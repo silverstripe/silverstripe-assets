@@ -1,0 +1,44 @@
+{
+  "name": "silverstripe/assets",
+  "description": "SilverStripe Assets component",
+  "type": "silverstripe-module",
+  "homepage": "http://silverstripe.org",
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "silverstripe",
+    "assets"
+  ],
+  "authors": [
+    {
+      "name": "SilverStripe",
+      "homepage": "http://silverstripe.com"
+    },
+    {
+      "name": "The SilverStripe Community",
+      "homepage": "http://silverstripe.org"
+    }
+  ],
+  "require": {
+    "silverstripe/framework": "^4@dev"
+  },
+  "require-dev": {
+    "phpunit/PHPUnit": "~4.8"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.x-dev"
+    },
+    "installer-name": "silverstripe-assets"
+  },
+  "autoload": {
+    "psr-4": {
+      "SilverStripe\\Assets\\": "src/",
+      "SilverStripe\\Assets\\Tests\\": "tests/php/"
+    }
+  },
+  "scripts": {
+    "lint": "phpcs --standard=tests/phpcs/ruleset.xml src/ tests/php/"
+  },
+  "min-stability": "dev",
+  "prefer-stable": true
+}

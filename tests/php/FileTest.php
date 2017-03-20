@@ -69,7 +69,7 @@ class FileTest extends SapphireTest
         }
 
         // Conditional fixture creation in case the 'cms' module is installed
-        if (class_exists('SilverStripe\\CMS\\Model\\ErrorPage')) {
+        if (class_exists(ErrorPage::class)) {
             $page = new ErrorPage(
                 array(
                 'Title' => 'Page not Found',

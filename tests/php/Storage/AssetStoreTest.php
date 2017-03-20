@@ -58,7 +58,7 @@ class AssetStoreTest extends SapphireTest
         );
 
         // Test setFromStream (seekable)
-        $fish1 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-high-quality.jpg');
+        $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
         $fish1Stream = fopen($fish1, 'r');
         $fish1Tuple = $backend->setFromStream($fish1Stream, 'parent/awesome-fish.jpg');
         fclose($fish1Stream);
@@ -73,7 +73,7 @@ class AssetStoreTest extends SapphireTest
 
         // Test with non-seekable streams
         TestAssetStore::$seekable_override = false;
-        $fish2 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-low-quality.jpg');
+        $fish2 = realpath(__DIR__ . '/../ImageTest/test-image-low-quality.jpg');
         $fish2Stream = fopen($fish2, 'r');
         $fish2Tuple = $backend->setFromStream($fish2Stream, 'parent/mediocre-fish.jpg');
         fclose($fish2Stream);
@@ -97,7 +97,7 @@ class AssetStoreTest extends SapphireTest
         $backend = $this->getBackend();
 
         // Put a file in
-        $fish1 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-high-quality.jpg');
+        $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
         $this->assertFileExists($fish1);
         $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
         $this->assertEquals(
@@ -114,7 +114,7 @@ class AssetStoreTest extends SapphireTest
         );
 
         // Write a different file with same name. Should not detect duplicates since sha are different
-        $fish2 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-low-quality.jpg');
+        $fish2 = realpath(__DIR__ . '/../ImageTest/test-image-low-quality.jpg');
         try {
             $fish2Tuple = $backend->setFromLocalFile(
                 $fish2,
@@ -303,7 +303,7 @@ class AssetStoreTest extends SapphireTest
         $backend = $this->getBackend();
 
         // jpg
-        $fish = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-high-quality.jpg');
+        $fish = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
         $fishTuple = $backend->setFromLocalFile($fish, 'parent/awesome-fish.jpg');
         $this->assertEquals(
             'image/jpeg',
@@ -337,7 +337,7 @@ class AssetStoreTest extends SapphireTest
         $backend = $this->getBackend();
 
         // Put a file in
-        $fish1 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-high-quality.jpg');
+        $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
         $this->assertFileExists($fish1);
         $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
         $this->assertEquals(
@@ -355,7 +355,7 @@ class AssetStoreTest extends SapphireTest
 
         // Write a different file with same name.
         // Since we are using legacy filenames, this should generate a new filename
-        $fish2 = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-low-quality.jpg');
+        $fish2 = realpath(__DIR__ . '/../ImageTest/test-image-low-quality.jpg');
         try {
             $backend->setFromLocalFile(
                 $fish2,
@@ -458,7 +458,7 @@ class AssetStoreTest extends SapphireTest
     public function testProtect()
     {
         $backend = $this->getBackend();
-        $fish = realpath(__DIR__ . '/../../ORM/ImageTest/test-image-high-quality.jpg');
+        $fish = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
         $fishTuple = $backend->setFromLocalFile($fish, 'parent/lovely-fish.jpg');
         $fishVariantTuple = $backend->setFromLocalFile($fish, $fishTuple['Filename'], $fishTuple['Hash'], 'copy');
 

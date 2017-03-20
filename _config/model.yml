@@ -1,0 +1,12 @@
+---
+Name: assetscontrol
+---
+SilverStripe\ORM\DataObject:
+  extensions:
+    - SilverStripe\Assets\AssetControlExtension
+---
+Name: assetsfieldtypes
+---
+SilverStripe\Core\Injector\Injector:
+  DBFile:
+    class: SilverStripe\Assets\Storage\DBFile

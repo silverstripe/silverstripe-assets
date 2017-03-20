@@ -1,5 +1,5 @@
 ---
-Name: coreflysystem
+Name: assetsflysystem
 ---
 SilverStripe\Core\Injector\Injector:
   # Define the default adapter for this filesystem
@@ -23,9 +23,7 @@ SilverStripe\Core\Injector\Injector:
       Config:
         visibility: private
 ---
-Name: coreassets
-After:
-  - '#coreflysystem'
+Name: assetscore
 ---
 SilverStripe\Core\Injector\Injector:
   # Define our SS asset backend
@@ -51,18 +49,3 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\View\Requirements_Backend:
     properties:
       AssetHandler: '%$GeneratedAssetHandler'
----
-Name: coreassetroutes
-After:
-  - '#coreassets'
----
-SilverStripe\Control\Director:
-  rules:
-    'assets': ProtectedFileController
----
-Name: imageconfig
----
-SilverStripe\Core\Injector\Injector:
-  SilverStripe\Assets\Image_Backend:
-    class: SilverStripe\Assets\GDBackend
-  Image_Backend: '%$SilverStripe\Assets\Image_Backend'

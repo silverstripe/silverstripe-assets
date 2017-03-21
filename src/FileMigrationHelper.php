@@ -6,7 +6,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Object;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DB;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * Service to help migrate File dataobjects to the new APL.
@@ -40,8 +40,11 @@ class FileMigrationHelper extends Object
 
         // Loop over all files
         $count = 0;
-        $originalState = Versioned::get_reading_mode();
-        Versioned::set_stage(Versioned::DRAFT);
+        $originalState = null;
+        if (class_exists(Versioned::class)) {
+            $originalState = Versioned::get_reading_mode();
+            Versioned::set_stage(Versioned::DRAFT);
+        }
         $filenameMap = $this->getFilenameArray();
         foreach ($this->getFileQuery() as $file) {
             // Get the name of the file to import
@@ -51,7 +54,9 @@ class FileMigrationHelper extends Object
                 $count++;
             }
         }
-        Versioned::set_reading_mode($originalState);
+        if (class_exists(Versioned::class)) {
+            Versioned::set_reading_mode($originalState);
+        }
         return $count;
     }
 
@@ -89,7 +94,9 @@ class FileMigrationHelper extends Object
 
         // Save and publish
         $file->write();
-        $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        if (class_exists(Versioned::class)) {
+            $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        }
         return true;
     }
 

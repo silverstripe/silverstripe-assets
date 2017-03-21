@@ -7,7 +7,7 @@ use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\Security\Member;
 
@@ -245,7 +245,7 @@ class AssetControlExtension extends DataExtension
      */
     protected function isVersioned()
     {
-        return $this->owner->has_extension('SilverStripe\\ORM\\Versioning\\Versioned') && class_exists('SilverStripe\\ORM\\Versioning\\Versioned');
+        return class_exists(Versioned::class) && $this->owner->has_extension(Versioned::class);
     }
 
     /**

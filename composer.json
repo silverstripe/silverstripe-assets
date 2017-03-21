@@ -22,6 +22,7 @@
     "silverstripe/framework": "^4@dev"
   },
   "require-dev": {
+    "silverstripe/versioned": "^1@dev",
     "phpunit/PHPUnit": "~4.8"
   },
   "extra": {
@@ -37,7 +38,7 @@
     }
   },
   "scripts": {
-    "lint": "phpcs --standard=tests/phpcs/ruleset.xml src/ tests/php/"
+    "lint": "phpcs src/ tests/php/"
   },
   "minimum-stability": "dev",
   "prefer-stable": true

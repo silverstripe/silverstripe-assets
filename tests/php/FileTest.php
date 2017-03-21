@@ -6,7 +6,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\FileTest\MyCustomFile;
 use SilverStripe\ORM\ValidationException;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use SilverStripe\CMS\Model\ErrorPage;

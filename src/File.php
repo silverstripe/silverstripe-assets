@@ -24,7 +24,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\View\Parsers\ShortcodeHandler;
@@ -121,8 +121,8 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     );
 
     private static $has_one = array(
-        "Parent" => "SilverStripe\\Assets\\File",
-        "Owner" => "SilverStripe\\Security\\Member"
+        "Parent" => File::class,
+        "Owner" => Member::class,
     );
 
     private static $defaults = array(
@@ -130,8 +130,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     );
 
     private static $extensions = array(
-        "SilverStripe\\ORM\\Hierarchy\\Hierarchy",
-        "SilverStripe\\ORM\\Versioning\\Versioned"
+        Hierarchy::class,
     );
 
     private static $casting = array (
@@ -201,11 +200,11 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
      * @var
      */
     private static $class_for_file_extension = array(
-        '*' => 'SilverStripe\\Assets\\File',
-        'jpg' => 'SilverStripe\\Assets\\Image',
-        'jpeg' => 'SilverStripe\\Assets\\Image',
-        'png' => 'SilverStripe\\Assets\\Image',
-        'gif' => 'SilverStripe\\Assets\\Image',
+        '*' => File::class,
+        'jpg' => Image::class,
+        'jpeg' => Image::class,
+        'png' => Image::class,
+        'gif' => Image::class,
     );
 
     /**
@@ -725,7 +724,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         }
 
         // Avoid moving files on live; Rely on this being done on stage prior to publish.
-        if (Versioned::get_stage() !== Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && Versioned::get_stage() !== Versioned::DRAFT) {
             return false;
         }
 
@@ -1104,7 +1103,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             $exts = array($exts);
         }
         foreach ($exts as $ext) {
-            if (!is_subclass_of($class, 'SilverStripe\\Assets\\File')) {
+            if (!is_subclass_of($class, File::class)) {
                 throw new InvalidArgumentException(
                     sprintf('Class "%s" (for extension "%s") is not a valid subclass of File', $class, $ext)
                 );

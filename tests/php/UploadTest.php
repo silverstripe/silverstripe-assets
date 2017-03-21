@@ -7,7 +7,7 @@ use SilverStripe\Assets\Upload;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 
 class UploadTest extends SapphireTest
 {

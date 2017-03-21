@@ -2,7 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Filesystem;

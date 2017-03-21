@@ -6,7 +6,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;

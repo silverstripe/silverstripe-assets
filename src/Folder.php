@@ -10,7 +10,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ValidationResult;
-use SilverStripe\ORM\Versioning\Versioned;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\TabSet;
 
@@ -293,7 +293,7 @@ class Folder extends File
         parent::onAfterWrite();
 
         // No publishing UX for folders, so just cascade changes live
-        if (Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
@@ -306,7 +306,7 @@ class Folder extends File
         parent::onAfterDelete();
 
         // Cascade deletions to live
-        if (Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->deleteFromStage(Versioned::LIVE);
         }
     }
@@ -330,7 +330,7 @@ class Folder extends File
     public function updateChildFilesystem()
     {
         // Don't synchronise on live (rely on publishing instead)
-        if (Versioned::get_stage() === Versioned::LIVE) {
+        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 

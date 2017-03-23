@@ -4,6 +4,7 @@ namespace SilverStripe\Assets;
 
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Versioning\Versioned;
@@ -162,7 +163,9 @@ class AssetControlExtension extends DataExtension
         // Unauthenticated member to use for checking visibility
         $baseClass = $this->owner->baseClass();
         $baseTable = $this->owner->baseTable();
-        $filter = array("\"{$baseTable}\".\"ID\"" => $this->owner->ID);
+        $filter = array(
+            Convert::symbol2sql("{$baseTable}.ID") => $this->owner->ID,
+        );
         $stages = $this->owner->getVersionedStages(); // {@see Versioned::getVersionedStages}
         foreach ($stages as $stage) {
             // Skip current stage; These should be handled explicitly

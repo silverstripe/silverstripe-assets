@@ -25,6 +25,7 @@ before_script:
   - "if [ \"$PHPCS_TEST\" = \"1\" ]; then pyrus install pear/PHP_CodeSniffer; fi"
   - phpenv rehash
   - phpenv config-rm xdebug.ini
+  - composer validate
   - composer install --prefer-dist
   - composer require silverstripe/framework:4.0.x-dev silverstripe/config:1.0.x-dev --prefer-dist
   - "if [ \"$DB\" = \"PGSQL\" ]; then composer require silverstripe/postgresql:2.0.x-dev --prefer-dist; fi"
@@ -33,7 +34,6 @@ before_script:
 script:
   - "if [ \"$PHPUNIT_TEST\" = \"1\" ]; then vendor/bin/phpunit; fi"
   - "if [ \"$PHPCS_TEST\" = \"1\" ]; then composer run-script lint; fi"
-  - "if [ \"$PHPCS_TEST\" = \"1\" ]; then composer validate; fi"
   - "if [ \"$PHPUNIT_COVERAGE_TEST\" = \"1\" ]; then phpdbg -qrr vendor/bin/phpunit --coverage-clover=coverage.xml; fi"
 
 after_success:

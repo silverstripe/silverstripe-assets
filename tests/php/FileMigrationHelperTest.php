@@ -19,9 +19,9 @@ class FileMigrationHelperTest extends SapphireTest
 
     protected static $fixture_file = 'FileMigrationHelperTest.yml';
 
-    protected $requiredExtensions = array(
+    protected static $required_extensions = array(
         File::class => array(
-            Extension::class
+            Extension::class,
         )
     );
 

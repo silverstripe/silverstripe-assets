@@ -11,7 +11,7 @@ use SilverStripe\ORM\ValidationException;
 class DBFileTest extends SapphireTest
 {
 
-    protected $extraDataObjects = array(
+    protected static $extra_dataobjects = array(
         DBFileTest\TestObject::class,
         DBFileTest\Subclass::class,
     );

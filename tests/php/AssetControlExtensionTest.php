@@ -17,7 +17,7 @@ use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 class AssetControlExtensionTest extends SapphireTest
 {
 
-    protected $extraDataObjects = array(
+    protected static $extra_dataobjects = array(
         VersionedObject::class,
         TestObject::class
     );

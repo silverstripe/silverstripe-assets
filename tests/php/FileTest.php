@@ -29,7 +29,7 @@ class FileTest extends SapphireTest
 
     protected static $fixture_file = 'FileTest.yml';
 
-    protected $extraDataObjects = array(
+    protected static $extra_dataobjects = array(
         MyCustomFile::class
     );
 

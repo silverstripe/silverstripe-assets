@@ -231,25 +231,6 @@ class Folder extends File
     {
         return $this->ChildFolders()->count();
     }
-    /**
-     * @return string
-     */
-    public function CMSTreeClasses()
-    {
-        $classes = sprintf('class-%s', $this->class);
-
-        if (!$this->canDelete()) {
-            $classes .= " nodelete";
-        }
-
-        if (!$this->canEdit()) {
-            $classes .= " disabled";
-        }
-
-        $classes .= $this->markingClasses('numChildFolders');
-
-        return $classes;
-    }
 
     /**
      * @return string

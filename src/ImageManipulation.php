@@ -516,7 +516,7 @@ trait ImageManipulation
      */
     public function Thumbnail($width, $height)
     {
-        return $this->Pad($width, $height);
+        return $this->Fit($width, $height);
     }
 
     /**

@@ -19,11 +19,15 @@
     }
   ],
   "require": {
-    "silverstripe/framework": "^4@dev"
+    "silverstripe/framework": "^4@dev",
+    "php": ">=5.6.0"
   },
   "require-dev": {
     "silverstripe/versioned": "^1@dev",
     "phpunit/PHPUnit": "~4.8"
+  },
+  "suggest": {
+    "ext-gd": "*"
   },
   "extra": {
     "branch-alias": {

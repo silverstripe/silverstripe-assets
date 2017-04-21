@@ -447,7 +447,7 @@ class FileTest extends SapphireTest
         $this->assertEquals("1000 bytes", File::format_size(1000));
         $this->assertEquals("1023 bytes", File::format_size(1023));
         $this->assertEquals("1 KB", File::format_size(1025));
-        $this->assertEquals("9.8 KB", File::format_size(10000));
+        $this->assertEquals("10 KB", File::format_size(10000));
         $this->assertEquals("49 KB", File::format_size(50000));
         $this->assertEquals("977 KB", File::format_size(1000000));
         $this->assertEquals("1 MB", File::format_size(1024*1024));

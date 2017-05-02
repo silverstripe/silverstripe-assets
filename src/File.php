@@ -24,6 +24,9 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\Group;
+use SilverStripe\Security\InheritedPermissions;
+use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -89,10 +92,14 @@ use InvalidArgumentException;
  * @mixin Hierarchy
  * @mixin Versioned
  */
-class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumbnail, CMSPreviewable
+class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
 {
-
     use ImageManipulation;
+
+    /**
+     * Permission for edit all files
+     */
+    const EDIT_ALL = 'FILE_EDIT_ALL';
 
     private static $default_sort = "\"Name\"";
 
@@ -118,6 +125,8 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         "File" => "DBFile",
         // Only applies to files, doesn't inherit for folder
         'ShowInSearch' => 'Boolean(1)',
+        "CanViewType" => "Enum('Anyone, LoggedInUsers, OnlyTheseUsers, Inherit', 'Inherit')",
+        "CanEditType" => "Enum('LoggedInUsers, OnlyTheseUsers, Inherit', 'Inherit')",
     );
 
     private static $has_one = array(
@@ -127,6 +136,13 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
 
     private static $defaults = array(
         "ShowInSearch" => 1,
+        "CanViewType" => "Inherit",
+        "CanEditType" => "Inherit",
+    );
+
+    private static $many_many = array(
+        "ViewerGroups" => Group::class,
+        "EditorGroups" => Group::class,
     );
 
     private static $extensions = array(
@@ -415,7 +431,9 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return true;
+        // Check inherited permissions
+        return static::getInheritedPermissions()
+            ->canView($this->ID, $member);
     }
 
     /**
@@ -435,7 +453,13 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return Permission::checkMember($member, array('CMS_ACCESS_AssetAdmin', 'CMS_ACCESS_LeftAndMain'));
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // Check inherited permissions
+        return static::getInheritedPermissions()
+            ->canEdit($this->ID, $member);
     }
 
     /**
@@ -476,7 +500,18 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return $this->canEdit($member);
+        if (!$member) {
+            return false;
+        }
+
+        // Default permission check
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // Check inherited permissions
+        return static::getInheritedPermissions()
+            ->canDelete($this->ID, $member);
     }
 
     /**
@@ -1312,5 +1347,31 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         $link = $this->getIcon();
         $this->extend('updatePreviewLink', $link, $action);
         return $link;
+    }
+
+    /**
+     * @return InheritedPermissions
+     */
+    public function getInheritedPermissions()
+    {
+        return Injector::inst()->get(InheritedPermissions::class.'.file');
+    }
+
+    /**
+     * Return a map of permission codes to add to the dropdown shown in the Security section of the CMS.
+     * array(
+     *   'VIEW_SITE' => 'View the site',
+     * );
+     */
+    public function providePermissions()
+    {
+        return [
+            self::EDIT_ALL => [
+                'name' => _t(__CLASS__.'.EDIT_ALL_DESCRIPTION', 'Edit any file'),
+                'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
+                'sort' => -100,
+                'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
+            ]
+        ];
     }
 }

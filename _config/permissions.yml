@@ -1,0 +1,11 @@
+---
+Name: assetspermissions
+---
+SilverStripe\Core\Injector\Injector:
+  SilverStripe\Security\InheritedPermissions.file:
+    class: SilverStripe\Security\InheritedPermissions
+    properties:
+      BaseClass: SilverStripe\Assets\File
+      RootPermissions: %$SilverStripe\Assets\FileRootPermissions
+      GlobalEditPermissions:
+        - CMS_ACCESS

@@ -202,7 +202,7 @@ class UploadTest extends SapphireTest
         $tmpFile['size'] = 0;
         $this->assertFalse($upload->validate($tmpFile));
         $this->assertContains(
-            _t('File.NOFILESIZE', 'Filesize is zero bytes.'),
+            _t('SilverStripe\\Assets\\File.NOFILESIZE', 'Filesize is zero bytes.'),
             $upload->getErrors()
         );
 
@@ -212,7 +212,7 @@ class UploadTest extends SapphireTest
         $this->assertFalse($upload->validate($tmpFile));
         $this->assertContains(
             _t(
-                'File.TOOLARGE',
+                'SilverStripe\\Assets\\File.TOOLARGE',
                 'Filesize is too large, maximum {size} allowed',
                 'Argument 1: Filesize (e.g. 1MB)',
                 array('size' => '1 KB')
@@ -226,7 +226,7 @@ class UploadTest extends SapphireTest
         $this->assertFalse($upload->validate($tmpFile));
         $this->assertContains(
             _t(
-                'File.TOOLARGE',
+                'SilverStripe\\Assets\\File.TOOLARGE',
                 'Filesize is too large, maximum {size} allowed',
                 'Argument 1: Filesize (e.g. 1MB)',
                 array('size' => '1 KB')
@@ -239,7 +239,7 @@ class UploadTest extends SapphireTest
         $tmpFile['error'] = UPLOAD_ERR_NO_FILE;
         $this->assertFalse($upload->validate($tmpFile));
         $this->assertContains(
-            _t('File.NOVALIDUPLOAD', 'File is not a valid upload'),
+            _t('SilverStripe\\Assets\\File.NOVALIDUPLOAD', 'File is not a valid upload'),
             $upload->getErrors()
         );
     }

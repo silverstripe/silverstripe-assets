@@ -25,7 +25,7 @@ class Validator extends Upload_Validator implements TestOnly
             $ext = (isset($pathInfo['extension'])) ? $pathInfo['extension'] : '';
             $arg = File::format_size($this->getAllowedMaxFileSize($ext));
             $this->errors[] = _t(
-                'File.TOOLARGE',
+                'SilverStripe\\Assets\\File.TOOLARGE',
                 'File size is too large, maximum {size} allowed',
                 'Argument 1: File size (e.g. 1MB)',
                 array('size' => $arg)
@@ -35,7 +35,7 @@ class Validator extends Upload_Validator implements TestOnly
 
         // extension validation
         if (!$this->isValidExtension()) {
-            $this->errors[] = _t('File.INVALIDEXTENSIONSHORT', 'Extension is not allowed');
+            $this->errors[] = _t('SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT', 'Extension is not allowed');
             return false;
         }
 

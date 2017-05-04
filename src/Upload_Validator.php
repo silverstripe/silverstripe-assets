@@ -253,13 +253,13 @@ class Upload_Validator
 
         // Check file upload
         if (!$this->isValidUpload()) {
-            $this->errors[] = _t('File.NOVALIDUPLOAD', 'File is not a valid upload');
+            $this->errors[] = _t('SilverStripe\\Assets\\File.NOVALIDUPLOAD', 'File is not a valid upload');
             return false;
         }
 
         // Check file isn't empty
         if ($this->isFileEmpty()) {
-            $this->errors[] = _t('File.NOFILESIZE', 'Filesize is zero bytes.');
+            $this->errors[] = _t('SilverStripe\\Assets\\File.NOFILESIZE', 'Filesize is zero bytes.');
             return false;
         }
 
@@ -269,7 +269,7 @@ class Upload_Validator
             $ext = (isset($pathInfo['extension'])) ? $pathInfo['extension'] : '';
             $arg = File::format_size($this->getAllowedMaxFileSize($ext));
             $this->errors[] = _t(
-                'File.TOOLARGE',
+                'SilverStripe\\Assets\\File.TOOLARGE',
                 'Filesize is too large, maximum {size} allowed',
                 'Argument 1: Filesize (e.g. 1MB)',
                 array('size' => $arg)
@@ -280,7 +280,7 @@ class Upload_Validator
         // extension validation
         if (!$this->isValidExtension()) {
             $this->errors[] = _t(
-                'File.INVALIDEXTENSION_SHORT',
+                'SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT',
                 'Extension is not allowed'
             );
             return false;

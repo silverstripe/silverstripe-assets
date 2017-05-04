@@ -71,12 +71,12 @@ class Image extends File implements ShortcodeHandler
                     TextField::create("Name", $this->fieldLabel('Filename')),
                     ReadonlyField::create(
                         "Path",
-                        _t('AssetTableField.PATH', 'Path'),
+                        _t('SilverStripe\\Assets\\File.PATH', 'Path'),
                         (($path !== '/.') ? $path : '') . '/'
                     ),
                     HTMLReadonlyField::create(
                         'ClickableURL',
-                        _t('AssetTableField.URL', 'URL'),
+                        _t('SilverStripe\\Assets\\File.URL', 'URL'),
                         sprintf(
                             '<i class="%s"></i><a href="%s" target="_blank">%s</a>',
                             'font-icon-link btn--icon-large form-control-static__icon',
@@ -89,11 +89,11 @@ class Image extends File implements ShortcodeHandler
                     'Usage',
                     DatetimeField::create(
                         "Created",
-                        _t('AssetTableField.CREATED', 'First uploaded')
+                        _t('SilverStripe\\Assets\\File.CREATED', 'First uploaded')
                     )->setReadonly(true),
                     DatetimeField::create(
                         "LastEdited",
-                        _t('AssetTableField.LASTEDIT', 'Last changed')
+                        _t('SilverStripe\\Assets\\File.LASTEDIT', 'Last changed')
                     )->setReadonly(true)
                 )
             ),

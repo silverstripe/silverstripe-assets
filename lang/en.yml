@@ -1,0 +1,47 @@
+en:
+  SilverStripe\Assets\File:
+    AviType: 'AVI video file'
+    CREATED: 'First uploaded'
+    CssType: 'CSS file'
+    DRAFT: Draft
+    DmgType: 'Apple disk image'
+    DocType: 'Word document'
+    GifType: 'GIF image - good for diagrams'
+    GzType: 'GZIP compressed file'
+    HtmlType: 'HTML file'
+    INVALIDEXTENSION_SHORT: 'Extension is not allowed'
+    IcoType: 'Icon image'
+    JpgType: 'JPEG image - good for photos'
+    JsType: 'Javascript file'
+    LASTEDIT: 'Last changed'
+    MODIFIED: Modified
+    Mp3Type: 'MP3 audio file'
+    MpgType: 'MPEG video file'
+    NOFILESIZE: 'Filesize is zero bytes.'
+    NOVALIDUPLOAD: 'File is not a valid upload'
+    PATH: Path
+    PLURALNAME: Files
+    PLURALS:
+      one: 'A File'
+      other: '{count} Files'
+    PdfType: 'Adobe Acrobat PDF file'
+    PngType: 'PNG image - good general-purpose format'
+    SINGULARNAME: File
+    TOOLARGE: 'Filesize is too large, maximum {size} allowed'
+    TiffType: 'Tagged image format'
+    URL: URL
+    WavType: 'WAV audo file'
+    XlsType: 'Excel spreadsheet'
+    ZipType: 'ZIP compressed file'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Folders
+    PLURALS:
+      one: 'A Folder'
+      other: '{count} Folders'
+    SINGULARNAME: Folder
+  SilverStripe\Assets\Image:
+    PLURALNAME: Images
+    PLURALS:
+      one: 'An Image'
+      other: '{count} Images'
+    SINGULARNAME: Image

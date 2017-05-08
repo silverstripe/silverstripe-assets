@@ -22,19 +22,20 @@ matrix:
 before_script:
   - printf "\n" | pecl install imagick
   - composer self-update || true
-  - "if [ \"$PHPCS_TEST\" = \"1\" ]; then pyrus install pear/PHP_CodeSniffer; fi"
+  - if [[ $PHPCS_TEST ]]; then pyrus install pear/PHP_CodeSniffer; fi
   - phpenv rehash
   - phpenv config-rm xdebug.ini
   - composer validate
   - composer install --prefer-dist
-  - composer require silverstripe/framework:4.0.x-dev embed/embed:^3.0@stable silverstripe/config:1.0.x-dev silverstripe/versioned:1.0.x-dev --prefer-dist
-  - "if [ \"$DB\" = \"PGSQL\" ]; then composer require silverstripe/postgresql:2.0.x-dev --prefer-dist; fi"
-  - "if [ \"$DB\" = \"SQLITE\" ]; then composer require silverstripe/sqlite3:2.0.x-dev --prefer-dist; fi"
+  - composer require symfony/config:^3.2 silverstripe/framework:4.0.x-dev embed/embed:^3.0@stable silverstripe/config:1.0.x-dev silverstripe/versioned:1.0.x-dev --prefer-dist --no-update
+  - composer update
+  - if [[ $DB == PGSQL ]]; then composer require silverstripe/postgresql:2.0.x-dev --prefer-dist; fi
+  - if [[ $DB == SQLITE ]]; then composer require silverstripe/sqlite3:2.0.x-dev --prefer-dist; fi
 
 script:
-  - "if [ \"$PHPUNIT_TEST\" = \"1\" ]; then vendor/bin/phpunit; fi"
-  - "if [ \"$PHPCS_TEST\" = \"1\" ]; then composer run-script lint; fi"
-  - "if [ \"$PHPUNIT_COVERAGE_TEST\" = \"1\" ]; then phpdbg -qrr vendor/bin/phpunit --coverage-clover=coverage.xml; fi"
+  - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi
+  - if [[ $PHPCS_TEST ]]; then composer run-script lint; fi
+  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then phpdbg -qrr vendor/bin/phpunit --coverage-clover=coverage.xml; fi
 
 after_success:
-  - "if [ \"$PHPUNIT_COVERAGE_TEST\" = \"1\" ]; then bash <(curl -s https://codecov.io/bash) -f coverage.xml; fi"
+  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then bash <(curl -s https://codecov.io/bash) -f coverage.xml; fi

@@ -476,7 +476,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
             return true;
         }
 
-        $message = _t('File.INVALIDEXTENSIONSHORT', 'Extension is not allowed');
+        $message = _t('SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT', 'Extension is not allowed');
         $result->addError($message);
         return false;
     }

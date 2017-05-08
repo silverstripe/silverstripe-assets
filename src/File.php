@@ -511,7 +511,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
                     TextField::create("Name", $this->fieldLabel('Filename')),
                     ReadonlyField::create(
                         "Path",
-                        _t('AssetTableField.PATH', 'Path'),
+                        _t(__CLASS__.'.PATH', 'Path'),
                         (($path !== '/.') ? $path : '') . '/'
                     )
                 ),
@@ -519,11 +519,11 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
                     'Usage',
                     DatetimeField::create(
                         "Created",
-                        _t('AssetTableField.CREATED', 'First uploaded')
+                        _t(__CLASS__.'.CREATED', 'First uploaded')
                     )->setReadonly(true),
                     DatetimeField::create(
                         "LastEdited",
-                        _t('AssetTableField.LASTEDIT', 'Last changed')
+                        _t(__CLASS__.'.LASTEDIT', 'Last changed')
                     )->setReadonly(true)
                 )
             ),
@@ -546,9 +546,9 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     {
         $statusTitle = '';
         if ($this->isOnDraftOnly()) {
-            $statusTitle = _t('File.DRAFT', 'Draft');
+            $statusTitle = _t(__CLASS__.'.DRAFT', 'Draft');
         } elseif ($this->isModifiedOnDraft()) {
-            $statusTitle = _t('File.MODIFIED', 'Modified');
+            $statusTitle = _t(__CLASS__.'.MODIFIED', 'Modified');
         }
         return $statusTitle;
     }
@@ -956,27 +956,27 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public static function get_file_type($filename)
     {
         $types = array(
-            'gif' => _t('File.GifType', 'GIF image - good for diagrams'),
-            'jpg' => _t('File.JpgType', 'JPEG image - good for photos'),
-            'jpeg' => _t('File.JpgType', 'JPEG image - good for photos'),
-            'png' => _t('File.PngType', 'PNG image - good general-purpose format'),
-            'ico' => _t('File.IcoType', 'Icon image'),
-            'tiff' => _t('File.TiffType', 'Tagged image format'),
-            'doc' => _t('File.DocType', 'Word document'),
-            'xls' => _t('File.XlsType', 'Excel spreadsheet'),
-            'zip' => _t('File.ZipType', 'ZIP compressed file'),
-            'gz' => _t('File.GzType', 'GZIP compressed file'),
-            'dmg' => _t('File.DmgType', 'Apple disk image'),
-            'pdf' => _t('File.PdfType', 'Adobe Acrobat PDF file'),
-            'mp3' => _t('File.Mp3Type', 'MP3 audio file'),
-            'wav' => _t('File.WavType', 'WAV audo file'),
-            'avi' => _t('File.AviType', 'AVI video file'),
-            'mpg' => _t('File.MpgType', 'MPEG video file'),
-            'mpeg' => _t('File.MpgType', 'MPEG video file'),
-            'js' => _t('File.JsType', 'Javascript file'),
-            'css' => _t('File.CssType', 'CSS file'),
-            'html' => _t('File.HtmlType', 'HTML file'),
-            'htm' => _t('File.HtmlType', 'HTML file')
+            'gif' => _t(__CLASS__.'.GifType', 'GIF image - good for diagrams'),
+            'jpg' => _t(__CLASS__.'.JpgType', 'JPEG image - good for photos'),
+            'jpeg' => _t(__CLASS__.'.JpgType', 'JPEG image - good for photos'),
+            'png' => _t(__CLASS__.'.PngType', 'PNG image - good general-purpose format'),
+            'ico' => _t(__CLASS__.'.IcoType', 'Icon image'),
+            'tiff' => _t(__CLASS__.'.TiffType', 'Tagged image format'),
+            'doc' => _t(__CLASS__.'.DocType', 'Word document'),
+            'xls' => _t(__CLASS__.'.XlsType', 'Excel spreadsheet'),
+            'zip' => _t(__CLASS__.'.ZipType', 'ZIP compressed file'),
+            'gz' => _t(__CLASS__.'.GzType', 'GZIP compressed file'),
+            'dmg' => _t(__CLASS__.'.DmgType', 'Apple disk image'),
+            'pdf' => _t(__CLASS__.'.PdfType', 'Adobe Acrobat PDF file'),
+            'mp3' => _t(__CLASS__.'.Mp3Type', 'MP3 audio file'),
+            'wav' => _t(__CLASS__.'.WavType', 'WAV audo file'),
+            'avi' => _t(__CLASS__.'.AviType', 'AVI video file'),
+            'mpg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),
+            'mpeg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),
+            'js' => _t(__CLASS__.'.JsType', 'Javascript file'),
+            'css' => _t(__CLASS__.'.CssType', 'CSS file'),
+            'html' => _t(__CLASS__.'.HtmlType', 'HTML file'),
+            'htm' => _t(__CLASS__.'.HtmlType', 'HTML file')
         );
 
         // Get extension

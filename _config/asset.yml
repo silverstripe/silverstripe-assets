@@ -44,8 +44,6 @@ SilverStripe\Core\Injector\Injector:
     class: SilverStripe\Assets\Flysystem\GeneratedAssetHandler
     properties:
       Filesystem: '%$FlysystemPublicBackend'
-  SilverStripe\View\Requirements_Minifier:
-    class: SilverStripe\View\JSMinifier
   SilverStripe\View\Requirements_Backend:
     properties:
       AssetHandler: '%$GeneratedAssetHandler'

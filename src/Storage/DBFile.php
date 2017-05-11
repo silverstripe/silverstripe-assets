@@ -78,7 +78,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      */
     protected function getStore()
     {
-        return Injector::inst()->get('AssetStore');
+        return Injector::inst()->get(AssetStore::class);
     }
 
     private static $composite_db = array(

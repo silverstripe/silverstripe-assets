@@ -14,7 +14,6 @@ use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 class ProtectedFileControllerTest extends FunctionalTest
 {
-
     protected static $fixture_file = 'FileTest.yml';
 
     public function setUp()
@@ -26,18 +25,14 @@ class ProtectedFileControllerTest extends FunctionalTest
 
         // Create a test folders for each of the fixture references
         foreach (Folder::get() as $folder) {
-            /**
- * @var Folder $folder
-*/
+            /** @var Folder $folder */
             $filePath = TestAssetStore::getLocalPath($folder);
             Filesystem::makeFolder($filePath);
         }
 
         // Create a test files for each of the fixture references
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-            /**
- * @var File $file
-*/
+            /** @var File $file */
             $path = TestAssetStore::getLocalPath($file);
             Filesystem::makeFolder(dirname($path));
             $fh = fopen($path, "w+");
@@ -200,7 +195,7 @@ class ProtectedFileControllerTest extends FunctionalTest
      */
     protected function getAssetStore()
     {
-        return Injector::inst()->get('AssetStore');
+        return Injector::inst()->get(AssetStore::class);
     }
 
     /**

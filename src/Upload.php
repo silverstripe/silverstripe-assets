@@ -144,7 +144,7 @@ class Upload extends Controller
      */
     protected function getNameGenerator($filename)
     {
-        return Injector::inst()->createWithArgs('AssetNameGenerator', array($filename));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, array($filename));
     }
 
     /**
@@ -153,7 +153,7 @@ class Upload extends Controller
      */
     protected function getAssetStore()
     {
-        return Injector::inst()->get('AssetStore');
+        return Injector::inst()->get(AssetStore::class);
     }
 
     /**

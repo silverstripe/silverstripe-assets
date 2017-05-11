@@ -302,6 +302,6 @@ class AssetControlExtension extends DataExtension
      */
     protected function getAssetStore()
     {
-        return Injector::inst()->get('AssetStore');
+        return Injector::inst()->get(AssetStore::class);
     }
 }

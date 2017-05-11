@@ -591,7 +591,7 @@ trait ImageManipulation
 
         // Create backend for this object
         /** @skipUpgrade */
-        return Injector::inst()->createWithArgs('Image_Backend', array($this));
+        return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
     }
 
     /**
@@ -788,7 +788,7 @@ trait ImageManipulation
 
         // Create this asset in the store if it doesn't already exist,
         // otherwise use the existing variant
-        $store = Injector::inst()->get('AssetStore');
+        $store = Injector::inst()->get(AssetStore::class);
         $result = null;
         if (!$store->exists($filename, $hash, $variant)) {
             $result = call_user_func($callback, $store, $filename, $hash, $variant);

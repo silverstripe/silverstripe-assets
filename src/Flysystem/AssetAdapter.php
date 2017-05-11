@@ -6,7 +6,6 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config as FlysystemConfig;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\View\ArrayData;

@@ -2,16 +2,21 @@ fileExtensions:
   - php
 mappings:
   SilverStripe\Filesystem\Storage\AssetContainer: SilverStripe\Assets\Storage\AssetContainer
+  AssetNameGenerator: SilverStripe\Assets\Storage\AssetNameGenerator
   SilverStripe\Filesystem\Storage\AssetNameGenerator: SilverStripe\Assets\Storage\AssetNameGenerator
+  AssetStore: SilverStripe\Assets\Storage\AssetStore
   SilverStripe\Filesystem\Storage\AssetStore: SilverStripe\Assets\Storage\AssetStore
   SilverStripe\Filesystem\Storage\AssetStoreRouter: SilverStripe\Assets\Storage\AssetStoreRouter
   SilverStripe\Filesystem\Storage\DBFile: SilverStripe\Assets\Storage\DBFile
   SilverStripe\Filesystem\Storage\DefaultAssetNameGenerator: SilverStripe\Assets\Storage\DefaultAssetNameGenerator
+  GeneratedAssetHandler: SilverStripe\Assets\Storage\GeneratedAssetHandler
   SilverStripe\Filesystem\Storage\GeneratedAssetHandler: SilverStripe\Assets\Storage\GeneratedAssetHandler
   SilverStripe\Filesystem\Storage\ProtectedFileController: SilverStripe\Assets\Storage\ProtectedFileController
+  ProtectedFileController: SilverStripe\Assets\Storage\ProtectedFileController
   SilverStripe\Filesystem\Flysystem\AssetAdapter: SilverStripe\Assets\Flysystem\AssetAdapter
   SilverStripe\Filesystem\Flysystem\FlysystemAssetStore: SilverStripe\Assets\Flysystem\FlysystemAssetStore
-  SilverStripe\Filesystem\Storage\FlysystemGeneratedAssetHandler: SilverStripe\Assets\Flysystem\GeneratedAssetHandler
+  SilverStripe\Filesystem\Storage\FlysystemGeneratedAssetHandler: SilverStripe\Assets\Flysystem\GeneratedAssets
+  SilverStripe\Assets\Flysystem\GeneratedAssetHandler: SilverStripe\Assets\Flysystem\GeneratedAssets
   SilverStripe\Filesystem\Flysystem\ProtectedAdapter: SilverStripe\Assets\Flysystem\ProtectedAdapter
   SilverStripe\Filesystem\Flysystem\ProtectedAssetAdapter: SilverStripe\Assets\Flysystem\ProtectedAssetAdapter
   SilverStripe\Filesystem\Flysystem\PublicAdapter: SilverStripe\Assets\Flysystem\PublicAdapter
@@ -59,6 +64,10 @@ mappings:
   ImagickImageTest: SilverStripe\Assets\Tests\ImagickImageTest
   AssetStoreTest_SpyStore: SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore
   AssetAdapterTest: SilverStripe\Assets\Tests\Flysystem\AssetAdapterTest
+  FlysystemPublicAdapter: SilverStripe\Assets\Flysystem\PublicAdapter
+  FlysystemProtectedAdapter: SilverStripe\Assets\Flysystem\ProtectedAdapter
+  FlysystemPublicBackend: League\Flysystem\Filesystem.public
+  FlysystemProtectedBackend: League\Flysystem\Filesystem.protected
 skipConfigs:
   - db
   - casting

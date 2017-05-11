@@ -3,14 +3,15 @@
 namespace SilverStripe\Assets\Flysystem;
 
 use Exception;
+use League\Flysystem\File;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\Storage\GeneratedAssetHandler;
 
 /**
  * Simple Flysystem implementation of GeneratedAssetHandler for storing generated content
  */
-class GeneratedAssetHandler implements \SilverStripe\Assets\Storage\GeneratedAssetHandler
+class GeneratedAssets implements GeneratedAssetHandler
 {
-
     /**
      * Flysystem store for files
      *
@@ -51,10 +52,14 @@ class GeneratedAssetHandler implements \SilverStripe\Assets\Storage\GeneratedAss
         if (!$result) {
             return null;
         }
-        /** @var PublicAdapter $adapter */
-        $adapter = $this
-            ->getFilesystem()
-            ->getAdapter();
+        $filesystem = $this->getFilesystem();
+        if (! $filesystem instanceof Filesystem) {
+            return null;
+        }
+        $adapter = $filesystem->getAdapter();
+        if (!$adapter instanceof PublicAdapter) {
+            return null;
+        }
         return $adapter->getPublicUrl($filename);
     }
 
@@ -109,6 +114,7 @@ class GeneratedAssetHandler implements \SilverStripe\Assets\Storage\GeneratedAss
     public function removeContent($filename)
     {
         if ($this->getFilesystem()->has($filename)) {
+            /** @var File $handler */
             $handler = $this->getFilesystem()->get($filename);
             $handler->delete();
         }

@@ -473,7 +473,18 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return $this->canEdit($member);
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // If Parent is provided, file can be created if parent can be edited
+        /** @var Folder $parent */
+        $parent = isset($context['Parent']) ? $context['Parent'] : null;
+        if ($parent) {
+            return $parent->canEdit($member);
+        }
+
+        return false;
     }
 
     /**

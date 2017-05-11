@@ -643,30 +643,74 @@ class FileTest extends SapphireTest
     public function testCanEdit()
     {
         $file = $this->objFromFixture(Image::class, 'gif');
+        $secureFile = $this->objFromFixture(File::class, 'restrictedFolder-file3');
 
         // Test anonymous permissions
         Session::set('loggedInAs', null);
         $this->assertFalse($file->canEdit(), "Anonymous users can't edit files");
 
         // Test permissionless user
-        $this->objFromFixture(Member::class, 'frontend')->logIn();
-        $this->assertFalse($file->canEdit(), "Permissionless users can't edit files");
+        $frontendUser = $this->objFromFixture(Member::class, 'frontend');
+        $this->assertFalse($file->canEdit($frontendUser), "Permissionless users can't edit files");
 
         // Test global CMS section users
-        $this->objFromFixture(Member::class, 'cms')->logIn();
-        $this->assertTrue($file->canEdit(), "Users with all CMS section access can edit files");
+        $cmsUser = $this->objFromFixture(Member::class, 'cms');
+        $this->assertFalse($file->canEdit($cmsUser), "CMS access doesn't necessarily grant edit permissions");
 
         // Test cms access users without file access
-        $this->objFromFixture(Member::class, 'security')->logIn();
-        $this->assertFalse($file->canEdit(), "Security CMS users can't edit files");
+        $securityUser = $this->objFromFixture(Member::class, 'security');
+        $this->assertFalse($file->canEdit($securityUser), "Security CMS users can't edit files");
 
-        // Test asset-admin user
-        $this->objFromFixture(Member::class, 'assetadmin')->logIn();
-        $this->assertTrue($file->canEdit(), "Asset admin users can edit files");
+        // Asset-admin user can edit files their group is granted to
+        $assetAdminUser = $this->objFromFixture(Member::class, 'assetadmin');
+        $this->assertFalse($file->canEdit($assetAdminUser), "Asset admin users can edit files");
+        $this->assertTrue($secureFile->canEdit($assetAdminUser), "Asset admin can edit assigned files");
+
+        // FILE_EDIT_ALL users can edit all
+        $fileUser = $this->objFromFixture(Member::class, 'file');
+        $this->assertTrue($file->canEdit($fileUser));
+        $this->assertTrue($secureFile->canEdit($fileUser));
 
         // Test admin
-        $this->objFromFixture(Member::class, 'admin')->logIn();
-        $this->assertTrue($file->canEdit(), "Admins can edit files");
+        $admin = $this->objFromFixture(Member::class, 'admin');
+        $this->assertTrue($file->canEdit($admin), "Admins can edit files");
+        $this->assertTrue($secureFile->canEdit($admin), 'Admins can edit any files');
+    }
+
+    public function testCanCreate()
+    {
+        $normalFolder = $this->objFromFixture(Folder::class, 'folder1');
+        $restrictedFolder = $this->objFromFixture(Folder::class, 'restrictedFolder');
+
+        // CMS user without any other permissions can't create files
+        $cmsUser = $this->objFromFixture(Member::class, 'cms');
+        $this->assertFalse(File::singleton()->canCreate($cmsUser, [
+            'Parent' => $restrictedFolder,
+        ]));
+        $this->assertFalse(File::singleton()->canCreate($cmsUser, [
+            'Parent' => $normalFolder,
+        ]));
+        $this->assertFalse(File::singleton()->canCreate($cmsUser));
+
+        // Members of the specific group can create in this folder (only)
+        $assetAdminUser = $this->objFromFixture(Member::class, 'assetadmin');
+        $this->assertTrue(File::singleton()->canCreate($assetAdminUser, [
+            'Parent' => $assetAdminUser,
+        ]));
+        $this->assertFalse(File::singleton()->canCreate($assetAdminUser, [
+            'Parent' => $normalFolder,
+        ]));
+        $this->assertFalse(File::singleton()->canCreate($assetAdminUser));
+
+        // user with FILE_EDIT_ALL permission can edit any file
+        $fileUser = $this->objFromFixture(Member::class, 'file');
+        $this->assertTrue(File::singleton()->canCreate($fileUser, [
+            'Parent' => $restrictedFolder,
+        ]));
+        $this->assertTrue(File::singleton()->canCreate($fileUser, [
+            'Parent' => $normalFolder,
+        ]));
+        $this->assertTrue(File::singleton()->canCreate($fileUser));
     }
 
     public function testJoinPaths()

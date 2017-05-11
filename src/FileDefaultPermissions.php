@@ -1,17 +1,15 @@
 <?php
 
-
 namespace SilverStripe\Assets;
-
 
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
-use SilverStripe\Security\RootPermissions;
+use SilverStripe\Security\DefaultPermissionChecker;
 
 /**
  * Permissions for root files with Can*Type = Inherit
  */
-class FileRootPermissions implements RootPermissions
+class FileDefaultPermissions implements DefaultPermissionChecker
 {
     /**
      * Can root be edited?

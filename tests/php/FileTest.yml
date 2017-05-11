@@ -1,3 +1,48 @@
+'SilverStripe\Security\Permission':
+  admin:
+    Code: ADMIN
+  cmsmain:
+    Code: CMS_ACCESS_LeftAndMain
+  assetadmin:
+    Code: CMS_ACCESS_AssetAdmin
+  securityadmin:
+    Code: CMS_ACCESS_SecurityAdmin
+  editfiles:
+    Code: FILE_EDIT_ALL
+'SilverStripe\Security\Group':
+  admins:
+    Title: Administrators
+    Permissions: '=>SilverStripe\Security\Permission.admin'
+  cmsusers:
+    Title: 'CMS Users'
+    Permissions: '=>SilverStripe\Security\Permission.cmsmain'
+  securityusers:
+    Title: 'Security Users'
+    Permissions: '=>SilverStripe\Security\Permission.securityadmin'
+  assetusers:
+    Title: 'Asset Users'
+    Permissions: '=>SilverStripe\Security\Permission.assetadmin'
+  fileusers:
+    Title: 'File Editors'
+    Permissions: '=>SilverStripe\Security\Permission.editfiles'
+'SilverStripe\Security\Member':
+  frontend:
+    Email: frontend@example.com
+  cms:
+    Email: cms@silverstripe.com
+    Groups: '=>SilverStripe\Security\Group.cmsusers'
+  admin:
+    Email: admin@silverstripe.com
+    Groups: '=>SilverStripe\Security\Group.admins'
+  assetadmin:
+    Email: assetadmin@silverstripe.com
+    Groups: '=>SilverStripe\Security\Group.assetusers'
+  security:
+    Email: security@silverstripe.com
+    Groups: '=>SilverStripe\Security\Group.securityusers'
+  file:
+    Email: files@silverstripe.com
+    Groups: '=>SilverStripe\Security\Group.fileusers'
 SilverStripe\Assets\Folder:
   subfolder:
     Name: FileTest-subfolder
@@ -8,6 +53,10 @@ SilverStripe\Assets\Folder:
   folder1-subfolder1:
     Name: FileTest-folder1-subfolder1
     ParentID: =>SilverStripe\Assets\Folder.folder1
+  restrictedFolder:
+    Name: FileTest-restricted-folder
+    CanEditType: OnlyTheseUsers
+    EditorGroups: =>SilverStripe\Security\Group.assetusers
 SilverStripe\Assets\File:
   asdf:
     FileFilename: FileTest.txt
@@ -32,6 +81,12 @@ SilverStripe\Assets\File:
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: File1.txt
     ParentID: =>SilverStripe\Assets\Folder.folder1
+  restrictedFolder-file3:
+    FileFilename: restrictedFolder/File3.txt
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: File1.txt
+    ParentID: =>SilverStripe\Assets\Folder.restrictedFolder
+
 SilverStripe\Assets\Image:
   gif:
     FileFilename: FileTest.gif
@@ -45,40 +100,3 @@ SilverStripe\Assets\Image:
     FileFilename: FileTest.png
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: FileTest.png
-'SilverStripe\Security\Permission':
-  admin:
-    Code: ADMIN
-  cmsmain:
-    Code: CMS_ACCESS_LeftAndMain
-  assetadmin:
-    Code: CMS_ACCESS_AssetAdmin
-  securityadmin:
-    Code: CMS_ACCESS_SecurityAdmin
-'SilverStripe\Security\Group':
-  admins:
-    Title: Administrators
-    Permissions: '=>SilverStripe\Security\Permission.admin'
-  cmsusers:
-    Title: 'CMS Users'
-    Permissions: '=>SilverStripe\Security\Permission.cmsmain'
-  securityusers:
-    Title: 'Security Users'
-    Permissions: '=>SilverStripe\Security\Permission.securityadmin'
-  assetusers:
-    Title: 'Asset Users'
-    Permissions: '=>SilverStripe\Security\Permission.assetadmin'
-'SilverStripe\Security\Member':
-  frontend:
-    Email: frontend@example.com
-  cms:
-    Email: cms@silverstripe.com
-    Groups: '=>SilverStripe\Security\Group.cmsusers'
-  admin:
-    Email: admin@silverstripe.com
-    Groups: '=>SilverStripe\Security\Group.admins'
-  assetadmin:
-    Email: assetadmin@silverstripe.com
-    Groups: '=>SilverStripe\Security\Group.assetusers'
-  security:
-    Email: security@silverstripe.com
-    Groups: '=>SilverStripe\Security\Group.securityusers'

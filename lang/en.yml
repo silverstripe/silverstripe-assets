@@ -6,6 +6,8 @@ en:
     DRAFT: Draft
     DmgType: 'Apple disk image'
     DocType: 'Word document'
+    EDIT_ALL_DESCRIPTION: 'Edit any file'
+    EDIT_ALL_HELP: 'Edit any file on the site, even if restricted'
     GifType: 'GIF image - good for diagrams'
     GzType: 'GZIP compressed file'
     HtmlType: 'HTML file'

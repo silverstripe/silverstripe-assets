@@ -24,6 +24,9 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\InheritedPermissionsExtension;
+use SilverStripe\Security\PermissionChecker;
+use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -88,11 +91,16 @@ use InvalidArgumentException;
  *
  * @mixin Hierarchy
  * @mixin Versioned
+ * @mixin InheritedPermissionsExtension
  */
-class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumbnail, CMSPreviewable
+class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
 {
-
     use ImageManipulation;
+
+    /**
+     * Permission for edit all files
+     */
+    const EDIT_ALL = 'FILE_EDIT_ALL';
 
     private static $default_sort = "\"Name\"";
 
@@ -131,6 +139,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
 
     private static $extensions = array(
         Hierarchy::class,
+        InheritedPermissionsExtension::class,
     );
 
     private static $casting = array (
@@ -415,7 +424,9 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return true;
+        // Check inherited permissions
+        return static::getPermissionChecker()
+            ->canView($this->ID, $member);
     }
 
     /**
@@ -435,7 +446,13 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return Permission::checkMember($member, array('CMS_ACCESS_AssetAdmin', 'CMS_ACCESS_LeftAndMain'));
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // Check inherited permissions
+        return static::getPermissionChecker()
+            ->canEdit($this->ID, $member);
     }
 
     /**
@@ -456,7 +473,18 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return $this->canEdit($member);
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // If Parent is provided, file can be created if parent can be edited
+        /** @var Folder $parent */
+        $parent = isset($context['Parent']) ? $context['Parent'] : null;
+        if ($parent) {
+            return $parent->canEdit($member);
+        }
+
+        return false;
     }
 
     /**
@@ -476,7 +504,18 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
             return $result;
         }
 
-        return $this->canEdit($member);
+        if (!$member) {
+            return false;
+        }
+
+        // Default permission check
+        if (Permission::checkMember($member, self::EDIT_ALL)) {
+            return true;
+        }
+
+        // Check inherited permissions
+        return static::getPermissionChecker()
+            ->canDelete($this->ID, $member);
     }
 
     /**
@@ -565,7 +604,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public static function get_app_category($ext)
     {
         $ext = strtolower($ext);
-        foreach (static::config()->app_categories as $category => $exts) {
+        foreach (static::config()->get('app_categories') as $category => $exts) {
             if (in_array($ext, $exts)) {
                 return $category;
             }
@@ -593,7 +632,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         }
 
         // Check configured categories
-        $appCategories = self::config()->app_categories;
+        $appCategories = static::config()->get('app_categories');
 
         // Merge all categories into list of extensions
         $extensions = array();
@@ -714,7 +753,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
      */
     public function updateFilesystem()
     {
-        if (!$this->config()->update_filesystem) {
+        if (!$this->config()->get('update_filesystem')) {
             return false;
         }
 
@@ -865,7 +904,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         $folder = '';
         $parent = $this->Parent();
         if ($parent && $parent->exists()) {
-            $folder = $parent->Filename;
+            $folder = $parent->getFilename();
         }
 
         // Detect change in foldername
@@ -1084,7 +1123,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
      */
     public static function get_class_for_file_extension($ext)
     {
-        $map = array_change_key_case(self::config()->class_for_file_extension, CASE_LOWER);
+        $map = array_change_key_case(self::config()->get('class_for_file_extension'), CASE_LOWER);
         return (array_key_exists(strtolower($ext), $map)) ? $map[strtolower($ext)] : $map['*'];
     }
 
@@ -1105,7 +1144,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
                     sprintf('Class "%s" (for extension "%s") is not a valid subclass of File', $class, $ext)
                 );
             }
-            self::config()->class_for_file_extension = array($ext => $class);
+            self::config()->merge('class_for_file_extension', [$ext => $class]);
         }
     }
 
@@ -1223,7 +1262,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         parent::requireDefaultRecords();
 
         // Check if old file records should be migrated
-        if (!$this->config()->migrate_legacy_file) {
+        if (!$this->config()->get('migrate_legacy_file')) {
             return;
         }
 
@@ -1312,5 +1351,31 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         $link = $this->getIcon();
         $this->extend('updatePreviewLink', $link, $action);
         return $link;
+    }
+
+    /**
+     * @return PermissionChecker
+     */
+    public function getPermissionChecker()
+    {
+        return Injector::inst()->get(PermissionChecker::class.'.file');
+    }
+
+    /**
+     * Return a map of permission codes to add to the dropdown shown in the Security section of the CMS.
+     * array(
+     *   'VIEW_SITE' => 'View the site',
+     * );
+     */
+    public function providePermissions()
+    {
+        return [
+            self::EDIT_ALL => [
+                'name' => _t(__CLASS__.'.EDIT_ALL_DESCRIPTION', 'Edit any file'),
+                'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
+                'sort' => -100,
+                'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
+            ]
+        ];
     }
 }

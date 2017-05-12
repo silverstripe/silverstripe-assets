@@ -38,12 +38,9 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
             $path = ASSETS_PATH;
         }
 
-        // Detect segment between root directory and assets root
-        if (stripos($path, BASE_PATH) === 0) {
-            $this->parentUrlPrefix = substr($path, strlen(BASE_PATH));
-        } else {
-            $this->parentUrlPrefix = ASSETS_DIR;
-        }
+        // Assign prefix based on path
+        $this->initParentURLPrefix($path);
+
         return $path;
     }
 
@@ -56,5 +53,23 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
     public function getPublicUrl($path)
     {
         return Controller::join_links(Director::baseURL(), $this->parentUrlPrefix, $path);
+    }
+
+    /**
+     * Initialise parent URL prefix
+     *
+     * @param string $path base path
+     */
+    protected function initParentURLPrefix($path)
+    {
+        // Detect segment between root directory and assets root
+        $path = str_replace('\\', '/', $path);
+        $basePath = str_replace('\\', '/', BASE_PATH);
+        if (stripos($path, $basePath) === 0) {
+            $prefix = substr($path, strlen($basePath));
+        } else {
+            $prefix = ASSETS_DIR;
+        }
+        $this->parentUrlPrefix = ltrim($prefix, '/');
     }
 }

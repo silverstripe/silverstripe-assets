@@ -14,6 +14,7 @@ use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Control\Session;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Config\Configurable;
@@ -853,14 +854,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function createResponseFor(FilesystemInterface $flysystem, $fileID)
     {
-        // Build response body
-        // @todo: gzip / buffer response?
-        $body = $flysystem->read($fileID);
+        // Create streamable response
+        $stream = $flysystem->readStream($fileID);
+        $size = $flysystem->getSize($fileID);
         $mime = $flysystem->getMimetype($fileID);
-        $response = new HTTPResponse($body, 200);
+        $response = HTTPStreamResponse::create($stream, $size)
+            ->addHeader('Content-Type', $mime);
 
-        // Add headers
-        $response->addHeader('Content-Type', $mime);
+        // Add standard headers
         $headers = $this->config()->get('file_response_headers');
         foreach ($headers as $header => $value) {
             $response->addHeader($header, $value);

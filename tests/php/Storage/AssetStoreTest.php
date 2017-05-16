@@ -35,7 +35,7 @@ class AssetStoreTest extends SapphireTest
      */
     protected function getBackend()
     {
-        return Injector::inst()->get('AssetStore');
+        return Injector::inst()->get(AssetStore::class);
     }
 
     /**

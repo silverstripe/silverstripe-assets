@@ -813,7 +813,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
      */
     protected function getNameGenerator($filename)
     {
-        return Injector::inst()->createWithArgs('AssetNameGenerator', array($filename));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, [$filename]);
     }
 
     /**

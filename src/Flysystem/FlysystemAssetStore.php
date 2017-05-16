@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use League\Flysystem\Directory;
 use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
 use League\Flysystem\Util;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -698,7 +697,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function fileGeneratorFor($fileID)
     {
-        return Injector::inst()->createWithArgs('AssetNameGenerator', array($fileID));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, array($fileID));
     }
 
     /**
@@ -810,15 +809,21 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         // Ensure that this instance is constructed on flush, thus forcing
         // bootstrapping of necessary .htaccess / web.config files
-        $instance = singleton('AssetStore');
+        $instance = singleton(AssetStore::class);
         if ($instance instanceof FlysystemAssetStore) {
-            $publicAdapter = $instance->getPublicFilesystem()->getAdapter();
-            if ($publicAdapter instanceof AssetAdapter) {
-                $publicAdapter->flush();
+            $public = $instance->getPublicFilesystem();
+            if ($public instanceof Filesystem) {
+                $publicAdapter = $public->getAdapter();
+                if ($publicAdapter instanceof AssetAdapter) {
+                    $publicAdapter->flush();
+                }
             }
-            $protectedAdapter = $instance->getProtectedFilesystem()->getAdapter();
-            if ($protectedAdapter instanceof AssetAdapter) {
-                $protectedAdapter->flush();
+            $protected = $instance->getProtectedFilesystem();
+            if ($protected instanceof Filesystem) {
+                $protectedAdapter = $protected->getAdapter();
+                if ($protectedAdapter instanceof AssetAdapter) {
+                    $protectedAdapter->flush();
+                }
             }
         }
     }
@@ -847,11 +852,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * Generate an {@see HTTPResponse} for the given file from the source filesystem
-     * @param FilesystemInterface $flysystem
+     * @param Filesystem $flysystem
      * @param string $fileID
      * @return HTTPResponse
      */
-    protected function createResponseFor(FilesystemInterface $flysystem, $fileID)
+    protected function createResponseFor(Filesystem $flysystem, $fileID)
     {
         // Build response body
         // @todo: gzip / buffer response?

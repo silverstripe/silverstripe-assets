@@ -10,10 +10,13 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
 use SilverStripe\Assets\Storage\AssetContainer;
-use SilverStripe\Assets\Flysystem\GeneratedAssetHandler;
+use SilverStripe\Assets\Flysystem\GeneratedAssets;
+use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
+use SilverStripe\Assets\Storage\GeneratedAssetHandler;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\View\Requirements;
@@ -71,12 +74,13 @@ class TestAssetStore extends FlysystemAssetStore
         $backend = new TestAssetStore();
         $backend->setPublicFilesystem($publicFilesystem);
         $backend->setProtectedFilesystem($protectedFilesystem);
-        Injector::inst()->registerService($backend, 'AssetStore');
+        Injector::inst()->registerService($backend, AssetStore::class);
+        Injector::inst()->registerService($backend, AssetStoreRouter::class);
 
         // Assign flysystem backend to generated asset handler at the same time
-        $generated = new GeneratedAssetHandler();
+        $generated = new GeneratedAssets();
         $generated->setFilesystem($publicFilesystem);
-        Injector::inst()->registerService($generated, 'GeneratedAssetHandler');
+        Injector::inst()->registerService($generated, GeneratedAssetHandler::class);
         Requirements::backend()->setAssetHandler($generated);
 
         // Disable legacy and set defaults
@@ -136,8 +140,9 @@ class TestAssetStore extends FlysystemAssetStore
         }
         // Extract filesystem used to store this object
         /** @var TestAssetStore $assetStore */
-        $assetStore = Injector::inst()->get('AssetStore');
+        $assetStore = Injector::inst()->get(AssetStore::class);
         $fileID = $assetStore->getFileID($asset->Filename, $asset->Hash, $asset->Variant);
+        /** @var Filesystem $filesystem */
         $filesystem = $assetStore->getProtectedFilesystem();
         if (!$filesystem->has($fileID)) {
             $filesystem = $assetStore->getPublicFilesystem();

@@ -7,7 +7,6 @@ use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Object;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 use InvalidArgumentException;
@@ -287,7 +286,7 @@ class Upload extends Controller
             $fileClass = File::get_class_for_file_extension(
                 File::get_file_extension($filename)
             );
-            $this->file = Object::create($fileClass);
+            $this->file = Injector::inst()->create($fileClass);
         }
 
         // Skip this step if not writing File dataobjects

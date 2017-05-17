@@ -5,16 +5,17 @@ namespace SilverStripe\Assets;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use Psr\SimpleCache\CacheInterface;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Core\Object;
 use SilverStripe\Core\Flushable;
 use InvalidArgumentException;
 
 /**
  * A wrapper class for GD-based images, with lots of manipulation functions.
  */
-class GDBackend extends Object implements Image_Backend, Flushable
+class GDBackend implements Image_Backend, Flushable
 {
+    use Configurable;
 
     /**
      * GD Resource
@@ -64,7 +65,6 @@ class GDBackend extends Object implements Image_Backend, Flushable
 
     public function __construct(AssetContainer $assetContainer = null)
     {
-        parent::__construct();
         $this->cache = Injector::inst()->get(CacheInterface::class . '.GDBackend_Manipulations');
 
         if ($assetContainer) {
@@ -509,6 +509,10 @@ class GDBackend extends Object implements Image_Backend, Flushable
         return $this->height;
     }
 
+    /**
+     * @param int $width
+     * @return static
+     */
     public function resizeByWidth($width)
     {
         $heightScale = $width / $this->width;
@@ -687,7 +691,7 @@ class GDBackend extends Object implements Image_Backend, Flushable
 
         // Get current image data
         if (file_exists($filename)) {
-            list($width, $height, $type, $attr) = getimagesize($filename);
+            list(, , $type, ) = getimagesize($filename);
             unlink($filename);
         } else {
             Filesystem::makeFolder(dirname($filename));

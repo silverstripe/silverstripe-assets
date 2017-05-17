@@ -2,7 +2,8 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Core\Object;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\View\Parsers\Transliterator;
 
 /**
@@ -28,8 +29,10 @@ use SilverStripe\View\Parsers\Transliterator;
  *
  * See {@link URLSegmentFilter} for a more generic implementation.
  */
-class FileNameFilter extends Object
+class FileNameFilter
 {
+    use Configurable;
+    use Injectable;
 
     /**
      * @config

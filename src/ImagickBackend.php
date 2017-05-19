@@ -187,7 +187,7 @@ class ImagickBackend extends Imagick implements Image_Backend
             return null;
         }
 
-        //keep the % within bounds of 0-100
+        // Keep the % within bounds of 0-100
         $transparencyPercent = min(100, max(0, $transparencyPercent));
 
         $new = $this->resizeRatio($width, $height);

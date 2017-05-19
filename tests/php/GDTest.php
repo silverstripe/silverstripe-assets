@@ -139,7 +139,7 @@ class GDTest extends SapphireTest
     /**
      * Tests that images are correctly transformed to greyscale
      */
-    function testGreyscale()
+    public function testGreyscale()
     {
 
         // Apply greyscaling to each image
@@ -217,5 +217,36 @@ class GDTest extends SapphireTest
         // Cache should refre to this file
         $this->assertTrue($gd->failedResample($fullPath, filemtime($fullPath)));
         $this->assertFalse($gd->failedResample($fullPath2, filemtime($fullPath2)));
+    }
+
+    /**
+     * Test that an image transparency parameter is passed to the GD backend.
+     *
+     * @dataProvider transparencyProvider
+     */
+    public function testImageTransparencyIsPassedToBackend($colour, $transparency, $expected)
+    {
+        $gd = $this->getMockBuilder(GDBackend::class)
+            ->setMethods(array('colourWeb2GD'))
+            ->getMock();
+
+        $gd->expects($this->once())
+            ->method('colourWeb2GD')
+            ->with($this->anything(), $colour, $expected);
+
+        $gd->loadFrom(realpath(__DIR__ . '/GDTest/images/test_jpg.jpg'));
+        $gd->paddedResize(100, 200, $colour, $transparency);
+    }
+
+    /**
+     * @return array[]
+     */
+    public function transparencyProvider()
+    {
+        return [
+            ['CCCCCC', 120, 100], // 120 is too high
+            ['DDDDDD', -50, 0], // -50 is too low
+            ['333333', 85, 85], // 85 is just right
+        ];
     }
 }

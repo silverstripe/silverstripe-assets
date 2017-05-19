@@ -19,8 +19,8 @@ class ImagickImageTest extends ImageTest
         }
 
         /**
- * @skipUpgrade
-*/
+         * @skipUpgrade
+         */
         Config::inst()->update(Injector::class, 'Image_Backend', ImagickBackend::class);
     }
 }

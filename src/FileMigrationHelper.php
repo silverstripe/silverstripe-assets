@@ -3,7 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Core\Object;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
@@ -13,8 +13,9 @@ use SilverStripe\Versioned\Versioned;
  *
  * This service does not alter these records in such a way that prevents downgrading back to 3.x
  */
-class FileMigrationHelper extends Object
+class FileMigrationHelper
 {
+    use Injectable;
 
     /**
      * Perform migration

@@ -2,7 +2,6 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Core\Object;
 use InvalidArgumentException;
 
 /**
@@ -68,16 +67,18 @@ class FileFinder
     /**
      * @var array
      */
-    protected $options;
+    protected $options = [];
 
     public function __construct()
     {
-        $this->options = array();
         $class = get_class($this);
 
         // We build our options array ourselves, because possibly no class or config manifest exists at this point
         do {
-            $this->options = array_merge(Object::static_lookup($class, 'default_options'), $this->options);
+            $this->options = array_merge(
+                $class::$default_options,
+                $this->options
+            );
         } while ($class = get_parent_class($class));
     }
 

@@ -2,7 +2,7 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Core\Object;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\Deprecation;
 use SilverStripe\Security\Permission;
@@ -11,8 +11,9 @@ use SilverStripe\Security\Security;
 /**
  * A collection of static methods for manipulating the filesystem.
  */
-class Filesystem extends Object
+class Filesystem
 {
+    use Configurable;
 
     /**
      * @config

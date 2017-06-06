@@ -302,7 +302,7 @@ class Upload extends Controller
             // If replacing files, make sure to update the OwnerID
             if (!$this->file->ID && $this->replaceFile && $existing) {
                 $this->file = $existing;
-                $this->file->OwnerID = Member::currentUserID();
+                $this->file->OwnerID = Security::getCurrentUser()->ID;
             }
             // Filename won't change if replacing
             return $filename;

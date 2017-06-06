@@ -37,7 +37,7 @@ class VersionedObject extends DataObject implements TestOnly
     public function canView($member = null)
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         // Expectation that versioned::canView will hide this object in draft

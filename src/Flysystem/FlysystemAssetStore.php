@@ -12,6 +12,7 @@ use League\Flysystem\Util;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Control\Session;
@@ -417,21 +418,23 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function grant($filename, $hash)
     {
+        $session = Controller::curr()->getRequest()->getSession();
         $fileID = $this->getFileID($filename, $hash);
-        $granted = Session::get(self::GRANTS_SESSION) ?: array();
+        $granted = $session->get(self::GRANTS_SESSION) ?: array();
         $granted[$fileID] = true;
-        Session::set(self::GRANTS_SESSION, $granted);
+        $session->set(self::GRANTS_SESSION, $granted);
     }
 
     public function revoke($filename, $hash)
     {
         $fileID = $this->getFileID($filename, $hash);
-        $granted = Session::get(self::GRANTS_SESSION) ?: array();
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(self::GRANTS_SESSION) ?: array();
         unset($granted[$fileID]);
         if ($granted) {
-            Session::set(self::GRANTS_SESSION, $granted);
+            $session->set(self::GRANTS_SESSION, $granted);
         } else {
-            Session::clear(self::GRANTS_SESSION);
+            $session->clear(self::GRANTS_SESSION);
         }
     }
 
@@ -455,7 +458,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Since permissions are applied to the non-variant only,
         // map back to the original file before checking
         $originalID = $this->removeVariant($fileID);
-        $granted = Session::get(self::GRANTS_SESSION) ?: array();
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(self::GRANTS_SESSION) ?: array();
         return !empty($granted[$originalID]);
     }
 

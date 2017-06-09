@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests\AssetControlExtensionTest;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 

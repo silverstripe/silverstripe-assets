@@ -2,15 +2,15 @@
 
 namespace SilverStripe\Assets;
 
+use Exception;
+use InvalidArgumentException;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Security\Member;
-use InvalidArgumentException;
-use Exception;
+use SilverStripe\Security\Security;
 
 /**
  * Manages uploads via HTML forms processed by PHP,
@@ -302,7 +302,10 @@ class Upload extends Controller
             // If replacing files, make sure to update the OwnerID
             if (!$this->file->ID && $this->replaceFile && $existing) {
                 $this->file = $existing;
-                $this->file->OwnerID = Member::currentUserID();
+                $user = Security::getCurrentUser();
+                if ($user) {
+                    $this->file->OwnerID = $user->ID;
+                }
             }
             // Filename won't change if replacing
             return $filename;

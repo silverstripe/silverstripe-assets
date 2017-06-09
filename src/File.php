@@ -27,6 +27,7 @@ use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\InheritedPermissionsExtension;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
+use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -416,7 +417,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public function canView($member = null)
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         $result = $this->extendedCan('canView', $member);
@@ -438,7 +439,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public function canEdit($member = null)
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         $result = $this->extendedCan('canEdit', $member);
@@ -465,7 +466,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public function canCreate($member = null, $context = array())
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         $result = $this->extendedCan('canCreate', $member, $context);
@@ -496,7 +497,7 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public function canDelete($member = null)
     {
         if (!$member) {
-            $member = Member::currentUser();
+            $member = Security::getCurrentUser();
         }
 
         $result = $this->extendedCan('canDelete', $member);
@@ -673,8 +674,8 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     protected function onBeforeWrite()
     {
         // Set default owner
-        if (!$this->isInDB() && !$this->OwnerID) {
-            $this->OwnerID = Member::currentUserID();
+        if (!$this->isInDB() && !$this->OwnerID && Security::getCurrentUser()) {
+            $this->OwnerID = Security::getCurrentUser()->ID;
         }
 
         $name = $this->getField('Name');

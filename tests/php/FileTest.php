@@ -619,7 +619,7 @@ class FileTest extends SapphireTest
 
     public function testSetsOwnerOnFirstWrite()
     {
-        Session::set('loggedInAs', null);
+        $this->logOut();
         $member1 = new Member();
         $member1->write();
         $member2 = new Member();
@@ -629,12 +629,12 @@ class FileTest extends SapphireTest
         $file1->write();
         $this->assertEquals(0, $file1->OwnerID, 'Owner not written when no user is logged in');
 
-        $member1->logIn();
+        $this->logInAs($member1);
         $file2 = new File();
         $file2->write();
         $this->assertEquals($member1->ID, $file2->OwnerID, 'Owner written when user is logged in');
 
-        $member2->logIn();
+        $this->logInAs($member2);
         $file2->forceChange();
         $file2->write();
         $this->assertEquals($member1->ID, $file2->OwnerID, 'Owner not overwritten on existing files');
@@ -646,7 +646,7 @@ class FileTest extends SapphireTest
         $secureFile = $this->objFromFixture(File::class, 'restrictedFolder-file3');
 
         // Test anonymous permissions
-        Session::set('loggedInAs', null);
+        $this->logOut();
         $this->assertFalse($file->canEdit(), "Anonymous users can't edit files");
 
         // Test permissionless user

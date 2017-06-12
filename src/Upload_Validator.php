@@ -3,12 +3,13 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Dev\SapphireTest;
 
 class Upload_Validator
 {
     use Injectable;
+    use Configurable;
 
     /**
      * Contains a list of the max file sizes shared by
@@ -19,6 +20,16 @@ class Upload_Validator
      * @var array
      */
     private static $default_max_file_size = array();
+
+    /**
+     * Set to false to assume is_uploaded_file() is true,
+     * Set to true to actually call is_uploaded_file()
+     * Useful to use when testing uploads
+     *
+     * @config
+     * @var bool
+     */
+    private static $use_is_uploaded_file = true;
 
     /**
      * Information about the temporary file produced
@@ -301,10 +312,14 @@ class Upload_Validator
             return false;
         }
 
+        // Note that some "max file size" errors leave "tmp_name" empty, so don't fail on this.
+        if (empty($this->tmpFile['tmp_name'])) {
+            return true;
+        }
+
         // Check if file is valid uploaded (with exception for unit testing)
-        // Note that some "max file size" errors leave "temp_name" empty, so don't fail on this.
-        $isRunningTests = (class_exists('SilverStripe\\Dev\\SapphireTest', false) && SapphireTest::is_running_test());
-        if (!empty($this->tmpFile['tmp_name']) && !is_uploaded_file($this->tmpFile['tmp_name']) && !$isRunningTests) {
+        $useUploadedFile = $this->config()->get('use_is_uploaded_file');
+        if ($useUploadedFile && !is_uploaded_file($this->tmpFile['tmp_name'])) {
             return false;
         }
 

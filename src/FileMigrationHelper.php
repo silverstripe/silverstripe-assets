@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DB;
@@ -36,8 +37,8 @@ class FileMigrationHelper
         }
 
         // Set max time and memory limit
-        increase_time_limit_to();
-        increase_memory_limit_to();
+        Environment::increaseTimeLimitTo();
+        Environment::increaseMemoryLimitTo();
 
         // Loop over all files
         $count = 0;

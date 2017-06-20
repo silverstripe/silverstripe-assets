@@ -6,6 +6,8 @@ use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Convert;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Flushable;
 use InvalidArgumentException;
@@ -82,7 +84,7 @@ class GDBackend implements Image_Backend, Flushable
     public function loadFrom($path)
     {
         // If we're working with image resampling, things could take a while.  Bump up the time-limit
-        increase_time_limit_to(300);
+        Environment::increaseTimeLimitTo(300);
         $this->resetResource();
 
         // Skip if path is unavailable
@@ -138,7 +140,7 @@ class GDBackend implements Image_Backend, Flushable
     public function loadFromContainer(AssetContainer $assetContainer)
     {
         // If we're working with image resampling, things could take a while.  Bump up the time-limit
-        increase_time_limit_to(300);
+        Environment::increaseTimeLimitTo(300);
         $this->resetResource();
 
         // Skip non-existant files
@@ -182,8 +184,8 @@ class GDBackend implements Image_Backend, Flushable
     {
         // Set defaults and clear resource
         $this->setImageResource(null);
-        $this->quality = $this->config()->default_quality;
-        $this->interlace = $this->config()->image_interlace;
+        $this->quality = $this->config()->get('default_quality');
+        $this->interlace = $this->config()->get('image_interlace');
     }
 
     /**
@@ -232,7 +234,7 @@ class GDBackend implements Image_Backend, Flushable
      */
     protected function checkAvailableMemory($imageInfo)
     {
-        $limit = translate_memstring(ini_get('memory_limit'));
+        $limit = Convert::memstring2bytes(ini_get('memory_limit'));
         if ($limit < 0) {
             return true; // memory_limit == -1
         }

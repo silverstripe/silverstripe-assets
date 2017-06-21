@@ -3,8 +3,11 @@
 namespace SilverStripe\Assets\Tests;
 
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Storage\DefaultAssetNameGenerator;
 use SilverStripe\Assets\Upload;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
+use SilverStripe\Assets\Upload_Validator;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Versioned\Versioned;
@@ -31,6 +34,9 @@ class UploadTest extends SapphireTest
         parent::setUp();
         Versioned::set_stage(Versioned::DRAFT);
         TestAssetStore::activate('UploadTest');
+
+        // Disable is_uploaded_file() in tests
+        Upload_Validator::config()->set('use_is_uploaded_file', false);
     }
 
     /**
@@ -89,6 +95,7 @@ class UploadTest extends SapphireTest
         $u2 = new Upload();
         $u2->loadIntoFile($tmpFile, null, $customFolder);
         $file2 = $u2->getFile();
+        $this->assertNotNull($file2);
         $this->assertEquals(
             'UploadTest-testUpload/UploadTest-testUpload.txt',
             $file2->getFilename()
@@ -173,11 +180,7 @@ class UploadTest extends SapphireTest
     public function testPHPUploadErrors()
     {
         $configMaxFileSizes = ['*' => '1k'];
-        Config::inst()->update(
-            'SilverStripe\\Assets\\Upload_Validator',
-            'default_max_file_size',
-            $configMaxFileSizes
-        );
+        Upload_Validator::config()->set('default_max_file_size', $configMaxFileSizes);
         // create tmp file
         $tmpFileName = 'myfile.jpg';
         $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
@@ -253,7 +256,7 @@ class UploadTest extends SapphireTest
             '[image]' => '1k',
             'txt' => 1000
         );
-        Config::inst()->update('SilverStripe\\Assets\\Upload_Validator', 'default_max_file_size', $configMaxFileSizes);
+        Upload_Validator::config()->set('default_max_file_size', $configMaxFileSizes);
         $v = new UploadTest\Validator();
 
         $retrievedSize = $v->getAllowedMaxFileSize('[image]');
@@ -459,6 +462,7 @@ class UploadTest extends SapphireTest
         // test upload into default folder
         $u = new Upload();
         $u->loadIntoFile($tmpFile);
+        /** @var File $file */
         $file = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload.tar.gz',
@@ -472,6 +476,7 @@ class UploadTest extends SapphireTest
 
         $u = new Upload();
         $u->loadIntoFile($tmpFile);
+        /** @var File $file2 */
         $file2 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload-v2.tar.gz',
@@ -490,6 +495,7 @@ class UploadTest extends SapphireTest
 
         $u = new Upload();
         $u->loadIntoFile($tmpFile);
+        /** @var File $file3 */
         $file3 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload-v3.tar.gz',
@@ -532,8 +538,8 @@ class UploadTest extends SapphireTest
         $u = new Upload();
         $u->setValidator($v);
         $u->loadIntoFile($tmpFile);
+        /** @var File $file */
         $file = $u->getFile();
-
         $this->assertEquals(
             'UploadTest-testUpload',
             $file->Name,
@@ -547,6 +553,7 @@ class UploadTest extends SapphireTest
         $u = new Upload();
         $u->setValidator($v);
         $u->loadIntoFile($tmpFile);
+        /** @var File $file2 */
         $file2 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload-v2',
@@ -589,8 +596,8 @@ class UploadTest extends SapphireTest
         $u = new Upload();
         $u->setValidator($v);
         $u->loadIntoFile($tmpFile);
+        /** @var File $file */
         $file = $u->getFile();
-
         $this->assertEquals(
             'UploadTest-testUpload',
             $file->Name,
@@ -605,6 +612,7 @@ class UploadTest extends SapphireTest
         $u->setValidator($v);
         $u->setReplaceFile(true);
         $u->loadIntoFile($tmpFile);
+        /** @var File $file2 */
         $file2 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload',
@@ -646,8 +654,8 @@ class UploadTest extends SapphireTest
         $u = new Upload();
         $u->setValidator($v);
         $u->loadIntoFile($tmpFile);
+        /** @var File $file */
         $file = $u->getFile();
-
         $this->assertEquals(
             'UploadTest-testUpload.txt',
             $file->Name,
@@ -663,6 +671,7 @@ class UploadTest extends SapphireTest
         $u->setValidator($v);
         $u->setReplaceFile(true);
         $u->loadIntoFile($tmpFile, new File());
+        /** @var File $file2 */
         $file2 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload.txt',
@@ -684,6 +693,7 @@ class UploadTest extends SapphireTest
         $u->setValidator($v);
         $u->setReplaceFile(false);
         $u->loadIntoFile($tmpFile, new File());
+        /** @var File $file3 */
         $file3 = $u->getFile();
         $this->assertEquals(
             'UploadTest-testUpload-v2.txt',
@@ -730,6 +740,7 @@ class UploadTest extends SapphireTest
         };
 
         // Image upload and generate a resampled image
+        /** @var Image $image */
         $image = $uploadImage();
         $resampled = $image->ResizedImage(123, 456);
         $resampledPath = TestAssetStore::getLocalPath($resampled);
@@ -737,7 +748,7 @@ class UploadTest extends SapphireTest
 
         // Re-upload the image, overwriting the original
         // Resampled images should removed when their parent file is overwritten
-        $image = $uploadImage();
+        $uploadImage();
         $this->assertFileExists($resampledPath);
     }
 
@@ -770,8 +781,9 @@ class UploadTest extends SapphireTest
         };
 
         // test empty file version prefix
-        Config::inst()->update('SilverStripe\\Assets\\Storage\\DefaultAssetNameGenerator', 'version_prefix', '');
+        Config::modify()->set(DefaultAssetNameGenerator::class, 'version_prefix', '');
 
+        /** @var Image $file1 */
         $file1 = $upload('UploadTest-IMG001.jpg');
         $this->assertEquals(
             'UploadTest-IMG001.jpg',
@@ -779,6 +791,7 @@ class UploadTest extends SapphireTest
             'File does not receive new name'
         );
 
+        /** @var Image $file2 */
         $file2 = $upload('UploadTest-IMG001.jpg');
         $this->assertEquals(
             'UploadTest-IMG002.jpg',
@@ -786,6 +799,7 @@ class UploadTest extends SapphireTest
             'File does receive new name'
         );
 
+        /** @var Image $file3 */
         $file3 = $upload('UploadTest-IMG002.jpg');
         $this->assertEquals(
             'UploadTest-IMG003.jpg',
@@ -793,6 +807,7 @@ class UploadTest extends SapphireTest
             'File does receive new name'
         );
 
+        /** @var Image $file4 */
         $file4 = $upload('UploadTest-IMG3.jpg');
         $this->assertEquals(
             'UploadTest-IMG3.jpg',
@@ -806,7 +821,7 @@ class UploadTest extends SapphireTest
         $file4->delete();
 
         // test '-v' file version prefix
-        Config::inst()->update('SilverStripe\\Assets\\Storage\\DefaultAssetNameGenerator', 'version_prefix', '-v');
+        Config::modify()->set(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
 
         $file1 = $upload('UploadTest2-IMG001.jpg');
         $this->assertEquals(

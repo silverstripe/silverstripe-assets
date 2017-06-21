@@ -4,10 +4,12 @@ namespace SilverStripe\Assets\Tests;
 
 require_once __DIR__  . "/ImageTest.php";
 
-use SilverStripe\Assets\Tests\ImageTest;
+use Intervention\Image\ImageManager;
+use SilverStripe\Assets\Image;
 use SilverStripe\Core\Config\Config;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
 class GDImageTest extends ImageTest
 {
@@ -21,21 +23,19 @@ class GDImageTest extends ImageTest
             return;
         }
 
-        /**
- * @skipUpgrade
-*/
-        Config::inst()->update(
-            'SilverStripe\\Core\\Injector\\Injector',
-            'Image_Backend',
-            'SilverStripe\\Assets\\GDBackend'
-        );
+        /** @skipUpgrade */
+        // this is a hack because the service locator cahces config settings meaning you can't properly override them
+        Injector::inst()->setConfigLocator(new SilverStripeServiceConfigurationLocator());
+        Config::modify()->set(Injector::class, ImageManager::class, [
+            'constructor' => [
+                [ 'driver' => 'gd' ],
+            ],
+        ]);
     }
 
-    public function tearDown()
+    public function testDriverType()
     {
-        $cache = Injector::inst()->get(CacheInterface::class . '.GDBackend_Manipulations');
-        $cache->clear();
-
-        parent::tearDown();
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $this->assertEquals('gd', $image->getImageBackend()->getImageManager()->config['driver']);
     }
 }

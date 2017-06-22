@@ -81,6 +81,7 @@ use InvalidArgumentException;
  *
  * @property string $Name Basename of the file
  * @property string $Title Title of the file
+ * @property string $Filename Full filename of this file
  * @property DBFile $File asset stored behind this File record
  * @property string $Content
  * @property string $ShowInSearch Boolean that indicates if file is shown in search. Doesn't apply to Folders
@@ -1099,6 +1100,9 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
         return $this->File->getAbsoluteSize();
     }
 
+    /**
+     * @return ValidationResult
+     */
     public function validate()
     {
         $result = ValidationResult::create();

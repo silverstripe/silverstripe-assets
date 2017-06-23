@@ -36,7 +36,6 @@ mappings:
   FileNameFilter: SilverStripe\Assets\FileNameFilter
   Filesystem: SilverStripe\Assets\Filesystem
   Folder: SilverStripe\Assets\Folder
-  GDBackend: SilverStripe\Assets\GDBackend
   Image: SilverStripe\Assets\Image
   Image_Backend: SilverStripe\Assets\Image_Backend
   ImagickBackend: SilverStripe\Assets\ImagickBackend
@@ -55,7 +54,6 @@ mappings:
   FileTest_MyCustomFile: SilverStripe\Assets\Tests\FileTest\MyCustomFile
   FolderTest: SilverStripe\Assets\Tests\FolderTest
   GDTest: SilverStripe\Assets\Tests\GDTest
-  GDBackend_ImageUnavailable: SilverStripe\Assets\Tests\GDTest\ImageUnavailable
   ProtectedFileControllerTest: SilverStripe\Assets\Tests\ProtectedFileControllerTest
   UploadTest: SilverStripe\Assets\Tests\UploadTest
   UploadTest_Validator: SilverStripe\Assets\Tests\UploadTest\UploadTest_Validator

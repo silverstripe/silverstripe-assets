@@ -1,0 +1,9 @@
+---
+Name: assetscache
+---
+SilverStripe\Core\Injector\Injector:
+  Psr\SimpleCache\CacheInterface.InterventionBackend_Manipulations:
+    factory: SilverStripe\Core\Cache\CacheFactory
+    constructor:
+      namespace: "Intervention_Manipulations"
+      defaultLifetime: 100

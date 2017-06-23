@@ -3,4 +3,4 @@ Name: assetsimage
 ---
 SilverStripe\Core\Injector\Injector:
   SilverStripe\Assets\Image_Backend:
-    class: SilverStripe\Assets\GDBackend
+    class: SilverStripe\Assets\InterventionBackend

@@ -2,10 +2,12 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Intervention\Image\ImageManager;
+use SilverStripe\Assets\Image;
 use SilverStripe\Assets\ImagickBackend;
-use SilverStripe\Assets\Tests\ImageTest;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
 class ImagickImageTest extends ImageTest
 {
@@ -18,9 +20,19 @@ class ImagickImageTest extends ImageTest
             return;
         }
 
-        /**
-         * @skipUpgrade
-         */
-        Config::inst()->update(Injector::class, 'Image_Backend', ImagickBackend::class);
+        /** @skipUpgrade */
+        // this is a hack because the service locator cahces config settings meaning you can't properly override them
+        Injector::inst()->setConfigLocator(new SilverStripeServiceConfigurationLocator());
+        Config::modify()->set(Injector::class, ImageManager::class, [
+            'constructor' => [
+                [ 'driver' => 'imagick' ],
+            ],
+        ]);
+    }
+
+    public function testDriverType()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $this->assertEquals('imagick', $image->getImageBackend()->getImageManager()->config['driver']);
     }
 }

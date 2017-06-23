@@ -57,6 +57,13 @@ interface Image_Backend
     public function getImageResource();
 
     /**
+     * Set the currently assigned image resource
+     *
+     * @param mixed $resource
+     */
+    public function setImageResource($resource);
+
+    /**
      * Write to the given asset store
      *
      * @param AssetStore $assetStore
@@ -73,6 +80,7 @@ interface Image_Backend
      * Write the backend to a local path
      *
      * @param string $path
+     * @return bool if the write was successful
      */
     public function writeTo($path);
 
@@ -129,7 +137,7 @@ interface Image_Backend
      * @param int $transparencyPercent
      * @return static
      */
-    public function paddedResize($width, $height, $backgroundColor = "FFFFFF", $transparencyPercent = 0);
+    public function paddedResize($width, $height, $backgroundColor = null);
 
     /**
      * Resize an image to cover the given width/height completely, and crop off any overhanging edges.

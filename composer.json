@@ -24,7 +24,7 @@
   },
   "require-dev": {
     "silverstripe/versioned": "^1@dev",
-    "phpunit/PHPUnit": "~4.8"
+    "phpunit/PHPUnit": "^5.7"
   },
   "suggest": {
     "ext-gd": "*"

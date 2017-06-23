@@ -442,12 +442,12 @@ trait ImageManipulation
         $cropRatio = $width / $height;
         // If cropping on the x axis compare heights
         if ($cropRatio < $imageRatio && $this->getHeight() < $height) {
-            return $this->Fill($this->getHeight() * $cropRatio, $this->getHeight());
+            return $this->Fill(round($this->getHeight() * $cropRatio), $this->getHeight());
         }
 
         // Otherwise we're cropping on the y axis (or not cropping at all) so compare widths
         if ($this->getWidth() < $width) {
-            return $this->Fill($this->getWidth(), $this->getWidth() / $cropRatio);
+            return $this->Fill($this->getWidth(), round($this->getWidth() / $cropRatio));
         }
 
         return $this->Fill($width, $height);

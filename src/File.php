@@ -189,10 +189,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             'potm', 'potx', 'pps', 'ppt', 'pptx', 'rtf', 'txt', 'xhtml', 'xls', 'xlsx', 'xltm', 'xltx', 'xml',
         ),
         'image' => array(
-            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'tif', 'tiff',
+            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff',
         ),
         'image/supported' => array(
-            'gif', 'jpeg', 'jpg', 'png'
+            'gif', 'jpeg', 'jpg', 'png', 'bmp', 'ico',
         ),
         'flash' => array(
             'fla', 'swf'
@@ -215,6 +215,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'jpeg' => Image::class,
         'png' => Image::class,
         'gif' => Image::class,
+        'bmp' => Image::class,
+        'ico' => Image::class,
     );
 
     /**

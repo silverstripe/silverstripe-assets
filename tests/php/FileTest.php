@@ -204,13 +204,16 @@ class FileTest extends SapphireTest
     {
         // Test specific categories
         $images = array(
-            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'tif', 'tiff'
+            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff'
         );
         $this->assertEquals($images, File::get_category_extensions('image'));
-        $this->assertEquals(array('gif', 'jpeg', 'jpg', 'png'), File::get_category_extensions('image/supported'));
+        $this->assertEquals(
+            array('bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'),
+            File::get_category_extensions('image/supported')
+        );
         $this->assertEquals($images, File::get_category_extensions(array('image', 'image/supported')));
         $this->assertEquals(
-            array('fla', 'gif', 'jpeg', 'jpg', 'png', 'swf'),
+            array('bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'),
             File::get_category_extensions(array('flash', 'image/supported'))
         );
 
@@ -235,9 +238,7 @@ class FileTest extends SapphireTest
 
     public function testSetNameChangesFilesystemOnWrite()
     {
-        /**
-         * @var File $file
-         */
+        /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');
         $this->logInWithPermission('ADMIN');
         $file->publishRecursive();

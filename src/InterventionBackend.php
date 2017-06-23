@@ -207,6 +207,22 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
+     * @return int The width of the image
+     */
+    public function getWidth()
+    {
+        return $this->getImageResource()->getWidth();
+    }
+
+    /**
+     * @return int The height of the image
+     */
+    public function getHeight()
+    {
+        return $this->getImageResource()->getHeight();
+    }
+
+    /**
      * Set the quality to a value between 0 and 100
      *
      * @param int $quality

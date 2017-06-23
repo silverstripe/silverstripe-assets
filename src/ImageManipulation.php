@@ -597,52 +597,13 @@ trait ImageManipulation
     }
 
     /**
-     * Get the dimensions of this Image.
-     *
-     * @param string $dim One of the following:
-     *  - "string": return the dimensions in string form
-     *  - "array": it'll return the raw result
-     *  - 0: return the height
-     *  - 1: return the width
-     * @return string|int|array|null
-     */
-    public function getDimensions($dim = "string")
-    {
-        if (!$this->getIsImage()) {
-            return null;
-        }
-
-        $content = $this->getString();
-        if (!$content) {
-            return null;
-        }
-
-        // Get raw content
-        $size = getimagesizefromstring($content);
-        if ($size === false) {
-            return null;
-        }
-
-        if ($dim === 'array') {
-            return $size;
-        }
-
-        // Get single dimension
-        if (is_numeric($dim)) {
-            return $size[$dim];
-        }
-
-        return "$size[0]x$size[1]";
-    }
-
-    /**
      * Get the width of this image.
      *
      * @return int
      */
     public function getWidth()
     {
-        return $this->getDimensions(0);
+        return $this->getImageBackend()->getWidth();
     }
 
     /**
@@ -652,7 +613,7 @@ trait ImageManipulation
      */
     public function getHeight()
     {
-        return $this->getDimensions(1);
+        return $this->getImageBackend()->getHeight();
     }
 
     /**

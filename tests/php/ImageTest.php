@@ -245,10 +245,10 @@ abstract class ImageTest extends SapphireTest
     public function testCacheFilename()
     {
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $imageFirst = $image->Pad(200, 200, 'CCCCCC');
+        $imageFirst = $image->Pad(200, 200, 'CCCCCC', 0);
         $imageFilename = $imageFirst->getURL();
             // Encoding of the arguments is duplicated from cacheFilename
-        $neededPart = 'Pad' . Convert::base64url_encode(array(200,200,'CCCCCC'));
+        $neededPart = 'Pad' . Convert::base64url_encode(array(200,200,'CCCCCC', 0));
         $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 

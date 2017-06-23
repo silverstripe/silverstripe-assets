@@ -381,11 +381,11 @@ class FileTest extends SapphireTest
 
     /**
      * @see http://open.silverstripe.org/ticket/5693
+     * @expectedException SilverStripe\ORM\ValidationException
      */
     public function testSetNameWithInvalidExtensionDoesntChangeFilesystem()
     {
         Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
-        $this->expectException(ValidationException::class);
 
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');

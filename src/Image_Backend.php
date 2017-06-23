@@ -126,9 +126,10 @@ interface Image_Backend
      * @param int $width
      * @param int $height
      * @param string $backgroundColor
+     * @param int $transparencyPercent
      * @return static
      */
-    public function paddedResize($width, $height, $backgroundColor = "FFFFFF");
+    public function paddedResize($width, $height, $backgroundColor = "FFFFFF", $transparencyPercent = 0);
 
     /**
      * Resize an image to cover the given width/height completely, and crop off any overhanging edges.

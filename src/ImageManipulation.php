@@ -171,14 +171,16 @@ trait ImageManipulation
     private static $asset_preview_height = 336;
 
     /**
-     * Fit image to specified dimensions and fill leftover space with a solid colour (default white). Use in templates with $Pad.
+     * Fit image to specified dimensions and fill leftover space with a solid colour (default white). Use in
+     * templates with $Pad.
      *
      * @param integer $width The width to size to
      * @param integer $height The height to size to
      * @param string $backgroundColor
+     * @param integer $transparencyPercent Level of transparency
      * @return AssetContainer
      */
-    public function Pad($width, $height, $backgroundColor = 'FFFFFF')
+    public function Pad($width, $height, $backgroundColor = 'FFFFFF', $transparencyPercent = 0)
     {
         if ($this->isSize($width, $height)) {
             return $this;
@@ -187,8 +189,8 @@ trait ImageManipulation
         $variant = $this->variantName(__FUNCTION__, $width, $height, $backgroundColor);
         return $this->manipulateImage(
             $variant,
-            function (Image_Backend $backend) use ($width, $height, $backgroundColor) {
-                return $backend->paddedResize($width, $height, $backgroundColor);
+            function (Image_Backend $backend) use ($width, $height, $backgroundColor, $transparencyPercent) {
+                return $backend->paddedResize($width, $height, $backgroundColor, $transparencyPercent);
             }
         );
     }

@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets;
 
+use Intervention\Image\Exception\NotSupportedException;
 use Intervention\Image\Exception\NotWritableException;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
@@ -172,14 +173,19 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array())
     {
-        $extension = pathinfo($filename, PATHINFO_EXTENSION);
-        return $assetStore->setFromString(
-            $this->getImageResource()->encode($extension, $this->getQuality())->getEncoded(),
-            $filename,
-            $hash,
-            $variant,
-            $config
-        );
+        try {
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+            return $assetStore->setFromString(
+                $this->getImageResource()->encode($extension, $this->getQuality())->getEncoded(),
+                $filename,
+                $hash,
+                $variant,
+                $config
+            );
+        } catch (NotSupportedException $e) {
+            return null;
+        }
     }
 
     /**

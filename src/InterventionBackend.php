@@ -154,8 +154,12 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setImageResource($image)
     {
-        // make sure the image is correctly orientated
-        $image->orientate();
+        try {
+            // try to correctly orientate the image based on it's exif data
+            $image->orientate();
+        } catch (NotSupportedException $e) {
+            // noop
+        }
         $this->image = $image;
         return $this;
     }

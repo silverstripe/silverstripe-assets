@@ -43,9 +43,33 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     private $cache;
 
+    /**
+     * @var string
+     */
+    private $tempPath;
+
     public function __construct(AssetContainer $assetContainer = null)
     {
         $this->setAssetContainer($assetContainer);
+    }
+
+    /**
+     * @return string The temporary local path for this image
+     */
+    public function getTempPath()
+    {
+        return $this->tempPath;
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return $this
+     */
+    public function setTempPath($path)
+    {
+        $this->tempPath = $path;
+        return $this;
     }
 
     /**
@@ -128,7 +152,22 @@ class InterventionBackend implements Image_Backend, Flushable
         // Handle resource
         try {
             $this->markStart($hash);
-            $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
+            // write the file to a local path so we can extract exif data if it exists.
+            // Currently exif data can only be read from file paths and not streams
+            $path = tempnam(TEMP_FOLDER, 'interventionimage_');
+            if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
+                //tmpnam creates a file, we should clean it up if we are changing the path name
+                unlink($path);
+                $path .= "." . $extension;
+            }
+            $bytesWritten = file_put_contents($path, $assetContainer->getStream());
+            // if we fail to write, then load from stream
+            if ($bytesWritten === false) {
+                $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
+            } else {
+                $this->setTempPath($path);
+                $this->setImageResource($this->getImageManager()->make($path));
+            }
             $this->markEnd($hash);
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
@@ -182,12 +221,6 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setImageResource($image)
     {
-        try {
-            // try to correctly orientate the image based on it's exif data
-            $image->orientate();
-        } catch (NotSupportedException $e) {
-            // noop
-        }
         $this->image = $image;
         return $this;
     }
@@ -206,6 +239,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array())
     {
+        try {
+            $this->getImageResource()->orientate();
+        } catch (NotSupportedException $e) {
+            // noop - we can't orientate, don't worry about it
+        }
         try {
             $resource = $this->getImageResource();
             if (!$resource) {
@@ -230,6 +268,7 @@ class InterventionBackend implements Image_Backend, Flushable
      *
      * @param string $path
      * @return bool If the writing was successful
+     * @throws BadMethodCallException If image isn't valid
      */
     public function writeTo($path)
     {
@@ -464,6 +503,10 @@ class InterventionBackend implements Image_Backend, Flushable
         if ($this->image) {
             $this->image->destroy();
         }
+        // remove our temp file if it exists
+        if (file_exists($this->getTempPath())) {
+            unlink($this->getTempPath());
+        }
     }
 
     /**
@@ -476,7 +519,7 @@ class InterventionBackend implements Image_Backend, Flushable
     public static function flush()
     {
         /** @var CacheInterface $cache */
-        $cache =  Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
+        $cache = Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
         $cache->clear();
     }
 }

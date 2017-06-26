@@ -6,6 +6,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject;
+use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
@@ -19,8 +20,27 @@ class AssetControlExtensionTest extends SapphireTest
 
     protected static $extra_dataobjects = array(
         VersionedObject::class,
-        TestObject::class
+        TestObject::class,
     );
+
+    protected static $required_extensions = [
+        VersionedObject::class => [
+            Versioned::class,
+        ],
+    ];
+
+    public static function setUpBeforeClass()
+    {
+        try {
+            parent::setUpBeforeClass();
+        } catch (\InvalidArgumentException $e) {
+            static::markTestSkipped('Unable to build databas');
+        }
+
+        if (!ModuleLoader::getModule('silverstripe/versioned')) {
+            static::markTestSkipped('Versioned module is required');
+        }
+    }
 
     public function setUp()
     {

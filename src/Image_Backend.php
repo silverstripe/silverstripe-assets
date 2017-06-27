@@ -36,6 +36,16 @@ interface Image_Backend
     public function __construct(AssetContainer $assetContainer = null);
 
     /**
+     * @return int The width of the image
+     */
+    public function getWidth();
+
+    /**
+     * @return int The height of the image
+     */
+    public function getHeight();
+
+    /**
      * Populate the backend with a given object
      *
      * @param AssetContainer $assetContainer Object to load from

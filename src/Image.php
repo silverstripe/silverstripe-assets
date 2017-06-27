@@ -100,7 +100,10 @@ class Image extends File implements ShortcodeHandler
             HiddenField::create('ID', $this->ID)
         );
 
-        if ($dimensions = $this->getDimensions()) {
+        $width = $this->getWidth();
+        $height = $this->getHeight();
+        if ($width && $height) {
+            $dimensions = sprintf('%dx%d', $width, $height);
             $content->insertAfter(
                 'TitleHeader',
                 LiteralField::create(

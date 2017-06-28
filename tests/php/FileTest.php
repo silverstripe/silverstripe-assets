@@ -9,11 +9,11 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\FileTest\MyCustomFile;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
-use SilverStripe\CMS\Model\ErrorPage;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
@@ -41,31 +41,15 @@ class FileTest extends SapphireTest
         // Set backend root to /ImageTest
         TestAssetStore::activate('FileTest');
 
-        // Create a test folders for each of the fixture references
-        $folderIDs = $this->allFixtureIDs(Folder::class);
-        foreach ($folderIDs as $folderID) {
-            /** @var Folder $folder */
-            $folder = DataObject::get_by_id(Folder::class, $folderID);
-            $filePath = ASSETS_PATH . '/FileTest/' . $folder->getFilename();
-            Filesystem::makeFolder($filePath);
-        }
-
         // Create a test files for each of the fixture references
-        $fileIDs = $this->allFixtureIDs(File::class);
+        $fileIDs = array_merge(
+            $this->allFixtureIDs(File::class),
+            $this->allFixtureIDs(Image::class)
+        );
         foreach ($fileIDs as $fileID) {
-            /**
-             * @var File $file
-             */
+            /** @var File $file */
             $file = DataObject::get_by_id(File::class, $fileID);
-            $root = ASSETS_PATH . '/FileTest/';
-            if ($folder = $file->Parent()) {
-                $root .= $folder->getFilename();
-            }
-            $path = $root . substr($file->getHash(), 0, 10) . '/' . basename($file->getFilename());
-            Filesystem::makeFolder(dirname($path));
-            $fh = fopen($path, "w+");
-            fwrite($fh, str_repeat('x', 1000000));
-            fclose($fh);
+            $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
         }
 
         // Conditional fixture creation in case the 'cms' module is installed
@@ -222,6 +206,38 @@ class FileTest extends SapphireTest
         $this->assertTrue($result->isValid());
     }
 
+    public function testInvalidImageManipulations()
+    {
+        // Existant non-image
+        /** @var File $pdf */
+        $pdf = $this->objFromFixture(File::class, 'pdf');
+        $this->assertEquals(0, $pdf->getWidth());
+        $this->assertEquals(0, $pdf->getHeight());
+        $this->assertFalse($pdf->getIsImage());
+        $this->assertTrue($pdf->exists());
+        $this->assertNull($pdf->Pad(100, 100));
+
+        // Non-existant image
+        $image = new Image();
+        $image->Filename = 'folder/some-non-file.jpg';
+        $image->Hash = sha1('oogleeboogle');
+        $image->write();
+        $this->assertEquals(0, $image->getWidth());
+        $this->assertEquals(0, $image->getHeight());
+        $this->assertTrue($image->getIsImage());
+        $this->assertFalse($image->exists());
+        $this->assertNull($image->Pad(100, 100));
+
+        // Existant but invalid files (see setUp())
+        /** @var Image $broken */
+        $broken = $this->objFromFixture(Image::class, 'gif');
+        $this->assertEquals(0, $broken->getWidth());
+        $this->assertEquals(0, $broken->getHeight());
+        $this->assertTrue($broken->getIsImage());
+        $this->assertTrue($broken->exists());
+        $this->assertNull($broken->Pad(100, 100));
+    }
+
     public function testAppCategory()
     {
         // Test various categories
@@ -257,30 +273,15 @@ class FileTest extends SapphireTest
         $this->assertNotEmpty(File::get_category_extensions('video'));
     }
 
-    /**
-     * @dataProvider allowedExtensions
-     * @param string $extension
-     */
-    public function testAllFilesHaveCategory($extension)
+    public function testAllFilesHaveCategory()
     {
-        $this->assertNotEmpty(
-            File::get_app_category($extension),
-            "Assert that extension {$extension} has a valid category"
-        );
-    }
-
-    /**
-     * Gets the list of all extensions for testing
-     *
-     * @return array
-     */
-    public function allowedExtensions()
-    {
-        $args = array();
+        // Can't use dataprovider due to https://github.com/sebastianbergmann/phpunit/issues/1206
         foreach (array_filter(File::config()->get('allowed_extensions')) as $ext) {
-            $args[] = array($ext);
+            $this->assertNotEmpty(
+                File::get_app_category($ext),
+                "Assert that extension {$ext} has a valid category"
+            );
         }
-        return $args;
     }
 
     public function testSetNameChangesFilesystemOnWrite()
@@ -381,10 +382,10 @@ class FileTest extends SapphireTest
 
     /**
      * @see http://open.silverstripe.org/ticket/5693
-     * @expectedException SilverStripe\ORM\ValidationException
      */
     public function testSetNameWithInvalidExtensionDoesntChangeFilesystem()
     {
+        $this->expectException(ValidationException::class);
         Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
 
         /** @var File $file */

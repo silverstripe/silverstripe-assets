@@ -587,7 +587,8 @@ trait ImageManipulation
      */
     public function getImageBackend()
     {
-        if (!$this->getIsImage()) {
+        // Skip if non-image or file is broken
+        if (!$this->getIsImage() || !$this->exists()) {
             return null;
         }
 
@@ -603,7 +604,11 @@ trait ImageManipulation
      */
     public function getWidth()
     {
-        return $this->getImageBackend()->getWidth();
+        $backend = $this->getImageBackend();
+        if ($backend) {
+            return $backend->getWidth();
+        }
+        return 0;
     }
 
     /**
@@ -613,7 +618,11 @@ trait ImageManipulation
      */
     public function getHeight()
     {
-        return $this->getImageBackend()->getHeight();
+        $backend = $this->getImageBackend();
+        if ($backend) {
+            return $backend->getHeight();
+        }
+        return 0;
     }
 
     /**

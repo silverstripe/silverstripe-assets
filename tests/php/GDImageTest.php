@@ -2,18 +2,15 @@
 
 namespace SilverStripe\Assets\Tests;
 
-require_once __DIR__  . "/ImageTest.php";
-
 use Intervention\Image\ImageManager;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Core\Config\Config;
-use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
 class GDImageTest extends ImageTest
 {
-
     public function setUp()
     {
         parent::setUp();
@@ -35,7 +32,10 @@ class GDImageTest extends ImageTest
 
     public function testDriverType()
     {
+        /** @var Image $image */
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $this->assertEquals('gd', $image->getImageBackend()->getImageManager()->config['driver']);
+        /** @var InterventionBackend $backend */
+        $backend = $image->getImageBackend();
+        $this->assertEquals('gd', $backend->getImageManager()->config['driver']);
     }
 }

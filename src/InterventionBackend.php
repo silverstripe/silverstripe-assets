@@ -2,12 +2,16 @@
 
 namespace SilverStripe\Assets;
 
+use BadMethodCallException;
+use Intervention\Image\Constraint;
+use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\Exception\NotSupportedException;
 use Intervention\Image\Exception\NotWritableException;
+use Intervention\Image\Image as InterventionImage;
+use Intervention\Image\ImageManager;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
-use Intervention\Image\ImageManager;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 
@@ -20,7 +24,7 @@ class InterventionBackend implements Image_Backend, Flushable
     private $container;
 
     /**
-     * @var \Intervention\Image\Image
+     * @var InterventionImage
      */
     private $image;
 
@@ -115,10 +119,20 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function loadFromContainer(AssetContainer $assetContainer)
     {
+        // Avoid repeat load of broken images
         $hash = $assetContainer->getHash();
-        $this->markStart($hash);
-        $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
-        $this->markEnd($hash);
+        if ($this->hasFailed($hash)) {
+            return $this;
+        }
+
+        // Handle resource
+        try {
+            $this->markStart($hash);
+            $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
+            $this->markEnd($hash);
+        } catch (NotReadableException $ex) {
+            // Handle unsupported image encoding on load (will be marked as failed)
+        }
         return $this;
     }
 
@@ -130,26 +144,40 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function loadFrom($path)
     {
-        $this->setImageResource($this->getImageManager()->make($path));
+        // Avoid repeat load of broken images
+        $hash = sha1($path);
+        if ($this->hasFailed($hash)) {
+            return $this;
+        }
+
+        // Handle resource
+        try {
+            $this->markStart($hash);
+            $this->setImageResource($this->getImageManager()->make($path));
+            $this->markEnd($hash);
+        } catch (NotReadableException $ex) {
+            // Handle unsupported image encoding on load (will be marked as failed)
+        }
+
         return $this;
     }
 
     /**
      * Get the currently assigned image resource
+     * Note: This method may return null if error
      *
-     * @return \Intervention\Image\Image
-     * @return $this
+     * @return InterventionImage
      */
     public function getImageResource()
     {
-        if (!$this->image && $this->getAssetContainer() && !$this->hasFailed($this->getAssetContainer()->getHash())) {
+        if (!$this->image && $this->getAssetContainer()) {
             $this->loadFromContainer($this->getAssetContainer());
         }
         return $this->image;
     }
 
     /**
-     * @param \Intervention\Image\Image $image
+     * @param InterventionImage $image
      * @return $this
      */
     public function setImageResource($image)
@@ -174,14 +202,19 @@ class InterventionBackend implements Image_Backend, Flushable
      * @param array $config Write options. {@see AssetStore}
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the given data.
+     * @throws BadMethodCallException If image isn't valid
      */
     public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array())
     {
         try {
-            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $resource = $this->getImageResource();
+            if (!$resource) {
+                throw new BadMethodCallException("Cannot write corrupt file to store");
+            }
 
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
             return $assetStore->setFromString(
-                $this->getImageResource()->encode($extension, $this->getQuality())->getEncoded(),
+                $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,
                 $hash,
                 $variant,
@@ -201,7 +234,11 @@ class InterventionBackend implements Image_Backend, Flushable
     public function writeTo($path)
     {
         try {
-            $this->image->save($path, $this->getQuality());
+            $resource = $this->getImageResource();
+            if (!$resource) {
+                throw new BadMethodCallException("Cannot write corrupt file to store");
+            }
+            $resource->save($path, $this->getQuality());
         } catch (NotWritableException $e) {
             return false;
         }
@@ -221,7 +258,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getWidth()
     {
-        return $this->getImageResource()->getWidth();
+        $resource = $this->getImageResource();
+        if ($resource) {
+            return $resource->getWidth();
+        }
+        return 0;
     }
 
     /**
@@ -229,7 +270,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getHeight()
     {
-        return $this->getImageResource()->getHeight();
+        $resource = $this->getImageResource();
+        if ($resource) {
+            return $resource->getHeight();
+        }
+        return 0;
     }
 
     /**
@@ -253,7 +298,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resize($width, $height)
     {
-        return $this->createCloneWithResource($this->getImageResource()->resize($width, $height));
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->resize($width, $height));
     }
 
     /**
@@ -268,10 +317,14 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeRatio($width, $height, $useAsMinimum = false)
     {
-        return $this->createCloneWithResource($this->getImageResource()->resize(
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->resize(
             $width,
             $height,
-            function ($constraint) use ($useAsMinimum) {
+            function (Constraint $constraint) use ($useAsMinimum) {
                 $constraint->aspectRatio();
                 if (!$useAsMinimum) {
                     $constraint->upsize();
@@ -288,7 +341,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByWidth($width)
     {
-        return $this->createCloneWithResource($this->getImageResource()->widen($width));
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->widen($width));
     }
 
     /**
@@ -299,7 +356,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByHeight($height)
     {
-        return $this->createCloneWithResource($this->getImageResource()->heighten($height));
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->heighten($height));
     }
 
     /**
@@ -308,17 +369,23 @@ class InterventionBackend implements Image_Backend, Flushable
      * @param int $width
      * @param int $height
      * @param string $backgroundColor
+     * @param int $transparencyPercent
      * @return static
      */
     public function paddedResize($width, $height, $backgroundColor = "FFFFFF", $transparencyPercent = 0)
     {
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+
         // caclulate the background colour
-        $background = $this->getImageResource()->getDriver()->parseColor($backgroundColor)->format('array');
+        $background = $resource->getDriver()->parseColor($backgroundColor)->format('array');
         // convert transparancy % to alpha
         $background[3] = 1 - round(min(100, max(0, $transparencyPercent)) / 100, 2);
 
         // resize the image maintaining the aspect ratio and then pad out the canvas
-        return $this->createCloneWithResource($this->getImageResource()->resize($width, $height, function ($constraint) {
+        return $this->createCloneWithResource($resource->resize($width, $height, function (Constraint $constraint) {
             $constraint->aspectRatio();
         })->resizeCanvas(
             $width,
@@ -338,7 +405,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function croppedResize($width, $height)
     {
-        return $this->createCloneWithResource($this->getImageResource()->fit($width, $height));
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->fit($width, $height));
     }
 
     /**
@@ -351,11 +422,15 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function crop($top, $left, $width, $height)
     {
-        return $this->createCloneWithResource($this->getImageResource()->crop($width, $height, $left, $top));
+        $resource = $this->getImageResource();
+        if (!$resource) {
+            return null;
+        }
+        return $this->createCloneWithResource($resource->crop($width, $height, $left, $top));
     }
 
     /**
-     * @param \Intervention\Image\Image $resource
+     * @param InterventionImage $resource
      * @return static
      */
     protected function createCloneWithResource($resource)

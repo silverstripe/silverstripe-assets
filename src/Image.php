@@ -5,8 +5,6 @@ namespace SilverStripe\Assets;
 use SilverStripe\Core\Convert;
 use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\LiteralField;
-use SilverStripe\View\Parsers\ShortcodeParser;
-use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\Forms\Tab;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\TabSet;
@@ -19,7 +17,7 @@ use SilverStripe\Forms\FieldList;
 /**
  * Represents an Image
  */
-class Image extends File implements ShortcodeHandler
+class Image extends File
 {
     /**
      * @config

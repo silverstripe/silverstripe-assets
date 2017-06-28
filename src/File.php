@@ -32,8 +32,6 @@ use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
-use SilverStripe\View\Parsers\ShortcodeHandler;
-use SilverStripe\View\Parsers\ShortcodeParser;
 use InvalidArgumentException;
 
 /**
@@ -96,7 +94,7 @@ use InvalidArgumentException;
  * @mixin Versioned
  * @mixin InheritedPermissionsExtension
  */
-class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
+class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
 {
     use ImageManipulation;
 

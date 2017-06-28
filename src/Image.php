@@ -39,9 +39,9 @@ class Image extends File implements ShortcodeHandler
      */
     private static $plural_name = "Images";
 
-    public function __construct($record = null, $isSingleton = false, $model = null, $queryParams = array())
+    public function __construct($record = null, $isSingleton = false, $queryParams = array())
     {
-        parent::__construct($record, $isSingleton, $model, $queryParams);
+        parent::__construct($record, $isSingleton, $queryParams);
         $this->File->setAllowedCategories('image/supported');
     }
 

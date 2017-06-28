@@ -44,13 +44,13 @@ class FileNameFilter
      * @config
      * @var array See {@link setReplacements()}.
      */
-    private static $default_replacements = array(
+    private static $default_replacements = [
         '/\s/' => '-', // remove whitespace
-        '/_/' => '-', // underscores to dashes
-        '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
-        '/[\-]{2,}/' => '-', // remove duplicate dashes
-        '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
-    );
+        '/[^-_A-Za-z0-9+.]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash, dot, and underscore
+        '/_{2,}/' => '_', // remove duplicate underscores (since `__` is variant separator)
+        '/-{2,}/' => '-', // remove duplicate dashes
+        '/^[-_\.]+/' => '', // Remove all leading dots, dashes or underscores
+    ];
 
     /**
      * @var array See {@link setReplacements()}

@@ -14,16 +14,16 @@ class FileNameFilterTest extends SapphireTest
     {
         parent::setUp();
 
-        Config::inst()->update(
-            'SilverStripe\\Assets\\FileNameFilter',
+        // Reset to default
+        FileNameFilter::config()->set(
             'default_replacements',
-            array(
-            '/\s/' => '-', // remove whitespace
-            '/_/' => '-', // underscores to dashes
-            '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
-            '/[\-]{2,}/' => '-', // remove duplicate dashes
-            '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
-            )
+            [
+                '/\s/' => '-', // remove whitespace
+                '/[^-_A-Za-z0-9+.]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash, dot, and underscore
+                '/_{2,}/' => '_', // remove duplicate underscores (since `__` is variant separator)
+                '/-{2,}/' => '-', // remove duplicate dashes
+                '/^[-_\.]+/' => '', // Remove all leading dots, dashes or underscores
+            ]
         );
     }
 
@@ -33,7 +33,7 @@ class FileNameFilterTest extends SapphireTest
         $filter = new FileNameFilter();
         $filter->setTransliterator(false);
         $this->assertEquals(
-            'Brtchen-fr-all-mit-Unterstrich.jpg',
+            'Brtchen-fr-all-mit_Unterstrich.jpg',
             $filter->filter($name)
         );
     }
@@ -44,7 +44,7 @@ class FileNameFilterTest extends SapphireTest
         $filter = new FileNameFilter();
         $filter->setTransliterator(new Transliterator());
         $this->assertEquals(
-            'Broetchen-fuer-alle-mit-Unterstrich.jpg',
+            'Broetchen-fuer-alle-mit_Unterstrich.jpg',
             $filter->filter($name)
         );
     }
@@ -122,18 +122,22 @@ class FileNameFilterTest extends SapphireTest
         $this->assertEquals('test-doc.txt', $filter->filter($name));
     }
 
-    public function testUnderscoresReplacedWithDashes()
+    public function testUnderscoresKept()
     {
         $name = 'test_doc.txt';
         $filter = new FileNameFilter();
-        $this->assertEquals('test-doc.txt', $filter->filter($name));
+        $this->assertEquals('test_doc.txt', $filter->filter($name));
+
+        $name = 'test_____doc.txt';
+        $filter = new FileNameFilter();
+        $this->assertEquals('test_doc.txt', $filter->filter($name));
     }
 
     public function testNonAsciiCharsReplacedWithDashes()
     {
         $name = '!@#$%^test_123@##@$#%^.txt';
         $filter = new FileNameFilter();
-        $this->assertEquals('test-123.txt', $filter->filter($name));
+        $this->assertEquals('test_123.txt', $filter->filter($name));
     }
 
     public function testDuplicateDashesRemoved()

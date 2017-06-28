@@ -8,6 +8,7 @@ use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\Deprecation;
@@ -963,18 +964,21 @@ class File extends DataObject implements ShortcodeHandler, AssetContainer, Thumb
     public static function get_icon_for_extension($extension)
     {
         $extension = strtolower($extension);
+        $module = ModuleLoader::getModule('silverstripe/framework');
 
         // Check if exact extension has an icon
-        if (!file_exists(FRAMEWORK_PATH ."/client/images/app_icons/{$extension}_92.png")) {
+        if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
+            // Fallback to category-specific icon
             $extension = static::get_app_category($extension);
 
-            // Fallback to category specific icon
-            if (!file_exists(FRAMEWORK_PATH ."/client/images/app_icons/{$extension}_92.png")) {
-                $extension ="generic";
+
+            // Fallback to  generic icon
+            if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
+                $extension = "generic";
             }
         }
 
-        return FRAMEWORK_DIR ."/client/images/app_icons/{$extension}_92.png";
+        return $module->getRelativeResourcePath("client/images/app_icons/{$extension}_92.png");
     }
 
     /**

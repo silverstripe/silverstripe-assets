@@ -43,6 +43,7 @@ class FileShortcodeProviderTest extends SapphireTest
         $this->assertEquals('', $parser->parse('[file_link]Example Content[/file_link]'));
 
         if (class_exists(ErrorPage::class)) {
+            ErrorPage::singleton()->requireDefaultRecords();
             /** @var ErrorPage $errorPage */
             $errorPage = ErrorPage::get()->filter('ErrorCode', 404)->first();
             $this->assertEquals(

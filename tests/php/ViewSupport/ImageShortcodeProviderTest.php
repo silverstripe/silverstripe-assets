@@ -4,6 +4,8 @@ namespace SilverStripe\Assets\Tests\ViewSupport;
 
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
+use SilverStripe\Assets\Image;
+use SilverStripe\Assets\ViewSupport\ImageShortcodeProvider;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,9 +20,9 @@ class ImageShortcodeProviderTest extends SapphireTest
 
 
     public function testShortcodeHandlerFallsBackToFileProperties() {
-        $image = $this->objFromFixture('SilverStripe\\Assets\\Image', 'imageWithTitle');
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $parser = new ShortcodeParser();
-        $parser->register('image', array('SilverStripe\\Assets\\ViewSupport\\ImageShortcodeProvider', 'handle_shortcode'));
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
         $this->assertEquals(
             sprintf(
@@ -32,9 +34,9 @@ class ImageShortcodeProviderTest extends SapphireTest
     }
 
     public function testShortcodeHandlerUsesShortcodeProperties() {
-        $image = $this->objFromFixture('SilverStripe\\Assets\\Image', 'imageWithTitle');
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $parser = new ShortcodeParser();
-        $parser->register('image', array('SilverStripe\\Assets\\ViewSupport\\ImageShortcodeProvider', 'handle_shortcode'));
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
         $this->assertEquals(
             '<img alt="Alt content" title="Title content">',
@@ -46,9 +48,9 @@ class ImageShortcodeProviderTest extends SapphireTest
     }
 
     public function testShortcodeHandlerAddsDefaultAttributes() {
-        $image = $this->objFromFixture('SilverStripe\\Assets\\Image', 'imageWithoutTitle');
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
         $parser = new ShortcodeParser();
-        $parser->register('image', array('SilverStripe\\Assets\\ViewSupport\\ImageShortcodeProvider', 'handle_shortcode'));
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
         $this->assertEquals(
             sprintf(

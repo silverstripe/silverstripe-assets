@@ -5,6 +5,8 @@ namespace SilverStripe\Assets\Tests\ViewSupport;
 use SilverStripe\CMS\Model\ErrorPage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
+use SilverStripe\Assets\ViewSupport\FileShortcodeProvider;
+use SilverStripe\Assets\File;
 
 /**
  * Class FileShortcodeProviderTest
@@ -15,10 +17,10 @@ class FileShortcodeProviderTest extends SapphireTest
     protected static $fixture_file = '../FileTest.yml';
 
     public function testLinkShortcodeHandler() {
-        $testFile = $this->objFromFixture('SilverStripe\\Assets\\File', 'asdf');
+        $testFile = $this->objFromFixture(File::class, 'asdf');
 
         $parser = new ShortcodeParser();
-        $parser->register('file_link', array('SilverStripe\\Assets\\ViewSupport\\FileShortcodeProvider', 'handle_shortcode'));
+        $parser->register('file_link', [FileShortcodeProvider::class, 'handle_shortcode']);
 
         $fileShortcode = sprintf('[file_link,id=%d]', $testFile->ID);
         $fileEnclosed  = sprintf('[file_link,id=%d]Example Content[/file_link]', $testFile->ID);

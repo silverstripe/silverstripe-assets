@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Shortcodes;
 
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Convert;
+use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
@@ -65,7 +66,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
         // Build the HTML tag
         $attrs = array_merge(
-        // Set overrideable defaults
+            // Set overrideable defaults
             ['src' => '', 'alt' => $record->Title],
             // Use all other shortcode arguments
             $args,
@@ -78,12 +79,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return (bool)$v;
         });
 
-        // Condense to HTML attribute string
-        $attrsStr = implode(' ', array_map(function ($name) use ($attrs) {
-            return Convert::raw2att($name) . '="' . Convert::raw2att($attrs[$name]) . '"';
-        }, array_keys($attrs)));
-
-        return '<img ' . $attrsStr . ' />';
+        return HTML::createTag('img', $attrs);
     }
 
     /**

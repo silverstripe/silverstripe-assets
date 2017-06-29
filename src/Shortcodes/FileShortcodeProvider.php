@@ -6,6 +6,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
@@ -59,18 +60,15 @@ class FileShortcodeProvider implements ShortcodeHandler
         // build the HTML tag
         if ($content) {
             // build some useful meta-data (file type and size) as data attributes
-            $attrs = ' ';
+            $attrs = [ 'href' => $record->Link() ];
             if ($record instanceof File) {
-                foreach (array(
-                             'class'     => 'file',
-                             'data-type' => $record->getExtension(),
-                             'data-size' => $record->getSize()
-                         ) as $name => $value) {
-                    $attrs .= sprintf('%s="%s" ', $name, $value);
-                }
+                $attrs = array_merge($attrs, [
+                     'class' => 'file',
+                     'data-type' => $record->getExtension(),
+                     'data-size' => $record->getSize(),
+                ]);
             }
-
-            return sprintf('<a href="%s" %s>%s</a>', $record->Link(), trim($attrs), $parser->parse($content));
+            return HTML::createTag('a', $attrs, $parser->parse($content));
         } else {
             return $record->Link();
         }
@@ -96,14 +94,12 @@ class FileShortcodeProvider implements ShortcodeHandler
         $file = File::get()->byID($args['id']);
         if (!$file) {
             $errorCode = 404;
-
             return null;
         }
 
         // Check if the file is viewable
         if (!$file->canView()) {
             $errorCode = 403;
-
             return null;
         }
 

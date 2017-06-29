@@ -2,17 +2,16 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use InvalidArgumentException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\View\Parsers\ShortcodeParser;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
-use InvalidArgumentException;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests

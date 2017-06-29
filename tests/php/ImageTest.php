@@ -264,6 +264,4 @@ abstract class ImageTest extends SapphireTest
         $resampled2 = $resampled->ScaleWidth(5);
         $this->assertEquals($resampled2->TestProperty, $testString);
     }
-
-
 }

@@ -2,17 +2,16 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use InvalidArgumentException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\View\Parsers\ShortcodeParser;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
-use InvalidArgumentException;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
@@ -264,62 +263,5 @@ abstract class ImageTest extends SapphireTest
         $this->assertEquals($resampled->TestProperty, $testString);
         $resampled2 = $resampled->ScaleWidth(5);
         $this->assertEquals($resampled2->TestProperty, $testString);
-    }
-
-    public function testShortcodeHandlerFallsBackToFileProperties()
-    {
-        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $parser = new ShortcodeParser();
-        $parser->register('image', array(Image::class, 'handle_shortcode'));
-
-        $this->assertEquals(
-            sprintf(
-                '<img src="%s" alt="%s">',
-                $image->Link(),
-                $image->Title
-            ),
-            $parser->parse(sprintf('[image id=%d]', $image->ID))
-        );
-    }
-
-    public function testShortcodeHandlerUsesShortcodeProperties()
-    {
-        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $parser = new ShortcodeParser();
-        $parser->register('image', array(Image::class, 'handle_shortcode'));
-
-        $this->assertEquals(
-            sprintf(
-                '<img src="%s" alt="Alt content" title="Title content">',
-                $image->Link()
-            ),
-            $parser->parse(
-                sprintf(
-                    '[image id="%d" alt="Alt content" title="Title content"]',
-                    $image->ID
-                )
-            )
-        );
-    }
-
-    public function testShortcodeHandlerAddsDefaultAttributes()
-    {
-        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $parser = new ShortcodeParser();
-        $parser->register('image', array(Image::class, 'handle_shortcode'));
-
-        $this->assertEquals(
-            sprintf(
-                '<img src="%s" alt="%s">',
-                $image->Link(),
-                $image->Title
-            ),
-            $parser->parse(
-                sprintf(
-                    '[image id="%d"]',
-                    $image->ID
-                )
-            )
-        );
     }
 }

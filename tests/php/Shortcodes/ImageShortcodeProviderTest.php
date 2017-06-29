@@ -1,11 +1,11 @@
 <?php
 
-namespace SilverStripe\Assets\Tests\ViewSupport;
+namespace SilverStripe\Assets\Tests\Shortcodes;
 
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\ViewSupport\ImageShortcodeProvider;
+use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,8 +18,8 @@ class ImageShortcodeProviderTest extends SapphireTest
     protected static $fixture_file = '../ImageTest.yml';
 
 
-
-    public function testShortcodeHandlerFallsBackToFileProperties() {
+    public function testShortcodeHandlerFallsBackToFileProperties()
+    {
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
@@ -33,7 +33,8 @@ class ImageShortcodeProviderTest extends SapphireTest
         );
     }
 
-    public function testShortcodeHandlerUsesShortcodeProperties() {
+    public function testShortcodeHandlerUsesShortcodeProperties()
+    {
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
@@ -47,7 +48,8 @@ class ImageShortcodeProviderTest extends SapphireTest
         );
     }
 
-    public function testShortcodeHandlerAddsDefaultAttributes() {
+    public function testShortcodeHandlerAddsDefaultAttributes()
+    {
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);

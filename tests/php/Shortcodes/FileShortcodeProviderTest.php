@@ -1,11 +1,11 @@
 <?php
 
-namespace SilverStripe\Assets\Tests\ViewSupport;
+namespace SilverStripe\Assets\Tests\Shortcodes;
 
 use SilverStripe\CMS\Model\ErrorPage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
-use SilverStripe\Assets\ViewSupport\FileShortcodeProvider;
+use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
 use SilverStripe\Assets\File;
 
 /**

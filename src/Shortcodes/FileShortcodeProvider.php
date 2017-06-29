@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\Assets\ViewSupport;
+namespace SilverStripe\Assets\Shortcodes;
 
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;

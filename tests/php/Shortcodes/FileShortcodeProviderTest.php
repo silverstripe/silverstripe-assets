@@ -2,7 +2,7 @@
 
 namespace SilverStripe\Assets\Tests\Shortcodes;
 
-use SilverStripe\CMS\Model\ErrorPage;
+use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
@@ -41,7 +41,7 @@ class FileShortcodeProviderTest extends SapphireTest
         $this->assertEquals('', $parser->parse('[file_link,id="text"]'));
         $this->assertEquals('', $parser->parse('[file_link]Example Content[/file_link]'));
 
-        if(class_exists('SilverStripe\\CMS\\Model\\ErrorPage')) {
+        if(class_exists(ErrorPage::class)) {
             /** @var ErrorPage $errorPage */
             $errorPage = ErrorPage::get()->filter('ErrorCode', 404)->first();
             $this->assertEquals(
@@ -59,5 +59,4 @@ class FileShortcodeProviderTest extends SapphireTest
             $this->assertEquals('', $parser->parse($fileEnclosed));
         }
     }
-
 }

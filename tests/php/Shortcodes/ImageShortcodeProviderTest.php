@@ -8,10 +8,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 
 /**
- * Created by IntelliJ IDEA.
- * User: simon
- * Date: 1/10/16
- * Time: 14:38
+ * Class ImageShortcodeProviderTest
  */
 class ImageShortcodeProviderTest extends SapphireTest
 {

@@ -37,10 +37,11 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = array()) {
+    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    {
         // Find appropriate record, with fallback for error handlers
         $record = static::find_shortcode_record($args, $errorCode);
-        if($errorCode) {
+        if ($errorCode) {
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -49,14 +50,14 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
         // Check if a resize is required
         $src = $record->Link();
-        if($record instanceof Image) {
+        if ($record instanceof Image) {
             $width = isset($args['width']) ? $args['width'] : null;
             $height = isset($args['height']) ? $args['height'] : null;
             $hasCustomDimensions = ($width && $height);
             if ($hasCustomDimensions && (($width != $record->getWidth()) || ($height != $record->getHeight()))) {
                 $resized = $record->ResizedImage($width, $height);
                 // Make sure that the resized image actually returns an image
-                if($resized) {
+                if ($resized) {
                     $src = $resized->getURL();
                 }
             }
@@ -73,10 +74,12 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         );
 
         // Clean out any empty attributes
-        $attrs = array_filter($attrs, function($v) {return (bool)$v;});
+        $attrs = array_filter($attrs, function ($v) {
+            return (bool)$v;
+        });
 
         // Condense to HTML attribute string
-        $attrsStr = implode(' ', array_map(function($name) use ($attrs) {
+        $attrsStr = implode(' ', array_map(function ($name) use ($attrs) {
             return Convert::raw2att($name) . '="' . Convert::raw2att($attrs[$name]) . '"';
         }, array_keys($attrs)));
 
@@ -93,16 +96,17 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = array()) {
+    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    {
         // Check if there is a suitable record
         $record = static::find_shortcode_record($args);
-        if($record) {
+        if ($record) {
             $args['src'] = $record->getURL();
         }
 
         // Rebuild shortcode
         $parts = array();
-        foreach($args as $name => $value) {
+        foreach ($args as $name => $value) {
             $htmlValue = Convert::raw2att($value ?: $name);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);
         }
@@ -115,7 +119,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param string $value HTML value
      * @return string value with links resampled
      */
-    public static function regenerate_html_links($value) {
+    public static function regenerate_html_links($value)
+    {
         // Create a shortcode generator which only regenerates links
         $regenerator = ShortcodeParser::get('regenerator');
         return $regenerator->parse($value);

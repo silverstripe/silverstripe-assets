@@ -124,5 +124,4 @@ class FileShortcodeProvider implements ShortcodeHandler
 
         return null;
     }
-
 }

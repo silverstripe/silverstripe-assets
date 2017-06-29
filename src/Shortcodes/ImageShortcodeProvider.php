@@ -125,5 +125,4 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         $regenerator = ShortcodeParser::get('regenerator');
         return $regenerator->parse($value);
     }
-
 }

@@ -16,7 +16,8 @@ class FileShortcodeProviderTest extends SapphireTest
 
     protected static $fixture_file = '../FileTest.yml';
 
-    public function testLinkShortcodeHandler() {
+    public function testLinkShortcodeHandler()
+    {
         $testFile = $this->objFromFixture(File::class, 'asdf');
 
         $parser = new ShortcodeParser();
@@ -41,7 +42,7 @@ class FileShortcodeProviderTest extends SapphireTest
         $this->assertEquals('', $parser->parse('[file_link,id="text"]'));
         $this->assertEquals('', $parser->parse('[file_link]Example Content[/file_link]'));
 
-        if(class_exists(ErrorPage::class)) {
+        if (class_exists(ErrorPage::class)) {
             /** @var ErrorPage $errorPage */
             $errorPage = ErrorPage::get()->filter('ErrorCode', 404)->first();
             $this->assertEquals(

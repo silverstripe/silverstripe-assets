@@ -13,7 +13,7 @@ use SilverStripe\View\Parsers\ShortcodeParser;
  */
 class ImageShortcodeProviderTest extends SapphireTest
 {
-    protected static $fixture_file = 'ImageTest.yml';
+    protected static $fixture_file = '../ImageTest.yml';
 
 
 

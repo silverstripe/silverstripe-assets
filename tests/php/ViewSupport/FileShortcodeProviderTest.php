@@ -12,7 +12,7 @@ use SilverStripe\View\Parsers\ShortcodeParser;
 class FileShortcodeProviderTest extends SapphireTest
 {
 
-    protected static $fixture_file = 'FileTest.yml';
+    protected static $fixture_file = '../FileTest.yml';
 
     public function testLinkShortcodeHandler() {
         $testFile = $this->objFromFixture('SilverStripe\\Assets\\File', 'asdf');

@@ -43,9 +43,28 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      * @var array
      */
     private static $supported_images = array(
+        'image/jpg',
         'image/jpeg',
+        'image/pjpeg',
         'image/gif',
-        'image/png'
+        'image/png',
+        'image/x-png',
+        'image/tiff',
+        'image/tif',
+        'image/x-tiff',
+        'image/x-tif',
+        'image/bmp',
+        'image/ms-bmp',
+        'image/x-bitmap',
+        'image/x-bmp',
+        'image/x-ms-bmp',
+        'image/x-win-bitmap',
+        'image/x-windows-bmp',
+        'image/x-xbitmap',
+        'image/x-ico',
+        'image/x-icon',
+        'image/vnd.microsoft.icon',
+        'image/vnd.adobe.photoshop',
     );
 
     /**

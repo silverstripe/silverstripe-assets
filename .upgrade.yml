@@ -38,13 +38,12 @@ mappings:
   Folder: SilverStripe\Assets\Folder
   Image: SilverStripe\Assets\Image
   Image_Backend: SilverStripe\Assets\Image_Backend
-  ImagickBackend: SilverStripe\Assets\ImagickBackend
   Upload: SilverStripe\Assets\Upload
   Upload_Validator: SilverStripe\Assets\Upload_Validator
   AssetControlExtensionTest: SilverStripe\Assets\Tests\AssetControlExtensionTest
-  AssetControlExtensionTest_VersionedObject: SilverStripe\Assets\Tests\VersionedObject
-  AssetControlExtensionTest_Object: SilverStripe\Assets\Tests\TestObject
-  AssetControlExtensionTest_ArchivedObject: SilverStripe\Assets\Tests\ArchivedObject
+  AssetControlExtensionTest_VersionedObject: SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject
+  AssetControlExtensionTest_Object: SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject
+  AssetControlExtensionTest_ArchivedObject: SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject
   AssetManipulationListTest: SilverStripe\Assets\Tests\AssetManipulationListTest
   FileFinderTest: SilverStripe\Assets\Tests\FileFinderTest
   FileMigrationHelperTest: SilverStripe\Assets\Tests\FileMigrationHelperTest
@@ -53,10 +52,10 @@ mappings:
   FileTest: SilverStripe\Assets\Tests\FileTest
   FileTest_MyCustomFile: SilverStripe\Assets\Tests\FileTest\MyCustomFile
   FolderTest: SilverStripe\Assets\Tests\FolderTest
-  GDTest: SilverStripe\Assets\Tests\GDTest
+  GDTest: SilverStripe\Assets\Tests\GDImageTest
   ProtectedFileControllerTest: SilverStripe\Assets\Tests\ProtectedFileControllerTest
   UploadTest: SilverStripe\Assets\Tests\UploadTest
-  UploadTest_Validator: SilverStripe\Assets\Tests\UploadTest\UploadTest_Validator
+  UploadTest_Validator: SilverStripe\Assets\Tests\UploadTest\Validator
   GDImageTest: SilverStripe\Assets\Tests\GDImageTest
   ImageTest: SilverStripe\Assets\Tests\ImageTest
   ImagickImageTest: SilverStripe\Assets\Tests\ImagickImageTest
@@ -64,6 +63,7 @@ mappings:
   AssetAdapterTest: SilverStripe\Assets\Tests\Flysystem\AssetAdapterTest
   FlysystemPublicAdapter: SilverStripe\Assets\Flysystem\PublicAdapter
   FlysystemProtectedAdapter: SilverStripe\Assets\Flysystem\ProtectedAdapter
+  # Service definitions - Not classes
   FlysystemPublicBackend: League\Flysystem\Filesystem.public
   FlysystemProtectedBackend: League\Flysystem\Filesystem.protected
 skipConfigs:

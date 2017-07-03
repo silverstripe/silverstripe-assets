@@ -1,0 +1,45 @@
+de:
+  SilverStripe\Assets\File:
+    AviType: AVI-Videodatei
+    CREATED: 'Zuerst hochgeladen'
+    CssType: CSS-Datei
+    DRAFT: Entwurf
+    DmgType: Apple-Datenträgerabbild
+    DocType: Word-Dokument
+    GifType: 'GIF-Bild - gut für Diagramme'
+    GzType: 'GZIP-komprimierte Datei'
+    HtmlType: HTML-Datei
+    INVALIDEXTENSION_SHORT: 'Erweiterung ist nicht erlaubt'
+    IcoType: Symbolbild
+    JpgType: 'JPEG-Bild - gut für Fotos'
+    JsType: Javascript-Datei
+    LASTEDIT: 'Zuletzt geändert'
+    MODIFIED: Geändert
+    Mp3Type: MP3-Audiodatei
+    MpgType: MPEG-Videodatei
+    NOFILESIZE: 'Dateigröße ist null Bytes.'
+    PATH: Pfad
+    PLURALNAME: Dateien
+    PLURALS:
+      one: 'Eine Datei'
+      other: '{count} Dateien'
+    PdfType: 'Adobe Acrobat PDF-Datei'
+    PngType: 'PNG-Bild - gutes Allzweckformat'
+    SINGULARNAME: Datei
+    TOOLARGE: 'Dateigröße ist zu groß, maximal {size} erlaubt'
+    URL: URL
+    WavType: WAV-Audiodatei
+    XlsType: Excel-Tabelle
+    ZipType: 'ZIP-komprimierte Datei'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Ordner
+    PLURALS:
+      one: 'Ein Ordner'
+      other: '{count} Ordner'
+    SINGULARNAME: Ordner
+  SilverStripe\Assets\Image:
+    PLURALNAME: Bilder
+    PLURALS:
+      one: 'Ein Bild'
+      other: '{count} Bilder'
+    SINGULARNAME: Bild

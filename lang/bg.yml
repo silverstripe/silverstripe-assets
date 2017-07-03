@@ -1,0 +1,46 @@
+bg:
+  SilverStripe\Assets\File:
+    AviType: 'AVI видео'
+    CREATED: 'Качен на'
+    CssType: 'CSS файл'
+    DRAFT: Чернова
+    DmgType: 'Apple DMG файл'
+    DocType: 'Word документ'
+    GifType: 'GIF файл - подходящ за диаграми'
+    GzType: 'Компресиран файл GZIP'
+    HtmlType: 'HTML файл'
+    INVALIDEXTENSION_SHORT: 'Неразрешен тип на файл'
+    IcoType: 'ICO файл'
+    JpgType: 'JPEG файл - подходящ за снимки'
+    JsType: 'Javascript файл'
+    LASTEDIT: 'Последно променен'
+    MODIFIED: 'Редактиран'
+    Mp3Type: 'MP3 аудио'
+    MpgType: 'MPEG видео'
+    NOFILESIZE: 'Големината на файла е 0 байта'
+    PATH: Път
+    PLURALNAME: Файлове
+    PLURALS:
+      one: Файл
+      other: '{count} файла'
+    PdfType: 'PDF файл'
+    PngType: 'PNG файл - подходящ за всякакъв вид изображения'
+    SINGULARNAME: Файл
+    TOOLARGE: 'Големината на файла е над позволената от {size}'
+    TiffType: 'TIF файл'
+    URL: URL
+    WavType: 'WAV аудио'
+    XlsType: 'Excel таблица'
+    ZipType: 'Компресиран файл ZIP'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Папки
+    PLURALS:
+      one: Папка
+      other: '{count} папки'
+    SINGULARNAME: Папка
+  SilverStripe\Assets\Image:
+    PLURALNAME: Снимки
+    PLURALS:
+      one: Снимка
+      other: '{count} снимки'
+    SINGULARNAME: Снимка

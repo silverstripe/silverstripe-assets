@@ -1,0 +1,53 @@
+ru:
+  SilverStripe\Assets\File:
+    AviType: 'AVI видео'
+    CREATED: 'По дате создания'
+    CssType: 'Файлы стилей CSS'
+    DRAFT: Черновик
+    DmgType: 'Образ Apple диска'
+    DocType: 'Документ Word'
+    GifType: 'Изображение GIF - подходит для инфографики'
+    GzType: 'GZIP архив'
+    HtmlType: 'Файл HTML'
+    INVALIDEXTENSION_SHORT: 'Расширение не разрешено'
+    IcoType: 'Эскиз изображения'
+    JpgType: 'Изображение JPEG - подходит для фотографий'
+    JsType: 'Файл JavaScript'
+    LASTEDIT: 'Последнее изменение'
+    MODIFIED: Изменён
+    Mp3Type: 'MP3 аудиофайл'
+    MpgType: 'MPEG видео'
+    NOFILESIZE: 'Размер файла 0 байт'
+    NOVALIDUPLOAD: 'Загрузка файла завершена неудачно'
+    PATH: Путь
+    PLURALNAME: Файлы
+    PLURALS:
+      one: Файл
+      few: '{count} файла'
+      many: '{count} файлов'
+      other: '{count} файлов'
+    PdfType: 'PDF файл'
+    PngType: 'Изображение PNG - подходит для всего'
+    SINGULARNAME: Файл
+    TOOLARGE: 'Размер файла превышает максимально возможный {size}'
+    TiffType: 'Выбранный формат изображений'
+    URL: URL
+    WavType: 'WAV аудиофайл'
+    XlsType: 'Таблица Excel'
+    ZipType: 'ZIP архив'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Папки
+    PLURALS:
+      one: Папка
+      few: '{count} папки'
+      many: '{count} папок'
+      other: '{count} папок'
+    SINGULARNAME: Папка
+  SilverStripe\Assets\Image:
+    PLURALNAME: Изображения
+    PLURALS:
+      one: Изборажение
+      few: '{count} изображения'
+      many: '{count} изображений'
+      other: '{count} изображений'
+    SINGULARNAME: Изображение

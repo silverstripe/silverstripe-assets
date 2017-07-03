@@ -1,0 +1,47 @@
+it:
+  SilverStripe\Assets\File:
+    AviType: 'Video file AVI'
+    CREATED: 'Caricato inizialmente'
+    CssType: 'File CSS'
+    DRAFT: Bozza
+    DmgType: 'Immagine disco Apple'
+    DocType: 'Documento Word'
+    GifType: 'Immagine GIF - adatta per diagrammi'
+    GzType: 'File compresso GZIP'
+    HtmlType: 'File HTML'
+    INVALIDEXTENSION_SHORT: 'Estensione non permessa'
+    IcoType: 'Immagine icona'
+    JpgType: 'Immagine JPEG - adatta per foto'
+    JsType: 'File Javascript'
+    LASTEDIT: 'Ultima modifica'
+    MODIFIED: Modificato
+    Mp3Type: 'File audio MP3'
+    MpgType: 'File video MPEG'
+    NOFILESIZE: 'La dimensione del file è zero byte.'
+    NOVALIDUPLOAD: 'Il file non è un upload valido'
+    PATH: Percorso
+    PLURALNAME: Files
+    PLURALS:
+      one: 'Un File'
+      other: '{count} File'
+    PdfType: 'File PDF Adobe Acrobat'
+    PngType: 'Immagine PNG - adatta per tutti gli usi'
+    SINGULARNAME: File
+    TOOLARGE: 'Dimensione file troppo grande, consentiti {size} massimo'
+    TiffType: TIFF
+    URL: URL
+    WavType: 'File audio WAV'
+    XlsType: 'Foglio elettronico Excel'
+    ZipType: 'File ZIP compresso'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Cartelle
+    PLURALS:
+      one: 'Una Cartella'
+      other: '{count} Cartelle'
+    SINGULARNAME: Cartella
+  SilverStripe\Assets\Image:
+    PLURALNAME: Immagini
+    PLURALS:
+      one: 'Una Immagine'
+      other: '{count} Immagini'
+    SINGULARNAME: Immagine

@@ -1,0 +1,47 @@
+eo:
+  SilverStripe\Assets\File:
+    AviType: AVI-videodosiero
+    CREATED: 'Unue alŝutita'
+    CssType: CSS-dosiero
+    DRAFT: Malneto
+    DmgType: 'Ekzakta kopio de Apple-disko'
+    DocType: Word-dokumento
+    GifType: 'GIF-bildo - taŭga por skemoj'
+    GzType: 'kompaktigita GZIP-dosiero'
+    HtmlType: HTML-dosiero
+    INVALIDEXTENSION_SHORT: 'Sufikso ne permesita'
+    IcoType: 'Bildsimbola dosiero'
+    JpgType: 'JPEG-bildo - taŭga por fotoj'
+    JsType: 'Ĝavoskripta dosiero'
+    LASTEDIT: 'Laste ŝanĝita'
+    MODIFIED: Ŝanĝita
+    Mp3Type: MP3-sondosiero
+    MpgType: MPEG-videodosiero
+    NOFILESIZE: 'Malplena dosiero'
+    NOVALIDUPLOAD: 'Dosiero ne estas valida alŝutaĵo'
+    PATH: Vojprefikso
+    PLURALNAME: Dosieroj
+    PLURALS:
+      one: 'Unu dosiero'
+      other: '{count} dosieroj'
+    PdfType: 'PDF-dosiero de Adobe Acrobat'
+    PngType: 'PNG-bildo - taŭga formato por ĝeneralaj uzoj'
+    SINGULARNAME: Dosiero
+    TOOLARGE: 'Dosiero estas tro granda, maksimumo estas {size}'
+    TiffType: 'Markita bilda formato'
+    URL: URL
+    WavType: WAV-sondosiero
+    XlsType: Excel-kalkultabelo
+    ZipType: 'kompaktigita ZIP-dosiero'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Dosierujoj
+    PLURALS:
+      one: 'Unu dosierujo'
+      other: '{count} dosierujoj'
+    SINGULARNAME: Dosierujo
+  SilverStripe\Assets\Image:
+    PLURALNAME: Bildoj
+    PLURALS:
+      one: 'Unu bildo'
+      other: '{count} bildoj'
+    SINGULARNAME: Bildo

@@ -15,6 +15,7 @@ use SilverStripe\Dev\SapphireTest;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
+ * @skipUpgrade
  */
 abstract class ImageTest extends SapphireTest
 {

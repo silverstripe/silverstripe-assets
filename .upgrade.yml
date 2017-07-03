@@ -80,3 +80,5 @@ skipConfigs:
   - summary_fields
   - default_search_filter_class
   - segment
+skipYML:
+  - Filesystem

@@ -12,15 +12,15 @@ SilverStripe\Core\Injector\Injector:
   League\Flysystem\Filesystem.public:
     class: League\Flysystem\Filesystem
     constructor:
-      Adapter: %$SilverStripe\Assets\Flysystem\PublicAdapter
-      Config:
+      FilesystemAdapter: %$SilverStripe\Assets\Flysystem\PublicAdapter
+      FilesystemConfig:
         visibility: public
   # Define the secondary filesystem for protected assets
   League\Flysystem\Filesystem.protected:
     class: League\Flysystem\Filesystem
     constructor:
-      Adapter: %$SilverStripe\Assets\Flysystem\ProtectedAdapter
-      Config:
+      FilesystemAdapter: %$SilverStripe\Assets\Flysystem\ProtectedAdapter
+      FilesystemConfig:
         visibility: private
 ---
 Name: assetscore

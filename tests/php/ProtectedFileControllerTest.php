@@ -12,6 +12,9 @@ use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
+/**
+ * @skipUpgrade
+ */
 class ProtectedFileControllerTest extends FunctionalTest
 {
     protected static $fixture_file = 'FileTest.yml';

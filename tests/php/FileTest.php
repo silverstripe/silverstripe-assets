@@ -3,7 +3,6 @@
 namespace SilverStripe\Assets\Tests;
 
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -18,10 +17,10 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\Parsers\ShortcodeParser;
 
 /**
  * Tests for the File class
+ * @skipUpgrade
  */
 class FileTest extends SapphireTest
 {

@@ -8,6 +8,9 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\ORM\ValidationException;
 
+/**
+ * @skipUpgrade
+ */
 class DBFileTest extends SapphireTest
 {
 

@@ -13,7 +13,7 @@ use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
 /**
- * Class FileShortcodeProviderTest
+ * @skipUpgrade
  */
 class FileShortcodeProviderTest extends SapphireTest
 {

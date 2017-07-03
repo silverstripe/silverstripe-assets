@@ -13,6 +13,7 @@ use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 /**
  * Tests {@see AssetControlExtension}
+ * @skipUpgrade
  */
 class AssetControlExtensionTest extends SapphireTest
 {

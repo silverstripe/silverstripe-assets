@@ -15,7 +15,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 
 /**
- * Class ImageShortcodeProviderTest
+ * @skipUpgrade
  */
 class ImageShortcodeProviderTest extends SapphireTest
 {

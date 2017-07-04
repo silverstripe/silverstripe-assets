@@ -7,6 +7,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
@@ -57,6 +58,14 @@ abstract class ImageTest extends SapphireTest
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
+    }
+
+    public function testAutoOrientateOnEXIFData()
+    {
+        $image = $this->objFromFixture(Image::class, 'exifPortrait');
+        $this->assertEquals(Image_Backend::ORIENTATION_LANDSCAPE, $image->getOrientation());
+        $resampled = $image->Resampled();
+        $this->assertEquals(Image_Backend::ORIENTATION_PORTRAIT, $resampled->getOrientation());
     }
 
     public function testGetTagWithoutTitle()

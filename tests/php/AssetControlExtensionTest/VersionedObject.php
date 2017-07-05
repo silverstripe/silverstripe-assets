@@ -19,9 +19,6 @@ use SilverStripe\Security\Member;
  */
 class VersionedObject extends DataObject implements TestOnly
 {
-    private static $extensions = array(
-        Versioned::class
-    );
 
     private static $db = array(
         'Title' => 'Varchar(255)',

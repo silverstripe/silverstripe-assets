@@ -8,9 +8,11 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\InjectorNotFoundException;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use InvalidArgumentException;
+use SilverStripe\View\HTML;
 
 /**
  * Provides image manipulation functionality.
@@ -542,10 +544,12 @@ trait ImageManipulation
      */
     public function IconTag()
     {
-        return DBField::create_field(
+        /** @var DBHTMLText $image */
+        $image = DBField::create_field(
             'HTMLFragment',
-            '<img src="' . Convert::raw2att($this->getIcon()) . '" />'
+            HTML::createTag('img', ['src' => $this->getIcon()])
         );
+        return $image;
     }
 
     /**
@@ -587,14 +591,18 @@ trait ImageManipulation
      */
     public function getImageBackend()
     {
-        // Skip if non-image or file is broken
-        if (!$this->getIsImage() || !$this->exists()) {
+        // Skip files we know won't be an image
+        if (!$this->getIsImage() || !$this->getHash()) {
             return null;
         }
 
-        // Create backend for this object
-        /** @skipUpgrade */
-        return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+        // Pass to backend service factory
+        try {
+            return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+        } catch (InjectorNotFoundException $ex) {
+            // Handle file-not-found errors
+            return null;
+        }
     }
 
     /**

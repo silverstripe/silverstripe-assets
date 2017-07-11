@@ -9,6 +9,7 @@ use Intervention\Image\Exception\NotSupportedException;
 use Intervention\Image\Exception\NotWritableException;
 use Intervention\Image\Image as InterventionImage;
 use Intervention\Image\ImageManager;
+use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -337,11 +338,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resize($width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->resize($width, $height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height) {
+                return $resource->resize($width, $height);
+            }
+        );
     }
 
     /**
@@ -356,20 +357,20 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeRatio($width, $height, $useAsMinimum = false)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->resize(
-            $width,
-            $height,
-            function (Constraint $constraint) use ($useAsMinimum) {
-                $constraint->aspectRatio();
-                if (!$useAsMinimum) {
-                    $constraint->upsize();
-                }
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height, $useAsMinimum) {
+                return $resource->resize(
+                    $width,
+                    $height,
+                    function (Constraint $constraint) use ($useAsMinimum) {
+                        $constraint->aspectRatio();
+                        if (!$useAsMinimum) {
+                            $constraint->upsize();
+                        }
+                    }
+                );
             }
-        ));
+        );
     }
 
     /**
@@ -380,11 +381,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByWidth($width)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->widen($width));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width) {
+                return $resource->widen($width);
+            }
+        );
     }
 
     /**
@@ -395,11 +396,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByHeight($height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->heighten($height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($height) {
+                return $resource->heighten($height);
+            }
+        );
     }
 
     /**
@@ -424,15 +425,25 @@ class InterventionBackend implements Image_Backend, Flushable
         $background[3] = 1 - round(min(100, max(0, $transparencyPercent)) / 100, 2);
 
         // resize the image maintaining the aspect ratio and then pad out the canvas
-        return $this->createCloneWithResource($resource->resize($width, $height, function (Constraint $constraint) {
-            $constraint->aspectRatio();
-        })->resizeCanvas(
-            $width,
-            $height,
-            'center',
-            false,
-            $background
-        ));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height, $background) {
+                return $resource
+                    ->resize(
+                        $width,
+                        $height,
+                        function (Constraint $constraint) {
+                            $constraint->aspectRatio();
+                        }
+                    )
+                    ->resizeCanvas(
+                        $width,
+                        $height,
+                        'center',
+                        false,
+                        $background
+                    );
+            }
+        );
     }
 
     /**
@@ -444,11 +455,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function croppedResize($width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->fit($width, $height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height) {
+                return $resource->fit($width, $height);
+            }
+        );
     }
 
     /**
@@ -461,21 +472,51 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function crop($top, $left, $width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->crop($width, $height, $left, $top));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($top, $left, $height, $width) {
+                return $resource->crop($width, $height, $left, $top);
+            }
+        );
     }
 
     /**
-     * @param InterventionImage $resource
+     * Modify this image backend with either a provided resource, or transformation
+     *
+     * @param InterventionImage|callable $resourceOrTransformation Either the resource to assign to the clone,
+     * or a function which takes the current resource as a parameter
      * @return static
      */
-    protected function createCloneWithResource($resource)
+    protected function createCloneWithResource($resourceOrTransformation)
     {
+        // No clone with no argument
+        if (!$resourceOrTransformation) {
+            return null;
+        }
+
+        // Handle transformation function
+        if (is_callable($resourceOrTransformation)) {
+            // Fail if resource not available
+            $resource = $this->getImageResource();
+            if (!$resource) {
+                return null;
+            }
+
+            // Note: Closure may simply modify the resource rather than return a new one
+            $resource = clone $resource;
+            $resource = call_user_func($resourceOrTransformation, $resource) ?: $resource;
+
+            // Clone with updated resource
+            return $this->createCloneWithResource($resource);
+        }
+
+        // Ensure result is of a valid type
+        if (! $resourceOrTransformation instanceof InterventionImage) {
+            throw new InvalidArgumentException("Invalid resource type");
+        }
+
+        // Create clone
         $clone = clone $this;
-        $clone->setImageResource(clone $resource);
+        $clone->setImageResource($resourceOrTransformation);
         return $clone;
     }
 

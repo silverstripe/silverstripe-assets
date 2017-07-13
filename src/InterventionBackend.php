@@ -9,6 +9,7 @@ use Intervention\Image\Exception\NotSupportedException;
 use Intervention\Image\Exception\NotWritableException;
 use Intervention\Image\Image as InterventionImage;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Size;
 use InvalidArgumentException;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
@@ -18,6 +19,15 @@ use SilverStripe\Core\Injector\Injector;
 
 class InterventionBackend implements Image_Backend, Flushable
 {
+    /**
+     * Cache prefix for marking
+     */
+    const CACHE_MARK = 'MARK_';
+
+    /**
+     * Cache prefix for dimensions
+     */
+    const CACHE_DIMENSIONS = 'DIMENSIONS_';
 
     /**
      * @var AssetContainer
@@ -110,6 +120,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setAssetContainer($assetContainer)
     {
+        $this->image = null;
         $this->container = $assetContainer;
         return $this;
     }
@@ -144,10 +155,32 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function loadFromContainer(AssetContainer $assetContainer)
     {
+        return $this->setAssetContainer($assetContainer);
+    }
+
+    /**
+     * Get the currently assigned image resource, or generates one if not yet assigned.
+     * Note: This method may return null if error
+     *
+     * @return InterventionImage
+     */
+    public function getImageResource()
+    {
+        // Get existing resource
+        if ($this->image) {
+            return $this->image;
+        }
+
+        // Load container
+        $assetContainer = $this->getAssetContainer();
+        if (!$assetContainer) {
+            return null;
+        }
+
         // Avoid repeat load of broken images
         $hash = $assetContainer->getHash();
         if ($this->hasFailed($hash)) {
-            return $this;
+            return null;
         }
 
         // Handle resource
@@ -164,16 +197,18 @@ class InterventionBackend implements Image_Backend, Flushable
             $bytesWritten = file_put_contents($path, $assetContainer->getStream());
             // if we fail to write, then load from stream
             if ($bytesWritten === false) {
-                $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
+                $resource = $this->getImageManager()->make($assetContainer->getStream());
             } else {
                 $this->setTempPath($path);
-                $this->setImageResource($this->getImageManager()->make($path));
+                $resource = $this->getImageManager()->make($path);
             }
             $this->markEnd($hash);
+            $this->setImageResource($resource);
+            return $resource;
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
         }
-        return $this;
+        return null;
     }
 
     /**
@@ -203,20 +238,6 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * Get the currently assigned image resource
-     * Note: This method may return null if error
-     *
-     * @return InterventionImage
-     */
-    public function getImageResource()
-    {
-        if (!$this->image && $this->getAssetContainer()) {
-            $this->loadFromContainer($this->getAssetContainer());
-        }
-        return $this->image;
-    }
-
-    /**
      * @param InterventionImage $image
      * @return $this
      */
@@ -241,24 +262,34 @@ class InterventionBackend implements Image_Backend, Flushable
     public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array())
     {
         try {
-            $this->getImageResource()->orientate();
-        } catch (NotSupportedException $e) {
-            // noop - we can't orientate, don't worry about it
-        }
-        try {
             $resource = $this->getImageResource();
             if (!$resource) {
                 throw new BadMethodCallException("Cannot write corrupt file to store");
             }
 
+            // Fix image orientation
+            try {
+                $resource->orientate();
+            } catch (NotSupportedException $e) {
+                // noop - we can't orientate, don't worry about it
+            }
+
+            // Save file
             $extension = pathinfo($filename, PATHINFO_EXTENSION);
-            return $assetStore->setFromString(
+            $result = $assetStore->setFromString(
                 $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,
                 $hash,
                 $variant,
                 $config
             );
+
+            // Warm cache for the result
+            if ($result) {
+                $this->warmCache($result['Hash'], $result['Variant']);
+            }
+
+            return $result;
         } catch (NotSupportedException $e) {
             return null;
         }
@@ -294,15 +325,102 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
+     * Return dimensions as array with cache enabled
+     *
+     * @return array Two-length array with width and height
+     */
+    protected function getDimensions()
+    {
+        // Default result
+        $result = [0, 0];
+
+        // If we have a resource already loaded, this means we have modified the resource since the
+        // original image was loaded. This means the "Variant" tuple key is out of date, and we don't
+        // have a reliable cache key to load from, or save to. If we use the original tuple as a key,
+        // we would run the risk of overwriting the original dimensions in the cache, with the values
+        // of the resized instead.
+        // Instead, we use the immediately available dimensions attached to this resource, and we will
+        // rely on cache warming in writeToStore to save these values, where the "Variant" becomes available,
+        // before the next time this variant is loaded into memory.
+        $resource = $this->image;
+        if ($resource) {
+            return $this->getResourceDimensions($resource);
+        }
+
+        // Check if we have a container
+        $container = $this->getAssetContainer();
+        if (!$container) {
+            return $result;
+        }
+
+        // Check cache for unloaded image
+        $cache = $this->getCache();
+        $key = $this->getDimensionCacheKey($container->getHash(), $container->getVariant());
+        if ($cache->has($key)) {
+            return $cache->get($key);
+        }
+
+        // Cache-miss
+        $resource = $this->getImageResource();
+        if ($resource) {
+            $result = $this->getResourceDimensions($resource);
+        }
+        $cache->set($key, $result);
+        return $result;
+    }
+
+    /**
+     * Get dimensions from the given resource
+     *
+     * @param InterventionImage $resource
+     * @return array
+     */
+    protected function getResourceDimensions(InterventionImage $resource)
+    {
+        /** @var Size $size */
+        $size = $resource->getSize();
+        return [
+            $size->getWidth(),
+            $size->getHeight()
+        ];
+    }
+
+    /**
+     * Cache key for dimensions for given container
+     *
+     * @param string $hash
+     * @param string $variant
+     * @return string
+     */
+    protected function getDimensionCacheKey($hash, $variant)
+    {
+        return self::CACHE_DIMENSIONS . sha1($hash .'-'.$variant);
+    }
+
+    /**
+     * Warm dimension cache for the given asset
+     *
+     * @param string $hash
+     * @param string $variant
+     */
+    protected function warmCache($hash, $variant)
+    {
+        // Warm dimension cache
+        $key = $this->getDimensionCacheKey($hash, $variant);
+        $resource = $this->getImageResource();
+        if ($resource) {
+            $result = $this->getResourceDimensions($resource);
+            $this->getCache()->set($key, $result);
+        }
+    }
+
+    /**
      * @return int The width of the image
      */
     public function getWidth()
     {
-        $resource = $this->getImageResource();
-        if ($resource) {
-            return $resource->getWidth();
-        }
-        return 0;
+        list($width) = $this->getDimensions();
+        return $width;
     }
 
     /**
@@ -310,11 +428,8 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getHeight()
     {
-        $resource = $this->getImageResource();
-        if ($resource) {
-            return $resource->getHeight();
-        }
-        return 0;
+        list(,$height) = $this->getDimensions();
+        return $height;
     }
 
     /**
@@ -520,19 +635,37 @@ class InterventionBackend implements Image_Backend, Flushable
         return $clone;
     }
 
+    /**
+     * Declare this image is being manipulated
+     *
+     * @param string $hash Hash of original file being manipluated
+     * @return bool
+     */
     protected function markStart($hash)
     {
-        return $this->getCache()->set($hash, 1);
+        return $this->getCache()->set(self::CACHE_MARK.$hash, 1);
     }
 
+    /**
+     * Declare that this image has been successfully manipulated
+     *
+     * @param string $hash
+     * @return bool
+     */
     protected function markEnd($hash)
     {
-        return $this->getCache()->delete($hash);
+        return $this->getCache()->delete(self::CACHE_MARK.$hash);
     }
 
+    /**
+     * Determine if this file has been loaded for manipulation, but could not be resized
+     *
+     * @param string $hash Hash of the original file being manipulated
+     * @return bool
+     */
     protected function hasFailed($hash)
     {
-        return $this->getCache()->has($hash);
+        return $this->getCache()->has(self::CACHE_MARK.$hash);
     }
 
     /**

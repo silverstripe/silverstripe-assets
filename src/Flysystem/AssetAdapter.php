@@ -144,7 +144,7 @@ class AssetAdapter extends Local
             }
         }
 
-        $viewer = new SSViewer(array($template));
+        $viewer = SSViewer::create(array($template));
         return (string)$viewer->process(new ArrayData(array(
             'AllowedExtensions' => $allowedExtensions
         )));

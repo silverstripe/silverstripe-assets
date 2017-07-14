@@ -3,15 +3,19 @@
 namespace SilverStripe\Assets\Tests;
 
 use InvalidArgumentException;
+use ReflectionMethod;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Image_Backend;
+use SilverStripe\Assets\InterventionBackend;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 
 /**
@@ -259,6 +263,43 @@ abstract class ImageTest extends SapphireTest
             // Encoding of the arguments is duplicated from cacheFilename
         $neededPart = 'Pad' . Convert::base64url_encode(array(200,200,'CCCCCC', 0));
         $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
+    }
+
+    /**
+     * Ensure dimensions are cached
+     */
+    public function testCacheDimensions()
+    {
+        /** @var Image $image */
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        /** @var InterventionBackend $backend */
+        $backend = $image->getImageBackend();
+        $cache = $backend->getCache();
+        $cache->clear();
+
+        /** @var DBFile $imageSecond */
+        $imageSecond = $image->Pad(331, 313, '222222', 0);
+
+        // Ensure image dimensions are cached
+        $imageKey = $this->getDimensionCacheKey($image->getHash(), '');
+        $this->assertTrue($cache->has($imageKey));
+        $secondKey = $this->getDimensionCacheKey($imageSecond->getHash(), $imageSecond->getVariant());
+        $this->assertTrue($cache->has($secondKey));
+
+        // Ensure that caching to a custom file (no variant) is warmed on output
+        $backend->writeToStore(
+            Injector::inst()->get(AssetStore::class),
+            'bob.jpg',
+            sha1('anything'),
+            'custom-variant'
+        );
+        $customKey = $this->getDimensionCacheKey(sha1('anything'), 'custom-variant');
+        $this->assertTrue($cache->has($customKey));
+    }
+
+    protected function getDimensionCacheKey($hash, $variant)
+    {
+        return InterventionBackend::CACHE_DIMENSIONS . sha1($hash .'-'.$variant);
     }
 
     /**

@@ -7,6 +7,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FileNameFilter;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
@@ -31,8 +32,8 @@ class FolderTest extends SapphireTest
         TestAssetStore::activate('FolderTest');
 
         // Set the File Name Filter replacements so files have the expected names
-        Config::inst()->update(
-            'SilverStripe\\Assets\\FileNameFilter',
+        Config::modify()->merge(
+            FileNameFilter::class,
             'default_replacements',
             array(
             '/\s/' => '-', // remove whitespace
@@ -165,9 +166,7 @@ class FolderTest extends SapphireTest
         $folder2 = $this->objFromFixture(Folder::class, 'folder2');
 
         // Publish file1
-        /**
- * @var File $file1
-*/
+        /** @var File $file1 */
         $file1 = DataObject::get_by_id(File::class, $this->idFromFixture(File::class, 'file1-folder1'), false);
         $file1->publishRecursive();
 
@@ -176,9 +175,7 @@ class FolderTest extends SapphireTest
         $folder1->write();
 
         // Check if the file in the folder moved along
-        /**
- * @var File $file1Draft
-*/
+        /** @var File $file1Draft */
         $file1Draft = Versioned::get_by_stage(File::class, Versioned::DRAFT)->byID($file1->ID);
         $this->assertFileExists(TestAssetStore::getLocalPath($file1Draft));
 
@@ -195,9 +192,7 @@ class FolderTest extends SapphireTest
         );
 
         // Published (live) version remains in the old location
-        /**
- * @var File $file1Live
-*/
+        /** @var File $file1Live */
         $file1Live = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($file1->ID);
         $this->assertEquals(
             ASSETS_PATH . '/FolderTest/FileTest-folder1/55b443b601/File1.txt',

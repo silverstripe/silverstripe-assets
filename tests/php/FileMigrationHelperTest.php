@@ -40,7 +40,7 @@ class FileMigrationHelperTest extends SapphireTest
     public function setUp()
     {
         Config::nest(); // additional nesting here necessary
-        Config::inst()->update(File::class, 'migrate_legacy_file', false);
+        Config::modify()->merge(File::class, 'migrate_legacy_file', false);
         parent::setUp();
 
         // Set backend root to /FileMigrationHelperTest/assets

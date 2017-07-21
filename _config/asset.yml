@@ -12,14 +12,14 @@ SilverStripe\Core\Injector\Injector:
   League\Flysystem\Filesystem.public:
     class: League\Flysystem\Filesystem
     constructor:
-      FilesystemAdapter: %$SilverStripe\Assets\Flysystem\PublicAdapter
+      FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\PublicAdapter'
       FilesystemConfig:
         visibility: public
   # Define the secondary filesystem for protected assets
   League\Flysystem\Filesystem.protected:
     class: League\Flysystem\Filesystem
     constructor:
-      FilesystemAdapter: %$SilverStripe\Assets\Flysystem\ProtectedAdapter
+      FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\ProtectedAdapter'
       FilesystemConfig:
         visibility: private
 ---
@@ -30,12 +30,12 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Assets\Storage\AssetStore:
     class: SilverStripe\Assets\Flysystem\FlysystemAssetStore
     properties:
-      PublicFilesystem: %$League\Flysystem\Filesystem.public
-      ProtectedFilesystem: %$League\Flysystem\Filesystem.protected
-  SilverStripe\Assets\Storage\AssetStoreRouter: %$SilverStripe\Assets\Storage\AssetStore
+      PublicFilesystem: '%$League\Flysystem\Filesystem.public'
+      ProtectedFilesystem: '%$League\Flysystem\Filesystem.protected'
+  SilverStripe\Assets\Storage\AssetStoreRouter: '%$SilverStripe\Assets\Storage\AssetStore'
   SilverStripe\Assets\Storage\ProtectedFileController:
     properties:
-      RouteHandler: %$SilverStripe\Assets\Storage\AssetStoreRouter
+      RouteHandler: '%$SilverStripe\Assets\Storage\AssetStoreRouter'
   SilverStripe\Assets\Storage\AssetNameGenerator:
     class: SilverStripe\Assets\Storage\DefaultAssetNameGenerator
     type: prototype
@@ -43,7 +43,7 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Assets\Storage\GeneratedAssetHandler:
     class: SilverStripe\Assets\Flysystem\GeneratedAssets
     properties:
-      Filesystem: %$League\Flysystem\Filesystem.public
+      Filesystem: '%$League\Flysystem\Filesystem.public'
   SilverStripe\View\Requirements_Backend:
     properties:
-      AssetHandler: %$SilverStripe\Assets\Storage\GeneratedAssetHandler
+      AssetHandler: '%$SilverStripe\Assets\Storage\GeneratedAssetHandler'

@@ -3,13 +3,13 @@
 namespace SilverStripe\Assets\Tests;
 
 use InvalidArgumentException;
-use ReflectionMethod;
+use Prophecy\Prophecy\ObjectProphecy;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
+use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
@@ -34,17 +34,19 @@ abstract class ImageTest extends SapphireTest
         TestAssetStore::activate('ImageTest');
 
         // Copy test images for each of the fixture references
+        /** @var File $image */
         $files = File::get()->exclude('ClassName', Folder::class);
         foreach ($files as $image) {
-            $filePath = TestAssetStore::getLocalPath($image); // Only correct for test asset store
             $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
-            if (!file_exists($filePath)) {
-                Filesystem::makeFolder(dirname($filePath));
-                if (!copy($sourcePath, $filePath)) {
-                    user_error('Failed to copy test images', E_USER_ERROR);
-                }
-            }
+            $image->setFromLocalFile($sourcePath, $image->Filename);
         }
+
+        // Set default config
+        InterventionBackend::config()->set('error_cache_ttl', [
+            InterventionBackend::FAILED_INVALID => 0,
+            InterventionBackend::FAILED_MISSING => '5,10',
+            InterventionBackend::FAILED_UNKNOWN => 300,
+        ]);
     }
 
     public function tearDown()
@@ -302,6 +304,94 @@ abstract class ImageTest extends SapphireTest
         return InterventionBackend::CACHE_DIMENSIONS . sha1($hash .'-'.$variant);
     }
 
+    protected function getErrorCacheKey($hash, $variant)
+    {
+        return InterventionBackend::CACHE_MARK . sha1($hash . '-' . $variant);
+    }
+
+    /**
+     * Test loading of errors
+     */
+    public function testCacheErrorLoading()
+    {
+        // Test loading of inaccessible asset
+        /** @var AssetContainer|ObjectProphecy $builder */
+        $filename = 'folder/file.jpg';
+        $hash = sha1($filename);
+
+        // Mock unavailable asset backend
+        $builder = $this->getMockAssetBackend($filename, $hash);
+        $builder
+            ->getStream()
+            ->willReturn(null); // Should safely trigger error in InterventionBackend::getImageResource()
+        $container = $builder->reveal();
+
+        // Test backend
+        /** @var InterventionBackend $backend */
+        $backend = Injector::inst()->createWithArgs(
+            Image_Backend::class,
+            [$container]
+        );
+        $cache = $backend->getCache();
+        $key = $this->getErrorCacheKey($hash, null);
+
+        // Check error after initial attempt
+        $result = $backend->croppedResize(100, 100);
+        $this->assertNull($result);
+        $this->assertEquals(InterventionBackend::FAILED_MISSING, $cache->get($key .'_reason'));
+        $this->assertEquals(0, $cache->get($key . '_ttl'));
+
+        // Subsequent attempts don't advance the rolling TTL
+        $result = $backend->croppedResize(100, 100);
+        $this->assertNull($result);
+        $this->assertEquals(InterventionBackend::FAILED_MISSING, $cache->get($key .'_reason'));
+        $this->assertEquals(0, $cache->get($key . '_ttl'));
+
+        // Clear error and attempt another load
+        $cache->delete($key.'_reason');
+        $result = $backend->croppedResize(200, 200);
+        $this->assertNull($result);
+        $this->assertEquals(InterventionBackend::FAILED_MISSING, $cache->get($key .'_reason'));
+        $this->assertEquals(1, $cache->get($key . '_ttl'));
+
+        // Note that for any subsequent failures we re-use the last TTL for each error
+        $cache->delete($key .'_reason');
+        $result = $backend->croppedResize(200, 200);
+        $this->assertNull($result);
+        $this->assertEquals(InterventionBackend::FAILED_MISSING, $cache->get($key .'_reason'));
+        $this->assertEquals(1, $cache->get($key . '_ttl'));
+    }
+
+    public function testCacheErrorInvalid()
+    {
+        // Test loading of inaccessible asset
+        /** @var AssetContainer|ObjectProphecy $builder */
+        $filename = 'folder/not-image.txt';
+        $hash = sha1($filename);
+
+        // Get backend which poses as image, but has non-image content
+        $builder = $this->getMockAssetBackend($filename, $hash);
+        $stream = fopen(__DIR__.'/ImageTest/not-image.txt', 'r');
+        $builder
+            ->getStream()
+            ->willReturn($stream);
+        $container = $builder->reveal();
+
+        // Test backend
+        /** @var InterventionBackend $backend */
+        $backend = Injector::inst()->createWithArgs(
+            Image_Backend::class,
+            [$container]
+        );
+        $cache = $backend->getCache();
+        $key = $this->getErrorCacheKey($hash, null);
+
+        // Check error after initial attempt
+        $result = $backend->croppedResize(100, 100);
+        $this->assertNull($result);
+        $this->assertEquals(InterventionBackend::FAILED_INVALID, $cache->get($key .'_reason'));
+    }
+
     /**
      * Test that propertes from the source Image are inherited by resampled images
      */
@@ -314,5 +404,21 @@ abstract class ImageTest extends SapphireTest
         $this->assertEquals($resampled->TestProperty, $testString);
         $resampled2 = $resampled->ScaleWidth(5);
         $this->assertEquals($resampled2->TestProperty, $testString);
+    }
+
+    /**
+     * @param $filename
+     * @param $hash
+     * @return ObjectProphecy
+     */
+    protected function getMockAssetBackend($filename, $hash)
+    {
+        $builder = $this->prophesize(AssetContainer::class);
+        $builder->exists()->willReturn(true);
+        $builder->getFilename()->willReturn($filename);
+        $builder->getHash()->willReturn($hash);
+        $builder->getVariant()->willReturn(null);
+        $builder->getIsImage()->willReturn(true);
+        return $builder;
     }
 }

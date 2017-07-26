@@ -267,35 +267,136 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * Test internal file Id generation
+     * Data provider for reversible file ids
+     *
+     * @return array
      */
-    public function testGetFileID()
+    public function dataProviderFileIDs()
+    {
+        return [
+            [
+                'directory/2a17a9cb4b/file.jpg',
+                [
+                    'Filename' => 'directory/file.jpg',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => null
+                ],
+            ],
+            [
+                '2a17a9cb4b/file.jpg',
+                [
+                    'Filename' => 'file.jpg',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => null
+                ],
+            ],
+            [
+                'dir_ectory/2a17a9cb4b/file_e.jpg',
+                [
+                    'Filename' => 'dir_ectory/file_e.jpg',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => null
+                ],
+            ],
+            [
+                'directory/2a17a9cb4b/file__variant.jpg',
+                [
+                    'Filename' => 'directory/file.jpg',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => 'variant'
+                ],
+            ],
+            [
+                '2a17a9cb4b/file__var__iant.jpg',
+                [
+                    'Filename' => 'file.jpg',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => 'var__iant'
+                ],
+            ],
+            [
+                '2a17a9cb4b/file__var__iant',
+                [
+                    'Filename' => 'file',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => 'var__iant'
+                ],
+            ],
+            [
+                '2a17a9cb4b/file',
+                [
+                    'Filename' => 'file',
+                    'Hash' => sha1('puppies'),
+                    'Variant' => null
+                ],
+            ]
+        ];
+    }
+
+    /**
+     * Data providers for files which need cleaning up (only when generating fileID)
+     */
+    public function dataProviderDirtyFileIDs()
+    {
+        return [
+            [
+                'directory/2a17a9cb4b/file_variant.jpg',
+                [
+                    'Filename' => 'directory/file__variant.jpg', // '__' in filename is invalid, will get collapsed
+                    'Hash' => sha1('puppies'),
+                    'Variant' => null
+                ],
+            ]
+        ];
+    }
+
+    /**
+     * Data provider for non-file IDs
+     */
+    public function dataProviderInvalidFileIDs()
+    {
+        return [
+            [ 'some/folder/file.jpg', null ],
+            [ 'file.jpg', null ]
+        ];
+    }
+
+    /**
+     * Test internal file Id generation
+     *
+     * @dataProvider dataProviderFileIDs
+     * @dataProvider dataProviderDirtyFileIDs
+     * @param string $fileID Expected file ID
+     * @param array $tuple Tuple that generates this file ID
+     */
+    public function testGetFileID($fileID, $tuple)
     {
         $store = new TestAssetStore();
         $this->assertEquals(
-            'directory/2a17a9cb4b/file.jpg',
-            $store->getFileID('directory/file.jpg', sha1('puppies'))
+            $fileID,
+            $store->getFileID($tuple['Filename'], $tuple['Hash'], $tuple['Variant'])
         );
-        $this->assertEquals(
-            '2a17a9cb4b/file.jpg',
-            $store->getFileID('file.jpg', sha1('puppies'))
-        );
-        $this->assertEquals(
-            'dir_ectory/2a17a9cb4b/fil_e.jpg',
-            $store->getFileID('dir__ectory/fil__e.jpg', sha1('puppies'))
-        );
-        $this->assertEquals(
-            'directory/2a17a9cb4b/file_variant.jpg',
-            $store->getFileID('directory/file__variant.jpg', sha1('puppies'), null)
-        );
-        $this->assertEquals(
-            'directory/2a17a9cb4b/file__variant.jpg',
-            $store->getFileID('directory/file.jpg', sha1('puppies'), 'variant')
-        );
-        $this->assertEquals(
-            '2a17a9cb4b/file__var__iant.jpg',
-            $store->getFileID('file.jpg', sha1('puppies'), 'var__iant')
-        );
+    }
+
+    /**
+     * Test reversing of FileIDs
+     *
+     * @dataProvider dataProviderFileIDs
+     * @dataProvider dataProviderInvalidFileIDs
+     * @param string $fileID File ID to parse
+     * @param array|null $tuple expected parsed tuple, or null if invalid
+     */
+    public function testParseFileID($fileID, $tuple)
+    {
+        $store = new TestAssetStore();
+        $result = $store->parseFileID($fileID);
+        if (is_null($tuple)) {
+            $this->assertNull($result, "$fileID should be treated as invalid fileID");
+        } else {
+            $this->assertEquals($tuple['Filename'], $result['Filename']);
+            $this->assertEquals($tuple['Variant'], $result['Variant']);
+            $this->assertArrayNotHasKey('Hash', $result);
+        }
     }
 
     public function testGetMetadata()
@@ -519,5 +620,69 @@ class AssetStoreTest extends SapphireTest
             AssetStore::VISIBILITY_PUBLIC,
             $backend->getVisibility($fishTuple['Filename'], $fishTuple['Hash'])
         );
+    }
+
+    public function testRename()
+    {
+        $backend = $this->getBackend();
+        $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
+
+        // Create file with various variants
+        $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
+        $backend->setFromLocalFile($fish1, $fish1Tuple['Filename'], $fish1Tuple['Hash'], 'somevariant');
+        $backend->setFromLocalFile($fish1, $fish1Tuple['Filename'], $fish1Tuple['Hash'], 'anothervariant');
+
+        // Move to new filename
+        $newFilename = 'another-file.jpg';
+        $confirmedFilename = $backend->rename($fish1Tuple['Filename'], $fish1Tuple['Hash'], $newFilename);
+
+        // Check result
+        $this->assertEquals($newFilename, $confirmedFilename);
+        $this->assertNotEquals($fish1Tuple['Filename'], $confirmedFilename);
+
+        // Check old files no longer exist
+        $this->assertFalse($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash']));
+        $this->assertFalse($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash'], 'somevariant'));
+        $this->assertFalse($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash'], 'anothervariant'));
+
+        // New files exist
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash']));
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'somevariant'));
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'anothervariant'));
+
+        // Ensure we aren't getting false positives for exists()
+        $this->assertFalse($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash'], 'nonvariant'));
+        $this->assertFalse($backend->exists($fish1Tuple['Filename'], sha1('nothash')));
+        $this->assertFalse($backend->exists($newFilename, $fish1Tuple['Hash'], 'nonvariant'));
+        $this->assertFalse($backend->exists('notfilename.jpg', $fish1Tuple['Hash']));
+    }
+
+    public function testCopy()
+    {
+        $backend = $this->getBackend();
+        $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
+
+        // Create file with various variants
+        $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
+        $backend->setFromLocalFile($fish1, $fish1Tuple['Filename'], $fish1Tuple['Hash'], 'somevariant');
+        $backend->setFromLocalFile($fish1, $fish1Tuple['Filename'], $fish1Tuple['Hash'], 'anothervariant');
+
+        // Move to new filename
+        $newFilename = 'another-file.jpg';
+        $confirmedFilename = $backend->copy($fish1Tuple['Filename'], $fish1Tuple['Hash'], $newFilename);
+
+        // Check result
+        $this->assertEquals($newFilename, $confirmedFilename);
+        $this->assertNotEquals($fish1Tuple['Filename'], $confirmedFilename);
+
+        // Check old files haven't been deleted
+        $this->assertTrue($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash']));
+        $this->assertTrue($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash'], 'somevariant'));
+        $this->assertTrue($backend->exists($fish1Tuple['Filename'], $fish1Tuple['Hash'], 'anothervariant'));
+
+        // New files exist
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash']));
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'somevariant'));
+        $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'anothervariant'));
     }
 }

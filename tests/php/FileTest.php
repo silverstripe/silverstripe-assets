@@ -304,7 +304,6 @@ class FileTest extends SapphireTest
             $this->getAssetStore()->exists($newTuple['Filename'], $newTuple['Hash']),
             'New path is updated in memory, not written before write() is called'
         );
-        $file->write();
 
         // After write()
         $file->write();
@@ -715,5 +714,22 @@ class FileTest extends SapphireTest
     protected function getAssetStore()
     {
         return Injector::inst()->get(AssetStore::class);
+    }
+
+    public function testRename()
+    {
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, 'asdf');
+        $this->assertTrue($file->exists());
+        $this->assertEquals('FileTest.txt', $file->getFilename());
+        $this->assertEquals('FileTest.txt', $file->File->getFilename());
+
+        // Rename immediately saves record and moves to new location
+        $result = $file->renameFile('_Parent/New__File.txt');
+        $this->assertTrue($file->exists());
+        $this->assertEquals('Parent/New_File.txt', $result);
+        $this->assertEquals('Parent/New_File.txt', $file->generateFilename());
+        $this->assertEquals('Parent/New_File.txt', $file->getFilename());
+        $this->assertFalse($file->isChanged());
     }
 }

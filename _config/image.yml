@@ -4,7 +4,7 @@ Name: assetsimage
 SilverStripe\Core\Injector\Injector:
   SilverStripe\Assets\ImageBackendFactory:
     constructor:
-      creator: %$SilverStripe\Core\Injector\InjectionCreator
+      creator: '%$SilverStripe\Core\Injector\InjectionCreator'
   SilverStripe\Assets\Image_Backend:
     class: SilverStripe\Assets\InterventionBackend
-    factory: %$SilverStripe\Assets\ImageBackendFactory
+    factory: '%$SilverStripe\Assets\ImageBackendFactory'

@@ -3,14 +3,13 @@
 namespace SilverStripe\Assets\Storage;
 
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Thumbnail;
 use SilverStripe\Assets\ImageManipulation;
-use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Assets\Thumbnail;
 use SilverStripe\Control\Director;
-use SilverStripe\Forms\FileField;
-use SilverStripe\ORM\ValidationResult;
-use SilverStripe\ORM\ValidationException;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\FieldType\DBComposite;
+use SilverStripe\ORM\ValidationException;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Permission;
 
 /**
@@ -22,7 +21,6 @@ use SilverStripe\Security\Permission;
  */
 class DBFile extends DBComposite implements AssetContainer, Thumbnail
 {
-
     use ImageManipulation;
 
     /**
@@ -578,5 +576,29 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
             && $this
                 ->getStore()
                 ->canView($this->Filename, $this->Hash);
+    }
+
+    public function renameFile($newName)
+    {
+        if (!$this->Filename) {
+            return null;
+        }
+        $newName = $this
+            ->getStore()
+            ->rename($this->Filename, $this->Hash, $newName);
+        if ($newName) {
+            $this->Filename = $newName;
+        }
+        return $newName;
+    }
+
+    public function copyFile($newName)
+    {
+        if (!$this->Filename) {
+            return null;
+        }
+        return $this
+            ->getStore()
+            ->copy($this->Filename, $this->Hash, $newName);
     }
 }

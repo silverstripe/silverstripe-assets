@@ -591,26 +591,18 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             $this->OwnerID = Security::getCurrentUser()->ID;
         }
 
-        $name = $this->getField('Name');
+        $currentname = $name = $this->getField('Name');
         $title = $this->getField('Title');
 
         $changed = $this->isChanged('Name');
 
-        // Name can't be blank, default to Title
+        // Name can't be blank, default to Title or singular name
         if (!$name) {
-            $changed = true;
-            $name = $title;
+            $name = $title ?: $this->i18n_singular_name();
         }
-
-        $filter = FileNameFilter::create();
-        if ($name) {
-            // Fix illegal characters
-            $name = $filter->filter($name);
-        } else {
-            // Default to file name
+        $name = $this->filterFilename($name);
+        if ($name !== $currentname) {
             $changed = true;
-            $name = $this->i18n_singular_name();
-            $name = $filter->filter($name);
         }
 
         // Check for duplicates when the name has changed (or is set for the first time)
@@ -689,9 +681,17 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return false;
         }
 
-        // Copy record to new location via stream
-        $stream = $this->File->getStream();
-        $this->File->setFromStream($stream, $pathAfter);
+        // Copy record to new location and point DB fields to updated Filename,
+        // respecting back end conflict resolution
+        $expectedPath = $pathAfter;
+        $pathAfter = $this->File->copyFile($pathAfter);
+        if (!$pathAfter) {
+            return false;
+        }
+        if ($expectedPath !== $pathAfter) {
+            $this->setFilename($pathAfter);
+        }
+        $this->File->Filename = $pathAfter;
         return true;
     }
 
@@ -804,6 +804,28 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
+     * Rename this file.
+     * Note: This method will immediately save to the database to maintain
+     * filesystem consistency with the database.
+     *
+     * @param string $newName
+     * @return string
+     */
+    public function renameFile($newName)
+    {
+        $this->setFilename($newName);
+        $this->write();
+        return $this->getFilename();
+    }
+
+    public function copyFile($newName)
+    {
+        $newName = $this->filterFilename($newName);
+        // Copy doesn't modify this record, so can be performed immediately
+        return $this->File->copyFile($newName);
+    }
+
+    /**
      * Update the ParentID and Name for the given filename.
      *
      * On save, the underlying DBFile record will move the underlying file to this location.
@@ -814,6 +836,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function setFilename($filename)
     {
+        $filename = $this->filterFilename($filename);
+
         // Check existing folder path
         $folder = '';
         $parent = $this->Parent();
@@ -1281,5 +1305,20 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
             ]
         ];
+    }
+
+    /**
+     * Pass name through standand FileNameFilter
+     *
+     * @param string $name
+     * @return string
+     */
+    protected function filterFilename($name)
+    {
+        // Fix illegal characters
+        $filter = FileNameFilter::create();
+        return implode('/', array_map(function ($part) use ($filter) {
+            return $filter->filter($part);
+        }, explode('/', $name)));
     }
 }

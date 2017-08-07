@@ -1,0 +1,49 @@
+nl:
+  SilverStripe\Assets\File:
+    AviType: 'AVI video bestand'
+    CREATED: 'Eerste upload'
+    CssType: 'CSS bestand'
+    DRAFT: Concept
+    DmgType: 'Apple disk image'
+    DocType: 'Word document'
+    EDIT_ALL_DESCRIPTION: 'Elk bestand bewerken'
+    EDIT_ALL_HELP: 'Elk bestand bewerken, inclusief vertrouwelijke bestanden'
+    GifType: 'GIF afbeelding - geschikt voor diagrammen'
+    GzType: 'GZIP gecomprimeerd bestand'
+    HtmlType: 'HTML bestand'
+    INVALIDEXTENSION_SHORT: 'Extensie niet toegestaan'
+    IcoType: 'Icon afbeelding'
+    JpgType: 'JPEG afbeelding - geschikt voor foto''s'
+    JsType: 'Javascript bestand'
+    LASTEDIT: 'Laatst gewijzigd'
+    MODIFIED: Gewijzigd
+    Mp3Type: 'MP3 audio bestand'
+    MpgType: 'MPEG video bestand'
+    NOFILESIZE: 'Bestandsgrootte is nul bytes'
+    NOVALIDUPLOAD: 'Geen geldig upload-bestand'
+    PATH: Pad
+    PLURALNAME: Bestanden
+    PLURALS:
+      one: 'Een bestand'
+      other: '{count} bestanden'
+    PdfType: 'Adobe Acrobat PDF bestand'
+    PngType: 'PNG afbeelding - geschikt voor algemeen gebruik'
+    SINGULARNAME: Bestand
+    TOOLARGE: 'Bestand is te groot, maximaal {size} is toegestaan'
+    TiffType: 'TIFF - Tagged image format'
+    URL: URL
+    WavType: 'WAV audio bestand'
+    XlsType: 'Excel spreadsheet'
+    ZipType: 'ZIP gecomprimeerd bestand'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Mappen
+    PLURALS:
+      one: 'Een map'
+      other: '{count} mappen'
+    SINGULARNAME: Map
+  SilverStripe\Assets\Image:
+    PLURALNAME: Afbeeldingen
+    PLURALS:
+      one: 'Een afbeelding'
+      other: '{count} afbeeldingen'
+    SINGULARNAME: Afbeelding

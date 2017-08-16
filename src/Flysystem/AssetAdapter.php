@@ -6,6 +6,7 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config as FlysystemConfig;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\View\ArrayData;
@@ -144,9 +145,16 @@ class AssetAdapter extends Local
             }
         }
 
+        Config::nest();
+        Config::modify()->set(SSViewer::class, 'source_file_comments', false);
+
         $viewer = SSViewer::create(array($template));
-        return (string)$viewer->process(new ArrayData(array(
+        $result = (string)$viewer->process(new ArrayData(array(
             'AllowedExtensions' => $allowedExtensions
         )));
+
+        Config::unnest();
+
+        return $result;
     }
 }

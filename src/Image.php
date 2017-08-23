@@ -2,18 +2,6 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Core\Convert;
-use SilverStripe\Forms\HTMLReadonlyField;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\TabSet;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\DatetimeField;
-use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\FieldList;
-
 /**
  * Represents an Image
  */
@@ -41,91 +29,6 @@ class Image extends File
     {
         parent::__construct($record, $isSingleton, $queryParams);
         $this->File->setAllowedCategories('image/supported');
-    }
-
-    public function getCMSFields()
-    {
-        $path = '/' . dirname($this->getFilename());
-
-        $previewLink = Convert::raw2att($this->PreviewLink());
-        $image = "<img src=\"{$previewLink}\" class=\"editor__thumbnail\" />";
-
-        $link = $this->Link();
-
-        $statusTitle = $this->getStatusTitle();
-        $statusFlag = "<span class=\"editor__status-flag\">{$statusTitle}</span>";
-
-        $content = Tab::create(
-            'Main',
-            HeaderField::create('TitleHeader', $this->Title, 1)
-                ->addExtraClass('editor__heading'),
-            LiteralField::create("ImageFull", $image)
-                ->addExtraClass('editor__file-preview'),
-            TabSet::create(
-                'Editor',
-                Tab::create(
-                    'Details',
-                    TextField::create("Title", $this->fieldLabel('Title')),
-                    TextField::create("Name", $this->fieldLabel('Filename')),
-                    ReadonlyField::create(
-                        "Path",
-                        _t('SilverStripe\\Assets\\File.PATH', 'Path'),
-                        (($path !== '/.') ? $path : '') . '/'
-                    ),
-                    HTMLReadonlyField::create(
-                        'ClickableURL',
-                        _t('SilverStripe\\Assets\\File.URL', 'URL'),
-                        sprintf(
-                            '<i class="%s"></i><a href="%s" target="_blank">%s</a>',
-                            'font-icon-link btn--icon-large form-control-static__icon',
-                            $link,
-                            $link
-                        )
-                    )
-                ),
-                Tab::create(
-                    'Usage',
-                    DatetimeField::create(
-                        "Created",
-                        _t('SilverStripe\\Assets\\File.CREATED', 'First uploaded')
-                    )->setReadonly(true),
-                    DatetimeField::create(
-                        "LastEdited",
-                        _t('SilverStripe\\Assets\\File.LASTEDIT', 'Last changed')
-                    )->setReadonly(true)
-                )
-            ),
-            HiddenField::create('ID', $this->ID)
-        );
-
-        $width = $this->getWidth();
-        $height = $this->getHeight();
-        if ($width && $height) {
-            $dimensions = sprintf('%dx%d', $width, $height);
-            $content->insertAfter(
-                'TitleHeader',
-                LiteralField::create(
-                    "DisplaySize",
-                    sprintf(
-                        '<div class="editor__specs">%spx, %s %s</div>',
-                        $dimensions,
-                        $this->getSize(),
-                        $statusFlag
-                    )
-                )
-            );
-        } else {
-            $content->insertAfter(
-                'TitleHeader',
-                LiteralField::create('StatusFlag', $statusFlag)
-            );
-        }
-
-        $fields = FieldList::create(TabSet::create('Root', $content));
-
-        $this->extend('updateCMSFields', $fields);
-
-        return $fields;
     }
 
     public function getIsImage()

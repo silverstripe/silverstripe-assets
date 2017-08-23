@@ -2,37 +2,31 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\ORM\CMSPreviewable;
+use InvalidArgumentException;
+use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
-use SilverStripe\Assets\Storage\AssetContainer;
-use SilverStripe\CMS\Model\SiteTree;
-use SilverStripe\Core\Convert;
-use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Dev\Deprecation;
-use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\TabSet;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\ReadonlyField;
+use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\InheritedPermissionsExtension;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Permission;
-use InvalidArgumentException;
+use SilverStripe\View\HTML;
 
 /**
  * This class handles the representation of a file on the filesystem within the framework.
@@ -433,60 +427,22 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Returns the fields to power the edit screen of files in the CMS.
-     * You can modify this FieldList by subclassing folder, or by creating a {@link DataExtension}
-     * and implementing updateCMSFields(FieldList $fields) on that extension.
+     * List of basic content editable file fields.
      *
      * @return FieldList
      */
     public function getCMSFields()
     {
-        $path = '/' . dirname($this->getFilename());
+        $image = HTML::createTag('img', [ 'src' => $this->PreviewLink(), 'alt' => $this->getTitle() ]);
 
-        $previewLink = Convert::raw2att($this->PreviewLink());
-        $image = "<img src=\"{$previewLink}\" class=\"editor__thumbnail\" />";
-
-        $statusTitle = $this->getStatusTitle();
-        $statusFlag = ($statusTitle) ? "<span class=\"editor__status-flag\">{$statusTitle}</span>" : '';
-
-        $content = Tab::create(
-            'Main',
-            HeaderField::create('TitleHeader', $this->Title, 1)
-                ->addExtraClass('editor__heading'),
-            LiteralField::create('StatusFlag', $statusFlag),
-            LiteralField::create("IconFull", $image)
-                ->addExtraClass('editor__file-preview'),
-            TabSet::create(
-                'Editor',
-                Tab::create(
-                    'Details',
-                    TextField::create("Title", $this->fieldLabel('Title')),
-                    TextField::create("Name", $this->fieldLabel('Filename')),
-                    ReadonlyField::create(
-                        "Path",
-                        _t(__CLASS__.'.PATH', 'Path'),
-                        (($path !== '/.') ? $path : '') . '/'
-                    )
-                ),
-                Tab::create(
-                    'Usage',
-                    DatetimeField::create(
-                        "Created",
-                        _t(__CLASS__.'.CREATED', 'First uploaded')
-                    )->setReadonly(true),
-                    DatetimeField::create(
-                        "LastEdited",
-                        _t(__CLASS__.'.LASTEDIT', 'Last changed')
-                    )->setReadonly(true)
-                )
-            ),
-            HiddenField::create('ID', $this->ID)
+        $fields = FieldList::create(
+            HTMLReadonlyField::create('IconFull', _t(__CLASS__.'.PREVIEW', 'Preview'), $image),
+            TextField::create("Title", $this->fieldLabel('Title')),
+            TextField::create("Name", $this->fieldLabel('Filename')),
+            TextField::create("Filename", _t(__CLASS__.'.PATH', 'Path'))
+                ->setReadonly(true)
         );
-
-        $fields = FieldList::create(TabSet::create('Root', $content));
-
         $this->extend('updateCMSFields', $fields);
-
         return $fields;
     }
 

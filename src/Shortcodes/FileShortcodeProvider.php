@@ -22,7 +22,6 @@ class FileShortcodeProvider implements ShortcodeHandler
 
     public function __construct()
     {
-        $this->constructExtensions();
     }
 
     /**

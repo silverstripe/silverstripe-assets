@@ -4,16 +4,9 @@ namespace SilverStripe\Assets;
 
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Manifest\ModuleLoader;
-use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\TabSet;
 
 /**
  * Represents a logical folder, which may be used to organise assets
@@ -173,45 +166,6 @@ class Folder extends File
     public function hasChildFolders()
     {
         return $this->ChildFolders()->exists();
-    }
-
-    /**
-     * Return the FieldList used to edit this folder in the CMS.
-     * You can modify this FieldList by subclassing folder, or by creating a {@link DataExtension}
-     * and implemeting updateCMSFields(FieldList $fields) on that extension.
-     *
-     * @return FieldList
-     */
-    public function getCMSFields()
-    {
-        // Don't show readonly path until we can implement parent folder selection,
-        // it's too confusing when readonly (makes sense for files only).
-
-        $width = (int)Image::config()->get('asset_preview_width');
-        $previewLink = Convert::raw2att($this->ScaleMaxWidth($width)->getIcon());
-        $image = "<img src=\"{$previewLink}\" class=\"editor__thumbnail\" />";
-
-        $content = Tab::create(
-            'Main',
-            HeaderField::create('TitleHeader', $this->Title, 1)
-                ->addExtraClass('editor__heading'),
-            LiteralField::create("IconFull", $image)
-                ->addExtraClass('editor__file-preview'),
-            TabSet::create(
-                'Editor',
-                Tab::create(
-                    'Details',
-                    TextField::create("Name", $this->fieldLabel('Filename'))
-                )
-            ),
-            HiddenField::create('ID', $this->ID)
-        );
-
-        $fields = FieldList::create(TabSet::create('Root', $content));
-
-        $this->extend('updateCMSFields', $fields);
-
-        return $fields;
     }
 
     /**

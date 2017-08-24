@@ -433,7 +433,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function getCMSFields()
     {
-        $image = HTML::createTag('img', [ 'src' => $this->PreviewLink(), 'alt' => $this->getTitle() ]);
+        $image = HTML::createTag('img', [
+            'src' => $this->PreviewLink(),
+            'alt' => $this->getTitle(),
+            'class' => 'd-block mx-auto',
+        ]);
 
         $fields = FieldList::create(
             HTMLReadonlyField::create('IconFull', _t(__CLASS__.'.PREVIEW', 'Preview'), $image),

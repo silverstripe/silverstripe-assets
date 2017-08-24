@@ -20,10 +20,6 @@ class FileShortcodeProvider implements ShortcodeHandler
     use Extensible;
     use Injectable;
 
-    public function __construct()
-    {
-    }
-
     /**
      * Gets the list of shortcodes provided by this handler
      *

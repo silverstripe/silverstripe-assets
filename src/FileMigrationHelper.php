@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
@@ -17,6 +18,17 @@ use SilverStripe\Versioned\Versioned;
 class FileMigrationHelper
 {
     use Injectable;
+    use Configurable;
+
+    /**
+     * If a file fails to validate during migration, delete it.
+     * If set to false, the record will exist but will not be attached to any filesystem
+     * item anymore.
+     *
+     * @config
+     * @var bool
+     */
+    private static $delete_invalid_files = true;
 
     /**
      * Perform migration
@@ -78,6 +90,15 @@ class FileMigrationHelper
             return false;
         }
 
+        // Remove this file if it violates allowed_extensions
+        $allowed = array_filter(File::config()->allowed_extensions);
+        $extension = strtolower($file->getExtension());
+        if (!in_array($extension, $allowed)) {
+            if ($this->config()->get('delete_invalid_files')) {
+                $file->delete();
+            }
+            return false;
+        }
 
         // Copy local file into this filesystem
         $filename = $file->generateFilename();
@@ -112,7 +133,7 @@ class FileMigrationHelper
         // Select all records which have a Filename value, but not FileFilename.
         /** @skipUpgrade */
         return File::get()
-            ->exclude('ClassName', ['SilverStripe\\Assets\\Folder', 'Folder'])
+            ->exclude('ClassName', [Folder::class, 'Folder'])
             ->filter('FileFilename', array('', null))
             ->where('"File"."Filename" IS NOT NULL AND "File"."Filename" != \'\''); // Non-orm field
     }

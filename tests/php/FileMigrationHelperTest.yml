@@ -19,3 +19,7 @@ SilverStripe\Assets\File:
   file3:
     Name: picture.jpg
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  invalid:
+    Name: myfile.exe
+    ParentID: =>SilverStripe\Assets\Folder.subfolder
+

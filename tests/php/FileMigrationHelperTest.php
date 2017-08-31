@@ -97,5 +97,10 @@ class FileMigrationHelperTest extends SapphireTest
             );
             $this->assertTrue($file->isPublished(), "File is published after migration");
         }
+
+        // Ensure that invalid file has been removed during migration
+        $invalidID = $this->idFromFixture(File::class, 'invalid');
+        $this->assertNotEmpty($invalidID);
+        $this->assertNull(File::get()->byID($invalidID));
     }
 }

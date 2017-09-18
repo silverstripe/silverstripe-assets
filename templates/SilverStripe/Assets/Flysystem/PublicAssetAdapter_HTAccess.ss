@@ -5,7 +5,10 @@
 #
 
 <IfModule mod_rewrite.c>
-    SetEnv HTTP_MOD_REWRITE On
+    <IfModule mod_env.c>
+        SetEnv HTTP_MOD_REWRITE On
+    </IfModule>
+
     RewriteEngine On
 
     # Disable PHP handler

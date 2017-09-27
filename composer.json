@@ -1,7 +1,7 @@
 {
     "name": "silverstripe/assets",
     "description": "SilverStripe Assets component",
-    "type": "silverstripe-module",
+    "type": "silverstripe-vendormodule",
     "homepage": "http://silverstripe.org",
     "license": "BSD-3-Clause",
     "keywords": [
@@ -20,6 +20,7 @@
     ],
     "require": {
         "silverstripe/framework": "^4@dev",
+        "silverstripe/vendor-plugin": "^1.0",
         "intervention/image": "^2.3",
         "php": ">=5.6.0"
     },

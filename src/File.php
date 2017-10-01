@@ -10,6 +10,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleLoader;
+use SilverStripe\Core\Resettable;
 use SilverStripe\Dev\Deprecation;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLReadonlyField;
@@ -19,6 +20,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\InheritedPermissionsExtension;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -88,7 +90,7 @@ use SilverStripe\View\HTML;
  * @mixin Versioned
  * @mixin InheritedPermissionsExtension
  */
-class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
+class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
 {
     use ImageManipulation;
 
@@ -531,7 +533,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         return self::get_app_category($this->getExtension());
     }
-
 
     /**
      * Should be called after the file was uploaded
@@ -1280,5 +1281,22 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return implode('/', array_map(function ($part) use ($filter) {
             return $filter->filter($part);
         }, explode('/', $name)));
+    }
+
+    public function flushCache($persistent = true)
+    {
+        parent::flushCache($persistent);
+        static::reset();
+    }
+
+    public static function reset()
+    {
+        parent::reset();
+
+        // Flush permissions on modification
+        $permissions = File::singleton()->getPermissionChecker();
+        if ($permissions instanceof InheritedPermissions) {
+            $permissions->clearCache();
+        }
     }
 }

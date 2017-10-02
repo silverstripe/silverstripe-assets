@@ -69,9 +69,18 @@ abstract class ImageTest extends SapphireTest
     public function testAutoOrientateOnEXIFData()
     {
         $image = $this->objFromFixture(Image::class, 'exifPortrait');
-        $this->assertEquals(Image_Backend::ORIENTATION_LANDSCAPE, $image->getOrientation());
+        $this->assertEquals(Image_Backend::ORIENTATION_PORTRAIT, $image->getOrientation());
         $resampled = $image->Resampled();
         $this->assertEquals(Image_Backend::ORIENTATION_PORTRAIT, $resampled->getOrientation());
+    }
+
+    public function testExifOrientationOnManipulatedImage()
+    {
+        /** @var Image $image */
+        $image = $this->objFromFixture(Image::class, 'exifPortrait');
+        $resampled = $image->ScaleHeight(100);
+        $this->assertEquals(Image_Backend::ORIENTATION_PORTRAIT, $resampled->getOrientation());
+        $this->assertEquals(100, $resampled->getHeight());
     }
 
     public function testGetTagWithoutTitle()

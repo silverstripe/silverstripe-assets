@@ -67,7 +67,7 @@ class AssetAdapterTest extends SapphireTest
         }
 
         // Rewrite rules
-        $this->assertContains('RewriteRule .* ../framework/main.php?url=%1 [QSA]', $content);
+        $this->assertContains('RewriteRule .* ../vendor/silverstripe/framework/main.php?url=%1 [QSA]', $content);
         $this->assertContains('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
 
         // Test flush restores invalid content

@@ -26,5 +26,5 @@
     # Non existant files passed to requesthandler
     RewriteCond %{REQUEST_URI} ^(.*)$
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule .* ../framework/main.php?url=%1 [QSA]
+    RewriteRule .* ../vendor/silverstripe/framework/main.php?url=%1 [QSA]
 </IfModule>

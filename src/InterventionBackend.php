@@ -254,6 +254,14 @@ class InterventionBackend implements Image_Backend, Flushable
                 $this->setTempPath($path);
                 $resource = $this->getImageManager()->make($path);
             }
+
+            // Fix image orientation
+            try {
+                $resource->orientate();
+            } catch (NotSupportedException $e) {
+                // noop - we can't orientate, don't worry about it
+            }
+
             $this->setImageResource($resource);
             $this->markSuccess($hash, $variant);
             $error = null;
@@ -331,13 +339,6 @@ class InterventionBackend implements Image_Backend, Flushable
             $resource = $this->getImageResource();
             if (!$resource) {
                 throw new BadMethodCallException("Cannot write corrupt file to store");
-            }
-
-            // Fix image orientation
-            try {
-                $resource->orientate();
-            } catch (NotSupportedException $e) {
-                // noop - we can't orientate, don't worry about it
             }
 
             // Save file

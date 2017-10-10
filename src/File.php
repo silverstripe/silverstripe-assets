@@ -862,19 +862,18 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $extension = strtolower($extension);
         $module = ModuleLoader::getModule('silverstripe/framework');
 
-        // Check if exact extension has an icon
-        if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
-            // Fallback to category-specific icon
-            $extension = static::get_app_category($extension);
-
-
-            // Fallback to  generic icon
-            if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
-                $extension = "generic";
+        $candidates = [
+            $extension,
+            static::get_app_category($extension),
+            'generic'
+        ];
+        foreach ($candidates as $candidate) {
+            $resource = $module->getResource("client/images/app_icons/{$candidate}_92.png");
+            if ($resource->exists()) {
+                return $resource->getURL();
             }
         }
-
-        return $module->getRelativeResourcePath("client/images/app_icons/{$extension}_92.png");
+        return null;
     }
 
     /**

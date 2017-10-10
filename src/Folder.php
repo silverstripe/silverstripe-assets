@@ -3,7 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Core\Convert;
-use SilverStripe\Core\Manifest\ModuleLoader;
+use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Versioned\Versioned;
@@ -98,8 +98,9 @@ class Folder extends File
      */
     public function getIcon()
     {
-        $module = ModuleLoader::getModule('silverstripe/framework');
-        return $module->getRelativeResourcePath("client/images/app_icons/folder_icon_large.png");
+        return ModuleResourceLoader::resourceURL(
+            'silverstripe/framework:client/images/app_icons/folder_icon_large.png'
+        );
     }
 
     /**

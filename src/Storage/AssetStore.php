@@ -216,6 +216,26 @@ interface AssetStore
     public function delete($filename, $hash);
 
     /**
+     * Rename a file (and all variants) to a new filename
+     *
+     * @param string $filename
+     * @param string $hash
+     * @param string $newName
+     * @return string Updated Filename, or null if rename failed
+     */
+    public function rename($filename, $hash, $newName);
+
+    /**
+     * Copy a file (and all variants) to a new filename
+     *
+     * @param string $filename
+     * @param string $hash
+     * @param string $newName
+     * @return string Updated Filename, or null if copy failed
+     */
+    public function copy($filename, $hash, $newName);
+
+    /**
      * Publicly expose the file (and all variants) identified by the given filename and hash
      *
      * @param string $filename Filename (not including assets)

@@ -60,14 +60,14 @@ class TestAssetStore extends FlysystemAssetStore
         $publicFilesystem = new Filesystem(
             $publicAdapter,
             [
-            'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+                'visibility' => AdapterInterface::VISIBILITY_PUBLIC
             ]
         );
         $protectedAdapter = new ProtectedAssetAdapter(ASSETS_PATH . '/' . $basedir . '/.protected');
         $protectedFilesystem = new Filesystem(
             $protectedAdapter,
             [
-            'visibility' => AdapterInterface::VISIBILITY_PRIVATE
+                'visibility' => AdapterInterface::VISIBILITY_PRIVATE
             ]
         );
 
@@ -162,6 +162,10 @@ class TestAssetStore extends FlysystemAssetStore
         return parent::getFileID($filename, $hash, $variant);
     }
 
+    public function parseFileID($fileID)
+    {
+        return parent::parseFileID($fileID);
+    }
 
     public function getOriginalFilename($fileID)
     {

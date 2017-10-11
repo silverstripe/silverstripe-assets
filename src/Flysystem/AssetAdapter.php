@@ -2,10 +2,12 @@
 
 namespace SilverStripe\Assets\Flysystem;
 
+use Exception;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config as FlysystemConfig;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\View\ArrayData;
@@ -34,8 +36,8 @@ class AssetAdapter extends Local
      */
     private static $file_permissions = array(
         'file' => [
-            'public' => 0744,
-            'private' => 0700,
+            'public' => 0644,
+            'private' => 0600,
         ],
         'dir' => [
             'public' => 0755,
@@ -51,11 +53,29 @@ class AssetAdapter extends Local
         $root = realpath($root);
 
         // Override permissions with config
-        $permissions = $this->config()->get('file_permissions');
+        $permissions = $this->normalisePermissions($this->config()->get('file_permissions'));
         parent::__construct($root, $writeFlags, $linkHandling, $permissions);
 
         // Configure server
         $this->configureServer();
+    }
+
+    /**
+     * Converts strings to octal permission codes. E.g. '0700' => 0700
+     *
+     * @param array $config
+     * @return array
+     */
+    public static function normalisePermissions($config)
+    {
+        foreach ($config as $type => $codes) {
+            foreach ($codes as $key => $mask) {
+                if (is_string($mask)) {
+                    $config[$type][$key] = intval($mask, 8);
+                }
+            }
+        }
+        return $config;
     }
 
     /**
@@ -96,7 +116,7 @@ class AssetAdapter extends Local
      * Configure server files for this store
      *
      * @param bool $forceOverwrite Force regeneration even if files already exist
-     * @throws \Exception
+     * @throws Exception
      */
     protected function configureServer($forceOverwrite = false)
     {
@@ -115,14 +135,17 @@ class AssetAdapter extends Local
         $config = new FlysystemConfig();
         $config->set('visibility', 'private');
         foreach ($configurations as $file => $template) {
+            // Ensure file contents
             if ($forceOverwrite || !$this->has($file)) {
                 // Evaluate file
                 $content = $this->renderTemplate($template);
                 $success = $this->write($file, $content, $config);
                 if (!$success) {
-                    throw new \Exception("Error writing server configuration file \"{$file}\"");
+                    throw new Exception("Error writing server configuration file \"{$file}\"");
                 }
             }
+            // Ensure correct permissions
+            $this->setVisibility($file, 'private');
         }
     }
 
@@ -144,9 +167,16 @@ class AssetAdapter extends Local
             }
         }
 
-        $viewer = new SSViewer(array($template));
-        return (string)$viewer->process(new ArrayData(array(
+        Config::nest();
+        Config::modify()->set(SSViewer::class, 'source_file_comments', false);
+
+        $viewer = SSViewer::create(array($template));
+        $result = (string)$viewer->process(new ArrayData(array(
             'AllowedExtensions' => $allowedExtensions
         )));
+
+        Config::unnest();
+
+        return $result;
     }
 }

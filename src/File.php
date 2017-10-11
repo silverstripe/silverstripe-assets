@@ -2,37 +2,33 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\ORM\CMSPreviewable;
+use InvalidArgumentException;
+use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
-use SilverStripe\Assets\Storage\AssetContainer;
-use SilverStripe\CMS\Model\SiteTree;
-use SilverStripe\Core\Convert;
-use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Manifest\ModuleLoader;
+use SilverStripe\Core\Resettable;
 use SilverStripe\Dev\Deprecation;
-use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\HeaderField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\Tab;
-use SilverStripe\Forms\TabSet;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\ReadonlyField;
+use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\InheritedPermissionsExtension;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Permission;
-use InvalidArgumentException;
+use SilverStripe\View\HTML;
 
 /**
  * This class handles the representation of a file on the filesystem within the framework.
@@ -94,7 +90,7 @@ use InvalidArgumentException;
  * @mixin Versioned
  * @mixin InheritedPermissionsExtension
  */
-class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider
+class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
 {
     use ImageManipulation;
 
@@ -433,60 +429,26 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Returns the fields to power the edit screen of files in the CMS.
-     * You can modify this FieldList by subclassing folder, or by creating a {@link DataExtension}
-     * and implementing updateCMSFields(FieldList $fields) on that extension.
+     * List of basic content editable file fields.
      *
      * @return FieldList
      */
     public function getCMSFields()
     {
-        $path = '/' . dirname($this->getFilename());
+        $image = HTML::createTag('img', [
+            'src' => $this->PreviewLink(),
+            'alt' => $this->getTitle(),
+            'class' => 'd-block mx-auto',
+        ]);
 
-        $previewLink = Convert::raw2att($this->PreviewLink());
-        $image = "<img src=\"{$previewLink}\" class=\"editor__thumbnail\" />";
-
-        $statusTitle = $this->getStatusTitle();
-        $statusFlag = ($statusTitle) ? "<span class=\"editor__status-flag\">{$statusTitle}</span>" : '';
-
-        $content = Tab::create(
-            'Main',
-            HeaderField::create('TitleHeader', $this->Title, 1)
-                ->addExtraClass('editor__heading'),
-            LiteralField::create('StatusFlag', $statusFlag),
-            LiteralField::create("IconFull", $image)
-                ->addExtraClass('editor__file-preview'),
-            TabSet::create(
-                'Editor',
-                Tab::create(
-                    'Details',
-                    TextField::create("Title", $this->fieldLabel('Title')),
-                    TextField::create("Name", $this->fieldLabel('Filename')),
-                    ReadonlyField::create(
-                        "Path",
-                        _t(__CLASS__.'.PATH', 'Path'),
-                        (($path !== '/.') ? $path : '') . '/'
-                    )
-                ),
-                Tab::create(
-                    'Usage',
-                    DatetimeField::create(
-                        "Created",
-                        _t(__CLASS__.'.CREATED', 'First uploaded')
-                    )->setReadonly(true),
-                    DatetimeField::create(
-                        "LastEdited",
-                        _t(__CLASS__.'.LASTEDIT', 'Last changed')
-                    )->setReadonly(true)
-                )
-            ),
-            HiddenField::create('ID', $this->ID)
+        $fields = FieldList::create(
+            HTMLReadonlyField::create('IconFull', _t(__CLASS__.'.PREVIEW', 'Preview'), $image),
+            TextField::create("Title", $this->fieldLabel('Title')),
+            TextField::create("Name", $this->fieldLabel('Filename')),
+            TextField::create("Filename", _t(__CLASS__.'.PATH', 'Path'))
+                ->setReadonly(true)
         );
-
-        $fields = FieldList::create(TabSet::create('Root', $content));
-
         $this->extend('updateCMSFields', $fields);
-
         return $fields;
     }
 
@@ -572,7 +534,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return self::get_app_category($this->getExtension());
     }
 
-
     /**
      * Should be called after the file was uploaded
      */
@@ -591,26 +552,18 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             $this->OwnerID = Security::getCurrentUser()->ID;
         }
 
-        $name = $this->getField('Name');
+        $currentname = $name = $this->getField('Name');
         $title = $this->getField('Title');
 
         $changed = $this->isChanged('Name');
 
-        // Name can't be blank, default to Title
+        // Name can't be blank, default to Title or singular name
         if (!$name) {
-            $changed = true;
-            $name = $title;
+            $name = $title ?: $this->i18n_singular_name();
         }
-
-        $filter = FileNameFilter::create();
-        if ($name) {
-            // Fix illegal characters
-            $name = $filter->filter($name);
-        } else {
-            // Default to file name
+        $name = $this->filterFilename($name);
+        if ($name !== $currentname) {
             $changed = true;
-            $name = $this->i18n_singular_name();
-            $name = $filter->filter($name);
         }
 
         // Check for duplicates when the name has changed (or is set for the first time)
@@ -689,9 +642,17 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return false;
         }
 
-        // Copy record to new location via stream
-        $stream = $this->File->getStream();
-        $this->File->setFromStream($stream, $pathAfter);
+        // Copy record to new location and point DB fields to updated Filename,
+        // respecting back end conflict resolution
+        $expectedPath = $pathAfter;
+        $pathAfter = $this->File->copyFile($pathAfter);
+        if (!$pathAfter) {
+            return false;
+        }
+        if ($expectedPath !== $pathAfter) {
+            $this->setFilename($pathAfter);
+        }
+        $this->File->Filename = $pathAfter;
         return true;
     }
 
@@ -804,6 +765,28 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
+     * Rename this file.
+     * Note: This method will immediately save to the database to maintain
+     * filesystem consistency with the database.
+     *
+     * @param string $newName
+     * @return string
+     */
+    public function renameFile($newName)
+    {
+        $this->setFilename($newName);
+        $this->write();
+        return $this->getFilename();
+    }
+
+    public function copyFile($newName)
+    {
+        $newName = $this->filterFilename($newName);
+        // Copy doesn't modify this record, so can be performed immediately
+        return $this->File->copyFile($newName);
+    }
+
+    /**
      * Update the ParentID and Name for the given filename.
      *
      * On save, the underlying DBFile record will move the underlying file to this location.
@@ -814,6 +797,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function setFilename($filename)
     {
+        $filename = $this->filterFilename($filename);
+
         // Check existing folder path
         $folder = '';
         $parent = $this->Parent();
@@ -877,19 +862,18 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $extension = strtolower($extension);
         $module = ModuleLoader::getModule('silverstripe/framework');
 
-        // Check if exact extension has an icon
-        if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
-            // Fallback to category-specific icon
-            $extension = static::get_app_category($extension);
-
-
-            // Fallback to  generic icon
-            if (!$module->hasResource("client/images/app_icons/{$extension}_92.png")) {
-                $extension = "generic";
+        $candidates = [
+            $extension,
+            static::get_app_category($extension),
+            'generic'
+        ];
+        foreach ($candidates as $candidate) {
+            $resource = $module->getResource("client/images/app_icons/{$candidate}_92.png");
+            if ($resource->exists()) {
+                return $resource->getURL();
             }
         }
-
-        return $module->getRelativeResourcePath("client/images/app_icons/{$extension}_92.png");
+        return null;
     }
 
     /**
@@ -981,28 +965,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Convert a php.ini value (eg: 512M) to bytes
      *
      * @param  string $iniValue
-     * @return int
+     * @return float
      */
     public static function ini2bytes($iniValue)
     {
-        $iniValues = str_split(trim($iniValue));
-        $unit = strtolower(array_pop($iniValues));
-        $quantity = (int) implode($iniValues);
-        switch ($unit) {
-            case 'g':
-                $quantity *= 1024;
-                // deliberate no break
-            case 'm':
-                $quantity *= 1024;
-                // deliberate no break
-            case 'k':
-                $quantity *= 1024;
-                // deliberate no break
-            default:
-                // no-op: pre-existing behaviour
-                break;
-        }
-        return $quantity;
+        Deprecation::notice('5.0', 'Use Convert::memstring2bytes instead');
+        return Convert::memstring2bytes($iniValue);
     }
 
     /**
@@ -1297,5 +1265,37 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
             ]
         ];
+    }
+
+    /**
+     * Pass name through standand FileNameFilter
+     *
+     * @param string $name
+     * @return string
+     */
+    protected function filterFilename($name)
+    {
+        // Fix illegal characters
+        $filter = FileNameFilter::create();
+        return implode('/', array_map(function ($part) use ($filter) {
+            return $filter->filter($part);
+        }, explode('/', $name)));
+    }
+
+    public function flushCache($persistent = true)
+    {
+        parent::flushCache($persistent);
+        static::reset();
+    }
+
+    public static function reset()
+    {
+        parent::reset();
+
+        // Flush permissions on modification
+        $permissions = File::singleton()->getPermissionChecker();
+        if ($permissions instanceof InheritedPermissions) {
+            $permissions->clearCache();
+        }
     }
 }

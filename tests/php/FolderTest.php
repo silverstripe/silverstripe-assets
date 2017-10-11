@@ -2,11 +2,14 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use SilverStripe\Security\InheritedPermissions;
+use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FileNameFilter;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
@@ -31,8 +34,8 @@ class FolderTest extends SapphireTest
         TestAssetStore::activate('FolderTest');
 
         // Set the File Name Filter replacements so files have the expected names
-        Config::inst()->update(
-            'SilverStripe\\Assets\\FileNameFilter',
+        Config::modify()->merge(
+            FileNameFilter::class,
             'default_replacements',
             array(
             '/\s/' => '-', // remove whitespace
@@ -165,9 +168,7 @@ class FolderTest extends SapphireTest
         $folder2 = $this->objFromFixture(Folder::class, 'folder2');
 
         // Publish file1
-        /**
- * @var File $file1
-*/
+        /** @var File $file1 */
         $file1 = DataObject::get_by_id(File::class, $this->idFromFixture(File::class, 'file1-folder1'), false);
         $file1->publishRecursive();
 
@@ -176,9 +177,7 @@ class FolderTest extends SapphireTest
         $folder1->write();
 
         // Check if the file in the folder moved along
-        /**
- * @var File $file1Draft
-*/
+        /** @var File $file1Draft */
         $file1Draft = Versioned::get_by_stage(File::class, Versioned::DRAFT)->byID($file1->ID);
         $this->assertFileExists(TestAssetStore::getLocalPath($file1Draft));
 
@@ -195,9 +194,7 @@ class FolderTest extends SapphireTest
         );
 
         // Published (live) version remains in the old location
-        /**
- * @var File $file1Live
-*/
+        /** @var File $file1Live */
         $file1Live = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($file1->ID);
         $this->assertEquals(
             ASSETS_PATH . '/FolderTest/FileTest-folder1/55b443b601/File1.txt',
@@ -299,5 +296,69 @@ class FolderTest extends SapphireTest
     {
         $root = Folder::singleton();
         $this->assertEquals('/', $root->getFilename());
+    }
+
+    /**
+     * Test permissions on folders recurse to children.
+     * Note: draft permissions
+     */
+    public function testPermissions()
+    {
+        $member = $this->objFromFixture(Member::class, 'assetadmin');
+
+        // Ensure all folders / files are published
+        /** @var Folder $restrictedFolderDraft */
+        $restrictedFolderDraft = $this->objFromFixture(Folder::class, 'restrictedViewFolder');
+        $restrictedFolderDraft->forceChange();
+        $restrictedFolderDraft->write();
+        $restrictedFolderLive = Versioned::get_by_stage(Folder::class, Versioned::LIVE)
+            ->byID($restrictedFolderDraft->ID);
+
+        /** @var File $restrictedFileDraft */
+        $restrictedFileDraft = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+        $restrictedFileDraft->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $restrictedFileLive = Versioned::get_by_stage(File::class, Versioned::LIVE)
+            ->byID($restrictedFileDraft->ID);
+
+        // Only member can view these files
+        $this->logInAs($member);
+        $this->assertTrue($restrictedFileLive->canView());
+        $this->assertTrue($restrictedFolderLive->canView());
+        $this->logOut();
+        $this->assertFalse($restrictedFileLive->canView());
+        $this->assertFalse($restrictedFolderLive->canView());
+
+        // Folder can be made public
+        $restrictedFolderDraft->CanViewType = InheritedPermissions::ANYONE;
+        $restrictedFolderDraft->write(); // Should trigger publish
+        $this->assertTrue($restrictedFolderLive->canView());
+        $this->assertTrue($restrictedFileLive->canView());
+
+        // Test that a public folder can be made protected
+        /** @var Folder $publicFolderDraft */
+        $publicFolderDraft = $this->objFromFixture(Folder::class, 'folder1');
+        $publicFolderDraft->forceChange();
+        $publicFolderDraft->write();
+        $publicFolderLive = Versioned::get_by_stage(Folder::class, Versioned::LIVE)
+            ->byID($publicFolderDraft->ID);
+
+        /** @var File $publicFileDraft */
+        $publicFileDraft = $this->objFromFixture(File::class, 'file1-folder1');
+        $publicFileDraft->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $publicFileLive = Versioned::get_by_stage(File::class, Versioned::LIVE)
+            ->byID($publicFileDraft->ID);
+
+        // Anyone can view these files
+        $this->assertTrue($publicFileLive->canView());
+        $this->assertTrue($publicFolderLive->canView());
+
+        // Folder can be made protected
+        $publicFolderDraft->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
+        $publicFolderDraft->write(); // should trigger publish
+        $this->assertFalse($publicFileLive->canView());
+        $this->assertFalse($publicFolderLive->canView());
+        $this->logInAs($member);
+        $this->assertTrue($publicFileLive->canView());
+        $this->assertTrue($publicFolderLive->canView());
     }
 }

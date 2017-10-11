@@ -304,7 +304,6 @@ class FileTest extends SapphireTest
             $this->getAssetStore()->exists($newTuple['Filename'], $newTuple['Hash']),
             'New path is updated in memory, not written before write() is called'
         );
-        $file->write();
 
         // After write()
         $file->write();
@@ -702,10 +701,10 @@ class FileTest extends SapphireTest
     public function ini2BytesProvider()
     {
         return [
-            ['2k', 2 * 1024],
-            ['512M', 512 * 1024 * 1024],
-            ['1024g', 1024 * 1024 * 1024 * 1024],
-            ['1024G', 1024 * 1024 * 1024 * 1024]
+            ['2k', (float)(2 * 1024)],
+            ['512M', (float)(512 * 1024 * 1024)],
+            ['1024g', (float)(1024 * 1024 * 1024 * 1024)],
+            ['1024G', (float)(1024 * 1024 * 1024 * 1024)]
         ];
     }
 
@@ -715,5 +714,22 @@ class FileTest extends SapphireTest
     protected function getAssetStore()
     {
         return Injector::inst()->get(AssetStore::class);
+    }
+
+    public function testRename()
+    {
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, 'asdf');
+        $this->assertTrue($file->exists());
+        $this->assertEquals('FileTest.txt', $file->getFilename());
+        $this->assertEquals('FileTest.txt', $file->File->getFilename());
+
+        // Rename immediately saves record and moves to new location
+        $result = $file->renameFile('_Parent/New__File.txt');
+        $this->assertTrue($file->exists());
+        $this->assertEquals('Parent/New_File.txt', $result);
+        $this->assertEquals('Parent/New_File.txt', $file->generateFilename());
+        $this->assertEquals('Parent/New_File.txt', $file->getFilename());
+        $this->assertFalse($file->isChanged());
     }
 }

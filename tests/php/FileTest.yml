@@ -57,6 +57,10 @@ SilverStripe\Assets\Folder:
     Name: FileTest-restricted-folder
     CanEditType: OnlyTheseUsers
     EditorGroups: =>SilverStripe\Security\Group.assetusers
+  restrictedViewFolder:
+    Name: FileTest-restricted-view-folder
+    CanViewType: OnlyTheseUsers
+    ViewerGroups: =>SilverStripe\Security\Group.assetusers
 SilverStripe\Assets\File:
   asdf:
     FileFilename: FileTest.txt
@@ -86,6 +90,11 @@ SilverStripe\Assets\File:
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: File1.txt
     ParentID: =>SilverStripe\Assets\Folder.restrictedFolder
+  restrictedViewFolder-file4:
+    FileFilename: restrictedViewFolder/File4.txt
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: File4.txt
+    ParentID: =>SilverStripe\Assets\Folder.restrictedViewFolder
 
 SilverStripe\Assets\Image:
   gif:

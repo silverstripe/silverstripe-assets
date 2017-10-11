@@ -3,20 +3,19 @@
 namespace SilverStripe\Assets\Flysystem;
 
 use Generator;
-use LogicException;
 use InvalidArgumentException;
 use League\Flysystem\Directory;
 use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
+use LogicException;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPStreamResponse;
-use SilverStripe\Control\Session;
 use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
@@ -318,6 +317,48 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         return $protected || $public;
     }
 
+    public function rename($filename, $hash, $newName)
+    {
+        if (empty($newName)) {
+            throw new InvalidArgumentException("Cannot write to empty filename");
+        }
+        if ($newName === $filename) {
+            return $filename;
+        }
+        $newName = $this->cleanFilename($newName);
+        $fileID = $this->getFileID($filename, $hash);
+        $filesystem = $this->getFilesystemFor($fileID);
+        foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
+            // Get variant and build new ID for this variant
+            $variant = $this->getVariant($nextID);
+            $newID = $this->getFileID($newName, $hash, $variant);
+            $filesystem->rename($nextID, $newID);
+        }
+        // Truncate empty dirs
+        $this->truncateDirectory(dirname($fileID), $filesystem);
+        return $newName;
+    }
+
+    public function copy($filename, $hash, $newName)
+    {
+        if (empty($newName)) {
+            throw new InvalidArgumentException("Cannot write to empty filename");
+        }
+        if ($newName === $filename) {
+            return $filename;
+        }
+        $newName = $this->cleanFilename($newName);
+        $fileID = $this->getFileID($filename, $hash);
+        $filesystem = $this->getFilesystemFor($fileID);
+        foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
+            // Get variant and build new ID for this variant
+            $variant = $this->getVariant($nextID);
+            $newID = $this->getFileID($newName, $hash, $variant);
+            $filesystem->copy($nextID, $newID);
+        }
+        return $newName;
+    }
+
     /**
      * Delete the given file (and any variants) in the given {@see Filesystem}
      *
@@ -349,8 +390,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         if ($dirname
             && ltrim(dirname($dirname), '.')
-            && ! $this->config()->get('keep_empty_dirs')
-            && ! $filesystem->listContents($dirname)
+            && !$this->config()->get('keep_empty_dirs')
+            && !$filesystem->listContents($dirname)
         ) {
             $filesystem->deleteDir($dirname);
         }
@@ -496,7 +537,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Transfer from given stream
         Util::rewindStream($stream);
         stream_copy_to_stream($stream, $buffer);
-        if (! fclose($buffer)) {
+        if (!fclose($buffer)) {
             throw new Exception("Could not write stream to temporary file");
         }
 
@@ -720,6 +761,33 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
+     * Get Filename and Variant from fileid
+     *
+     * @param string $fileID
+     * @return array
+     */
+    protected function parseFileID($fileID)
+    {
+        if ($this->useLegacyFilenames()) {
+            $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        } else {
+            $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-zA-Z0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        }
+
+        // not a valid file (or not a part of the filesystem)
+        if (!preg_match($pattern, $fileID, $matches)) {
+            return null;
+        }
+
+        $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = isset($matches['variant']) ? $matches['variant'] : null;
+        return [
+            'Filename' => $filename,
+            'Variant' => $variant,
+        ];
+    }
+
+    /**
      * Given a FileID, map this back to the original filename, trimming variant and hash
      *
      * @param string $fileID Adapter specific identifier for this file/version
@@ -727,19 +795,26 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getOriginalFilename($fileID)
     {
-        // Remove variant
-        $originalID = $this->removeVariant($fileID);
-
-        // Remove hash (unless using legacy filenames, without hash)
-        if ($this->useLegacyFilenames()) {
-            return $originalID;
-        } else {
-            return preg_replace(
-                '/(?<hash>[a-zA-Z0-9]{10}\\/)(?<name>[^\\/]+)$/',
-                '$2',
-                $originalID
-            );
+        $parts = $this->parseFileID($fileID);
+        if (!$parts) {
+            return null;
         }
+        return $parts['Filename'];
+    }
+
+    /**
+     * Get variant from this file
+     *
+     * @param string $fileID
+     * @return string
+     */
+    protected function getVariant($fileID)
+    {
+        $parts = $this->parseFileID($fileID);
+        if (!$parts) {
+            return null;
+        }
+        return $parts['Variant'];
     }
 
     /**
@@ -750,12 +825,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function removeVariant($fileID)
     {
-        // Check variant
-        if (preg_match('/^(?<before>((?<!__).)+)__(?<variant>[^\\.]+)(?<after>.*)$/', $fileID, $matches)) {
-            return $matches['before'] . $matches['after'];
+        $variant = $this->getVariant($fileID);
+        if (empty($variant)) {
+            return $fileID;
         }
-        // There is no variant, so return original value
-        return $fileID;
+        return str_replace("__{$variant}", '', $fileID);
     }
 
     /**

@@ -6,4 +6,3 @@ SilverStripe\Core\Injector\Injector:
     factory: SilverStripe\Core\Cache\CacheFactory
     constructor:
       namespace: "Intervention_Manipulations"
-      defaultLifetime: 100

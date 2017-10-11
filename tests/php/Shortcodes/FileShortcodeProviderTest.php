@@ -6,6 +6,8 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
 use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
+use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
@@ -38,8 +40,9 @@ class FileShortcodeProviderTest extends SapphireTest
             $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
         }
 
-        // Conditional fixture creation in case the 'cms' module is installed
+        // Conditional fixture creation in case the 'cms' and 'errorpage' modules are installed
         if (class_exists(ErrorPage::class)) {
+            Config::inst()->update(SiteTree::class, 'create_default_pages', true);
             ErrorPage::singleton()->requireDefaultRecords();
         }
     }
@@ -80,7 +83,6 @@ class FileShortcodeProviderTest extends SapphireTest
         $this->assertEquals('', $parser->parse('[file_link]Example Content[/file_link]'));
 
         if (class_exists(ErrorPage::class)) {
-            ErrorPage::singleton()->requireDefaultRecords();
             /** @var ErrorPage $errorPage */
             $errorPage = ErrorPage::get()->filter('ErrorCode', 404)->first();
             $this->assertEquals(

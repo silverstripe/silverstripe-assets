@@ -59,7 +59,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.txt';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -117,7 +117,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.txt';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -152,7 +152,7 @@ class UploadTest extends SapphireTest
 
         // check max file size set by app category
         $tmpFileName = 'UploadTest-testUpload.jpg';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         file_put_contents($this->tmpFilePath, $tmpFileContent . $tmpFileContent);
 
         $tmpFile = array(
@@ -186,7 +186,7 @@ class UploadTest extends SapphireTest
         Upload_Validator::config()->set('default_max_file_size', $configMaxFileSizes);
         // create tmp file
         $tmpFileName = 'myfile.jpg';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent(100);
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -329,7 +329,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -358,7 +358,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.php';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -387,7 +387,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.txt';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -419,7 +419,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -448,7 +448,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.tar.gz';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -520,7 +520,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -578,7 +578,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -637,7 +637,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.txt';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath, $tmpFileContent);
 
@@ -717,7 +717,7 @@ class UploadTest extends SapphireTest
     public function testDeleteResampledImagesOnUpload()
     {
         $tmpFileName = 'UploadTest-testUpload.jpg';
-        $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
 
         $uploadImage = function () use ($tmpFileName) {
             copy(__DIR__ . '/GDTest/images/test_jpg.jpg', $this->tmpFilePath);
@@ -759,7 +759,7 @@ class UploadTest extends SapphireTest
     {
         $upload = function ($tmpFileName) {
             // create tmp file
-            $this->tmpFilePath = TEMP_FOLDER . '/' . $tmpFileName;
+            $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
             $tmpFileContent = $this->getTemporaryFileContent();
             file_put_contents($this->tmpFilePath, $tmpFileContent);
 

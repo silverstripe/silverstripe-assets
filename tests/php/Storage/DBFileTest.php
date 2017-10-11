@@ -54,8 +54,8 @@ class DBFileTest extends SapphireTest
 
         // Test download tag
         $obj->MyFile->setFromString('puppies', 'subdir/puppy-document.txt');
-        $this->assertEquals(
-            '<a href="/mysite/assets/DBFileTest/subdir/2a17a9cb4b/puppy-document.txt" title="puppy-document.txt" download="puppy-document.txt"/>',
+        $this->assertContains(
+            '<a href="/mysite/assets/DBFileTest/subdir/2a17a9cb4b/puppy-document.txt" title="puppy-document.txt" download="puppy-document.txt">',
             trim($obj->MyFile->forTemplate())
         );
     }

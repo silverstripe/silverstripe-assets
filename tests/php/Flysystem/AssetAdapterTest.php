@@ -2,12 +2,14 @@
 
 namespace SilverStripe\Assets\Tests\Flysystem;
 
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Filesystem;
+use SilverStripe\Assets\Flysystem\AssetAdapter;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\File;
-use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Dev\SapphireTest;
 
 class AssetAdapterTest extends SapphireTest
 {
@@ -19,9 +21,20 @@ class AssetAdapterTest extends SapphireTest
     {
         parent::setUp();
 
+        AssetAdapter::config()->set('file_permissions', [
+            'file' => [
+                'public' => 0644,
+                'private' => 0600,
+            ],
+            'dir' => [
+                'public' => 0755,
+                'private' => 0700,
+            ]
+        ]);
+
         $this->rootDir = ASSETS_PATH . '/AssetAdapterTest';
         Filesystem::makeFolder($this->rootDir);
-        Config::inst()->update('SilverStripe\\Control\\Director', 'alternate_base_url', '/');
+        Config::modify()->set(Director::class, 'alternate_base_url', '/');
         $this->originalServer = $_SERVER;
     }
 
@@ -54,11 +67,11 @@ class AssetAdapterTest extends SapphireTest
         }
 
         // Rewrite rules
-        $this->assertContains('RewriteRule .* ../framework/main.php?url=%1 [QSA]', $content);
+        $this->assertContains('RewriteRule .* ../index.php [QSA]', $content);
         $this->assertContains('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
 
         // Test flush restores invalid content
-        \file_put_contents($this->rootDir . '/.htaccess', '# broken content');
+        file_put_contents($this->rootDir . '/.htaccess', '# broken content');
         $adapter->flush();
         $htaccess2 = $adapter->read('.htaccess');
         $this->assertEquals($content, $htaccess2['contents']);
@@ -76,5 +89,106 @@ class AssetAdapterTest extends SapphireTest
 
         // Test url
         $this->assertEquals('/assets/file.jpg', $adapter->getProtectedUrl('file.jpg'));
+    }
+
+    public function testPermissions()
+    {
+        if (stripos(PHP_OS, 'win') === 0) {
+            $this->markTestSkipped("This test doesn't work on windows");
+        }
+        $_SERVER['SERVER_SOFTWARE'] = 'Apache/2.2.22 (Win64) PHP/5.3.13';
+
+        // Public asset adapter writes .htaccess with private perms
+        $adapter = new PublicAssetAdapter($this->rootDir);
+        $adapter->flush();
+        $this->assertFileExists($this->rootDir . '/.htaccess');
+        $publicPerm = fileperms($this->rootDir . '/.htaccess');
+        // No public read / write
+        $this->assertEquals(
+            0000,
+            $publicPerm & 0066,
+            $this->readablePerm($publicPerm) . ' has no public read / write'
+        );
+
+        // Same as protected adapter
+        $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
+        $adapter->flush();
+        $this->assertFileExists($this->rootDir . '/.protected/.htaccess');
+        $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
+        // No public read / write
+        $this->assertEquals(
+            0000,
+            $protectedPerm & 0066,
+            $this->readablePerm($protectedPerm) . ' has no public read / write'
+        );
+
+        // Test more permissive check
+        AssetAdapter::config()->merge('file_permissions', [
+            'file' => [
+                'private' => 0644,
+            ]
+        ]);
+        $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
+        $adapter->flush();
+        $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
+        // Public read, no public write
+        $this->assertEquals(
+            0044,
+            $protectedPerm & 0066,
+            $this->readablePerm($protectedPerm) . ' has public read only'
+        );
+
+        // Test more permissive check (public write)
+        AssetAdapter::config()->merge('file_permissions', [
+            'file' => [
+                'private' => 0666,
+            ]
+        ]);
+        $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
+        $adapter->flush();
+        $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
+        // Public read / write
+        $this->assertEquals(
+            0066,
+            $protectedPerm & 0066,
+            $this->readablePerm($protectedPerm) . ' has public read / write'
+        );
+    }
+
+    public function testNormalisePermissions()
+    {
+        $this->assertEquals(
+            [
+                'file' => [
+                    'private' => 0644,
+                    'public' => 0666,
+                ],
+                'dir' => [
+                    'public' => 0755,
+                    'private' => 0700,
+                ]
+            ],
+            AssetAdapter::normalisePermissions([
+                'file' => [
+                    'private' => '0644',
+                    'public' => '666',
+                ],
+                'dir' => [
+                    'public' => 0755,
+                    'private' => 0700,
+                ]
+            ])
+        );
+    }
+
+    /**
+     * Human readable perm mask
+     *
+     * @param int $mask
+     * @return string
+     */
+    protected function readablePerm($mask)
+    {
+        return substr(sprintf('%o', $mask), -4);
     }
 }

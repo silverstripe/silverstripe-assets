@@ -4,26 +4,31 @@ namespace SilverStripe\Assets\Shortcodes;
 
 use SilverStripe\Assets\File;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
 /**
- * Class FileShortcodeProvider
- *
- * @package SilverStripe\Forms\HTMLEditor
+ * Provides shortcodes for File dataobject
  */
 class FileShortcodeProvider implements ShortcodeHandler
 {
     use Extensible;
     use Injectable;
 
-    public function __construct()
-    {
-        $this->constructExtensions();
-    }
+    /**
+     * Assume canView() = true for all files provided via shortcodes.
+     * This relies on the application applying canView() on the parent record
+     * to ensure access control.
+     *
+     * @config
+     * @var bool
+     */
+    private static $shortcodes_inherit_canview = true;
 
     /**
      * Gets the list of shortcodes provided by this handler
@@ -91,14 +96,15 @@ class FileShortcodeProvider implements ShortcodeHandler
 
         // Check if the file is found
         /** @var File $file */
-        $file = File::get()->byID($args['id']);
+        $file = DataObject::get_by_id(File::class, $args['id']);
         if (!$file) {
             $errorCode = 404;
             return null;
         }
 
         // Check if the file is viewable
-        if (!$file->canView()) {
+        $inheritsCanView = Config::inst()->get(static::class, 'shortcodes_inherit_canview');
+        if (!$inheritsCanView && !$file->canView()) {
             $errorCode = 403;
             return null;
         }

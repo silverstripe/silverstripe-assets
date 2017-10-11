@@ -9,14 +9,60 @@ use Intervention\Image\Exception\NotSupportedException;
 use Intervention\Image\Exception\NotWritableException;
 use Intervention\Image\Image as InterventionImage;
 use Intervention\Image\ImageManager;
+use Intervention\Image\Size;
+use InvalidArgumentException;
+use LogicException;
+use Psr\Http\Message\StreamInterface;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 
 class InterventionBackend implements Image_Backend, Flushable
 {
+    use Configurable;
+
+    /**
+     * Cache prefix for marking
+     */
+    const CACHE_MARK = 'MARK_';
+
+    /**
+     * Cache prefix for dimensions
+     */
+    const CACHE_DIMENSIONS = 'DIMENSIONS_';
+
+    /**
+     * How long to cache each error type
+     *
+     * @config
+     * @var array Map of error type to config.
+     * each config could be a single int (fixed cache time)
+     * or list of integers (increasing scale)
+     */
+    private static $error_cache_ttl = [
+        self::FAILED_INVALID => 0, // Invalid file type should probably never be retried
+        self::FAILED_MISSING => '5,10,20,40,80', // Missing files may be eventually available
+        self::FAILED_UNKNOWN => 300, // Unknown (edge case). Maybe system error? Needs a flush?
+    ];
+
+    /**
+     * This file is invalid because it is not image data, or it cannot
+     * be processed by the given backend
+     */
+    const FAILED_INVALID = 'invalid';
+
+    /**
+     * This file is invalid as it is missing from the filesystem
+     */
+    const FAILED_MISSING = 'missing';
+
+    /**
+     * Some unknown error
+     */
+    const FAILED_UNKNOWN = 'unknown';
 
     /**
      * @var AssetContainer
@@ -43,9 +89,33 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     private $cache;
 
+    /**
+     * @var string
+     */
+    private $tempPath;
+
     public function __construct(AssetContainer $assetContainer = null)
     {
         $this->setAssetContainer($assetContainer);
+    }
+
+    /**
+     * @return string The temporary local path for this image
+     */
+    public function getTempPath()
+    {
+        return $this->tempPath;
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return $this
+     */
+    public function setTempPath($path)
+    {
+        $this->tempPath = $path;
+        return $this;
     }
 
     /**
@@ -85,6 +155,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setAssetContainer($assetContainer)
     {
+        $this->image = null;
         $this->container = $assetContainer;
         return $this;
     }
@@ -119,21 +190,92 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function loadFromContainer(AssetContainer $assetContainer)
     {
+        return $this->setAssetContainer($assetContainer);
+    }
+
+    /**
+     * Get the currently assigned image resource, or generates one if not yet assigned.
+     * Note: This method may return null if error
+     *
+     * @return InterventionImage
+     */
+    public function getImageResource()
+    {
+        // Get existing resource
+        if ($this->image) {
+            return $this->image;
+        }
+
+        // Load container
+        $assetContainer = $this->getAssetContainer();
+        if (!$assetContainer) {
+            return null;
+        }
+
         // Avoid repeat load of broken images
         $hash = $assetContainer->getHash();
-        if ($this->hasFailed($hash)) {
-            return $this;
+        $variant = $assetContainer->getVariant();
+        if ($this->hasFailed($hash, $variant)) {
+            return null;
+        }
+
+        // Validate stream is readable
+        // Note: Mark failed regardless of whether a failed stream is exceptional or not
+        $error = self::FAILED_MISSING;
+        try {
+            $stream = $assetContainer->getStream();
+            if ($this->isStreamReadable($stream)) {
+                $error = null;
+            } else {
+                return null;
+            }
+        } finally {
+            if ($error) {
+                $this->markFailed($hash, $variant, $error);
+            }
         }
 
         // Handle resource
+        $error = self::FAILED_UNKNOWN;
         try {
-            $this->markStart($hash);
-            $this->setImageResource($this->getImageManager()->make($assetContainer->getStream()));
-            $this->markEnd($hash);
+            // write the file to a local path so we can extract exif data if it exists.
+            // Currently exif data can only be read from file paths and not streams
+            $path = tempnam(TEMP_PATH, 'interventionimage_');
+            if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
+                //tmpnam creates a file, we should clean it up if we are changing the path name
+                unlink($path);
+                $path .= "." . $extension;
+            }
+            $bytesWritten = file_put_contents($path, $stream);
+            // if we fail to write, then load from stream
+            if ($bytesWritten === false) {
+                $resource = $this->getImageManager()->make($stream);
+            } else {
+                $this->setTempPath($path);
+                $resource = $this->getImageManager()->make($path);
+            }
+
+            // Fix image orientation
+            try {
+                $resource->orientate();
+            } catch (NotSupportedException $e) {
+                // noop - we can't orientate, don't worry about it
+            }
+
+            $this->setImageResource($resource);
+            $this->markSuccess($hash, $variant);
+            $error = null;
+            return $resource;
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
+            // Unsupported exceptions are handled without being raised as exceptions
+            $error = self::FAILED_INVALID;
+        } finally {
+            if ($error) {
+                $this->markFailed($hash, $variant, $error);
+            }
         }
-        return $this;
+        return null;
     }
 
     /**
@@ -146,34 +288,27 @@ class InterventionBackend implements Image_Backend, Flushable
     {
         // Avoid repeat load of broken images
         $hash = sha1($path);
-        if ($this->hasFailed($hash)) {
+        if ($this->hasFailed($hash, null)) {
             return $this;
         }
 
         // Handle resource
+        $error = self::FAILED_UNKNOWN;
         try {
-            $this->markStart($hash);
             $this->setImageResource($this->getImageManager()->make($path));
-            $this->markEnd($hash);
+            $this->markSuccess($hash, null);
+            $error = null;
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
+            // Unsupported exceptions are handled without being raised as exceptions
+            $error = self::FAILED_INVALID;
+        } finally {
+            if ($error) {
+                $this->markFailed($hash, null, $error);
+            }
         }
 
         return $this;
-    }
-
-    /**
-     * Get the currently assigned image resource
-     * Note: This method may return null if error
-     *
-     * @return InterventionImage
-     */
-    public function getImageResource()
-    {
-        if (!$this->image && $this->getAssetContainer()) {
-            $this->loadFromContainer($this->getAssetContainer());
-        }
-        return $this->image;
     }
 
     /**
@@ -182,12 +317,6 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setImageResource($image)
     {
-        try {
-            // try to correctly orientate the image based on it's exif data
-            $image->orientate();
-        } catch (NotSupportedException $e) {
-            // noop
-        }
         $this->image = $image;
         return $this;
     }
@@ -212,14 +341,22 @@ class InterventionBackend implements Image_Backend, Flushable
                 throw new BadMethodCallException("Cannot write corrupt file to store");
             }
 
+            // Save file
             $extension = pathinfo($filename, PATHINFO_EXTENSION);
-            return $assetStore->setFromString(
+            $result = $assetStore->setFromString(
                 $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,
                 $hash,
                 $variant,
                 $config
             );
+
+            // Warm cache for the result
+            if ($result) {
+                $this->warmCache($result['Hash'], $result['Variant']);
+            }
+
+            return $result;
         } catch (NotSupportedException $e) {
             return null;
         }
@@ -230,6 +367,7 @@ class InterventionBackend implements Image_Backend, Flushable
      *
      * @param string $path
      * @return bool If the writing was successful
+     * @throws BadMethodCallException If image isn't valid
      */
     public function writeTo($path)
     {
@@ -254,15 +392,114 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
+     * Return dimensions as array with cache enabled
+     *
+     * @return array Two-length array with width and height
+     */
+    protected function getDimensions()
+    {
+        // Default result
+        $result = [0, 0];
+
+        // If we have a resource already loaded, this means we have modified the resource since the
+        // original image was loaded. This means the "Variant" tuple key is out of date, and we don't
+        // have a reliable cache key to load from, or save to. If we use the original tuple as a key,
+        // we would run the risk of overwriting the original dimensions in the cache, with the values
+        // of the resized instead.
+        // Instead, we use the immediately available dimensions attached to this resource, and we will
+        // rely on cache warming in writeToStore to save these values, where the "Variant" becomes available,
+        // before the next time this variant is loaded into memory.
+        $resource = $this->image;
+        if ($resource) {
+            return $this->getResourceDimensions($resource);
+        }
+
+        // Check if we have a container
+        $container = $this->getAssetContainer();
+        if (!$container) {
+            return $result;
+        }
+
+        // Check cache for unloaded image
+        $cache = $this->getCache();
+        $key = $this->getDimensionCacheKey($container->getHash(), $container->getVariant());
+        if ($cache->has($key)) {
+            return $cache->get($key);
+        }
+
+        // Cache-miss
+        $resource = $this->getImageResource();
+        if ($resource) {
+            $result = $this->getResourceDimensions($resource);
+            $cache->set($key, $result);
+        }
+        return $result;
+    }
+
+    /**
+     * Get dimensions from the given resource
+     *
+     * @param InterventionImage $resource
+     * @return array
+     */
+    protected function getResourceDimensions(InterventionImage $resource)
+    {
+        /** @var Size $size */
+        $size = $resource->getSize();
+        return [
+            $size->getWidth(),
+            $size->getHeight()
+        ];
+    }
+
+    /**
+     * Cache key for recording errors
+     *
+     * @param string $hash
+     * @param string|null $variant
+     * @return string
+     */
+    protected function getErrorCacheKey($hash, $variant = null)
+    {
+        return self::CACHE_MARK . sha1($hash . '-' . $variant);
+    }
+
+    /**
+     * Cache key for dimensions for given container
+     *
+     * @param string $hash
+     * @param string|null $variant
+     * @return string
+     */
+    protected function getDimensionCacheKey($hash, $variant = null)
+    {
+        return self::CACHE_DIMENSIONS . sha1($hash . '-' . $variant);
+    }
+
+    /**
+     * Warm dimension cache for the given asset
+     *
+     * @param string $hash
+     * @param string|null $variant
+     */
+    protected function warmCache($hash, $variant = null)
+    {
+        // Warm dimension cache
+        $key = $this->getDimensionCacheKey($hash, $variant);
+        $resource = $this->getImageResource();
+        if ($resource) {
+            $result = $this->getResourceDimensions($resource);
+            $this->getCache()->set($key, $result);
+        }
+    }
+
+    /**
      * @return int The width of the image
      */
     public function getWidth()
     {
-        $resource = $this->getImageResource();
-        if ($resource) {
-            return $resource->getWidth();
-        }
-        return 0;
+        list($width) = $this->getDimensions();
+        return $width;
     }
 
     /**
@@ -270,11 +507,8 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getHeight()
     {
-        $resource = $this->getImageResource();
-        if ($resource) {
-            return $resource->getHeight();
-        }
-        return 0;
+        list(, $height) = $this->getDimensions();
+        return $height;
     }
 
     /**
@@ -298,11 +532,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resize($width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->resize($width, $height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height) {
+                return $resource->resize($width, $height);
+            }
+        );
     }
 
     /**
@@ -317,20 +551,20 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeRatio($width, $height, $useAsMinimum = false)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->resize(
-            $width,
-            $height,
-            function (Constraint $constraint) use ($useAsMinimum) {
-                $constraint->aspectRatio();
-                if (!$useAsMinimum) {
-                    $constraint->upsize();
-                }
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height, $useAsMinimum) {
+                return $resource->resize(
+                    $width,
+                    $height,
+                    function (Constraint $constraint) use ($useAsMinimum) {
+                        $constraint->aspectRatio();
+                        if (!$useAsMinimum) {
+                            $constraint->upsize();
+                        }
+                    }
+                );
             }
-        ));
+        );
     }
 
     /**
@@ -341,11 +575,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByWidth($width)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->widen($width));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width) {
+                return $resource->widen($width);
+            }
+        );
     }
 
     /**
@@ -356,11 +590,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function resizeByHeight($height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->heighten($height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($height) {
+                return $resource->heighten($height);
+            }
+        );
     }
 
     /**
@@ -385,15 +619,25 @@ class InterventionBackend implements Image_Backend, Flushable
         $background[3] = 1 - round(min(100, max(0, $transparencyPercent)) / 100, 2);
 
         // resize the image maintaining the aspect ratio and then pad out the canvas
-        return $this->createCloneWithResource($resource->resize($width, $height, function (Constraint $constraint) {
-            $constraint->aspectRatio();
-        })->resizeCanvas(
-            $width,
-            $height,
-            'center',
-            false,
-            $background
-        ));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height, $background) {
+                return $resource
+                    ->resize(
+                        $width,
+                        $height,
+                        function (Constraint $constraint) {
+                            $constraint->aspectRatio();
+                        }
+                    )
+                    ->resizeCanvas(
+                        $width,
+                        $height,
+                        'center',
+                        false,
+                        $background
+                    );
+            }
+        );
     }
 
     /**
@@ -405,11 +649,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function croppedResize($width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->fit($width, $height));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($width, $height) {
+                return $resource->fit($width, $height);
+            }
+        );
     }
 
     /**
@@ -422,37 +666,116 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function crop($top, $left, $width, $height)
     {
-        $resource = $this->getImageResource();
-        if (!$resource) {
-            return null;
-        }
-        return $this->createCloneWithResource($resource->crop($width, $height, $left, $top));
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($top, $left, $height, $width) {
+                return $resource->crop($width, $height, $left, $top);
+            }
+        );
     }
 
     /**
-     * @param InterventionImage $resource
+     * Modify this image backend with either a provided resource, or transformation
+     *
+     * @param InterventionImage|callable $resourceOrTransformation Either the resource to assign to the clone,
+     * or a function which takes the current resource as a parameter
      * @return static
      */
-    protected function createCloneWithResource($resource)
+    protected function createCloneWithResource($resourceOrTransformation)
     {
+        // No clone with no argument
+        if (!$resourceOrTransformation) {
+            return null;
+        }
+
+        // Handle transformation function
+        if (is_callable($resourceOrTransformation)) {
+            // Fail if resource not available
+            $resource = $this->getImageResource();
+            if (!$resource) {
+                return null;
+            }
+
+            // Note: Closure may simply modify the resource rather than return a new one
+            $resource = clone $resource;
+            $resource = call_user_func($resourceOrTransformation, $resource) ?: $resource;
+
+            // Clone with updated resource
+            return $this->createCloneWithResource($resource);
+        }
+
+        // Ensure result is of a valid type
+        if (!$resourceOrTransformation instanceof InterventionImage) {
+            throw new InvalidArgumentException("Invalid resource type");
+        }
+
+        // Create clone
         $clone = clone $this;
-        $clone->setImageResource(clone $resource);
+        $clone->setImageResource($resourceOrTransformation);
         return $clone;
     }
 
-    protected function markStart($hash)
+    /**
+     * Clear any cached errors / metadata for this image
+     *
+     * @param string $hash
+     * @param string|null $variant
+     */
+    protected function markSuccess($hash, $variant = null)
     {
-        return $this->getCache()->set($hash, 1);
+        $key = $this->getErrorCacheKey($hash, $variant);
+        $this->getCache()->deleteMultiple([
+            $key.'_reason',
+            $key.'_ttl'
+        ]);
     }
 
-    protected function markEnd($hash)
+    /**
+     * Mark this image as failed to load
+     *
+     * @param string $hash Hash of original file being manipluated
+     * @param string|null $variant Variant being loaded
+     * @param string $reason Reason this file is failed
+     */
+    protected function markFailed($hash, $variant = null, $reason = self::FAILED_UNKNOWN)
     {
-        return $this->getCache()->delete($hash);
+        $key = $this->getErrorCacheKey($hash, $variant);
+
+        // Get TTL for error
+        $errorTTLs = $this->config()->get('error_cache_ttl');
+        $ttl = isset($errorTTLs[$reason]) ? $errorTTLs[$reason] : $errorTTLs[self::FAILED_UNKNOWN];
+
+        // Detect increasing waits
+        if (is_string($ttl) && strstr($ttl, ',')) {
+            $ttl = preg_split('#\s*,\s*#', $ttl);
+        }
+        if (is_array($ttl)) {
+            $index = min(
+                $this->getCache()->get($key.'_ttl', -1) + 1,
+                count($ttl) - 1
+            );
+            $this->getCache()->set($key.'_ttl', $index);
+            $ttl = $ttl[$index];
+        }
+        if (!is_numeric($ttl)) {
+            throw new LogicException("Invalid TTL {$ttl}");
+        }
+        // Treat 0 as unlimited
+        $ttl = $ttl ? (int)$ttl : null;
+        $this->getCache()->set($key.'_reason', $reason, $ttl);
     }
 
-    protected function hasFailed($hash)
+    /**
+     * Determine reason this file could not be loaded.
+     * Will return one of the FAILED_* constant values, or null if not failed
+     *
+     * @param string $hash Hash of the original file being manipulated
+     * @param string|null $variant
+     * @return string|null
+     */
+    protected function hasFailed($hash, $variant = null)
     {
-        return $this->getCache()->has($hash);
+        $key = $this->getErrorCacheKey($hash, $variant);
+        return $this->getCache()->get($key.'_reason', null);
     }
 
     /**
@@ -463,6 +786,10 @@ class InterventionBackend implements Image_Backend, Flushable
         //skip the `getImageResource` method because we don't want to load the resource just to destroy it
         if ($this->image) {
             $this->image->destroy();
+        }
+        // remove our temp file if it exists
+        if (file_exists($this->getTempPath())) {
+            unlink($this->getTempPath());
         }
     }
 
@@ -476,7 +803,35 @@ class InterventionBackend implements Image_Backend, Flushable
     public static function flush()
     {
         /** @var CacheInterface $cache */
-        $cache =  Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
+        $cache = Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
         $cache->clear();
+    }
+
+    /**
+     * Validate the stream resource is readable
+     *
+     * @param mixed $stream
+     * @return bool
+     */
+    protected function isStreamReadable($stream)
+    {
+        if (empty($stream)) {
+            return false;
+        }
+        if ($stream instanceof StreamInterface) {
+            return $stream->isReadable();
+        }
+
+        // Ensure resource is stream type
+        if (!is_resource($stream)) {
+            return false;
+        }
+        if (get_resource_type($stream) !== 'stream') {
+            return false;
+        }
+
+        // Ensure stream is readable
+        $meta = stream_get_meta_data($stream);
+        return isset($meta['mode']) && strstr($meta['mode'], 'r');
     }
 }

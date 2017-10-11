@@ -151,6 +151,23 @@ interface AssetContainer
     public function deleteFile();
 
     /**
+     * Rename to new filename, and point to new file
+     *
+     * @param string $newName
+     * @return string Updated Filename
+     */
+    public function renameFile($newName);
+
+    /**
+     * Copy to new filename.
+     * This will not automatically point to the new file (as renameFile() does)
+     *
+     * @param string $newName
+     * @return string Updated filename
+     */
+    public function copyFile($newName);
+
+    /**
      * Publicly expose the file (and all variants) identified by the given filename and hash
      * {@see AssetStore::publish}
      */

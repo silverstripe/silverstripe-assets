@@ -2,15 +2,17 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Assets\Storage\DBFile;
+use InvalidArgumentException;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\InjectorNotFoundException;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use InvalidArgumentException;
+use SilverStripe\View\HTML;
 
 /**
  * Provides image manipulation functionality.
@@ -42,6 +44,52 @@ use InvalidArgumentException;
  */
 trait ImageManipulation
 {
+    /**
+     * If image resizes are allowed
+     *
+     * @var bool
+     */
+    protected $allowGeneration = true;
+
+    /**
+     * Set whether image resizes are allowed
+     *
+     * @param bool $allow
+     * @return $this
+     */
+    public function setAllowGeneration($allow)
+    {
+        $this->allowGeneration = $allow;
+        return $this;
+    }
+
+    /**
+     * Check if resizes are allowed
+     *
+     * @return bool
+     */
+    public function getAllowGeneration()
+    {
+        return $this->allowGeneration;
+    }
+
+    /**
+     * Return clone of self which promises to only return existing thumbnails
+     *
+     * @return DBFile
+     */
+    public function existingOnly()
+    {
+        $value = [
+            'Filename' => $this->getFilename(),
+            'Variant' => $this->getVariant(),
+            'Hash' => $this->getHash()
+        ];
+        /** @var DBFile $file */
+        $file = DBField::create_field('DBFile', $value);
+        $file->setAllowGeneration(false);
+        return $file;
+    }
 
     /**
      * @return string Data from the file in this container
@@ -518,7 +566,7 @@ trait ImageManipulation
      */
     public function Thumbnail($width, $height)
     {
-        return $this->Fit($width, $height);
+        return $this->Fill($width, $height);
     }
 
     /**
@@ -542,10 +590,12 @@ trait ImageManipulation
      */
     public function IconTag()
     {
-        return DBField::create_field(
+        /** @var DBHTMLText $image */
+        $image = DBField::create_field(
             'HTMLFragment',
-            '<img src="' . Convert::raw2att($this->getIcon()) . '" />'
+            HTML::createTag('img', ['src' => $this->getIcon()])
         );
+        return $image;
     }
 
     /**
@@ -587,14 +637,18 @@ trait ImageManipulation
      */
     public function getImageBackend()
     {
-        // Skip if non-image or file is broken
-        if (!$this->getIsImage() || !$this->exists()) {
+        // Skip files we know won't be an image
+        if (!$this->getIsImage() || !$this->getHash()) {
             return null;
         }
 
-        // Create backend for this object
-        /** @skipUpgrade */
-        return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+        // Pass to backend service factory
+        try {
+            return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+        } catch (InjectorNotFoundException $ex) {
+            // Handle file-not-found errors
+            return null;
+        }
     }
 
     /**
@@ -763,6 +817,10 @@ trait ImageManipulation
         $store = Injector::inst()->get(AssetStore::class);
         $result = null;
         if (!$store->exists($filename, $hash, $variant)) {
+            // Circumvent generation of thumbnails if we only want to get existing ones
+            if (!$this->getAllowGeneration()) {
+                return null;
+            }
             $result = call_user_func($callback, $store, $filename, $hash, $variant);
         } else {
             $result = array(

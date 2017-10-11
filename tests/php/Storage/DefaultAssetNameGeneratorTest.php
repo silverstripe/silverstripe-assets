@@ -17,7 +17,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
      */
     public function testWithoutPrefix()
     {
-        Config::inst()->update(DefaultAssetNameGenerator::class, 'version_prefix', '');
+        Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '');
         $generator = new DefaultAssetNameGenerator('folder/MyFile-001.jpg');
         $suggestions = iterator_to_array($generator);
 
@@ -67,7 +67,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
      */
     public function testWithDefaultPrefix()
     {
-        Config::inst()->update(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
+        Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
 
         // Test with item that doesn't contain the prefix
         $generator = new DefaultAssetNameGenerator('folder/MyFile-001.jpg');
@@ -107,7 +107,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
 
     public function testFolderWithoutDefaultPrefix()
     {
-        Config::inst()->update(DefaultAssetNameGenerator::class, 'version_prefix', '');
+        Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '');
         $generator = new DefaultAssetNameGenerator('folder/subfolder');
         $suggestions = iterator_to_array($generator);
 
@@ -121,7 +121,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
 
     public function testFolderWithDefaultPrefix()
     {
-        Config::inst()->update(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
+        Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
         $generator = new DefaultAssetNameGenerator('folder/subfolder');
         $suggestions = iterator_to_array($generator);
 

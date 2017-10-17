@@ -2,20 +2,27 @@
 
 namespace SilverStripe\Assets\Shortcodes;
 
+use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extensible;
+use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\View\ArrayData;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
+use SilverStripe\View\SSViewer;
+use SilverStripe\View\SSViewer_FromString;
 
 /**
  * Provides shortcodes for File dataobject
  */
-class FileShortcodeProvider implements ShortcodeHandler
+class FileShortcodeProvider implements ShortcodeHandler, Flushable
 {
     use Extensible;
     use Injectable;
@@ -53,6 +60,18 @@ class FileShortcodeProvider implements ShortcodeHandler
      */
     public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = array())
     {
+        /** @var CacheInterface $cache */
+        $cache = static::getCache();
+        $cacheKey = static::getCacheKey($arguments, $content);
+
+        $item = $cache->get($cacheKey);
+        if ($item) {
+            /** @var AssetStore $store */
+            $store = Injector::inst()->get(AssetStore::class);
+            $store->grant($item['filename'], $item['hash']);
+            return $item['markup'];
+        }
+
         // Find appropriate record, with fallback for error handlers
         $record = static::find_shortcode_record($arguments, $errorCode);
         if ($errorCode) {
@@ -73,10 +92,20 @@ class FileShortcodeProvider implements ShortcodeHandler
                      'data-size' => $record->getSize(),
                 ]);
             }
-            return HTML::createTag('a', $attrs, $parser->parse($content));
+            $markup = HTML::createTag('a', $attrs, $parser->parse($content));
         } else {
-            return $record->Link();
+            $markup = $record->Link();
         }
+
+        // cache it for future reference
+        $cache->set($cacheKey, [
+            'markup' => $markup,
+            'filename' => $record->getFilename(),
+            'hash' => $record->getHash(),
+        ]);
+
+
+        return $markup;
     }
 
     /**
@@ -130,5 +159,43 @@ class FileShortcodeProvider implements ShortcodeHandler
         }
 
         return null;
+    }
+
+    /**
+     * Generates a cachekey with the given parameters
+     *
+     * @param $params
+     * @param $content
+     * @return string
+     */
+    public static function getCacheKey($params, $content = null)
+    {
+        $key = SSViewer::config()->get('global_key');
+        $viewer = new SSViewer_FromString($key);
+        $globalKey = $viewer->process(ArrayData::create([]));
+        $argsKey = md5(serialize($params)) . '#' . md5(serialize($content));
+
+        return "{$globalKey}#{$argsKey}";
+    }
+
+    /**
+     * Gets the cache used by this provider
+     *
+     * @return CacheInterface
+     */
+    public static function getCache()
+    {
+        /** @var CacheInterface $cache */
+        return Injector::inst()->get(CacheInterface::class . '.FileShortcodeProvider');
+    }
+
+    /**
+     *
+     */
+    public static function flush()
+    {
+        $cache = static::getCache();
+
+        $cache->clear();
     }
 }

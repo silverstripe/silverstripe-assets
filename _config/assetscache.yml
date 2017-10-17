@@ -6,3 +6,11 @@ SilverStripe\Core\Injector\Injector:
     factory: SilverStripe\Core\Cache\CacheFactory
     constructor:
       namespace: "Intervention_Manipulations"
+  Psr\SimpleCache\CacheInterface.FileShortcodeProvider:
+    factory: SilverStripe\Core\Cache\CacheFactory
+    constructor:
+      namespace: "FileShortcodeProvider"
+  Psr\SimpleCache\CacheInterface.ImageShortcodeProvider:
+    factory: SilverStripe\Core\Cache\CacheFactory
+    constructor:
+      namespace: "ImageShortcodeProvider"

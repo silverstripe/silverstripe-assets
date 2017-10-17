@@ -2,8 +2,12 @@
 
 namespace SilverStripe\Assets\Shortcodes;
 
+use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Flushable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
@@ -13,7 +17,7 @@ use SilverStripe\View\Parsers\ShortcodeParser;
  *
  * @package SilverStripe\Forms\HtmlEditor
  */
-class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeHandler
+class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeHandler, Flushable
 {
 
     /**
@@ -25,7 +29,6 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
     {
         return array('image');
     }
-
 
     /**
      * Replace"[image id=n]" shortcode with an image reference.
@@ -40,6 +43,17 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = array())
     {
+        $cache = static::getCache();
+        $cacheKey = static::getCacheKey($args);
+
+        $item = $cache->get($cacheKey);
+        if ($item) {
+            /** @var AssetStore $store */
+            $store = Injector::inst()->get(AssetStore::class);
+            $store->grant($item['filename'], $item['hash']);
+            return $item['markup'];
+        }
+
         // Find appropriate record, with fallback for error handlers
         $record = static::find_shortcode_record($args, $errorCode);
         if ($errorCode) {
@@ -79,7 +93,16 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return (bool)$v;
         });
 
-        return HTML::createTag('img', $attrs);
+        $markup = HTML::createTag('img', $attrs);
+
+        // cache it for future reference
+        $cache->set($cacheKey, [
+            'markup' => $markup,
+            'filename' => $record->getFilename(),
+            'hash' => $record->getHash(),
+        ]);
+
+        return $markup;
     }
 
     /**
@@ -120,5 +143,16 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         // Create a shortcode generator which only regenerates links
         $regenerator = ShortcodeParser::get('regenerator');
         return $regenerator->parse($value);
+    }
+
+    /**
+     * Gets the cache used by this provider
+     *
+     * @return CacheInterface
+     */
+    public static function getCache()
+    {
+        /** @var CacheInterface $cache */
+        return Injector::inst()->get(CacheInterface::class . '.ImageShortcodeProvider');
     }
 }

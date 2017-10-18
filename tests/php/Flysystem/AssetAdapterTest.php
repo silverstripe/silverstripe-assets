@@ -98,16 +98,17 @@ class AssetAdapterTest extends SapphireTest
         }
         $_SERVER['SERVER_SOFTWARE'] = 'Apache/2.2.22 (Win64) PHP/5.3.13';
 
-        // Public asset adapter writes .htaccess with private perms
+        // Public asset adapter writes .htaccess with public perms
         $adapter = new PublicAssetAdapter($this->rootDir);
         $adapter->flush();
         $this->assertFileExists($this->rootDir . '/.htaccess');
         $publicPerm = fileperms($this->rootDir . '/.htaccess');
-        // No public read / write
+
+        // Public read
         $this->assertEquals(
-            0000,
-            $publicPerm & 0066,
-            $this->readablePerm($publicPerm) . ' has no public read / write'
+            0044,
+            $publicPerm & 0044,
+            $this->readablePerm($publicPerm) . ' has public read'
         );
 
         // Same as protected adapter
@@ -115,43 +116,11 @@ class AssetAdapterTest extends SapphireTest
         $adapter->flush();
         $this->assertFileExists($this->rootDir . '/.protected/.htaccess');
         $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
-        // No public read / write
-        $this->assertEquals(
-            0000,
-            $protectedPerm & 0066,
-            $this->readablePerm($protectedPerm) . ' has no public read / write'
-        );
-
-        // Test more permissive check
-        AssetAdapter::config()->merge('file_permissions', [
-            'file' => [
-                'private' => 0644,
-            ]
-        ]);
-        $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
-        $adapter->flush();
-        $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
-        // Public read, no public write
+        // Public read
         $this->assertEquals(
             0044,
-            $protectedPerm & 0066,
-            $this->readablePerm($protectedPerm) . ' has public read only'
-        );
-
-        // Test more permissive check (public write)
-        AssetAdapter::config()->merge('file_permissions', [
-            'file' => [
-                'private' => 0666,
-            ]
-        ]);
-        $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
-        $adapter->flush();
-        $protectedPerm = fileperms($this->rootDir . '/.protected/.htaccess');
-        // Public read / write
-        $this->assertEquals(
-            0066,
-            $protectedPerm & 0066,
-            $this->readablePerm($protectedPerm) . ' has public read / write'
+            $protectedPerm & 0044,
+            $this->readablePerm($protectedPerm) . ' has public read'
         );
     }
 

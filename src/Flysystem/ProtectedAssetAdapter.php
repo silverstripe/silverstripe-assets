@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Flysystem;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Environment;
 
 class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
 {
@@ -36,7 +37,7 @@ class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
         }
 
         // Use environment defined path or default location is under assets
-        if ($path = getenv('SS_PROTECTED_ASSETS_PATH')) {
+        if ($path = Environment::getEnv('SS_PROTECTED_ASSETS_PATH')) {
             return $path;
         }
 

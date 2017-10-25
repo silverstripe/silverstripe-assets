@@ -3,6 +3,8 @@
 namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
+use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
+use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
@@ -1286,6 +1288,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         parent::flushCache($persistent);
         static::reset();
+        ImageShortcodeProvider::flush();
+        FileShortcodeProvider::flush();
     }
 
     public static function reset()

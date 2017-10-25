@@ -29,6 +29,14 @@ class AssetAdapter extends Local
     private static $server_configuration = array();
 
     /**
+     * Default server configuration to use if the server type defined by the environment is not found
+     *
+     * @config
+     * @var string
+     */
+    private static $default_server = 'apache';
+
+    /**
      * Config compatible permissions configuration
      *
      * @config
@@ -127,13 +135,18 @@ class AssetAdapter extends Local
         // Determine configurations to write
         $rules = $this->config()->get('server_configuration');
         if (empty($rules[$type])) {
-            return;
+            $type = $this->config()->get('default_server');
+            if (!$type || empty($rules[$type])) {
+                return;
+            }
         }
         $configurations = $rules[$type];
 
+        $visibility = 'public';
+
         // Apply each configuration
         $config = new FlysystemConfig();
-        $config->set('visibility', 'private');
+        $config->set('visibility', $visibility);
         foreach ($configurations as $file => $template) {
             // Ensure file contents
             if ($forceOverwrite || !$this->has($file)) {
@@ -144,8 +157,11 @@ class AssetAdapter extends Local
                     throw new Exception("Error writing server configuration file \"{$file}\"");
                 }
             }
-            // Ensure correct permissions
-            $this->setVisibility($file, 'private');
+            $perms = $this->getVisibility($file);
+            if ($perms['visibility'] !== $visibility) {
+                // Ensure correct permissions
+                $this->setVisibility($file, $visibility);
+            }
         }
     }
 

@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\FileMigrationHelper;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Tests\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
@@ -102,5 +103,12 @@ class FileMigrationHelperTest extends SapphireTest
         $invalidID = $this->idFromFixture(File::class, 'invalid');
         $this->assertNotEmpty($invalidID);
         $this->assertNull(File::get()->byID($invalidID));
+    }
+
+    public function testMigrationWithLegacyFilenames()
+    {
+        Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
+
+        $this->testMigration();
     }
 }

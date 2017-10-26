@@ -2,7 +2,9 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
@@ -119,6 +121,11 @@ class FileMigrationHelper
         $file->write();
         if (class_exists(Versioned::class)) {
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        }
+
+        if (!Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames')) {
+            // removing the legacy file since it has been migrated now and not using legacy filenames
+            return unlink($path);
         }
         return true;
     }

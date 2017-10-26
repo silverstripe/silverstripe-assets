@@ -106,6 +106,7 @@ class FolderTest extends SapphireTest
 
     public function testAllChildrenIncludesFolders()
     {
+        /** @var Folder $folder1 */
         $folder1 = $this->objFromFixture(Folder::class, 'folder1');
         $subfolder1 = $this->objFromFixture(Folder::class, 'folder1-subfolder1');
         $file1 = $this->objFromFixture(File::class, 'file1-folder1');
@@ -226,6 +227,7 @@ class FolderTest extends SapphireTest
         $folder1->write();
 
         // Check if the file in the folder moved along
+        /** @var File $file1 */
         $file1 = DataObject::get_by_id(File::class, $this->idFromFixture(File::class, 'file1-folder1'), false);
         $this->assertFileExists(
             TestAssetStore::getLocalPath($file1)
@@ -248,6 +250,7 @@ class FolderTest extends SapphireTest
      */
     public function testLinkAndRelativeLink()
     {
+        /** @var Folder $folder */
         $folder = $this->objFromFixture(Folder::class, 'folder1');
         $this->assertEmpty($folder->getURL());
         $this->assertEmpty($folder->Link());
@@ -360,5 +363,34 @@ class FolderTest extends SapphireTest
         $this->logInAs($member);
         $this->assertTrue($publicFileLive->canView());
         $this->assertTrue($publicFolderLive->canView());
+    }
+
+    /**
+     * Ensure that child records ensure parent folders are published
+     */
+    public function testChildrenEnsureParentsPublish()
+    {
+        $folder1 = Folder::create();
+        $folder1->Name = 'ParentFolder';
+        $folder1->write();
+        $folder2 = Folder::create();
+        $folder2->Name = 'SubFolder';
+        $folder2->ParentID = $folder1->ID;
+        $folder2->write();
+
+        // Should auto-assign to the above folders
+        $file = File::create();
+        $file->setFromString('file content', 'ParentFolder/SubFolder/myfile.txt');
+        $file->write();
+        $this->assertTrue($file->isOnDraftOnly());
+        $this->assertTrue($file->exists());
+        $this->assertEquals($folder2->ID, $file->ParentID);
+        $this->assertEquals('ParentFolder/SubFolder/myfile.txt', $file->getFilename());
+
+        // Publish should recurse upwards (or already be recursed)
+        $file->publishSingle();
+        $this->assertTrue($file->isPublished());
+        $this->assertTrue($folder1->isPublished());
+        $this->assertTrue($folder2->isPublished());
     }
 }

@@ -85,7 +85,7 @@ use SilverStripe\View\HTML;
  * @property int $ParentID ID of parent File/Folder
  * @property int $OwnerID ID of Member who owns the file
  *
- * @method File Parent() Returns parent File
+ * @method File|Folder Parent() Returns parent File or Folder
  * @method Member Owner() Returns Member object of file owner.
  *
  * @mixin Hierarchy

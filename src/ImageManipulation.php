@@ -169,10 +169,13 @@ trait ImageManipulation
     abstract public function getIsImage();
 
     /**
+     * Force all images to resample in all cases
+     * Off by default, as this can be resource intensive to apply to multiple images simultaneously.
+     *
      * @config
-     * @var bool Force all images to resample in all cases
+     * @var bool
      */
-    private static $force_resample = true;
+    private static $force_resample = false;
 
     /**
      * @config

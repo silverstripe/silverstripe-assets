@@ -264,6 +264,7 @@ class InterventionBackend implements Image_Backend, Flushable
 
             $this->setImageResource($resource);
             $this->markSuccess($hash, $variant);
+            $this->warmCache($hash, $variant);
             $error = null;
             return $resource;
         } catch (NotReadableException $ex) {
@@ -499,7 +500,7 @@ class InterventionBackend implements Image_Backend, Flushable
     public function getWidth()
     {
         list($width) = $this->getDimensions();
-        return $width;
+        return (int)$width;
     }
 
     /**
@@ -508,7 +509,7 @@ class InterventionBackend implements Image_Backend, Flushable
     public function getHeight()
     {
         list(, $height) = $this->getDimensions();
-        return $height;
+        return (int)$height;
     }
 
     /**

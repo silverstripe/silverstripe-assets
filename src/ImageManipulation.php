@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
+use LogicException;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
@@ -225,22 +226,23 @@ trait ImageManipulation
      * Fit image to specified dimensions and fill leftover space with a solid colour (default white). Use in
      * templates with $Pad.
      *
-     * @param integer $width The width to size to
-     * @param integer $height The height to size to
+     * @param int $width The width to size to
+     * @param int $height The height to size to
      * @param string $backgroundColor
-     * @param integer $transparencyPercent Level of transparency
+     * @param int $transparencyPercent Level of transparency
      * @return AssetContainer
      */
     public function Pad($width, $height, $backgroundColor = 'FFFFFF', $transparencyPercent = 0)
     {
-        if ($this->isSize($width, $height)) {
-            return $this;
-        }
-
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
         $variant = $this->variantName(__FUNCTION__, $width, $height, $backgroundColor, $transparencyPercent);
         return $this->manipulateImage(
             $variant,
             function (Image_Backend $backend) use ($width, $height, $backgroundColor, $transparencyPercent) {
+                if ($backend->getWidth() === $width && $backend->getHeight() === $height) {
+                    return $this;
+                }
                 return $backend->paddedResize($width, $height, $backgroundColor, $transparencyPercent);
             }
         );
@@ -299,18 +301,19 @@ trait ImageManipulation
      * This can be used in templates with $ResizedImage but should be avoided,
      * as it's the only image manipulation function which can skew an image.
      *
-     * @param integer $width Width to resize to
-     * @param integer $height Height to resize to
+     * @param int $width Width to resize to
+     * @param int $height Height to resize to
      * @return AssetContainer
      */
     public function ResizedImage($width, $height)
     {
-        if ($this->isSize($width, $height)) {
-            return $this;
-        }
-
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
         $variant = $this->variantName(__FUNCTION__, $width, $height);
         return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width, $height) {
+            if ($backend->getWidth() === $width && $backend->getHeight() === $height) {
+                return $this;
+            }
             return $backend->resize($width, $height);
         });
     }
@@ -318,36 +321,38 @@ trait ImageManipulation
     /**
      * Scale image proportionally to fit within the specified bounds
      *
-     * @param integer $width The width to size within
-     * @param integer $height The height to size within
+     * @param int $width The width to size within
+     * @param int $height The height to size within
      * @return AssetContainer
      */
     public function Fit($width, $height)
     {
-        // Prevent divide by zero on missing/blank file
-        if (!$this->getWidth() || !$this->getHeight()) {
-            return null;
-        }
-
-        // Check if image is already sized to the correct dimension
-        $widthRatio = $width / $this->getWidth();
-        $heightRatio = $height / $this->getHeight();
-
-        if ($widthRatio < $heightRatio) {
-            // Target is higher aspect ratio than image, so check width
-            if ($this->isWidth($width)) {
-                return $this;
-            }
-        } else {
-            // Target is wider or same aspect ratio as image, so check height
-            if ($this->isHeight($height)) {
-                return $this;
-            }
-        }
-
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
         // Item must be regenerated
         $variant = $this->variantName(__FUNCTION__, $width, $height);
         return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width, $height) {
+            // Check if image is already sized to the correct dimension
+            $currentWidth = $backend->getWidth();
+            $currentHeight = $backend->getHeight();
+            if (!$currentWidth || !$currentHeight) {
+                return null;
+            }
+            $widthRatio = $width / $currentWidth;
+            $heightRatio = $height / $currentHeight;
+
+            if ($widthRatio < $heightRatio) {
+                // Target is higher aspect ratio than image, so check width
+                if ($currentWidth === $width) {
+                    return $this;
+                }
+            } else {
+                // Target is wider or same aspect ratio as image, so check height
+                if ($currentHeight === $height) {
+                    return $this;
+                }
+            }
+
             return $backend->resizeRatio($width, $height);
         });
     }
@@ -357,32 +362,62 @@ trait ImageManipulation
      * Similar to Fit but without up-sampling. Use in templates with $FitMax.
      *
      * @uses ScalingManipulation::Fit()
-     * @param integer $width The maximum width of the output image
-     * @param integer $height The maximum height of the output image
+     * @param int $width The maximum width of the output image
+     * @param int $height The maximum height of the output image
      * @return AssetContainer
      */
     public function FitMax($width, $height)
     {
-        return $this->getWidth() > $width || $this->getHeight() > $height
-            ? $this->Fit($width, $height)
-            : $this;
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
+        $variant = $this->variantName(__FUNCTION__, $width, $height);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width, $height) {
+            // Check if image is already sized to the correct dimension
+            $currentWidth = $backend->getWidth();
+            $currentHeight = $backend->getHeight();
+            if (!$currentWidth || !$currentHeight) {
+                return null;
+            }
+
+            // Check if inside bounds
+            if ($currentWidth <= $width && $currentHeight <= $height) {
+                return $this;
+            }
+
+            $widthRatio = $width / $currentWidth;
+            $heightRatio = $height / $currentHeight;
+
+            if ($widthRatio < $heightRatio) {
+                // Target is higher aspect ratio than image, so check width
+                if ($currentWidth === $width) {
+                    return $this;
+                }
+            } else {
+                // Target is wider or same aspect ratio as image, so check height
+                if ($currentHeight === $height) {
+                    return $this;
+                }
+            }
+
+            return $backend->resizeRatio($width, $height);
+        });
     }
 
 
     /**
      * Scale image proportionally by width. Use in templates with $ScaleWidth.
      *
-     * @param integer $width The width to set
+     * @param int $width The width to set
      * @return AssetContainer
      */
     public function ScaleWidth($width)
     {
-        if ($this->isWidth($width)) {
-            return $this;
-        }
-
+        $width = $this->castDimension($width, 'Width');
         $variant = $this->variantName(__FUNCTION__, $width);
         return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width) {
+            if ($backend->getWidth() === $width) {
+                return $this;
+            }
             return $backend->resizeByWidth($width);
         });
     }
@@ -392,14 +427,19 @@ trait ImageManipulation
      * Similar to ScaleWidth but without up-sampling. Use in templates with $ScaleMaxWidth.
      *
      * @uses ScalingManipulation::ScaleWidth()
-     * @param integer $width The maximum width of the output image
+     * @param int $width The maximum width of the output image
      * @return AssetContainer
      */
     public function ScaleMaxWidth($width)
     {
-        return $this->getWidth() > $width
-            ? $this->ScaleWidth($width)
-            : $this;
+        $width = $this->castDimension($width, 'Width');
+        $variant = $this->variantName(__FUNCTION__, $width);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width) {
+            if ($backend->getWidth() <= $width) {
+                return $this;
+            }
+            return $backend->resizeByWidth($width);
+        });
     }
 
     /**
@@ -410,12 +450,12 @@ trait ImageManipulation
      */
     public function ScaleHeight($height)
     {
-        if ($this->isHeight($height)) {
-            return $this;
-        }
-
+        $height = $this->castDimension($height, 'Height');
         $variant = $this->variantName(__FUNCTION__, $height);
         return $this->manipulateImage($variant, function (Image_Backend $backend) use ($height) {
+            if ($backend->getHeight() === $height) {
+                return $this;
+            }
             return $backend->resizeByHeight($height);
         });
     }
@@ -425,14 +465,19 @@ trait ImageManipulation
      * Similar to ScaleHeight but without up-sampling. Use in templates with $ScaleMaxHeight.
      *
      * @uses ScalingManipulation::ScaleHeight()
-     * @param integer $height The maximum height of the output image
+     * @param int $height The maximum height of the output image
      * @return AssetContainer
      */
     public function ScaleMaxHeight($height)
     {
-        return $this->getHeight() > $height
-            ? $this->ScaleHeight($height)
-            : $this;
+        $height = $this->castDimension($height, 'Height');
+        $variant = $this->variantName(__FUNCTION__, $height);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($height) {
+            if ($backend->getHeight() <= $height) {
+                return $this;
+            }
+            return $backend->resizeByHeight($height);
+        });
     }
 
 
@@ -441,14 +486,21 @@ trait ImageManipulation
      * Use in templates with $CropWidth. Example: $Image.ScaleHeight(100).$CropWidth(100)
      *
      * @uses CropManipulation::Fill()
-     * @param integer $width The maximum width of the output image
+     * @param int $width The maximum width of the output image
      * @return AssetContainer
      */
     public function CropWidth($width)
     {
-        return $this->getWidth() > $width
-            ? $this->Fill($width, $this->getHeight())
-            : $this;
+        $variant = $this->variantName(__FUNCTION__, $width);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width) {
+            // Already within width
+            if ($backend->getWidth() <= $width) {
+                return $this;
+            }
+
+            // Crop to new width (same height)
+            return $backend->croppedResize($width, $backend->getHeight());
+        });
     }
 
     /**
@@ -456,14 +508,21 @@ trait ImageManipulation
      * Use in templates with $CropHeight. Example: $Image.ScaleWidth(100).CropHeight(100)
      *
      * @uses CropManipulation::Fill()
-     * @param integer $height The maximum height of the output image
+     * @param int $height The maximum height of the output image
      * @return AssetContainer
      */
     public function CropHeight($height)
     {
-        return $this->getHeight() > $height
-            ? $this->Fill($this->getWidth(), $height)
-            : $this;
+        $variant = $this->variantName(__FUNCTION__, $height);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($height) {
+            // Already within height
+            if ($backend->getHeight() <= $height) {
+                return $this;
+            }
+
+            // Crop to new height (same width)
+            return $backend->croppedResize($backend->getWidth(), $height);
+        });
     }
 
     /**
@@ -472,55 +531,59 @@ trait ImageManipulation
      * Similar to Fill but without up-sampling. Use in templates with $FillMax.
      *
      * @uses ImageManipulation::Fill()
-     * @param integer $width The relative (used to determine aspect ratio) and maximum width of the output image
-     * @param integer $height The relative (used to determine aspect ratio) and maximum height of the output image
+     * @param int $width The relative (used to determine aspect ratio) and maximum width of the output image
+     * @param int $height The relative (used to determine aspect ratio) and maximum height of the output image
      * @return AssetContainer
      */
     public function FillMax($width, $height)
     {
-        // Prevent divide by zero on missing/blank file
-        if (!$this->getWidth() || !$this->getHeight()) {
-            return null;
-        }
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
+        $variant = $this->variantName(__FUNCTION__, $width, $height);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width, $height) {
+            // Validate dimensions
+            $currentWidth = $backend->getWidth();
+            $currentHeight = $backend->getHeight();
+            if (!$currentWidth || !$currentHeight) {
+                return null;
+            }
+            if ($currentWidth === $width && $currentHeight === $height) {
+                return $this;
+            }
 
-        // Is the image already the correct size?
-        if ($this->isSize($width, $height)) {
-            return $this;
-        }
-
-        // If not, make sure the image isn't upsampled
-        $imageRatio = $this->getWidth() / $this->getHeight();
-        $cropRatio = $width / $height;
-        // If cropping on the x axis compare heights
-        if ($cropRatio < $imageRatio && $this->getHeight() < $height) {
-            return $this->Fill(round($this->getHeight() * $cropRatio), $this->getHeight());
-        }
-
-        // Otherwise we're cropping on the y axis (or not cropping at all) so compare widths
-        if ($this->getWidth() < $width) {
-            return $this->Fill($this->getWidth(), round($this->getWidth() / $cropRatio));
-        }
-
-        return $this->Fill($width, $height);
+            // Compare current and destination aspect ratios
+            $imageRatio = $currentWidth / $currentHeight;
+            $cropRatio = $width / $height;
+            if ($cropRatio < $imageRatio && $currentHeight < $height) {
+                // Crop off sides
+                return $backend->croppedResize(round($currentHeight * $cropRatio), $currentHeight);
+            } elseif ($currentWidth < $width) {
+                // Crop off top/bottom
+                return $backend->croppedResize($currentWidth, round($currentWidth / $cropRatio));
+            } else {
+                // Crop on both
+                return $backend->croppedResize($width, $height);
+            }
+        });
     }
 
     /**
      * Resize and crop image to fill specified dimensions.
      * Use in templates with $Fill
      *
-     * @param integer $width Width to crop to
-     * @param integer $height Height to crop to
+     * @param int $width Width to crop to
+     * @param int $height Height to crop to
      * @return AssetContainer
      */
     public function Fill($width, $height)
     {
-        if ($this->isSize($width, $height)) {
-            return $this;
-        }
-
-        // Resize
+        $width = $this->castDimension($width, 'Width');
+        $height = $this->castDimension($height, 'Height');
         $variant = $this->variantName(__FUNCTION__, $width, $height);
         return $this->manipulateImage($variant, function (Image_Backend $backend) use ($width, $height) {
+            if ($backend->getWidth() === $width && $backend->getHeight() === $height) {
+                return $this;
+            }
             return $backend->croppedResize($width, $height);
         });
     }
@@ -703,8 +766,8 @@ trait ImageManipulation
     /**
      * Determine if this image is of the specified size
      *
-     * @param integer $width Width to check
-     * @param integer $height Height to check
+     * @param int $width Width to check
+     * @param int $height Height to check
      * @return boolean
      */
     public function isSize($width, $height)
@@ -715,36 +778,33 @@ trait ImageManipulation
     /**
      * Determine if this image is of the specified width
      *
-     * @param integer $width Width to check
+     * @param int $width Width to check
      * @return boolean
      */
     public function isWidth($width)
     {
-        if (empty($width) || !is_numeric($width)) {
-            throw new InvalidArgumentException("Invalid value for width");
-        }
-        return $this->getWidth() == $width;
+        $width = $this->castDimension($width, 'Width');
+        return $this->getWidth() === $width;
     }
 
     /**
      * Determine if this image is of the specified width
      *
-     * @param integer $height Height to check
+     * @param int $height Height to check
      * @return boolean
      */
     public function isHeight($height)
     {
-        if (empty($height) || !is_numeric($height)) {
-            throw new InvalidArgumentException("Invalid value for height");
-        }
-        return $this->getHeight() == $height;
+        $height = $this->castDimension($height, 'Height');
+        return $this->getHeight() === $height;
     }
 
     /**
      * Wrapper for manipulate that passes in and stores Image_Backend objects instead of tuples
      *
      * @param string $variant
-     * @param callable $callback Callback which takes an Image_Backend object, and returns an Image_Backend result
+     * @param callable $callback Callback which takes an Image_Backend object, and returns an Image_Backend result.
+     * If this callback returns `true` then the current image will be duplicated without modification.
      * @return DBFile The manipulated file
      */
     public function manipulateImage($variant, $callback)
@@ -759,27 +819,42 @@ trait ImageManipulation
                 if (!$backend || !$backend->getImageResource()) {
                     return null;
                 }
-                $backend = $callback($backend);
-                if (!$backend) {
+
+                // Delegate to user manipulation
+                $result = $callback($backend);
+
+                // Empty result means no image generated
+                if (!$result) {
                     return null;
                 }
 
-                $return = $backend->writeToStore(
-                    $store,
-                    $filename,
-                    $hash,
-                    $variant,
-                    array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
-                );
+                // Write from another container
+                if ($result instanceof AssetContainer) {
+                    try {
+                        return $store->setFromStream($result->getStream(), $filename, $hash, $variant);
+                    } finally {
+                        gc_collect_cycles();
+                    }
+                }
 
-                // Enforce garbage collection on $backend, avoid increasing memory use on each manipulation
-                // by holding on to the underlying GD image resource.
-                // Even though it's a local variable with no other references,
-                // PHP holds on to it for the entire lifecycle of the script,
-                // which is potentially related to passing it into the $callback closure.
-                gc_collect_cycles();
+                // Write from modified backend
+                if ($result instanceof Image_Backend) {
+                    try {
+                        /** @var Image_Backend $result */
+                        return $result->writeToStore(
+                            $store,
+                            $filename,
+                            $hash,
+                            $variant,
+                            array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
+                        );
+                    } finally {
+                        gc_collect_cycles();
+                    }
+                }
 
-                return $return;
+                // Unknown result from callback
+                throw new LogicException("Invalid manipulation result");
             }
         );
     }
@@ -857,5 +932,29 @@ trait ImageManipulation
         $args = func_get_args();
         array_shift($args);
         return $format . Convert::base64url_encode($args);
+    }
+
+    /**
+     * Validate a width or size is valid and casts it to integer
+     *
+     * @param mixed $value value of dimension
+     * @param string $dimension Name of dimension
+     * @return int Validated value
+     */
+    protected function castDimension($value, $dimension)
+    {
+        // Check empty
+        if (empty($value)) {
+            throw new InvalidArgumentException("{$dimension} is required");
+        }
+        // Check type
+        if (!is_int($value) && !(is_string($value) && filter_var($value, FILTER_VALIDATE_INT))) {
+            throw new InvalidArgumentException("{$dimension} must be an integer value");
+        }
+        // Check flag
+        if ($value < 1) {
+            throw new InvalidArgumentException("{$dimension} must be positive");
+        }
+        return (int)$value;
     }
 }

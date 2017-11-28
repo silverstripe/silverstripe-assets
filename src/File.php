@@ -753,20 +753,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Ensure that parent folders are published before this one is published
-     *
-     * @todo Solve this via triggered publishing / ownership in the future
-     */
-    public function onBeforePublish()
-    {
-        // Publish all parents from the root up
-        /** @var Folder $parent */
-        foreach ($this->getAncestors()->reverse() as $parent) {
-            $parent->publishSingle();
-        }
-    }
-
-    /**
      * Rename this file.
      * Note: This method will immediately save to the database to maintain
      * filesystem consistency with the database.

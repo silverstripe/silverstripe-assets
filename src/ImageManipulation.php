@@ -943,18 +943,22 @@ trait ImageManipulation
      */
     protected function castDimension($value, $dimension)
     {
+        // Check type
+        if (!is_numeric($value)) {
+            throw new InvalidArgumentException("{$dimension} must be a numeric value");
+        }
+
+        // Cast to integer
+        $value = intval($value);
+
         // Check empty
         if (empty($value)) {
             throw new InvalidArgumentException("{$dimension} is required");
-        }
-        // Check type
-        if (!is_int($value) && !(is_string($value) && filter_var($value, FILTER_VALIDATE_INT))) {
-            throw new InvalidArgumentException("{$dimension} must be an integer value");
         }
         // Check flag
         if ($value < 1) {
             throw new InvalidArgumentException("{$dimension} must be positive");
         }
-        return (int)$value;
+        return $value;
     }
 }

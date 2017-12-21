@@ -22,7 +22,7 @@ class PublicAssetAdapterTest extends SapphireTest
         // Test windows paths generate correct url
         // TODO Fix Filesystem::makeFolder() to use realpath, otherwise this fails in AssetAdapter::__construct()
         // $base = str_replace('/', '\\', BASE_PATH) . '\\assets\\subdir';
-        $base = BASE_PATH . '/assets/subdir';
+        $base = ASSETS_PATH . '/subdir';
         $adapter = new PublicAssetAdapter($base);
 
         $this->assertEquals(

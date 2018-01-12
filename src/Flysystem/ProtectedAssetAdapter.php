@@ -20,14 +20,14 @@ class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
      */
     private static $secure_folder = '.protected';
 
-    private static $server_configuration = array(
-        'apache' => array(
-            '.htaccess' => "SilverStripe\\Assets\\Flysystem\\ProtectedAssetAdapter_HTAccess"
-        ),
-        'microsoft-iis' => array(
-            'web.config' => "SilverStripe\\Assets\\Flysystem\\ProtectedAssetAdapter_WebConfig"
-        )
-    );
+    private static $server_configuration = [
+        'apache' => [
+            '.htaccess' => self::class . '_HTAccess'
+        ],
+        'microsoft-iis' => [
+            'web.config' => self::class . '_WebConfig'
+        ]
+    ];
 
     protected function findRoot($root)
     {

@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Flysystem;
 
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
 
 class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
 {
@@ -21,14 +22,14 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
      * @config
      * @var array Mapping of server configurations to configuration files necessary
      */
-    private static $server_configuration = array(
-        'apache' => array(
-            '.htaccess' => "SilverStripe\\Assets\\Flysystem\\PublicAssetAdapter_HTAccess"
-        ),
-        'microsoft-iis' => array(
-            'web.config' => "SilverStripe\\Assets\\Flysystem\\PublicAssetAdapter_WebConfig"
-        )
-    );
+    private static $server_configuration = [
+        'apache' => [
+            '.htaccess' => self::class . '_HTAccess'
+        ],
+        'microsoft-iis' => [
+            'web.config' => self::class . '_WebConfig'
+        ]
+    ];
 
     protected function findRoot($root)
     {
@@ -62,9 +63,9 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
      */
     protected function initParentURLPrefix($path)
     {
-        // Detect segment between root directory and assets root
-        $path = str_replace('\\', '/', $path);
-        $basePath = str_replace('\\', '/', BASE_PATH);
+        // Detect segment between web root directory and assets root
+        $path = Convert::slashes($path, '/');
+        $basePath = Convert::slashes(Director::publicFolder(), '/');
         if (stripos($path, $basePath) === 0) {
             $prefix = substr($path, strlen($basePath));
         } else {

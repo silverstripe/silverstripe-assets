@@ -76,7 +76,7 @@ class FileTest extends SapphireTest
         // Creating the folder is necessary to avoid having "Filename" overwritten by setName()/setRelativePath(),
         // because the parent folders don't exist in the database
         $folder = Folder::find_or_make('/FileTest/');
-        $testfilePath = BASE_PATH . '/assets/FileTest/CreateWithFilenameHasCorrectPath.txt'; // Important: No leading slash
+        $testfilePath = ASSETS_PATH . '/FileTest/CreateWithFilenameHasCorrectPath.txt'; // Important: No leading slash
         $fh = fopen($testfilePath, 'w');
         fwrite($fh, str_repeat('x', 1000000));
         fclose($fh);

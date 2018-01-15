@@ -6,7 +6,12 @@ SilverStripe\Core\Injector\Injector:
     class: SilverStripe\Security\InheritedPermissions
     constructor:
       BaseClass: SilverStripe\Assets\File
+      CacheService: '%$Psr\SimpleCache\CacheInterface.InheritedPermissions'
     properties:
       DefaultPermissions: '%$SilverStripe\Assets\FileDefaultPermissions'
       GlobalEditPermissions:
         - CMS_ACCESS
+  SilverStripe\Security\InheritedPermissionFlusher:
+    properties:
+      Services:
+        - '%$SilverStripe\Security\PermissionChecker.file'

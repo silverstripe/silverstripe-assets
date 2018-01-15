@@ -85,7 +85,7 @@ class UploadTest extends SapphireTest
             $file1->getFilename()
         );
         $this->assertEquals(
-            BASE_PATH . '/assets/UploadTest/.protected/Uploads/315ae4c3d4/UploadTest-testUpload.txt',
+            ASSETS_PATH . '/UploadTest/.protected/Uploads/315ae4c3d4/UploadTest-testUpload.txt',
             TestAssetStore::getLocalPath($file1)
         );
         $this->assertFileExists(
@@ -104,7 +104,7 @@ class UploadTest extends SapphireTest
             $file2->getFilename()
         );
         $this->assertEquals(
-            BASE_PATH . '/assets/UploadTest/.protected/UploadTest-testUpload/315ae4c3d4/UploadTest-testUpload.txt',
+            ASSETS_PATH . '/UploadTest/.protected/UploadTest-testUpload/315ae4c3d4/UploadTest-testUpload.txt',
             TestAssetStore::getLocalPath($file2)
         );
         $this->assertFileExists(

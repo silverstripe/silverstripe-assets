@@ -257,6 +257,51 @@ abstract class ImageTest extends SapphireTest
     }
 
     /**
+     * Test input arg validation
+     */
+    public function testImageResizeValidate()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $this->assertTrue($image->isSize(300, 300));
+
+        // Test string arguments
+        $resized = $image->Pad("150", "100");
+        $this->assertTrue($resized->isSize(150, 100));
+
+        // Test float arguments (decimal floored away)
+        $cropped = $image->Fill(100.1, 200.6);
+        $this->assertTrue($cropped->isSize(100, 200));
+
+        // Test string float
+        $cropped = $image->Fill("110.1", "210.6");
+        $this->assertTrue($cropped->isSize(110, 210));
+    }
+
+    /**
+     * @dataProvider providerTestImageResizeInvalid
+     * @param $width
+     * @param $height
+     * @param $error
+     */
+    public function testImageResizeInvalid($width, $height, $error)
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage($error);
+        /** @var Image $image */
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $image->Pad($width, $height);
+    }
+
+    public function providerTestImageResizeInvalid()
+    {
+        return [
+            ['-1', 100, 'Width must be positive'],
+            ['bob', 100, 'Width must be a numeric value'],
+            ['0', 100, 'Width is required'],
+        ];
+    }
+
+    /**
      * @expectedException InvalidArgumentException
      */
     public function testGenerateImageWithInvalidParameters()

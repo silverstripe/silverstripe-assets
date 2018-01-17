@@ -120,7 +120,7 @@ class FileFinderTest extends SapphireTest
         );
     }
 
-    public function assertFinderFinds(FileFinder $finder, $expect, $message = null)
+    protected function assertFinderFinds(FileFinder $finder, $expect, string $message = '')
     {
         $found = $finder->find($this->base);
 

@@ -70,7 +70,7 @@ class DBFileTest extends SapphireTest
         $obj->MyFile->setFromLocalFile($fish, 'awesome-fish.jpg');
 
         // This should fail
-        $this->setExpectedException(ValidationException::class);
+        $this->expectException(ValidationException::class);
         $obj->MyFile->setFromString('puppies', 'subdir/puppy-document.txt');
     }
 

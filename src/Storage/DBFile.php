@@ -278,6 +278,16 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     }
 
     /**
+     * Return URL for this image. Alias for getURL()
+     *
+     * @return string
+     */
+    public function Link()
+    {
+        return $this->getURL();
+    }
+
+    /**
      * Get URL, but without resampling.
      * Note that this will return the url even if the file does not exist.
      *

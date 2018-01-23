@@ -62,6 +62,19 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         $this->assertNotEquals('folder/MyFile100.jpg', $suggestions[99]); // Last suggestion is semi-random
     }
 
+    public function testPathsNormalised()
+    {
+        Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
+        $generator = new DefaultAssetNameGenerator('/some\folder/MyFile.jpg');
+        $suggestions = iterator_to_array($generator);
+        $this->assertEquals(100, count($suggestions));
+
+        // Slashes are always normalised
+        $this->assertEquals('some/folder/MyFile.jpg', $suggestions[0]);
+        $this->assertEquals('some/folder/MyFile-v2.jpg', $suggestions[1]);
+        $this->assertEquals('some/folder/MyFile-v3.jpg', $suggestions[2]);
+    }
+
     /**
      * Test with default -v prefix
      */

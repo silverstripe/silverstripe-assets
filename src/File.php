@@ -101,6 +101,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     const EDIT_ALL = 'FILE_EDIT_ALL';
 
+    /**
+     * Permission for view all files
+     */
+    const VIEW_ALL = 'FILE_VIEW_ALL';
+
     private static $default_sort = "\"Name\"";
 
     /**
@@ -334,6 +339,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $result = $this->extendedCan('canView', $member);
         if ($result !== null) {
             return $result;
+        }
+
+        if (Permission::checkMember($member, File::VIEW_ALL)) {
+            return true;
         }
 
         // Check inherited permissions
@@ -1251,6 +1260,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
                 'sort' => -100,
                 'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
+            ],
+            self::VIEW_ALL => [
+                'name' => _t(__CLASS__.'.VIEW_ALL_DESCRIPTION', 'View any file'),
+                'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
+                'sort' => -100,
+                'help' => _t(__CLASS__.'.VIEW_ALL_HELP', 'View any file on the site, even if restricted')
             ]
         ];
     }

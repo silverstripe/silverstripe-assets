@@ -15,3 +15,6 @@ SilverStripe\Core\Injector\Injector:
     properties:
       Services:
         - '%$SilverStripe\Security\PermissionChecker.file'
+SilverStripe\SiteConfig\SiteConfig:
+  extensions:
+    - SilverStripe\Assets\Extension\SiteConfigPermissionsExtension

@@ -20,6 +20,7 @@
     ],
     "require": {
         "silverstripe/framework": "^4@dev",
+        "silverstripe/siteconfig": "^4@dev",
         "silverstripe/vendor-plugin": "^1.0",
         "intervention/image": "^2.3",
         "php": ">=5.6.0"

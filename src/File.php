@@ -112,12 +112,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $plural_name = "Files";
 
     /**
-     * Permissions necessary to view files outside of the live stage (e.g. archive / draft stage).
+     * Anyone with CMS access can view draft files
      *
      * @config
      * @var array
      */
-    private static $non_live_permissions = array('CMS_ACCESS_LeftAndMain', 'CMS_ACCESS_AssetAdmin', 'VIEW_DRAFT_CONTENT');
+    private static $non_live_permissions = ['CMS_ACCESS', 'VIEW_DRAFT_CONTENT'];
 
     private static $db = array(
         "Name" => "Varchar(255)",

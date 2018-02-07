@@ -112,12 +112,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $plural_name = "Files";
 
     /**
-     * Permissions necessary to view files outside of the live stage (e.g. archive / draft stage).
+     * Anyone with CMS access can view draft files
      *
      * @config
      * @var array
      */
-    private static $non_live_permissions = array('CMS_ACCESS_LeftAndMain', 'CMS_ACCESS_AssetAdmin', 'VIEW_DRAFT_CONTENT');
+    private static $non_live_permissions = ['CMS_ACCESS', 'VIEW_DRAFT_CONTENT'];
 
     private static $db = array(
         "Name" => "Varchar(255)",
@@ -266,7 +266,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function find($filename)
     {
         // Split to folders and the actual filename, and traverse the structure.
-        $parts = explode("/", $filename);
+        $parts = array_filter(preg_split("#[/\\\\]+#", $filename));
         $parentID = 0;
         /** @var File $item */
         $item = null;
@@ -1265,9 +1265,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         // Fix illegal characters
         $filter = FileNameFilter::create();
+        $parts = array_filter(preg_split("#[/\\\\]+#", $name));
         return implode('/', array_map(function ($part) use ($filter) {
             return $filter->filter($part);
-        }, explode('/', $name)));
+        }, $parts));
     }
 
     public function flushCache($persistent = true)

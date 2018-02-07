@@ -48,9 +48,8 @@ class Folder extends File
      */
     public static function find_or_make($folderPath)
     {
-        // replace leading and trailing slashes
-        $folderPath = preg_replace('/^\/?(.*)\/?$/', '$1', trim($folderPath));
-        $parts = explode("/", $folderPath);
+        // Safely split all parts
+        $parts = array_filter(preg_split("#[/\\\\]+#", $folderPath));
 
         $parentID = 0;
         $item = null;

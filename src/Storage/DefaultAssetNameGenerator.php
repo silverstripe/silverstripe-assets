@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Storage;
 
+use SilverStripe\Assets\File;
 use SilverStripe\Core\Config\Config;
 
 /**
@@ -79,8 +80,9 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
 
     public function __construct($filename)
     {
-        $this->filename = $filename;
-        $this->directory = ltrim(dirname($filename), '.');
+        // Normalise filename slashes to `/` (fixed across OS for DB file identifier separator)
+        $this->filename = trim(preg_replace('#[/\\\\]+#', '/', $filename), '/');
+        $this->directory = ltrim(dirname($this->filename), '.');
         $name = basename($this->filename);
         // Note: Unlike normal extensions, we want to split at the first period, not the last.
         if (($pos = strpos($name, '.')) !== false) {
@@ -138,7 +140,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         // Build next name
         $filename = $this->name . $this->getPrefix() . $version . $this->extension;
         if ($this->directory) {
-            $filename = $this->directory . DIRECTORY_SEPARATOR . $filename;
+            $filename = File::join_paths($this->directory, $filename);
         }
         return $filename;
     }

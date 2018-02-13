@@ -2,17 +2,17 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\FileNameFilter;
+use SilverStripe\Assets\Filesystem;
+use SilverStripe\Assets\Folder;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Dev\SapphireTest;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\ORM\DataObject;
-use SilverStripe\Assets\Folder;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\File;
-use SilverStripe\Assets\FileNameFilter;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 /**
  * @author Ingo Schommer (ingo at silverstripe dot com)

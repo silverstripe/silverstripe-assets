@@ -2,15 +2,15 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Filesystem;
+use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\ProtectedFileController;
-use SilverStripe\Assets\Folder;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\File;
+use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
-use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 /**
  * @skipUpgrade

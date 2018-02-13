@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Tests;
 
 use InvalidArgumentException;
 use Prophecy\Prophecy\ObjectProphecy;
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
@@ -12,7 +13,6 @@ use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;

@@ -59,7 +59,8 @@ mappings:
   GDImageTest: SilverStripe\Assets\Tests\GDImageTest
   ImageTest: SilverStripe\Assets\Tests\ImageTest
   ImagickImageTest: SilverStripe\Assets\Tests\ImagickImageTest
-  AssetStoreTest_SpyStore: SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore
+  AssetStoreTest_SpyStore: SilverStripe\Assets\Dev\TestAssetStore
+  SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore: SilverStripe\Assets\Dev\TestAssetStore
   AssetAdapterTest: SilverStripe\Assets\Tests\Flysystem\AssetAdapterTest
   FlysystemPublicAdapter: SilverStripe\Assets\Flysystem\PublicAdapter
   FlysystemProtectedAdapter: SilverStripe\Assets\Flysystem\ProtectedAdapter

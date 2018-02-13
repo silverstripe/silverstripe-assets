@@ -3,9 +3,9 @@
 namespace SilverStripe\Assets\Tests\Storage;
 
 use Exception;
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;

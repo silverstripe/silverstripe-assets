@@ -2,11 +2,11 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\DefaultAssetNameGenerator;
 use SilverStripe\Assets\Upload;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\Assets\Upload_Validator;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;

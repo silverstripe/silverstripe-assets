@@ -2,10 +2,10 @@
 
 namespace SilverStripe\Assets\Tests\Storage;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 use SilverStripe\ORM\ValidationException;
 
 /**

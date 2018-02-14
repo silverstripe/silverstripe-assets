@@ -833,6 +833,6 @@ class InterventionBackend implements Image_Backend, Flushable
 
         // Ensure stream is readable
         $meta = stream_get_meta_data($stream);
-        return isset($meta['mode']) && strstr($meta['mode'], 'r');
+        return isset($meta['mode']) && (strstr($meta['mode'], 'r') || strstr($meta['mode'], '+'));
     }
 }

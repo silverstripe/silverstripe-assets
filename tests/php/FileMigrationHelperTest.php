@@ -2,15 +2,15 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\FileMigrationHelper;
+use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Tests\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 /**
  * Ensures that File dataobjects can be safely migrated from 3.x

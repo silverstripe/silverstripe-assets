@@ -2,14 +2,14 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject;
-use SilverStripe\Versioned\Versioned;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * Tests {@see AssetControlExtension}

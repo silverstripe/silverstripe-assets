@@ -5,7 +5,7 @@ namespace SilverStripe\Assets\Tests\Shortcodes;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
+use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;

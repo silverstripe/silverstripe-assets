@@ -6,6 +6,7 @@ use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * A basic unversioned object
@@ -21,6 +22,10 @@ class TestObject extends DataObject implements TestOnly
     );
 
     private static $table_name = 'AssetControlExtensionTest_TestObject';
+
+    private static $extensions = [
+        Versioned::class . '.versioned', // Versioning only, no staging
+    ];
 
     /**
      * @param Member $member

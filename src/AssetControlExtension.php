@@ -245,7 +245,11 @@ class AssetControlExtension extends DataExtension
      */
     protected function isVersioned()
     {
-        return class_exists(Versioned::class) && $this->owner->has_extension(Versioned::class);
+        /** @var Versioned|DataObject $owner */
+        $owner = $this->owner;
+        return class_exists(Versioned::class)
+            && $owner->hasExtension(Versioned::class)
+            && $owner->hasStages();
     }
 
     /**

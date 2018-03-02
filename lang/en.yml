@@ -32,7 +32,7 @@ en:
     TOOLARGE: 'Filesize is too large, maximum {size} allowed'
     TiffType: 'Tagged image format'
     URL: URL
-    WavType: 'WAV audo file'
+    WavType: 'WAV audio file'
     XlsType: 'Excel spreadsheet'
     ZipType: 'ZIP compressed file'
   SilverStripe\Assets\Folder:

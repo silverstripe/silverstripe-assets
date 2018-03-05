@@ -82,3 +82,65 @@ skipConfigs:
   - segment
 skipYML:
   - Filesystem
+warnings:
+  methods:
+    'SilverStripe\Assets\File->setFilename()':
+      message: 'Filenames should not be set directly anymore'
+      url: 'https://docs.silverstripe.org/en/4/changelogs/4.0.0#write-file-dataobject'
+    'SilverStripe\Assets\File::handle_shortcode()':
+      message: 'Has been removed'
+      url: 'https://docs.silverstripe.org/en/4/changelogs/4.0.0#file-shortcode'
+    'SilverStripe\Assets\Filesystem::sync()':
+      message: 'Removed'
+    'SilverStripe\Assets\Folder::syncChildren()':
+      message: 'Removed'
+    'SilverStripe\Assets\Folder::constructChild()':
+      message: 'Removed'
+    'SilverStripe\Assets\Folder::addUploadToFolder()':
+      message: 'Removed'
+    'SilverStripe\Assets\File::deletedatabaseOnly()':
+      message: 'Removed'
+    'SilverStripe\Assets\File::link_shortcode_handler()':
+      message: 'Removed'
+    'SilverStripe\Assets\File::getRelativePath()':
+      message: 'Removed'
+    'SilverStripe\Assets\File::getFullPath()':
+      message: 'Removed'
+    'SilverStripe\Assets\File::setParentID()':
+      message: 'Removed'
+    'SilverStripe\Assets\Image::regenerateFormattedImages()':
+      message: 'Removed'
+    'SilverStripe\Assets\Image::getGeneratedImages()':
+      message: 'Removed'
+    'SilverStripe\Assets\Image::deleteFormattedImages()':
+      message: 'Removed'
+    'SilverStripe\Assets\Image::handle_shortcode()':
+      message: 'moved to SilverStripe\Assets\Shortcodes\ImageShortcodeProvider::handle_shortcode()'
+    'SilverStripe\Assets\Image::deleteFormattedImages()':
+      message: 'Removed'
+    'SilverStripe\Assets\Image::SetRatioSize()':
+      message: 'Renamed to Fit()'
+      replacement: 'Fit'
+    'SilverStripe\Assets\Image::SetWidth()':
+      message: 'Renamed to ScaleWidth()'
+      replacement: 'ScaleWidth'
+    'SilverStripe\Assets\Image::SetHeight()':
+      message: 'Renamed to ScaleHeight'
+      replacement: 'ScaleHeight'
+    'SilverStripe\Assets\Image::SetSize()':
+      message: 'Renamed to Pad()'
+      replacement: 'Pad'
+    'SilverStripe\Assets\Image::PaddedImage()':
+      message: 'Renamed to Pad()'
+      replacement: 'Pad'
+    'SilverStripe\Assets\Image::CroppedImage()':
+      message: 'Renamed to Fill()'
+      replacement: 'Fill'
+    'SilverStripe\Assets\Image::AssetLibraryPreview()':
+      message: 'Renamed to PreviewThumbnail()'
+      replacement: 'PreviewThumbnail'
+    'SilverStripe\Assets\Image::AssetLibraryThumbnail()':
+      message: 'Renamed to CMSThumbnail()'
+      replacement: 'CMSThumbnail'
+    'SilverStripe\Assets\Image::deleteFormattedImages()':
+      message: 'Removed'

@@ -85,7 +85,7 @@ skipYML:
 warnings:
   methods:
     'SilverStripe\Assets\File->setFilename()':
-      message: 'Filenames should not be set directly any more'
+      message: 'Filenames should not be set directly anymore'
       url: 'https://docs.silverstripe.org/en/4/changelogs/4.0.0#write-file-dataobject'
     'SilverStripe\Assets\File::handle_shortcode()':
       message: 'Has been removed'

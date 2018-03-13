@@ -897,7 +897,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             'dmg' => _t(__CLASS__.'.DmgType', 'Apple disk image'),
             'pdf' => _t(__CLASS__.'.PdfType', 'Adobe Acrobat PDF file'),
             'mp3' => _t(__CLASS__.'.Mp3Type', 'MP3 audio file'),
-            'wav' => _t(__CLASS__.'.WavType', 'WAV audo file'),
+            'wav' => _t(__CLASS__.'.WavType', 'WAV audio file'),
             'avi' => _t(__CLASS__.'.AviType', 'AVI video file'),
             'mpg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),
             'mpeg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),

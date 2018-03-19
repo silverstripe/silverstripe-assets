@@ -8,6 +8,7 @@ use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\CMS\Model\FileLink;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
@@ -17,9 +18,11 @@ use SilverStripe\Dev\Deprecation;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
+use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\InheritedPermissions;
@@ -87,6 +90,7 @@ use SilverStripe\View\HTML;
  *
  * @method File Parent() Returns parent File
  * @method Member Owner() Returns Member object of file owner.
+ * @method HasManyList|FileLink[] BackLinks() List of SiteTreeLink objects attached to this page
  *
  * @mixin Hierarchy
  * @mixin Versioned
@@ -131,6 +135,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         "Parent" => File::class,
         "Owner" => Member::class,
     );
+
+    private static $has_many = [
+        'BackLinks' => FileLink::class . '.Linked',
+    ];
 
     private static $defaults = array(
         "ShowInSearch" => 1,
@@ -1146,6 +1154,25 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         if ($migrated) {
             DB::alteration_message("{$migrated} File DataObjects upgraded", "changed");
         }
+    }
+
+    /**
+     * Get the back-link tracking objects that link to this file via HTML fields
+     *
+     * @retun ArrayList|DataObject[]
+     */
+    public function BackLinkTracking()
+    {
+        // @todo - Implement PolymorphicManyManyList to replace this
+        $list = ArrayList::create();
+        foreach ($this->BackLinks() as $link) {
+            // Ensure parent record exists
+            $item = $link->Parent();
+            if ($item && $item->isInDB()) {
+                $list->push($item);
+            }
+        }
+        return $list;
     }
 
     /**

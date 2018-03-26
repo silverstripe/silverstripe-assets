@@ -3,12 +3,13 @@
 namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
+use SilverStripe\Assets\Shortcodes\FileLink;
+use SilverStripe\Assets\Shortcodes\FileLinkTracking;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
-use SilverStripe\CMS\Model\FileLink;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
@@ -32,6 +33,7 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
+use SilverStripe\Versioned\RecursivePublishable;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\HTML;
 
@@ -94,6 +96,7 @@ use SilverStripe\View\HTML;
  *
  * @mixin Hierarchy
  * @mixin Versioned
+ * @mixin RecursivePublishable
  * @mixin InheritedPermissionsExtension
  */
 class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
@@ -138,6 +141,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
     private static $has_many = [
         'BackLinks' => FileLink::class . '.Linked',
+    ];
+
+    private static $owned_by = [
+        'BackLinks',
     ];
 
     private static $defaults = array(
@@ -616,6 +623,26 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $this->updateFilesystem();
 
         parent::onBeforeWrite();
+    }
+
+    /**
+     * Update link tracking on delete
+     */
+    protected function onAfterDelete()
+    {
+        // Skip live stage
+        if (Versioned::get_stage() === Versioned::LIVE) {
+            return;
+        }
+
+        // Trigger update of all parent owners on change
+        /** @var DataObject|FileLinkTracking $brokenPage */
+        foreach ($this->BackLinkTracking() as $brokenPage) {
+            $brokenPage->syncLinkTracking();
+            if ($brokenPage->isChanged()) {
+                $brokenPage->write();
+            }
+        }
     }
 
     /**
@@ -1173,6 +1200,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             }
         }
         return $list;
+    }
+
+    public function BackLinkTrackingCount()
+    {
+        return $this->BackLinks()->count();
     }
 
     /**

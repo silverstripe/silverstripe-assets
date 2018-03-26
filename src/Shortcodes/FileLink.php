@@ -19,6 +19,10 @@ class FileLink extends DataObject
         'Linked',
     ];
 
+    private static $owned_by = [
+        'Parent',
+    ];
+
     private static $has_one = [
         'Parent' => DataObject::class,
         'Linked' => File::class,

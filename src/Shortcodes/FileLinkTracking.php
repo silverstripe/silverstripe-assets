@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Shortcodes;
 
 use DOMElement;
 use SilverStripe\Assets\File;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -18,12 +19,11 @@ use SilverStripe\View\Parsers\HTMLValue;
  * referenced in any HTMLText fields, and a boolean to indicate if there are any broken file links. Call
  * augmentSyncFileLinkTracking to update those fields with any changes to those fields.
  *
- * Note that since both SiteTree and File are versioned, LinkTracking and ImageTracking will
+ * Note that since both SiteTree and File are versioned, LinkTracking and FileTracking will
  * only be enabled for the Stage record.
  *
  * @property DataObject|FileLinkTracking $owner
- * @property bool $HasBrokenFile True if any file or image is broken
- * @method ManyManyList|File[] ImageTracking() List of files linked on this dataobject
+ * @method ManyManyList|File[] FileTracking() List of files linked on this dataobject
  */
 class FileLinkTracking extends DataExtension
 {
@@ -42,21 +42,27 @@ class FileLinkTracking extends DataExtension
         'FileParser' => '%$' . FileLinkTrackingParser::class,
     ];
 
-    private static $db = [
-        'HasBrokenFile' => 'Boolean',
-    ];
-
     private static $owns = [
-        'ImageTracking',
+        'FileTracking',
     ];
 
     private static $many_many = [
-        'ImageTracking' => [
+        'FileTracking' => [
             'through' => FileLink::class,
             'from' => 'Parent',
             'to' => 'Linked',
         ],
     ];
+
+    /**
+     * @deprecated 4.2..5.0 Use FileTracking() instead
+     * @return File[]|ManyManyList
+     */
+    public function ImageTracking()
+    {
+        Deprecation::notice('5.0', 'Use FileTracking() instead');
+        return $this->FileTracking();
+    }
 
     /**
      * FileParser for link tracking
@@ -102,37 +108,41 @@ class FileLinkTracking extends DataExtension
      */
     public function augmentSyncLinkTracking()
     {
-        // Skip live tracking
-        if (Versioned::get_stage() == Versioned::LIVE) {
+        // If owner is versioned, skip tracking on live
+        if (Versioned::get_stage() == Versioned::LIVE && $this->owner->hasExtension(Versioned::class)) {
             return;
         }
-
-        // Reset boolean broken flag. This will be flagged back by trackLinksInField().
-        $this->owner->HasBrokenFile = false;
 
         // Build a list of HTMLText fields, merging all linked pages together.
         $allFields = DataObject::getSchema()->fieldSpecs($this->owner);
         $linkedPages = [];
+        $anyBroken = false;
         foreach ($allFields as $field => $fieldSpec) {
             $fieldObj = $this->owner->dbObject($field);
             if ($fieldObj instanceof DBHTMLText) {
                 // Merge links in this field with global list.
-                $linksInField = $this->trackLinksInField($field);
+                $linksInField = $this->trackLinksInField($field, $anyBroken);
                 $linkedPages = array_merge($linkedPages, $linksInField);
             }
         }
 
-        // Update the "ImageTracking" many_many.
-        $this->owner->ImageTracking()->setByIDList($linkedPages);
+        // Soft support for HasBrokenFile db field (e.g. SiteTree)
+        if ($this->owner->hasField('HasBrokenFile')) {
+            $this->owner->HasBrokenFile = $anyBroken;
+        }
+
+        // Update the "FileTracking" many_many.
+        $this->owner->FileTracking()->setByIDList($linkedPages);
     }
 
     /**
      * Scrape the content of a field to detect anly links to local SiteTree pages or files
      *
      * @param string $fieldName The name of the field on {@link @owner} to scrape
+     * @param bool &$anyBroken Will be flagged to true (by reference) if a link is broken.
      * @return int[] Array of page IDs found (associative array)
      */
-    public function trackLinksInField($fieldName)
+    public function trackLinksInField($fieldName, &$anyBroken = false)
     {
         // Pull down current field content
         $record = $this->owner;
@@ -149,7 +159,7 @@ class FileLinkTracking extends DataExtension
 
             // Flag broken
             if ($link['Broken']) {
-                $record->HasBrokenFile = true;
+                $anyBroken = true;
             }
 
             // Collect page ids

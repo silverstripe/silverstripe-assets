@@ -50,7 +50,8 @@ class UploadTest extends SapphireTest
         TestAssetStore::reset();
         parent::tearDown();
 
-        if (file_exists($this->tmpFilePath)) {
+        $isTmpFile = (strpos($this->tmpFilePath, __DIR__) !== 0);
+        if (file_exists($this->tmpFilePath) && $isTmpFile) {
             unlink($this->tmpFilePath);
         }
     }
@@ -66,7 +67,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -124,7 +125,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -185,7 +186,7 @@ class UploadTest extends SapphireTest
         $configMaxFileSizes = ['*' => '1k'];
         Upload_Validator::config()->set('default_max_file_size', $configMaxFileSizes);
         // create tmp file
-        $tmpFileName = 'myfile.jpg';
+        $tmpFileName = 'myfile.txt';
         $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent(100);
         file_put_contents($this->tmpFilePath, $tmpFileContent);
@@ -194,7 +195,7 @@ class UploadTest extends SapphireTest
         $upload = new Upload();
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => '',
+            'type' => 'text/plain',
             'tmp_name' => $this->tmpFilePath,
             'size' => filesize($this->tmpFilePath),
             'error' => UPLOAD_ERR_OK,
@@ -336,7 +337,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => '',
@@ -365,7 +366,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'php',
@@ -394,7 +395,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -426,7 +427,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => '',
@@ -448,14 +449,12 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.tar.gz';
-        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
-        $tmpFileContent = $this->getTemporaryFileContent();
-        file_put_contents($this->tmpFilePath, $tmpFileContent);
+        $this->tmpFilePath = implode([__DIR__, 'UploadTest', $tmpFileName], DIRECTORY_SEPARATOR);
 
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'tar.gz',
@@ -527,7 +526,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -585,7 +584,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -644,7 +643,7 @@ class UploadTest extends SapphireTest
         // emulates the $_FILES array
         $tmpFile = array(
             'name' => $tmpFileName,
-            'type' => 'text/plaintext',
+            'type' => 'text/plain',
             'size' => filesize($this->tmpFilePath),
             'tmp_name' => $this->tmpFilePath,
             'extension' => 'txt',
@@ -725,7 +724,7 @@ class UploadTest extends SapphireTest
             // emulates the $_FILES array
             $tmpFile = array(
                 'name' => $tmpFileName,
-                'type' => 'text/plaintext',
+                'type' => 'text/plain',
                 'size' => filesize($this->tmpFilePath),
                 'tmp_name' => $this->tmpFilePath,
                 'extension' => 'jpg',
@@ -766,7 +765,7 @@ class UploadTest extends SapphireTest
             // emulates the $_FILES array
             $tmpFile = array(
                 'name' => $tmpFileName,
-                'type' => 'text/plaintext',
+                'type' => 'text/plain',
                 'size' => filesize($this->tmpFilePath),
                 'tmp_name' => $this->tmpFilePath,
                 'extension' => 'jpg',

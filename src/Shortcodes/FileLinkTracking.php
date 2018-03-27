@@ -135,6 +135,16 @@ class FileLinkTracking extends DataExtension
         $this->owner->FileTracking()->setByIDList($linkedPages);
     }
 
+    public function onAfterDelete()
+    {
+        // If owner is versioned, skip tracking on live
+        if (Versioned::get_stage() == Versioned::LIVE && $this->owner->hasExtension(Versioned::class)) {
+            return;
+        }
+
+        $this->owner->FileTracking()->removeAll();
+    }
+
     /**
      * Scrape the content of a field to detect anly links to local SiteTree pages or files
      *

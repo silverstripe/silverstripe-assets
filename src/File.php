@@ -1223,6 +1223,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $list;
     }
 
+    /**
+     * Count of backlinks
+     * Note: Doesn't filter broken records
+     *
+     * @return int
+     */
     public function BackLinkTrackingCount()
     {
         return $this->BackLinks()->count();

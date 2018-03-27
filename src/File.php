@@ -630,17 +630,38 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     protected function onAfterDelete()
     {
+        parent::onAfterDelete();
+        $this->updateDependantObjects();
+    }
+
+    public function onAfterRevertToLive()
+    {
+        // Force query of draft object and update (as source record is bound to live stage)
+        /** @var File $draftRecord */
+        $draftRecord = Versioned::get_by_stage(self::class, Versioned::DRAFT)->byID($this->ID);
+        $draftRecord->updateDependantObjects();
+    }
+
+    /**
+     * Update objects linking to this file
+     */
+    protected function updateDependantObjects()
+    {
         // Skip live stage
         if (Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 
+        // Need to flush cache to avoid outdated versionnumber references
+        $this->flushCache();
+
         // Trigger update of all parent owners on change
-        /** @var DataObject|FileLinkTracking $brokenPage */
-        foreach ($this->BackLinkTracking() as $brokenPage) {
-            $brokenPage->syncLinkTracking();
-            if ($brokenPage->isChanged()) {
-                $brokenPage->write();
+        /** @var DataObject|FileLinkTracking $object */
+        foreach ($this->BackLinkTracking() as $object) {
+            // Update sync link tracking
+            $object->syncLinkTracking();
+            if ($object->isChanged()) {
+                $object->write();
             }
         }
     }

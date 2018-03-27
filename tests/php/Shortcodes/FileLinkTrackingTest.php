@@ -239,23 +239,39 @@ class FileLinkTrackingTest extends SapphireTest
     {
         /** @var EditableObject $page */
         $page = $this->objFromFixture(EditableObject::class, 'page1');
+        /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
+        $fileID = $file->ID;
 
         $this->assertContains(
             '<p><a href="/assets/FileLinkTrackingTest/44781db6b1/testscript-test-file.txt">Working Link</a></p>',
             $page->dbObject('Another')->forTemplate()
         );
         $this->assertContains(
-            sprintf('<p><a href="[file_link,id=%d]">Working Link</a></p>', $file->ID),
+            sprintf('<p><a href="[file_link,id=%d]">Working Link</a></p>', $fileID),
             $page->Another
         );
 
         // Deleting file should trigger css class
-
+        $file->delete();
         $page = EditableObject::get()->byID($page->ID);
         $this->assertContains(
-            '<img src="/assets/FileLinkTrackingTest/5a5ee24e44/testscript-test-file.jpg"',
-            $page->Content
+            '<p><a href="" class="ss-broken">Working Link</a></p>',
+            $page->dbObject('Another')->forTemplate()
+        );
+        $this->assertContains(
+            sprintf('<p><a href="[file_link,id=%d]" class="ss-broken">Working Link</a></p>', $fileID),
+            $page->Another
+        );
+
+        // Restoring the file should fix it
+        /** @var File $fileLive */
+        $fileLive = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($fileID);
+        $fileLive->doRevertToLive();
+        $page = EditableObject::get()->byID($page->ID);
+        $this->assertContains(
+            sprintf('<p><a href="[file_link,id=%d]">Working Link</a></p>', $fileID),
+            $page->Another
         );
         $this->assertContains(
             '<p><a href="/assets/FileLinkTrackingTest/44781db6b1/testscript-test-file.txt">Working Link</a></p>',

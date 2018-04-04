@@ -35,13 +35,13 @@ class FileMigrationHelper
     /**
      * Perform migration
      *
-     * @param string $base Absolute base path (parent of assets folder). Will default to BASE_PATH
+     * @param string $base Absolute base path (parent of assets folder). Will default to PUBLIC_PATH
      * @return int Number of files successfully migrated
      */
     public function run($base = null)
     {
         if (empty($base)) {
-            $base = BASE_PATH;
+            $base = PUBLIC_PATH;
         }
         // Check if the File dataobject has a "Filename" field.
         // If not, cannot migrate

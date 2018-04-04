@@ -86,7 +86,7 @@ class FileLinkTrackingTest extends SapphireTest
             $page->dbObject('Another')->forTemplate()
         );
 
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             /** @var EditableObject $pageLive */
             $pageLive = EditableObject::get()->byID($page->ID);
@@ -123,7 +123,7 @@ class FileLinkTrackingTest extends SapphireTest
             '<img src="/assets/5a5ee24e44/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertContains(
@@ -140,7 +140,7 @@ class FileLinkTrackingTest extends SapphireTest
             '<img src="/assets/FileLinkTrackingTest/5a5ee24e44/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertContains(
@@ -156,7 +156,7 @@ class FileLinkTrackingTest extends SapphireTest
             '<img src="/assets/FileLinkTrackingTest/5a5ee24e44/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertContains(
@@ -190,7 +190,7 @@ class FileLinkTrackingTest extends SapphireTest
         $page = $this->objFromFixture(EditableObject::class, 'page1');
         $this->assertTrue($page->publishRecursive());
 
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $livePage = EditableObject::get()->byID($page->ID);
             $this->assertContains(
@@ -221,7 +221,7 @@ class FileLinkTrackingTest extends SapphireTest
 
         // Publishing this record also updates live record
         $page->publishRecursive();
-        Versioned::withVersionedMode(function() use ($page) {
+        Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertContains(

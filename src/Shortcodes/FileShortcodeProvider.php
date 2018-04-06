@@ -196,7 +196,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     public static function flush()
     {
         $cache = static::getCache();
-
         $cache->clear();
     }
 }

@@ -1,0 +1,6 @@
+---
+Name: assetslinktracking
+---
+SilverStripe\ORM\DataObject:
+  extensions:
+    - SilverStripe\Assets\Shortcodes\FileLinkTracking

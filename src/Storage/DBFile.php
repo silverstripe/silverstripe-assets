@@ -11,6 +11,7 @@ use SilverStripe\ORM\FieldType\DBComposite;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Permission;
+use SilverStripe\View\ViewableData;
 
 /**
  * Represents a file reference stored in a database
@@ -403,7 +404,9 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      */
     public function setOriginal($original)
     {
-        $this->failover = $original;
+        if ($original instanceof ViewableData) {
+            $this->setFailover($original);
+        }
         return $this;
     }
 

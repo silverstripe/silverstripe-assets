@@ -1,0 +1,13 @@
+# These need to come first so that SiteTree has the link meta-data written.
+SilverStripe\Assets\File:
+  file1:
+    FileFilename: testscript-test-file.txt
+    Name: testscript-test-file.txt
+SilverStripe\Assets\Image:
+  image1:
+    FileFilename: testscript-test-file.jpg
+    Name: testscript-test-file.jpg
+
+SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest\EditableObject:
+  page1:
+    Title: 'Page 1'

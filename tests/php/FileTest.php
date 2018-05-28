@@ -227,7 +227,7 @@ class FileTest extends SapphireTest
     public function testAllFilesHaveCategory()
     {
         // Can't use dataprovider due to https://github.com/sebastianbergmann/phpunit/issues/1206
-        foreach (array_filter(File::config()->get('allowed_extensions')) as $ext) {
+        foreach (array_filter(File::getAllowedExtensions()) as $ext) {
             $this->assertNotEmpty(
                 File::get_app_category($ext),
                 "Assert that extension {$ext} has a valid category"
@@ -731,5 +731,45 @@ class FileTest extends SapphireTest
         $this->assertEquals('Parent/New_File.txt', $file->generateFilename());
         $this->assertEquals('Parent/New_File.txt', $file->getFilename());
         $this->assertFalse($file->isChanged());
+    }
+
+    /**
+     * @dataProvider allowedExtensionsProvider
+     * @param array $allowedExtensions
+     * @param array $expected
+     */
+    public function testGetAllowedExtensions($allowedExtensions, $expected)
+    {
+        Config::modify()->set(File::class, 'allowed_extensions', $allowedExtensions);
+        $this->assertSame($expected, $expected);
+    }
+
+    /**
+     * @return array[]
+     */
+    public function allowedExtensionsProvider()
+    {
+        return [
+            'unkeyed array' => [
+                ['jpg', 'foo', 'gif', 'bmp'],
+                ['jpg', 'foo', 'gif', 'bmp'],
+            ],
+            'associative array' => [
+                ['jpg' => true, 'foo' => false, 'gif' => true, 'bmp' => true],
+                ['jpg', 'gif', 'bmp'],
+            ],
+            'mixed array' => [
+                ['jpg', 'foo', 'gif' => false, 'bmp' => true],
+                ['jpg', 'foo', 'bmp'],
+            ],
+            'mixed array with removals' => [
+                ['jpg', 'foo', 'gif', 'bmp' => true, 'foo' => false],
+                ['jpg', 'gif', 'bmp'],
+            ],
+            'mixed cases with removals' => [
+                ['jpg' => null, 'FOO', 'gIf', 'bmP'],
+                ['foo', 'gif', 'bmp'],
+            ]
+        ];
     }
 }

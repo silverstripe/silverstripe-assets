@@ -175,21 +175,21 @@ class AssetAdapter extends Local
     {
         // Build allowed extensions
         $allowedExtensions = new ArrayList();
-        foreach (File::config()->allowed_extensions as $extension) {
+        foreach (File::getAllowedExtensions() as $extension) {
             if ($extension) {
-                $allowedExtensions->push(new ArrayData(array(
+                $allowedExtensions->push(new ArrayData([
                     'Extension' => preg_quote($extension)
-                )));
+                ]));
             }
         }
 
         Config::nest();
         Config::modify()->set(SSViewer::class, 'source_file_comments', false);
 
-        $viewer = SSViewer::create(array($template));
-        $result = (string)$viewer->process(new ArrayData(array(
+        $viewer = SSViewer::create([$template]);
+        $result = (string)$viewer->process(new ArrayData([
             'AllowedExtensions' => $allowedExtensions
-        )));
+        ]));
 
         Config::unnest();
 

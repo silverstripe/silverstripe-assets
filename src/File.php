@@ -166,6 +166,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @config
      * @var array List of allowed file extensions, enforced through {@link validate()}.
      *
+     * You can remove extensions from this list with YAML configuration, for example:
+     *
+     * ```
+     * SilverStripe\Assets\File:
+     *   allowed_extensions:
+     *     ppt: false
+     * ```
+     *
      * Note: if you modify this, you should also change a configuration file in the assets directory.
      * Otherwise, the files will be able to be uploaded but they won't be able to be served by the
      * webserver.
@@ -176,11 +184,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Instructions for the change you need to make are included in a comment in the config file.
      */
     private static $allowed_extensions = array(
-        '', 'ace', 'arc', 'arj', 'asf', 'au', 'avi', 'bmp', 'bz2', 'cab', 'cda', 'css', 'csv', 'dmg', 'doc',
-        'docx', 'dotx', 'dotm', 'flv', 'gif', 'gpx', 'gz', 'hqx', 'ico', 'jar', 'jpeg', 'jpg', 'js', 'kml',
+        '', 'ace', 'arc', 'arj', 'asf', 'au', 'avi', 'bmp', 'bz2', 'cab', 'cda', 'csv', 'dmg', 'doc',
+        'docx', 'dotx', 'flv', 'gif', 'gpx', 'gz', 'hqx', 'ico', 'jpeg', 'jpg', 'kml',
         'm4a', 'm4v', 'mid', 'midi', 'mkv', 'mov', 'mp3', 'mp4', 'mpa', 'mpeg', 'mpg', 'ogg', 'ogv', 'pages',
-        'pcx', 'pdf', 'png', 'pps', 'ppt', 'pptx', 'potx', 'potm', 'ra', 'ram', 'rm', 'rtf', 'sit', 'sitx',
-        'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'webm', 'wma', 'wmv', 'xls', 'xlsx', 'xltx', 'xltm', 'zip',
+        'pcx', 'pdf', 'png', 'pps', 'ppt', 'pptx', 'potx', 'ra', 'ram', 'rm', 'rtf', 'sit', 'sitx',
+        'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'webm', 'wma', 'wmv', 'xls', 'xlsx', 'xltx', 'zip',
         'zipx',
     );
 
@@ -1339,6 +1347,42 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
             ]
         ];
+    }
+
+    /**
+     * Get the list of globally allowed file extensions for file uploads.
+     *
+     * Specific extensions can be disabled with configuration, for example:
+     *
+     * ```
+     * SilverStripe\Assets\File:
+     *   allowed_extensions:
+     *     dmg: false
+     *     docx: false
+     * ```
+     *
+     * @return array
+     */
+    public static function getAllowedExtensions()
+    {
+        $config = static::config()->get('allowed_extensions');
+
+        $allowedExtensions = [];
+        foreach ($config as $key => $value) {
+            if (is_int($key)) {
+                // Numeric indexes, example: [jpg, png, gif]
+                $key = $value;
+                $value = true;
+            }
+
+            // Skip disabled extensions
+            if (in_array($value, [null, false], true)) {
+                continue;
+            }
+
+            $allowedExtensions[] = strtolower($key);
+        }
+        return $allowedExtensions;
     }
 
     /**

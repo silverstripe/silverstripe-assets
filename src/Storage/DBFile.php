@@ -465,7 +465,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         }
 
         // If no extensions are configured, fallback to global list
-        $globalList = File::config()->allowed_extensions;
+        $globalList = File::getAllowedExtensions();
         if (in_array($extension, $globalList)) {
             return true;
         }

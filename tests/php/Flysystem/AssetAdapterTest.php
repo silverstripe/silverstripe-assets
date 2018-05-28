@@ -62,7 +62,7 @@ class AssetAdapterTest extends SapphireTest
         $content = $htaccess['contents'];
         // Allowed extensions set
         $this->assertContains('RewriteCond %{REQUEST_URI} !^[^.]*\\.(?i:', $content);
-        foreach (File::config()->allowed_extensions as $extension) {
+        foreach (File::getAllowedExtensions() as $extension) {
             $this->assertRegExp('/\b'.preg_quote($extension).'\b/', $content);
         }
 

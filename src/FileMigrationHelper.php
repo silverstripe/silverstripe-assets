@@ -93,7 +93,7 @@ class FileMigrationHelper
         }
 
         // Remove this file if it violates allowed_extensions
-        $allowed = array_filter(File::config()->allowed_extensions);
+        $allowed = array_filter(File::getAllowedExtensions());
         $extension = strtolower($file->getExtension());
         if (!in_array($extension, $allowed)) {
             if ($this->config()->get('delete_invalid_files')) {

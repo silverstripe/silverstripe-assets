@@ -117,8 +117,6 @@ warnings:
       message: 'Removed'
     'SilverStripe\Assets\Image::handle_shortcode()':
       message: 'moved to SilverStripe\Assets\Shortcodes\ImageShortcodeProvider::handle_shortcode()'
-    'SilverStripe\Assets\Image::deleteFormattedImages()':
-      message: 'Removed'
     'SilverStripe\Assets\Image::SetRatioSize()':
       message: 'Renamed to Fit()'
       replacement: 'Fit'
@@ -143,5 +141,3 @@ warnings:
     'SilverStripe\Assets\Image::AssetLibraryThumbnail()':
       message: 'Renamed to CMSThumbnail()'
       replacement: 'CMSThumbnail'
-    'SilverStripe\Assets\Image::deleteFormattedImages()':
-      message: 'Removed'

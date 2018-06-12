@@ -456,6 +456,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * List of basic content editable file fields.
      *
+     * Note: These fields no longer affect the edit form in asset-admin. To add fields to the file
+     * edit form in asset-admin, you will need to add an extension to FileFormFactory and use the
+     * updateFormFields() hook.
+     *
      * @return FieldList
      */
     public function getCMSFields()

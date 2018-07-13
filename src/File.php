@@ -157,7 +157,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     );
 
     private static $casting = array (
-        'TreeTitle' => 'HTMLFragment'
+        'TreeTitle' => 'HTMLFragment',
+        'getTreeTitle' => 'HTMLFragment',
+        'Tag' => 'HTMLFragment',
+        'getTag' => 'HTMLFragment',
     );
 
     private static $table_name = 'File';

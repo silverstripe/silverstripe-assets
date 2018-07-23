@@ -107,8 +107,10 @@ class FileMigrationHelperTest extends SapphireTest
 
     public function testMigrationWithLegacyFilenames()
     {
+        // See https://github.com/silverstripe/silverstripe-framework/issues/8182
+        $this->markTestSkipped("Re-enable once DDL no longer breaks test transactional state");
+        return;
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
-
         $this->testMigration();
     }
 }

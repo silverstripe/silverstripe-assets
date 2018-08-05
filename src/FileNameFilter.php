@@ -24,7 +24,7 @@ use SilverStripe\View\Parsers\Transliterator;
  * To leave uploaded filenames as they are (being aware of filesystem restrictions),
  * add the following code to your YAML config:
  * <code>
- * FileNameFilter:
+ * SilverStripe\Assets\FileNameFilter:
  *   default_use_transliterator: false
  *   default_replacements:
  * </code>

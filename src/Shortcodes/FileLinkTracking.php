@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Shortcodes;
 use DOMElement;
 use SilverStripe\Assets\File;
 use SilverStripe\Dev\Deprecation;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -82,6 +83,11 @@ class FileLinkTracking extends DataExtension
     {
         $this->fileParser = $parser;
         return $this;
+    }
+    
+    public function updateCMSFields(FieldList $fields)
+    {
+        $fields->removeByName('FileTracking');
     }
 
     public function onBeforeWrite()

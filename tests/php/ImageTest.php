@@ -127,6 +127,33 @@ abstract class ImageTest extends SapphireTest
     }
 
     /**
+     * Tests that calls to ->Quality() affect the resulting image's file size.
+     * These tests are a little crude (simple "less/greater than"), but it's
+     * not possible to accurately predict file sizes
+     */
+    public function testQualityAdjustsImageFilesize()
+    {
+        $image = $this->objFromFixture(Image::class, 'highQualityJPEG');
+
+        $highQuality = $image->ScaleWidth(200)->Quality(100);
+        $lowQuality = $image->ScaleWidth(200)->Quality(1);
+        $this->assertLessThan(
+            $highQuality->getAbsoluteSize(),
+            $lowQuality->getAbsoluteSize(),
+            'Low quality setting did not reduce file size'
+        );
+
+        // Same test, but with manipulations in a different order
+        $highQuality = $image->Quality(100)->ScaleWidth(200);
+        $lowQuality = $image->Quality(1)->ScaleWidth(200);
+        $this->assertLessThan(
+            $highQuality->getAbsoluteSize(),
+            $lowQuality->getAbsoluteSize(),
+            'Low quality setting did not reduce file size'
+        );
+    }
+
+    /**
      * Tests that image manipulations that do not affect the resulting dimensions
      * of the output image do not resample the file.
      */
@@ -458,6 +485,18 @@ abstract class ImageTest extends SapphireTest
         $this->assertEquals($resampled->TestProperty, $testString);
         $resampled2 = $resampled->ScaleWidth(5);
         $this->assertEquals($resampled2->TestProperty, $testString);
+    }
+
+    public function testGetSetImageBackend()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $this->assertInstanceOf(Image_Backend::class, $image->getImageBackend());
+
+        $builder = $this->prophesize(InterventionBackend::class);
+        $builder->getWidth()->shouldBeCalled()->willReturn(99999);
+        $mockBackend = $builder->reveal();
+        $image->setImageBackend($mockBackend);
+        $this->assertEquals(99999, $image->getWidth());
     }
 
     /**

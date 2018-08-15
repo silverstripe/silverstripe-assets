@@ -11,6 +11,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\InjectorNotFoundException;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\View\HTML;
@@ -45,6 +46,11 @@ use SilverStripe\View\HTML;
  */
 trait ImageManipulation
 {
+    /**
+     * @var Image_Backend
+     */
+    protected $imageBackend;
+
     /**
      * If image resizes are allowed
      *
@@ -589,6 +595,22 @@ trait ImageManipulation
     }
 
     /**
+     * Set the quality of the resampled image
+     *
+     * @param int $quality Quality level from 0 - 100
+     * @return AssetContainer
+     * @throws InvalidArgumentException
+     */
+    public function Quality($quality)
+    {
+        $quality = $this->castDimension($quality, 'Quality');
+        $variant = $this->variantName(__FUNCTION__, $quality);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($quality) {
+            return $backend->setQuality($quality);
+        });
+    }
+
+    /**
      * Default CMS thumbnail
      *
      * @return DBFile|DBHTMLText Either a resized thumbnail, or html for a thumbnail icon
@@ -703,6 +725,11 @@ trait ImageManipulation
      */
     public function getImageBackend()
     {
+        // Re-use existing image backend if set
+        if ($this->imageBackend) {
+            return $this->imageBackend;
+        }
+
         // Skip files we know won't be an image
         if (!$this->getIsImage() || !$this->getHash()) {
             return null;
@@ -710,11 +737,21 @@ trait ImageManipulation
 
         // Pass to backend service factory
         try {
-            return Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+            return $this->imageBackend = Injector::inst()->createWithArgs(Image_Backend::class, array($this));
         } catch (InjectorNotFoundException $ex) {
             // Handle file-not-found errors
             return null;
         }
+    }
+
+    /**
+     * @param Image_Backend $backend
+     * @return $this
+     */
+    public function setImageBackend(Image_Backend $backend)
+    {
+        $this->imageBackend = $backend;
+        return $this;
     }
 
     /**
@@ -831,7 +868,8 @@ trait ImageManipulation
                 // Write from another container
                 if ($result instanceof AssetContainer) {
                     try {
-                        return $store->setFromStream($result->getStream(), $filename, $hash, $variant);
+                        $tuple = $store->setFromStream($result->getStream(), $filename, $hash, $variant);
+                        return [$tuple, $result];
                     } finally {
                         gc_collect_cycles();
                     }
@@ -841,13 +879,15 @@ trait ImageManipulation
                 if ($result instanceof Image_Backend) {
                     try {
                         /** @var Image_Backend $result */
-                        return $result->writeToStore(
+                        $tuple = $result->writeToStore(
                             $store,
                             $filename,
                             $hash,
                             $variant,
                             array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
                         );
+
+                        return [$tuple, $result];
                     } finally {
                         gc_collect_cycles();
                     }
@@ -893,15 +933,29 @@ trait ImageManipulation
         // Create this asset in the store if it doesn't already exist,
         // otherwise use the existing variant
         $store = Injector::inst()->get(AssetStore::class);
-        $result = null;
+        $tuple = $manipulationResult = null;
         if (!$store->exists($filename, $hash, $variant)) {
             // Circumvent generation of thumbnails if we only want to get existing ones
             if (!$this->getAllowGeneration()) {
                 return null;
             }
+
             $result = call_user_func($callback, $store, $filename, $hash, $variant);
+
+            // Preserve backward compatibility
+            if (isset($result['Filename'])) {
+                $tuple = $result;
+                Deprecation::notice(
+                    '5.0',
+                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array 
+                        containing a tuple and an image backend, i.e. [$tuple, $result]',
+                    Deprecation::SCOPE_GLOBAL
+                );
+            } else {
+                list($tuple, $manipulationResult) = $result;
+            }
         } else {
-            $result = array(
+            $tuple = array(
                 'Filename' => $filename,
                 'Hash' => $hash,
                 'Variant' => $variant
@@ -909,13 +963,20 @@ trait ImageManipulation
         }
 
         // Callback may fail to perform this manipulation (e.g. resize on text file)
-        if (!$result) {
+        if (!$tuple) {
             return null;
         }
 
         // Store result in new DBFile instance
         /** @var DBFile $file */
-        $file = DBField::create_field('DBFile', $result);
+        $file = DBField::create_field('DBFile', $tuple);
+
+        // Pass the manipulated image backend down to the resampled image - this allows chained manipulations
+        // without having to re-load the image resource from the manipulated file written to disk
+        if ($manipulationResult instanceof Image_Backend) {
+            $file->setImageBackend($manipulationResult);
+        }
+
         return $file->setOriginal($this);
     }
 

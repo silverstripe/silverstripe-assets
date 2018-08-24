@@ -47,3 +47,5 @@ en:
       one: 'An Image'
       other: '{count} Images'
     SINGULARNAME: Image
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Image not found'

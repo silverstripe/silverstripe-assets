@@ -93,4 +93,23 @@ class ImageShortcodeProviderTest extends SapphireTest
             ))
         );
     }
+
+    public function testShortcodeHandlerFailsGracefully()
+    {
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+
+        $nonExistentImageID = 9999;
+        while(Image::get()->byID($nonExistentImageID)) {
+            $nonExistentImageID++;
+        }
+        $this->assertEquals(
+            '<img alt="Image not found">',
+            $parser->parse(sprintf(
+                '[image id="%d"]',
+                $nonExistentImageID
+            ))
+        );
+    }
+
 }

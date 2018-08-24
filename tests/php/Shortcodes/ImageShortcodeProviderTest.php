@@ -100,7 +100,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
         $nonExistentImageID = 9999;
-        while(Image::get()->byID($nonExistentImageID)) {
+        while (Image::get()->byID($nonExistentImageID)) {
             $nonExistentImageID++;
         }
         $this->assertEquals(
@@ -111,5 +111,4 @@ class ImageShortcodeProviderTest extends SapphireTest
             ))
         );
     }
-
 }

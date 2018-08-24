@@ -168,5 +168,4 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             'Title' => _t(__CLASS__ . '.IMAGENOTFOUND', 'Image not found'),
         ]);
     }
-
 }

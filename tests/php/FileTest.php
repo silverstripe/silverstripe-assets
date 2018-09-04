@@ -141,7 +141,7 @@ class FileTest extends SapphireTest
         $this->assertFalse($result->isValid());
         $messages = $result->getMessages();
         $this->assertEquals(1, count($messages));
-        $this->assertEquals('Extension is not allowed', $messages[0]['message']);
+        $this->assertEquals('Extension \'php\' is not allowed', $messages[0]['message']);
 
         // Valid ext
         $file->Name = 'asdf.txt';

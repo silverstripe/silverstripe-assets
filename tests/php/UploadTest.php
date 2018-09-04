@@ -434,15 +434,22 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
+        // Upload will work if no special validator is set
+        $u1 = new Upload();
+        $result1 = $u1->loadIntoFile($tmpFile);
+        $this->assertTrue($result1, 'Load failed because extension was not accepted');
+
+        // If a validator limiting extensions is applied, then no-extension files are no longer allowed
         $v = new Upload_Validator();
         $v->setAllowedExtensions(array('txt'));
 
         // test upload into default folder
-        $u = new Upload();
-        $result = $u->loadIntoFile($tmpFile);
+        $u2 = new Upload();
+        $u2->setValidator($v);
+        $result2 = $u2->loadIntoFile($tmpFile);
 
-        $this->assertFalse($result, 'Load failed because extension was not accepted');
-        $this->assertEquals(1, count($u->getErrors()), 'There is a single error of the file extension');
+        $this->assertFalse($result2, 'Load failed because extension was not accepted');
+        $this->assertEquals(1, count($u2->getErrors()), 'There is a single error of the file extension');
     }
 
     public function testUploadTarGzFileTwiceAppendsNumber()

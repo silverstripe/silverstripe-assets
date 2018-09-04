@@ -112,8 +112,8 @@ class Upload_Validator
             }
         }
 
-        $ext = strtolower($ext);
-        if ($ext) {
+        if ($ext !== null) {
+            $ext = strtolower($ext);
             if (isset($this->allowedMaxFileSize[$ext])) {
                 return $this->allowedMaxFileSize[$ext];
             }
@@ -210,9 +210,7 @@ class Upload_Validator
             case UPLOAD_ERR_FORM_SIZE:
                 return false;
         }
-        $pathInfo = pathinfo($this->tmpFile['name']);
-        $extension = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : null;
-        $maxSize = $this->getAllowedMaxFileSize($extension);
+        $maxSize = $this->getAllowedMaxFileSize($this->getFileExtension());
         return (!$this->tmpFile['size'] || !$maxSize || (int)$this->tmpFile['size'] < $maxSize);
     }
 
@@ -237,15 +235,25 @@ class Upload_Validator
      */
     public function isValidExtension()
     {
-        $pathInfo = pathinfo($this->tmpFile['name']);
+        return !count($this->allowedExtensions)
+            || in_array($this->getFileExtension(), $this->allowedExtensions, true);
+    }
 
-        // Special case for filenames without an extension
-        if (!isset($pathInfo['extension'])) {
-            return in_array('', $this->allowedExtensions, true);
-        } else {
-            return (!count($this->allowedExtensions)
-                || in_array(strtolower($pathInfo['extension']), $this->allowedExtensions));
+    /**
+     * Return the extension of the uploaded file, in lowercase
+     * Returns an empty string for files without an extension
+     *
+     * @return string
+     */
+    public function getFileExtension()
+    {
+        $pathInfo = pathinfo($this->tmpFile['name']);
+        if (isset($pathInfo['extension'])) {
+            return strtolower($pathInfo['extension']);
         }
+
+        // Special case for files without extensions
+        return '';
     }
 
     /**
@@ -276,9 +284,7 @@ class Upload_Validator
 
         // filesize validation
         if (!$this->isValidSize()) {
-            $pathInfo = pathinfo($this->tmpFile['name']);
-            $ext = (isset($pathInfo['extension'])) ? $pathInfo['extension'] : '';
-            $arg = File::format_size($this->getAllowedMaxFileSize($ext));
+            $arg = File::format_size($this->getAllowedMaxFileSize($this->getFileExtension()));
             $this->errors[] = _t(
                 'SilverStripe\\Assets\\File.TOOLARGE',
                 'Filesize is too large, maximum {size} allowed',
@@ -291,8 +297,9 @@ class Upload_Validator
         // extension validation
         if (!$this->isValidExtension()) {
             $this->errors[] = _t(
-                'SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT',
-                'Extension is not allowed'
+                'SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT_EXT',
+                'Extension \'{extension}\' is not allowed',
+                [ 'extension' => $this->getFileExtension() ]
             );
             return false;
         }

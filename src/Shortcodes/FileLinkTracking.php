@@ -5,6 +5,8 @@ namespace SilverStripe\Assets\Shortcodes;
 use DOMElement;
 use SilverStripe\Assets\File;
 use SilverStripe\Dev\Deprecation;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormScaffolder;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -53,6 +55,15 @@ class FileLinkTracking extends DataExtension
             'to' => 'Linked',
         ],
     ];
+
+    /**
+     * Controls visibility of the File Tracking tab
+     *
+     * @config
+     * @see linktracking.yml
+     * @var boolean
+     */
+    private static $show_file_link_tracking = false;
 
     /**
      * @deprecated 4.2..5.0 Use FileTracking() instead
@@ -207,6 +218,15 @@ class FileLinkTracking extends DataExtension
             $domReference->setAttribute('class', implode(' ', $classes));
         } else {
             $domReference->removeAttribute('class');
+        }
+    }
+
+    public function updateCMSFields(FieldList $fields)
+    {
+        if (!$this->owner->config()->get('show_file_link_tracking')) {
+            $fields->removeByName('FileTracking');
+        } elseif ($this->owner->ID && !$this->owner->getField('FileTracking')) {
+            FormScaffolder::addManyManyRelationshipFields($fields, 'FileTracking', null, true, $this->owner);
         }
     }
 }

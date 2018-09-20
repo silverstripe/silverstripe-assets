@@ -217,9 +217,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getAsURL($filename, $hash, $variant = null, $grant = true)
     {
-        if ($grant) {
-            $this->grant($filename, $hash);
-        }
         $fileID = $this->getFileID($filename, $hash, $variant);
 
         // Check with filesystem this asset exists in
@@ -230,6 +227,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $publicAdapter = $public->getAdapter();
             return $publicAdapter->getPublicUrl($fileID);
         } else {
+            if ($grant) {
+                $this->grant($filename, $hash);
+            }
+
             /** @var ProtectedAdapter $protectedAdapter */
             $protectedAdapter = $protected->getAdapter();
             return $protectedAdapter->getProtectedUrl($fileID);

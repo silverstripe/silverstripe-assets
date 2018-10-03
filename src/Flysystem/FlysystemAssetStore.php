@@ -226,15 +226,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             /** @var PublicAdapter $publicAdapter */
             $publicAdapter = $public->getAdapter();
             return $publicAdapter->getPublicUrl($fileID);
-        } else {
-            if ($grant) {
-                $this->grant($filename, $hash);
-            }
-
-            /** @var ProtectedAdapter $protectedAdapter */
-            $protectedAdapter = $protected->getAdapter();
-            return $protectedAdapter->getProtectedUrl($fileID);
         }
+
+        if ($grant) {
+            $this->grant($filename, $hash);
+        }
+
+        /** @var ProtectedAdapter $protectedAdapter */
+        $protectedAdapter = $protected->getAdapter();
+        return $protectedAdapter->getProtectedUrl($fileID);
     }
 
     public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array())

@@ -74,7 +74,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
 
         // test upload into default folder
         $u1 = new Upload();
@@ -134,7 +134,7 @@ class UploadTest extends SapphireTest
 
         // test upload into default folder
         $u1 = new Upload();
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
 
         $v->setAllowedMaxFileSize(array('txt' => 10));
         $u1->setValidator($v);
@@ -261,7 +261,7 @@ class UploadTest extends SapphireTest
             'txt' => 1000
         );
         Upload_Validator::config()->set('default_max_file_size', $configMaxFileSizes);
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
 
         $retrievedSize = $v->getAllowedMaxFileSize('[image]');
         $this->assertEquals(
@@ -282,7 +282,7 @@ class UploadTest extends SapphireTest
             '[document]' => 2000,
             'txt' => '4k'
         );
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedMaxFileSize($maxFileSizes);
 
         $retrievedSize = $v->getAllowedMaxFileSize('[document]');
@@ -313,7 +313,7 @@ class UploadTest extends SapphireTest
         );
 
         // Check a wildcard max file size against a file with an extension
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedMaxFileSize(2000);
 
         $retrievedSize = $v->getAllowedMaxFileSize('.jpg');
@@ -344,7 +344,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedMaxFileSize(array('' => 10));
 
         // test upload into default folder
@@ -373,7 +373,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedExtensions(array('txt'));
 
         // test upload into default folder
@@ -402,7 +402,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedExtensions(array('txt'));
 
         // test upload into default folder
@@ -434,15 +434,22 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        // Upload will work if no special validator is set
+        $u1 = new Upload();
+        $result1 = $u1->loadIntoFile($tmpFile);
+        $this->assertTrue($result1, 'Load failed because extension was not accepted');
+
+        // If a validator limiting extensions is applied, then no-extension files are no longer allowed
+        $v = new Upload_Validator();
         $v->setAllowedExtensions(array('txt'));
 
         // test upload into default folder
-        $u = new Upload();
-        $result = $u->loadIntoFile($tmpFile);
+        $u2 = new Upload();
+        $u2->setValidator($v);
+        $result2 = $u2->loadIntoFile($tmpFile);
 
-        $this->assertFalse($result, 'Load failed because extension was not accepted');
-        $this->assertEquals(1, count($u->getErrors()), 'There is a single error of the file extension');
+        $this->assertFalse($result2, 'Load failed because extension was not accepted');
+        $this->assertEquals(1, count($u2->getErrors()), 'There is a single error of the file extension');
     }
 
     public function testUploadTarGzFileTwiceAppendsNumber()
@@ -533,7 +540,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedExtensions(array(''));
 
         // test upload into default folder
@@ -591,7 +598,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
         $v->setAllowedExtensions(array(''));
 
         // test upload into default folder
@@ -650,7 +657,7 @@ class UploadTest extends SapphireTest
             'error' => UPLOAD_ERR_OK,
         );
 
-        $v = new UploadTest\Validator();
+        $v = new Upload_Validator();
 
         // test upload into default folder
         $u = new Upload();
@@ -731,7 +738,7 @@ class UploadTest extends SapphireTest
                 'error' => UPLOAD_ERR_OK,
             );
 
-            $v = new UploadTest\Validator();
+            $v = new Upload_Validator();
 
             // test upload into default folder
             $u = new Upload();
@@ -772,7 +779,7 @@ class UploadTest extends SapphireTest
                 'error' => UPLOAD_ERR_OK,
             );
 
-            $v = new UploadTest\Validator();
+            $v = new Upload_Validator();
 
             // test upload into default folder
             $u = new Upload();

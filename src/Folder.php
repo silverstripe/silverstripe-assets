@@ -92,16 +92,9 @@ class Folder extends File
 
     public function onBeforeWrite()
     {
-        // Make sure Title is updated if Name is chaged (as we keep these in sync for folders)
-        if ($this->isChanged('Name')) {
-            $name = $this->Name;
-            $this->setField(
-                'Title',
-                str_replace(array('-','_'), ' ', preg_replace('/\.[^.]+$/', '', $name))
-            );
-        }
-
         parent::onBeforeWrite();
+
+        $this->Title = $this->getField('Name');
     }
 
     /**

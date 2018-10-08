@@ -102,6 +102,17 @@ class FileMigrationHelper
             return false;
         }
 
+        // If this file has the wrong class for it's extension, update the classname
+        $destinationClass = $file->get_class_for_file_extension($extension);
+        if ($file->ClassName !== $destinationClass) {
+            // We disable validation so that we are able to write a corrected
+            // classname, once that is changed we re-enable it for subsequent writes
+            Config::modify()->set(File::class, 'validation_enabled', false);
+            $file = $file->newClassInstance($destinationClass);
+            $file->write();
+            Config::modify()->set(File::class, 'validation_enabled', true);
+        }
+
         // Copy local file into this filesystem
         $filename = $file->generateFilename();
         $result = $file->setFromLocalFile(

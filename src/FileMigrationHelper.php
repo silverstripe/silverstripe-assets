@@ -9,6 +9,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
 
@@ -102,15 +103,21 @@ class FileMigrationHelper
             return false;
         }
 
-        // If this file has the wrong class for it's extension, update the classname
-        $destinationClass = $file->get_class_for_file_extension($extension);
-        if ($file->ClassName !== $destinationClass) {
-            // We disable validation so that we are able to write a corrected
+        // Fix file classname if it has a classname that's incompatible with it's extention
+        if (!$this->validateFileClassname($file, $extension)) {
+            // We disable validation (if it is enabled) so that we are able to write a corrected
             // classname, once that is changed we re-enable it for subsequent writes
-            Config::modify()->set(File::class, 'validation_enabled', false);
+            $validationEnabled = DataObject::Config()->get('validation_enabled');
+            if ($validationEnabled) {
+                DataObject::Config()->set('validation_enabled', false);
+            }
+            $destinationClass = $file->get_class_for_file_extension($extension);
             $file = $file->newClassInstance($destinationClass);
-            $file->write();
-            Config::modify()->set(File::class, 'validation_enabled', true);
+            $fileID = $file->write();
+            if ($validationEnabled) {
+                DataObject::Config()->set('validation_enabled', true);
+            }
+            $file = File::get_by_id($fileID);
         }
 
         // Copy local file into this filesystem
@@ -139,6 +146,19 @@ class FileMigrationHelper
             return unlink($path);
         }
         return true;
+    }
+
+    /**
+     * Check if a file's classname is compatible with it's extension
+     *
+     * @param File $file
+     * @param string $extension
+     * @return bool
+     */
+    protected function validateFileClassname($file, $extension)
+    {
+        $destinationClass = $file->get_class_for_file_extension($extension);
+        return $file->ClassName === $destinationClass;
     }
 
     /**

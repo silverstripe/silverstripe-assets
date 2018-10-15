@@ -293,6 +293,19 @@ class FolderTest extends SapphireTest
         $newFolder->Title = 'TestTitleWithIllegalCharactersCopiedToName <!BANG!>';
         $this->assertEquals($newFolder->Name, $newFolder->Title);
         $this->assertEquals($newFolder->Title, 'TestTitleWithIllegalCharactersCopiedToName <!BANG!>');
+
+        // Title should be populated from name on first write
+        $writeFolder = new Folder();
+        $writeFolder->Name = 'TestNameWrittenToTitle';
+        $writeFolder->write();
+        $newFolderWritten = Folder::get_one(Folder::class, "\"Title\" = 'TestNameWrittenToTitle'");
+        $this->assertNotNull($newFolderWritten);
+
+        // Title should be populated from name on subsequent writes
+        $writeFolder->Name = 'TestNameWrittenToTitleOnUpdate';
+        $writeFolder->write();
+        $newFolderWritten = Folder::get_one(Folder::class, "\"Title\" = 'TestNameWrittenToTitleOnUpdate'");
+        $this->assertNotNull($newFolderWritten);
     }
 
     public function testRootFolder()

@@ -650,8 +650,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         // Force query of draft object and update (as source record is bound to live stage)
         /** @var File $draftRecord */
-        $draftRecord = Versioned::get_by_stage(self::class, Versioned::DRAFT)->byID($this->ID);
-        $draftRecord->updateDependantObjects();
+        if (class_exists(Versioned::class) &&
+            $draftRecord = Versioned::get_by_stage(self::class, Versioned::DRAFT)->byID($this->ID)
+        ) {
+            $draftRecord->updateDependantObjects();
+        }
     }
 
     /**
@@ -660,7 +663,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     protected function updateDependantObjects()
     {
         // Skip live stage
-        if (Versioned::get_stage() === Versioned::LIVE) {
+        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 

@@ -9,6 +9,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
 
@@ -102,6 +103,23 @@ class FileMigrationHelper
             return false;
         }
 
+        // Fix file classname if it has a classname that's incompatible with it's extention
+        if (!$this->validateFileClassname($file, $extension)) {
+            // We disable validation (if it is enabled) so that we are able to write a corrected
+            // classname, once that is changed we re-enable it for subsequent writes
+            $validationEnabled = DataObject::Config()->get('validation_enabled');
+            if ($validationEnabled) {
+                DataObject::Config()->set('validation_enabled', false);
+            }
+            $destinationClass = $file->get_class_for_file_extension($extension);
+            $file = $file->newClassInstance($destinationClass);
+            $fileID = $file->write();
+            if ($validationEnabled) {
+                DataObject::Config()->set('validation_enabled', true);
+            }
+            $file = File::get_by_id($fileID);
+        }
+
         // Copy local file into this filesystem
         $filename = $file->generateFilename();
         $result = $file->setFromLocalFile(
@@ -128,6 +146,19 @@ class FileMigrationHelper
             return unlink($path);
         }
         return true;
+    }
+
+    /**
+     * Check if a file's classname is compatible with it's extension
+     *
+     * @param File $file
+     * @param string $extension
+     * @return bool
+     */
+    protected function validateFileClassname($file, $extension)
+    {
+        $destinationClass = $file->get_class_for_file_extension($extension);
+        return $file->ClassName === $destinationClass;
     }
 
     /**

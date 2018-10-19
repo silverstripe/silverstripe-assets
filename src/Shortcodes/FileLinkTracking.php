@@ -120,7 +120,10 @@ class FileLinkTracking extends DataExtension
     public function augmentSyncLinkTracking()
     {
         // If owner is versioned, skip tracking on live
-        if (Versioned::get_stage() == Versioned::LIVE && $this->owner->hasExtension(Versioned::class)) {
+        if (class_exists(Versioned::class) &&
+            Versioned::get_stage() == Versioned::LIVE &&
+            $this->owner->hasExtension(Versioned::class)
+        ) {
             return;
         }
 
@@ -149,7 +152,10 @@ class FileLinkTracking extends DataExtension
     public function onAfterDelete()
     {
         // If owner is versioned, skip tracking on live
-        if (Versioned::get_stage() == Versioned::LIVE && $this->owner->hasExtension(Versioned::class)) {
+        if (class_exists(Versioned::class) &&
+            Versioned::get_stage() == Versioned::LIVE &&
+            $this->owner->hasExtension(Versioned::class)
+        ) {
             return;
         }
 

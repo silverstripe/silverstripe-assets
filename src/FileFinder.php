@@ -136,7 +136,7 @@ class FileFinder
     {
         $base = rtrim($base, '/');
         // Special case for a base path of /, eg. a chroot environment
-        if ($base == '') {
+        if ($base === '') {
             $base = '/';
         }
 

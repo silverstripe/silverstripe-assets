@@ -701,10 +701,10 @@ class FileTest extends SapphireTest
     public function ini2BytesProvider()
     {
         return [
-            ['2k', (float)(2 * 1024)],
-            ['512M', (float)(512 * 1024 * 1024)],
-            ['1024g', (float)(1024 * 1024 * 1024 * 1024)],
-            ['1024G', (float)(1024 * 1024 * 1024 * 1024)]
+            ['2k', (int)(2 * 1024)],
+            ['512M', (int)(512 * 1024 * 1024)],
+            ['1024g', (int)(1024 * 1024 * 1024 * 1024)],
+            ['1024G', (int)(1024 * 1024 * 1024 * 1024)]
         ];
     }
 

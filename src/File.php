@@ -1026,8 +1026,9 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * Convert a php.ini value (eg: 512M) to bytes
      *
+     * @deprecated 5.0 Use Convert::memstring2bytes() instead
      * @param  string $iniValue
-     * @return float
+     * @return int
      */
     public static function ini2bytes($iniValue)
     {

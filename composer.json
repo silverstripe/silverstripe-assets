@@ -28,6 +28,9 @@
         "silverstripe/versioned": "^1@dev",
         "phpunit/phpunit": "^5.7"
     },
+    "suggest": {
+        "ext-exif": "If you use GD backend (the default) you may want to have EXIF extension installed to elude some tricky issues"
+    },
     "extra": {
         "installer-name": "silverstripe-assets"
     },

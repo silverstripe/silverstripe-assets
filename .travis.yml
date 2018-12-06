@@ -22,7 +22,7 @@ before_script:
   - composer self-update || true
   - phpenv rehash
   - phpenv config-rm xdebug.ini
-  - export PATH=~/.composer/vendor/bin:$PATH
+  - export PATH=~/.config/composer/vendor/bin:$PATH
   - composer validate
   - composer install --prefer-dist
   - composer require symfony/config:^3.2 silverstripe/framework:4.0.x-dev embed/embed:^3.0@stable silverstripe/config:1.0.x-dev silverstripe/versioned:1.0.x-dev --prefer-dist --no-update

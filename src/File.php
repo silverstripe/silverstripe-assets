@@ -272,7 +272,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @var string[]
      */
     private static $file_types = [];
-    
 
     public static function get_shortcodes()
     {

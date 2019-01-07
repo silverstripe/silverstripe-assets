@@ -1,7 +1,5 @@
 ---
 Name: assetsfiletypes
-Before:
-  - "*"
 ---
 SilverStripe\Assets\File:
   file_types:

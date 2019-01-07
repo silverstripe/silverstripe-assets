@@ -266,7 +266,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $update_filesystem = true;
 
     /**
-     * File types
+     * A list of file extensions and a description of what type of file they represent
      *
      * @config
      * @var array List of file types

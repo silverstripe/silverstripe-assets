@@ -269,7 +269,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * A list of file extensions and a description of what type of file they represent
      *
      * @config
-     * @var array List of file types
+     * @var string[]
      */
     private static $file_types = [];
     

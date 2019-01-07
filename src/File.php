@@ -267,7 +267,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
     /**
      * File types
-     * 
+     *
      * @config
      * @var array List of file types
      */

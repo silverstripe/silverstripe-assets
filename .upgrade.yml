@@ -141,3 +141,6 @@ warnings:
     'SilverStripe\Assets\Image::AssetLibraryThumbnail()':
       message: 'Renamed to CMSThumbnail()'
       replacement: 'CMSThumbnail'
+renameWarnings:
+  - File
+  - Image

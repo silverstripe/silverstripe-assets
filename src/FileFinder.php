@@ -134,7 +134,13 @@ class FileFinder
      */
     public function find($base)
     {
-        $paths = array(array(rtrim($base, '/'), 0));
+        $base = rtrim($base, '/');
+        // Special case for a base path of /, eg. a chroot environment
+        if ($base === '') {
+            $base = '/';
+        }
+
+        $paths = array(array($base, 0));
         $found = array();
 
         $fileCallback = $this->getOption('file_callback');

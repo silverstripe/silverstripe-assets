@@ -178,7 +178,8 @@ class FileMigrationHelper
             ->filter('FileFilename', array('', null))
             ->where(sprintf(
                 '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
-                $table, $table
+                $table,
+                $table
             )) // Non-orm field
             ->alterDataQuery(function (DataQuery $query) use ($table) {
                 return $query->addSelectFromTable($table, ['Filename']);
@@ -188,7 +189,7 @@ class FileMigrationHelper
     /**
      * Get map of File IDs to legacy filenames
      *
-     * @deprecated 4.4..5.0
+     * @deprecated 4.4.0
      * @return array
      */
     protected function getFilenameArray()
@@ -203,5 +204,4 @@ class FileMigrationHelper
             ->execute()
             ->map(); // map ID to Filename
     }
-
 }

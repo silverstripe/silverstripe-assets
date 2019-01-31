@@ -256,7 +256,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 throw new InvalidArgumentException("$path could not be opened for reading");
             }
             $result = $filesystem->putStream($fileID, $handle);
-            fclose($handle);
+			if(is_resource($handle)){
+            	fclose($handle);
+			}
             return $result;
         };
 
@@ -449,7 +451,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Copy via stream
             $stream = $from->readStream($nextID);
             $to->putStream($nextID, $stream);
-            fclose($stream);
+			if(is_resource($stream)){
+            	fclose($stream);
+			}
             $from->delete($nextID);
         }
 

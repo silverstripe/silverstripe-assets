@@ -265,6 +265,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     private static $update_filesystem = true;
 
+    /**
+     * A list of file extensions and a description of what type of file they represent
+     *
+     * @config
+     * @var string[]
+     */
+    private static $file_types = [];
+
     public static function get_shortcodes()
     {
         return 'file_link';
@@ -957,33 +965,19 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_file_type($filename)
     {
-        $types = array(
-            'gif' => _t(__CLASS__.'.GifType', 'GIF image - good for diagrams'),
-            'jpg' => _t(__CLASS__.'.JpgType', 'JPEG image - good for photos'),
-            'jpeg' => _t(__CLASS__.'.JpgType', 'JPEG image - good for photos'),
-            'png' => _t(__CLASS__.'.PngType', 'PNG image - good general-purpose format'),
-            'ico' => _t(__CLASS__.'.IcoType', 'Icon image'),
-            'tiff' => _t(__CLASS__.'.TiffType', 'Tagged image format'),
-            'doc' => _t(__CLASS__.'.DocType', 'Word document'),
-            'xls' => _t(__CLASS__.'.XlsType', 'Excel spreadsheet'),
-            'zip' => _t(__CLASS__.'.ZipType', 'ZIP compressed file'),
-            'gz' => _t(__CLASS__.'.GzType', 'GZIP compressed file'),
-            'dmg' => _t(__CLASS__.'.DmgType', 'Apple disk image'),
-            'pdf' => _t(__CLASS__.'.PdfType', 'Adobe Acrobat PDF file'),
-            'mp3' => _t(__CLASS__.'.Mp3Type', 'MP3 audio file'),
-            'wav' => _t(__CLASS__.'.WavType', 'WAV audio file'),
-            'avi' => _t(__CLASS__.'.AviType', 'AVI video file'),
-            'mpg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),
-            'mpeg' => _t(__CLASS__.'.MpgType', 'MPEG video file'),
-            'js' => _t(__CLASS__.'.JsType', 'Javascript file'),
-            'css' => _t(__CLASS__.'.CssType', 'CSS file'),
-            'html' => _t(__CLASS__.'.HtmlType', 'HTML file'),
-            'htm' => _t(__CLASS__.'.HtmlType', 'HTML file')
-        );
+        $file_types = self::config()->get('file_types');
 
         // Get extension
         $extension = strtolower(self::get_file_extension($filename));
-        return isset($types[$extension]) ? $types[$extension] : 'unknown';
+
+        if (isset($file_types[$extension])) {
+            return _t(
+                __CLASS__ . '.' . ucfirst($extension) . 'Type',
+                $file_types[$extension]
+            );
+        }
+
+        return 'unknown';
     }
 
     /**

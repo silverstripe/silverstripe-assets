@@ -10,6 +10,7 @@ use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\DataQuery;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
 
@@ -62,10 +63,11 @@ class FileMigrationHelper
             $originalState = Versioned::get_reading_mode();
             Versioned::set_stage(Versioned::DRAFT);
         }
-        $filenameMap = $this->getFilenameArray();
+
         foreach ($this->getFileQuery() as $file) {
-            // Get the name of the file to import
-            $filename = $filenameMap[$file->ID];
+            // Bypass the accessor and the filename from the column
+            $filename = $file->getField('Filename');
+
             $success = $this->migrateFile($base, $file, $filename);
             if ($success) {
                 $count++;
@@ -87,6 +89,8 @@ class FileMigrationHelper
      */
     protected function migrateFile($base, File $file, $legacyFilename)
     {
+        $useLegacyFilenames = Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames');
+
         // Make sure this legacy file actually exists
         $path = $base . '/' . $legacyFilename;
         if (!file_exists($path)) {
@@ -127,7 +131,11 @@ class FileMigrationHelper
             $filename,
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE)
+            [
+                'conflict' => $useLegacyFilenames ?
+                    AssetStore::CONFLICT_USE_EXISTING :
+                    AssetStore::CONFLICT_OVERWRITE
+            ]
         );
 
         // Move file if the APL changes filename value
@@ -141,7 +149,7 @@ class FileMigrationHelper
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
-        if (!Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames')) {
+        if (!$useLegacyFilenames) {
             // removing the legacy file since it has been migrated now and not using legacy filenames
             return unlink($path);
         }
@@ -168,27 +176,37 @@ class FileMigrationHelper
      */
     protected function getFileQuery()
     {
+        $table = DataObject::singleton(File::class)->baseTable();
         // Select all records which have a Filename value, but not FileFilename.
         /** @skipUpgrade */
         return File::get()
             ->exclude('ClassName', [Folder::class, 'Folder'])
             ->filter('FileFilename', array('', null))
-            ->where('"File"."Filename" IS NOT NULL AND "File"."Filename" != \'\''); // Non-orm field
+            ->where(sprintf(
+                '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
+                $table,
+                $table
+            )) // Non-orm field
+            ->alterDataQuery(function (DataQuery $query) use ($table) {
+                return $query->addSelectFromTable($table, ['Filename']);
+            });
     }
 
     /**
      * Get map of File IDs to legacy filenames
      *
+     * @deprecated 4.4.0
      * @return array
      */
     protected function getFilenameArray()
     {
+        $table = DataObject::singleton(File::class)->baseTable();
         // Convert original query, ensuring the legacy "Filename" is included in the result
         /** @skipUpgrade */
         return $this
             ->getFileQuery()
             ->dataQuery()
-            ->selectFromTable('File', array('ID', 'Filename'))
+            ->selectFromTable($table, ['ID', 'Filename'])
             ->execute()
             ->map(); // map ID to Filename
     }

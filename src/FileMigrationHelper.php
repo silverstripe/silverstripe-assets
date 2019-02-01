@@ -89,6 +89,8 @@ class FileMigrationHelper
      */
     protected function migrateFile($base, File $file, $legacyFilename)
     {
+        $useLegacyFilenames = Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames');
+
         // Make sure this legacy file actually exists
         $path = $base . '/' . $legacyFilename;
         if (!file_exists($path)) {
@@ -129,7 +131,11 @@ class FileMigrationHelper
             $filename,
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE)
+            [
+                'conflict' => $useLegacyFilenames ?
+                    AssetStore::CONFLICT_USE_EXISTING :
+                    AssetStore::CONFLICT_OVERWRITE
+            ]
         );
 
         // Move file if the APL changes filename value
@@ -143,7 +149,7 @@ class FileMigrationHelper
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
-        if (!Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames')) {
+        if (!$useLegacyFilenames) {
             // removing the legacy file since it has been migrated now and not using legacy filenames
             return unlink($path);
         }

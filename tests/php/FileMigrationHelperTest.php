@@ -17,6 +17,7 @@ use SilverStripe\Dev\SapphireTest;
  */
 class FileMigrationHelperTest extends SapphireTest
 {
+    protected $usesTransactions = false;
 
     protected static $fixture_file = 'FileMigrationHelperTest.yml';
 
@@ -86,6 +87,7 @@ class FileMigrationHelperTest extends SapphireTest
 
         // Test that each file exists
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
+            /** @var File $file */
             $expectedFilename = $file->generateFilename();
             $filename = $file->File->getFilename();
             $this->assertTrue($file->exists(), "File with name {$filename} exists");
@@ -97,6 +99,7 @@ class FileMigrationHelperTest extends SapphireTest
                 "File with name {$filename} has the correct hash"
             );
             $this->assertTrue($file->isPublished(), "File is published after migration");
+            $this->assertGreaterThan(0, $file->getAbsoluteSize());
         }
 
         // Ensure that invalid file has been removed during migration
@@ -107,9 +110,6 @@ class FileMigrationHelperTest extends SapphireTest
 
     public function testMigrationWithLegacyFilenames()
     {
-        // See https://github.com/silverstripe/silverstripe-framework/issues/8182
-        $this->markTestSkipped("Re-enable once DDL no longer breaks test transactional state");
-        return;
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
         $this->testMigration();
     }

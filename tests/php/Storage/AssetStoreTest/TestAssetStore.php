@@ -162,9 +162,9 @@ class TestAssetStore extends FlysystemAssetStore
         return parent::getFileID($filename, $hash, $variant);
     }
 
-    public function parseFileID($fileID)
+    public function parseFileID($fileID, $forceLegacy = false)
     {
-        return parent::parseFileID($fileID);
+        return parent::parseFileID($fileID, $forceLegacy);
     }
 
     public function getOriginalFilename($fileID)

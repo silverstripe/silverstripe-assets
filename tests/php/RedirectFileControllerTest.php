@@ -150,15 +150,9 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get($v1Url);
 
-        if (File::config()->get('keep_archived_assets')) {
-            // This only runs on RedirectKeepArchiveFileControllerTest
-            $this->assertResponse(403, '', false, $response,
-                'Old Hash URL of unpublsihed files should return 403');
-        } else {
-            $this->assertResponse(404, '', false, $response,
-                'Old Hash URL of unpublsihed files should return 404');
-        }
 
+        $this->assertResponse(404, '', false, $response,
+            'Old Hash URL of unpublsihed files should return 404');
     }
 
     public function testRedirectAfterDeleting() {

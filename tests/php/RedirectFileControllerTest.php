@@ -61,24 +61,41 @@ class RedirectFileControllerTest extends FunctionalTest
         parent::tearDown();
     }
 
-    public function testLegacyFilenameRedirect() {
+    public function testLegacyFilenameRedirect()
+    {
         $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
 
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(404, '', false, $response,
-            'Legacy URL for unpublished file should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Legacy URL for unpublished file should return 404'
+        );
 
         $file->publishSingle();
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(307, '', $file->getURL(false), $response,
-            'Legacy URL for published file should return 307');
+        $this->assertResponse(
+            307,
+            '',
+            $file->getURL(false),
+            $response,
+            'Legacy URL for published file should return 307'
+        );
 
         $response = $this->get($response->getHeader('location'));
-        $this->assertResponse(200, str_repeat('x', 1000000), false, $response,
-            'Redirected legacy url should return 200');
+        $this->assertResponse(
+            200,
+            str_repeat('x', 1000000),
+            false,
+            $response,
+            'Redirected legacy url should return 200'
+        );
     }
 
-    public function testRedirectWithDraftFile() {
+    public function testRedirectWithDraftFile()
+    {
         $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
         $file->publishSingle();
         $v1Url = $file->getURL(false);
@@ -89,19 +106,35 @@ class RedirectFileControllerTest extends FunctionalTest
 
         // Before publishing second draft file
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(307, '', $v1Url, $response,
-            'Legacy URL for published file should return 307 to live file');
+        $this->assertResponse(
+            307,
+            '',
+            $v1Url,
+            $response,
+            'Legacy URL for published file should return 307 to live file'
+        );
 
         $response = $this->get($response->getHeader('location'));
-        $this->assertResponse(200, str_repeat('x', 1000000), false, $response,
-            'Redirected legacy url should return 200 with content of live file');
+        $this->assertResponse(
+            200,
+            str_repeat('x', 1000000),
+            false,
+            $response,
+            'Redirected legacy url should return 200 with content of live file'
+        );
 
         $response = $this->get($v2Url);
-        $this->assertResponse(403, '', false, $response,
-            'Draft URL without grant should 403');
+        $this->assertResponse(
+            403,
+            '',
+            false,
+            $response,
+            'Draft URL without grant should 403'
+        );
     }
 
-    public function testRedirectAfterPublishSecondVersion() {
+    public function testRedirectAfterPublishSecondVersion()
+    {
         $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
         $file->publishSingle();
         $v1Url = $file->getURL(false);
@@ -114,20 +147,35 @@ class RedirectFileControllerTest extends FunctionalTest
 
         // After publishing second draft file
         $response = $this->get($v2Url);
-        $this->assertResponse(200, 'version 2', false, $response,
-            'Publish version should resolve with 200');
+        $this->assertResponse(
+            200,
+            'version 2',
+            false,
+            $response,
+            'Publish version should resolve with 200'
+        );
 
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(307, '', $v2Url, $response,
-            'Legacy URL should redirect to the latest live version');
+        $this->assertResponse(
+            307,
+            '',
+            $v2Url,
+            $response,
+            'Legacy URL should redirect to the latest live version'
+        );
 
         $response = $this->get($v1Url);
-        $this->assertResponse(307, '', $v2Url, $response,
-            'Old Hash URL should redirect to the latest live version');
-
+        $this->assertResponse(
+            307,
+            '',
+            $v2Url,
+            $response,
+            'Old Hash URL should redirect to the latest live version'
+        );
     }
 
-    public function testRedirectAfterUnpublish() {
+    public function testRedirectAfterUnpublish()
+    {
         $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
         $file->publishSingle();
         $v1Url = $file->getURL(false);
@@ -141,21 +189,37 @@ class RedirectFileControllerTest extends FunctionalTest
 
         // After unpublishing file
         $response = $this->get($v2Url);
-        $this->assertResponse(403, '', false, $response,
-            'Unpublish file should return 403');
+        $this->assertResponse(
+            403,
+            '',
+            false,
+            $response,
+            'Unpublish file should return 403'
+        );
 
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(404, '', false, $response,
-            'Legacy URL of unpublish files should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Legacy URL of unpublish files should return 404'
+        );
 
         $response = $this->get($v1Url);
 
 
-        $this->assertResponse(404, '', false, $response,
-            'Old Hash URL of unpublsihed files should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Old Hash URL of unpublsihed files should return 404'
+        );
     }
 
-    public function testRedirectAfterDeleting() {
+    public function testRedirectAfterDeleting()
+    {
         $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
         $file->publishSingle();
         $v1Url = $file->getURL(false);
@@ -169,16 +233,31 @@ class RedirectFileControllerTest extends FunctionalTest
         $file->deleteFile();
 
         $response = $this->get($v2Url);
-        $this->assertResponse(404, '', false, $response,
-            'Deleted file file should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Deleted file file should return 404'
+        );
 
         $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
-        $this->assertResponse(404, '', false, $response,
-            'Legacy URL of deleted files should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Legacy URL of deleted files should return 404'
+        );
 
         $response = $this->get($v1Url);
-        $this->assertResponse(404, '', false, $response,
-            'Old Hash URL of deleted files should return 404');
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Old Hash URL of deleted files should return 404'
+        );
     }
 
     public function testVariantRedirect()
@@ -195,12 +274,31 @@ class RedirectFileControllerTest extends FunctionalTest
         $suffix = $ico->getVariant();
 
         $response = $this->get($icoUrl);
-        $this->assertResponse(200, $ico->getString(), false, $response,
-            'Publish variant sghould resolve with 200');
+        $this->assertResponse(
+            200,
+            $ico->getString(),
+            false,
+            $response,
+            'Publish variant sghould resolve with 200'
+        );
 
-        $response = $this->get("assets/test__$suffix.jpg");
-        $this->assertResponse(307, '', $icoUrl, $response,
-            'Legacy path to variant should resolve.');
+        $response = $this->get("/assets/test__$suffix.jpg");
+        $this->assertResponse(
+            307,
+            '',
+            $icoUrl,
+            $response,
+            'Legacy path to variant should redirect.'
+        );
+
+        $response = $this->get("/assets/_resampled/$suffix/test.jpg");
+        $this->assertResponse(
+            307,
+            '',
+            $icoUrl,
+            $response,
+            'SS3 Legacy path to variant should redirect.'
+        );
 
         $file->setFromLocalFile(__DIR__ . '/ImageTest/test-image-high-quality.jpg', 'test.jpg');
         $file->write();
@@ -209,9 +307,74 @@ class RedirectFileControllerTest extends FunctionalTest
         $icoV2Url = $ico->getURL(false);
 
         $response = $this->get($icoUrl);
-        $this->assertResponse(307, '', $icoV2Url, $response,
-            'Old URL to variant should redirect with 307');
+        $this->assertResponse(
+            307,
+            '',
+            $icoV2Url,
+            $response,
+            'Old URL to variant should redirect with 307'
+        );
+    }
 
+    public function testVariantInFolderRedirect()
+    {
+        /** @var Folder $folder */
+        $folder = Folder::create();
+        $folder->Filename = 'SubFolderOfDoom';
+        $folder->write();
+
+        /** @var Image $file */
+        $file = Image::create();
+        $file->ParentID = $folder->ID;
+        $file->FileFilename = 'SubFolderOfDoom/test.jpg';
+        $file->setFromLocalFile(__DIR__ . '/ImageTest/landscape-to-portrait.jpg', 'SubFolderOfDoom/test.jpg');
+        $file->write();
+        $file->publishSingle();
+        $ico = $file->ScaleWidth(32);
+        $icoUrl = $ico->getURL(false);
+        $suffix = $ico->getVariant();
+
+        $response = $this->get($icoUrl);
+        $this->assertResponse(
+            200,
+            $ico->getString(),
+            false,
+            $response,
+            'Publish variant sghould resolve with 200'
+        );
+
+        $response = $this->get("/assets/SubFolderOfDoom/test__$suffix.jpg");
+        $this->assertResponse(
+            307,
+            '',
+            $icoUrl,
+            $response,
+            'Legacy path to variant should redirect.'
+        );
+
+        $response = $this->get("/assets/SubFolderOfDoom/_resampled/$suffix/test.jpg");
+        $this->assertResponse(
+            307,
+            '',
+            $icoUrl,
+            $response,
+            'SS3 Legacy path to variant should redirect.'
+        );
+
+        $file->setFromLocalFile(__DIR__ . '/ImageTest/test-image-high-quality.jpg', 'SubFolderOfDoom/test.jpg');
+        $file->write();
+        $file->publishSingle();
+        $ico = $file->ScaleWidth(32);
+        $icoV2Url = $ico->getURL(false);
+
+        $response = $this->get($icoUrl);
+        $this->assertResponse(
+            307,
+            '',
+            $icoV2Url,
+            $response,
+            'Old URL to variant should redirect with 307'
+        );
     }
 
     public function testDraftOnlyArchivedVersion()
@@ -226,9 +389,13 @@ class RedirectFileControllerTest extends FunctionalTest
         $v2Url = $file->getURL(false);
 
         $response = $this->get($v1Url);
-        $this->assertResponse(404, '', false, $response,
-            'Old Hash URL of version that never got published should return 404');
-
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Old Hash URL of version that never got published should return 404'
+        );
     }
 
     /**

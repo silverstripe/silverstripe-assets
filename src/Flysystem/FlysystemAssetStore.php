@@ -783,9 +783,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $fileID
      * @return array
      */
-    protected function parseFileID($fileID, $forceLegacyName = false)
+    protected function parseFileID($fileID)
     {
-        if ($forceLegacyName || $this->useLegacyFilenames()) {
+        if ($this->useLegacyFilenames()) {
             $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
         } else {
             $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-zA-Z0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
@@ -803,6 +803,32 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             'Filename' => $filename,
             'Variant' => $variant,
             'Hash' => $hash
+        ];
+    }
+
+    /**
+     * Try to parse a file ID using the old SilverStripe 3 format legacy or the SS4 legacy filename format.
+     *
+     * @param string $fileID
+     * @return array
+     */
+    private function parseLegacyFileID($fileID)
+    {
+        // assets/folder/_resampled/ResizedImageWzEwMCwxMzNd/basename.extension
+        $ss3Pattern = '#^(?<folder>([^/_]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>[^/._]+))(?<extension>(\..+)*)$#';
+        // assets/folder/basename__ResizedImageWzEwMCwxMzNd.extension
+        $ss4LegacyPattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+
+        // not a valid file (or not a part of the filesystem)
+        if (!preg_match($ss3Pattern, $fileID, $matches) && !preg_match($ss4LegacyPattern, $fileID, $matches)) {
+            return null;
+        }
+
+        $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = isset($matches['variant']) ? $matches['variant'] : null;
+        return [
+            'Filename' => $filename,
+            'Variant' => $variant
         ];
     }
 
@@ -1000,7 +1026,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Let's see if $asset is a legacy URL that can be map to a current file
-        $parsedFileID = $this->parseFileID($asset, true);
+        $parsedFileID = $this->parseLegacyFileID($asset);
         if ($parsedFileID) {
             $filename = $parsedFileID['Filename'];
             $variant = $parsedFileID['Variant'];

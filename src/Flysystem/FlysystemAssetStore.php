@@ -815,7 +815,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     private function parseLegacyFileID($fileID)
     {
         // assets/folder/_resampled/ResizedImageWzEwMCwxMzNd/basename.extension
-        $ss3Pattern = '#^(?<folder>([^/_]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>[^/._]+))(?<extension>(\..+)*)$#';
+        $ss3Pattern = '#^(?<folder>([^/_]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
         // assets/folder/basename__ResizedImageWzEwMCwxMzNd.extension
         $ss4LegacyPattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 

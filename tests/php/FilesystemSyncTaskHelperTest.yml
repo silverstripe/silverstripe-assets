@@ -1,0 +1,22 @@
+Files:
+  SilverStripe\Assets\Folder:
+    parent:
+      Name: ParentFolder
+    subfolder:
+      Name: SubFolder
+      Parent: parent
+  SilverStripe\Assets\Image:
+    image1:
+      Name: myimage.jpg
+    image2:
+      Name: myimage.jpg
+      Parent: parent/subfolder
+  SilverStripe\Assets\File:
+    file1:
+      Name: anotherfile.jpg
+    file2:
+      Name: file.jpg
+      Parent: parent
+    file3:
+      Name: picture.jpg
+      Parent: parent/subfolder

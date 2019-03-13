@@ -1301,7 +1301,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @return array
      * @deprecated 1.4.0
      */
-    protected function parseFileID($fileID)
+    public function parseFileID($fileID)
     {
         /** @var ParsedFileID $parsedFileID */
         $parsedFileID = $this->getProtectedResolutionStrategy()->parseFileID($fileID);
@@ -1531,5 +1531,31 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         return $response;
+    }
+
+
+    /**
+     * Find a File object by the given filename.
+     *
+     * @param string $filename Filename to search for, including any custom parent directories.
+     * Should include hashed folder the file is located inside.
+     * @return File
+     */
+    public static function getFileByFilename($filename)
+    {
+        // Take out the hash folder from the path
+        $parts = explode(DIRECTORY_SEPARATOR, $filename);
+        $parts = array_merge(
+            array_slice($parts, 0, count($parts)-2),
+            [$parts[count($parts)-1]]
+        );
+        $filename = implode(DIRECTORY_SEPARATOR, $parts);
+
+        /** @var File $file */
+        $file = File::get()->filter([
+            'FileFilename' => $filename
+        ])->first();
+
+        return $file;
     }
 }

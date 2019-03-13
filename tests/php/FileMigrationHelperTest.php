@@ -70,45 +70,43 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testMigration()
     {
-        // TODO Fix file migration test by adjusting file migration logic to new behaviour
-        // added through https://github.com/silverstripe/silverstripe-versioned/issues/177
+        // Prior to migration, check that each file has empty Filename / Hash properties
+        /** @var File $file */
+        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
+            $filename = $file->generateFilename();
+            $this->assertNotEmpty($filename, "File {$file->Name} has a filename");
+            $this->assertEmpty($file->File->getFilename(), "File {$file->Name} has no DBFile filename");
+            $this->assertEmpty($file->File->getHash(), "File {$file->Name} has no hash");
+            $this->assertFalse($file->exists(), "File with name {$file->Name} does not yet exist");
+            $this->assertFalse($file->isPublished(), "File is not published yet");
+        }
 
-//        // Prior to migration, check that each file has empty Filename / Hash properties
-//        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-//            $filename = $file->generateFilename();
-//            $this->assertNotEmpty($filename, "File {$file->Name} has a filename");
-//            $this->assertEmpty($file->File->getFilename(), "File {$file->Name} has no DBFile filename");
-//            $this->assertEmpty($file->File->getHash(), "File {$file->Name} has no hash");
-//            $this->assertFalse($file->exists(), "File with name {$file->Name} does not yet exist");
-//            $this->assertFalse($file->isPublished(), "File is not published yet");
-//        }
-//
-//        // Do migration
-//        $helper = new FileMigrationHelper();
-//        $result = $helper->run($this->getBasePath());
-//        $this->assertEquals(5, $result);
-//
-//        // Test that each file exists
-//        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-//            /** @var File $file */
-//            $expectedFilename = $file->generateFilename();
-//            $filename = $file->File->getFilename();
-//            $this->assertTrue($file->exists(), "File with name {$filename} exists");
-//            $this->assertNotEmpty($filename, "File {$file->Name} has a Filename");
-//            $this->assertEquals($expectedFilename, $filename, "File {$file->Name} has retained its Filename value");
-//            $this->assertEquals(
-//                '33be1b95cba0358fe54e8b13532162d52f97421c',
-//                $file->File->getHash(),
-//                "File with name {$filename} has the correct hash"
-//            );
-//            $this->assertTrue($file->isPublished(), "File is published after migration");
-//            $this->assertGreaterThan(0, $file->getAbsoluteSize());
-//        }
-//
-//        // Ensure that invalid file has been removed during migration
-//        $invalidID = $this->idFromFixture(File::class, 'invalid');
-//        $this->assertNotEmpty($invalidID);
-//        $this->assertNull(File::get()->byID($invalidID));
+        // Do migration
+        $helper = new FileMigrationHelper();
+        $result = $helper->run($this->getBasePath());
+        $this->assertEquals(5, $result);
+
+        // Test that each file exists
+        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
+            /** @var File $file */
+            $expectedFilename = $file->generateFilename();
+            $filename = $file->File->getFilename();
+            $this->assertTrue($file->exists(), "File with name {$filename} exists");
+            $this->assertNotEmpty($filename, "File {$file->Name} has a Filename");
+            $this->assertEquals($expectedFilename, $filename, "File {$file->Name} has retained its Filename value");
+            $this->assertEquals(
+                '33be1b95cba0358fe54e8b13532162d52f97421c',
+                $file->File->getHash(),
+                "File with name {$filename} has the correct hash"
+            );
+            $this->assertTrue($file->isPublished(), "File is published after migration");
+            $this->assertGreaterThan(0, $file->getAbsoluteSize());
+        }
+
+        // Ensure that invalid file has been removed during migration
+        $invalidID = $this->idFromFixture(File::class, 'invalid');
+        $this->assertNotEmpty($invalidID);
+        $this->assertNull(File::get()->byID($invalidID));
     }
 
     public function testMigrationWithLegacyFilenames()

@@ -195,4 +195,36 @@ class AssetAdapter extends Local
 
         return $result;
     }
+
+    /**
+     * @param string $directory
+     * @param callable $filter
+     * @return \Generator Returns a generator for recursively iterating through a directory.
+     * This is intended to be less memory intensive than `listContents`
+     * as it yields per directory instead of returning the whole directory tree as one array.
+     * @see listContents
+     */
+    public function getFileGenerator(string $directory, $filter = null)
+    {
+        $files = $this->listContents($directory, false);
+        foreach ($files as $file) {
+            if (is_callable($filter) && !$filter($file)) {
+                continue;
+            }
+
+            yield $file;
+            if ($file['type'] == 'dir') {
+                yield from $this->getFileGenerator($file['path']);
+            }
+        }
+    }
+
+    /**
+     * @param string $relativePath
+     * @return string
+     */
+    public function relativeToRealPath(string $relativePath)
+    {
+        return $this->getPathPrefix() . $relativePath;
+    }
 }

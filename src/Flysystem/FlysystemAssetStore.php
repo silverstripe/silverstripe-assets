@@ -10,6 +10,9 @@ use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use LogicException;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+use SilverStripe\Assets\FilenameParsing\HashPathFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalPathFileIDHelper;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
@@ -765,6 +768,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
+     * @return FileIDHelper
+     */
+    private function getDefaultFileIDHelper()
+    {
+        return Injector::inst()->get(
+            $this->useLegacyFilenames() ?
+                NaturalPathFileIDHelper::class :
+                HashPathFileIDHelper::class
+        );
+    }
+
+    /**
      * Performs filename cleanup before sending it back.
      *
      * This name should not contain hash or variants.
@@ -774,8 +789,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function cleanFilename($filename)
     {
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        return preg_replace('/_{2,}/', '_', $filename);
+        return $this->getDefaultFileIDHelper()->cleanFilename($filename);
     }
 
     /**
@@ -786,25 +800,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function parseFileID($fileID)
     {
-        if ($this->useLegacyFilenames()) {
-            $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
-        } else {
-            $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-zA-Z0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
-        }
-
-        // not a valid file (or not a part of the filesystem)
-        if (!preg_match($pattern, $fileID, $matches)) {
-            return null;
-        }
-
-        $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
-        $variant = isset($matches['variant']) ? $matches['variant'] : null;
-        $hash = isset($matches['hash']) ? $matches['hash'] : null;
-        return [
-            'Filename' => $filename,
-            'Variant' => $variant,
-            'Hash' => $hash
-        ];
+        $parsedFiledID = $this->getDefaultFileIDHelper()->parseFileID($fileID);
+        return $parsedFiledID ? $parsedFiledID->getTuple() : null;
     }
 
     /**
@@ -841,11 +838,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getOriginalFilename($fileID)
     {
-        $parts = $this->parseFileID($fileID);
-        if (!$parts) {
-            return null;
-        }
-        return $parts['Filename'];
+        $parsedFiledID = $this->getDefaultFileIDHelper()->parseFileID($fileID);
+        return $parsedFiledID ? $parsedFiledID->getFilename() : null;
     }
 
     /**
@@ -856,11 +850,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getVariant($fileID)
     {
-        $parts = $this->parseFileID($fileID);
-        if (!$parts) {
-            return null;
-        }
-        return $parts['Variant'];
+        $parsedFiledID = $this->getDefaultFileIDHelper()->parseFileID($fileID);
+        return $parsedFiledID ? $parsedFiledID->getVariant() : null;
     }
 
     /**
@@ -871,11 +862,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function removeVariant($fileID)
     {
-        $variant = $this->getVariant($fileID);
-        if (empty($variant)) {
-            return $fileID;
+        $parsedFiledID = $this->getDefaultFileIDHelper()->parseFileID($fileID);
+        if ($parsedFiledID) {
+            $variant = $parsedFiledID->getVariant($fileID);
+            if ($variant) {
+                return str_replace("__{$variant}", '', $fileID);
+            }
         }
-        return str_replace("__{$variant}", '', $fileID);
+
+        return $fileID;
     }
 
     /**
@@ -890,42 +885,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getFileID($filename, $hash, $variant = null)
     {
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        $filename = $this->cleanFilename($filename);
-        $name = basename($filename);
-
-        // Split extension
-        $extension = null;
-        if (($pos = strpos($name, '.')) !== false) {
-            $extension = substr($name, $pos);
-            $name = substr($name, 0, $pos);
-        }
-
-        // Unless in legacy mode, inject hash just prior to the filename
-        if ($this->useLegacyFilenames()) {
-            $fileID = $name;
-        } else {
-            $fileID = substr($hash, 0, 10) . '/' . $name;
-        }
-
-        // Add directory
-        $dirname = ltrim(dirname($filename), '.');
-        if ($dirname) {
-            $fileID = $dirname . '/' . $fileID;
-        }
-
-        // Add variant
-        if ($variant) {
-            $fileID .= '__' . $variant;
-        }
-
-        // Add extension
-        if ($extension) {
-            $fileID .= $extension;
-        }
-
-        return $fileID;
+        return $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
     }
+
+
 
     /**
      * Ensure each adapter re-generates its own server configuration files

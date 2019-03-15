@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
@@ -12,6 +13,7 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -33,6 +35,13 @@ class FileMigrationHelper
      * @var bool
      */
     private static $delete_invalid_files = true;
+
+    /**
+     * If set to true, this will ensure that when Files are migrated, its 'LastEdited' date remains as its original date not updated to the date at which the task is run.
+     *
+     * @var boolean
+     */
+    private static $keep_lastedited_date = false;
 
     /**
      * Perform migration
@@ -133,8 +142,8 @@ class FileMigrationHelper
             null,
             [
                 'conflict' => $useLegacyFilenames ?
-                    AssetStore::CONFLICT_USE_EXISTING :
-                    AssetStore::CONFLICT_OVERWRITE
+                AssetStore::CONFLICT_USE_EXISTING :
+                AssetStore::CONFLICT_OVERWRITE,
             ]
         );
 
@@ -143,10 +152,22 @@ class FileMigrationHelper
             $file->setFilename($result['Filename']);
         }
 
+        // set original 'LastEdited' date if static is enabled
+        $lastEditedDate = '';
+        if ($this->config()->get('keep_lastedited_date')) {
+            $lastEditedDate = $file->LastEdited;
+        }
+
         // Save and publish
         $file->write();
         if (class_exists(Versioned::class)) {
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        }
+
+        // if 'LastEdited' date static is enabled, update file's last edited using SQL query
+        if ($this->config()->get('keep_lastedited_date') && $lastEditedDate) {
+            $update = SQLUpdate::create('"File"')->addWhere(['ID' => $file->ID]);
+            $update->assign('"LastEdited"', $lastEditedDate);
         }
 
         if (!$useLegacyFilenames) {

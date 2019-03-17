@@ -73,18 +73,27 @@ class FileMigrationHelper
             Versioned::set_stage(Versioned::DRAFT);
         }
 
+        // Save and publish
+        $newFile->write();
+        if (class_exists(Versioned::class)) {
+            $newFile->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        }
+
         foreach ($this->getFileQuery() as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
 
             $success = $this->migrateFile($base, $file, $filename);
+
             if ($success) {
                 $count++;
             }
         }
+
         if (class_exists(Versioned::class)) {
             Versioned::set_reading_mode($originalState);
         }
+
         return $count;
     }
 
@@ -166,8 +175,15 @@ class FileMigrationHelper
 
         // if 'LastEdited' date static is enabled, update file's last edited using SQL query
         if ($this->config()->get('keep_lastedited_date') && $lastEditedDate) {
-            $update = SQLUpdate::create('"File"')->addWhere(['ID' => $file->ID]);
-            $update->assign('"LastEdited"', $lastEditedDate);
+            // Draft table
+            $update = SQLUpdate::create('File')->addWhere(['ID' => $file->ID]);
+            $update->assign('LastEdited', $lastEditedDate);
+            $update->execute();
+
+            // Live table
+            $update = SQLUpdate::create('File_Live')->addWhere(['ID' => $file->ID]);
+            $update->assign('LastEdited', $lastEditedDate);
+            $update->execute();
         }
 
         if (!$useLegacyFilenames) {

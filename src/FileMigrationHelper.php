@@ -73,12 +73,6 @@ class FileMigrationHelper
             Versioned::set_stage(Versioned::DRAFT);
         }
 
-        // Save and publish
-        $newFile->write();
-        if (class_exists(Versioned::class)) {
-            $newFile->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
-        }
-
         foreach ($this->getFileQuery() as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');

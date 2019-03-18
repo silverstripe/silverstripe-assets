@@ -61,6 +61,9 @@ SilverStripe\Assets\Folder:
     Name: FileTest-restricted-view-folder
     CanViewType: OnlyTheseUsers
     ViewerGroups: =>SilverStripe\Security\Group.assetusers
+  deep-folder:
+    Name: super_deep_folder_with_underscores
+    ParentID: =>SilverStripe\Assets\Folder.folder1-subfolder1
 SilverStripe\Assets\File:
   asdf:
     FileFilename: FileTest.txt
@@ -95,6 +98,16 @@ SilverStripe\Assets\File:
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: File4.txt
     ParentID: =>SilverStripe\Assets\Folder.restrictedViewFolder
+  double-extension:
+    FileFilename: FileTest-folder1/FileTest-folder1-subfolder1/super_deep_folder_with_underscores/Archive.tar.gz
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: Archive.tar.gz
+    ParentID: =>SilverStripe\Assets\Folder.deep-folder
+  double-underscore:
+    FileFilename: FileTest-folder1/FileTest-folder1-subfolder1/super_deep_folder_with_underscores/file_with_underscores.tar.gz
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: file_with_underscores.gz
+    ParentID: =>SilverStripe\Assets\Folder.deep-folder
 
 SilverStripe\Assets\Image:
   gif:

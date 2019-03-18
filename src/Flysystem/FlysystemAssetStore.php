@@ -87,12 +87,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * Define the HTTP Response code for request that should be redirected to a different URL. Defaults to a temporary
-     * redirection (307). Set to 308 if you would rather your redirections be permanent and indicate to search engine
+     * redirection (302). Set to 308 if you would rather your redirections be permanent and indicate to search engine
      * that they should index the other file.
      * @config
      * @var int
      */
-    private static $redirect_response_code = 307;
+    private static $redirect_response_code = 302;
 
     /**
      * Custom headers to add to all custom file responses
@@ -815,7 +815,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     private function parseLegacyFileID($fileID)
     {
         // assets/folder/_resampled/ResizedImageWzEwMCwxMzNd/basename.extension
-        $ss3Pattern = '#^(?<folder>([^/_]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        $ss3Pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
         // assets/folder/basename__ResizedImageWzEwMCwxMzNd.extension
         $ss4LegacyPattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
@@ -990,6 +990,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
+     * Given a FileID, try to find an equivalent file ID for a more recent file using the latest format.
+     * @param string $asset
      * @return string
      */
     private function searchForEquivalentFileID($asset)

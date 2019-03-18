@@ -26,9 +26,13 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         parent::setUp();
     }
 
-    public function testRedirectAfterUnpublish()
+    /**
+     * @dataProvider fileList
+     */
+    public function testRedirectAfterUnpublish($fixtureID)
     {
-        $file = File::find('FileTest-subfolder/FileTestSubfolder.txt');
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, $fixtureID);
         $file->publishSingle();
         $v1hash = $file->getHash();
         $v1Url = $file->getURL(false);
@@ -39,12 +43,12 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
 
         $file->publishSingle();
 
-        $this->getAssetStore()->grant('FileTest-subfolder/FileTestSubfolder.txt', $v1hash);
+        $this->getAssetStore()->grant($file->getFilename(), $v1hash);
         $response = $this->get($v1Url);
-        $this->getAssetStore()->revoke('FileTest-subfolder/FileTestSubfolder.txt', $v1hash);
+        $this->getAssetStore()->revoke($file->getFilename(), $v1hash);
         $this->assertResponse(
             200,
-            str_repeat('x', 1000000),
+            'version 1',
             false,
             $response,
             'Old Hash URL of live file should return 200 when access is granted'
@@ -62,7 +66,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             'Unpublish file should return 403'
         );
 
-        $response = $this->get('/assets/FileTest-subfolder/FileTestSubfolder.txt');
+        $response = $this->get('/assets/' . $file->getFilename());
         $this->assertResponse(
             404,
             '',
@@ -80,11 +84,11 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             'Old Hash URL of unpublished files should return 403'
         );
 
-        $this->getAssetStore()->grant('FileTest-subfolder/FileTestSubfolder.txt', $v1hash);
+        $this->getAssetStore()->grant($file->getFilename(), $v1hash);
         $response = $this->get($v1Url);
         $this->assertResponse(
             200,
-            str_repeat('x', 1000000),
+            'version 1',
             false,
             $response,
             'Old Hash URL of unpublished files should return 200 when access is granted'

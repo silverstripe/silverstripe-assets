@@ -10,4 +10,5 @@ use SilverStripe\Assets\Dev;
  */
 class TestAssetStore extends Dev\TestAssetStore
 {
+
 }

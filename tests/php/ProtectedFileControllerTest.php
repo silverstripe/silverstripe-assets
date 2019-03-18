@@ -52,6 +52,12 @@ class ProtectedFileControllerTest extends FunctionalTest
         }
     }
 
+    public function tearDown()
+    {
+        TestAssetStore::reset();
+        parent::tearDown();
+    }
+
     /**
      * @dataProvider getFilenames
      */

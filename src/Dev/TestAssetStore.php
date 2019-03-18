@@ -132,7 +132,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
      * @param  AssetContainer $asset
      * @return string
      */
-    public static function getLocalPath(AssetContainer $asset)
+    public static function getLocalPath(AssetContainer $asset, $forceProtected = false)
     {
         if ($asset instanceof Folder) {
             return self::base_path() . '/' . $asset->getFilename();
@@ -146,7 +146,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         $fileID = $assetStore->getFileID($asset->Filename, $asset->Hash, $asset->Variant);
         /** @var Filesystem $filesystem */
         $filesystem = $assetStore->getProtectedFilesystem();
-        if (!$filesystem->has($fileID)) {
+        if (!$forceProtected && !$filesystem->has($fileID)) {
             $filesystem = $assetStore->getPublicFilesystem();
         }
         /** @var Local $adapter */

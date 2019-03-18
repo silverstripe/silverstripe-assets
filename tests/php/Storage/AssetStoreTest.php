@@ -278,7 +278,7 @@ class AssetStoreTest extends SapphireTest
                 'directory/2a17a9cb4b/file.jpg',
                 [
                     'Filename' => 'directory/file.jpg',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => null
                 ],
             ],
@@ -286,7 +286,7 @@ class AssetStoreTest extends SapphireTest
                 '2a17a9cb4b/file.jpg',
                 [
                     'Filename' => 'file.jpg',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => null
                 ],
             ],
@@ -294,7 +294,7 @@ class AssetStoreTest extends SapphireTest
                 'dir_ectory/2a17a9cb4b/file_e.jpg',
                 [
                     'Filename' => 'dir_ectory/file_e.jpg',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => null
                 ],
             ],
@@ -302,7 +302,7 @@ class AssetStoreTest extends SapphireTest
                 'directory/2a17a9cb4b/file__variant.jpg',
                 [
                     'Filename' => 'directory/file.jpg',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => 'variant'
                 ],
             ],
@@ -310,7 +310,7 @@ class AssetStoreTest extends SapphireTest
                 '2a17a9cb4b/file__var__iant.jpg',
                 [
                     'Filename' => 'file.jpg',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => 'var__iant'
                 ],
             ],
@@ -318,7 +318,7 @@ class AssetStoreTest extends SapphireTest
                 '2a17a9cb4b/file__var__iant',
                 [
                     'Filename' => 'file',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => 'var__iant'
                 ],
             ],
@@ -326,7 +326,7 @@ class AssetStoreTest extends SapphireTest
                 '2a17a9cb4b/file',
                 [
                     'Filename' => 'file',
-                    'Hash' => sha1('puppies'),
+                    'Hash' => substr(sha1('puppies'), 0, 10),
                     'Variant' => null
                 ],
             ]
@@ -395,7 +395,7 @@ class AssetStoreTest extends SapphireTest
         } else {
             $this->assertEquals($tuple['Filename'], $result['Filename']);
             $this->assertEquals($tuple['Variant'], $result['Variant']);
-            $this->assertArrayNotHasKey('Hash', $result);
+            $this->assertEquals($tuple['Hash'], $result['Hash']);
         }
     }
 

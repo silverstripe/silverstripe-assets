@@ -132,6 +132,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         "Owner" => Member::class,
     );
 
+    private static $indexes = array(
+        'FileHash' => true
+    );
+
     private static $defaults = array(
         "ShowInSearch" => 1,
     );

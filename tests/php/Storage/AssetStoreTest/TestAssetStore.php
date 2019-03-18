@@ -130,8 +130,9 @@ class TestAssetStore extends FlysystemAssetStore
      * @param  AssetContainer $asset
      * @return string
      */
-    public static function getLocalPath(AssetContainer $asset)
+    public static function getLocalPath(AssetContainer $asset, $forceProtected = false)
     {
+
         if ($asset instanceof Folder) {
             return self::base_path() . '/' . $asset->getFilename();
         }
@@ -144,7 +145,7 @@ class TestAssetStore extends FlysystemAssetStore
         $fileID = $assetStore->getFileID($asset->Filename, $asset->Hash, $asset->Variant);
         /** @var Filesystem $filesystem */
         $filesystem = $assetStore->getProtectedFilesystem();
-        if (!$filesystem->has($fileID)) {
+        if (!$forceProtected && !$filesystem->has($fileID)) {
             $filesystem = $assetStore->getPublicFilesystem();
         }
         /** @var Local $adapter */
@@ -162,9 +163,9 @@ class TestAssetStore extends FlysystemAssetStore
         return parent::getFileID($filename, $hash, $variant);
     }
 
-    public function parseFileID($fileID)
+    public function parseFileID($fileID, $forceLegacy = false)
     {
-        return parent::parseFileID($fileID);
+        return parent::parseFileID($fileID, $forceLegacy);
     }
 
     public function getOriginalFilename($fileID)

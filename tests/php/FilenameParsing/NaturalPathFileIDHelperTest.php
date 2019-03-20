@@ -1,14 +1,14 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-use SilverStripe\Assets\FilenameParsing\NaturalPathFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 
-class NaturalPathFileIDHelperTest extends FileIDHelperTester
+class NaturalFileIDHelperTest extends FileIDHelperTester
 {
 
     protected function getHelper()
     {
-        return new NaturalPathFileIDHelper();
+        return new NaturalFileIDHelper();
     }
 
     /**
@@ -99,5 +99,4 @@ class NaturalPathFileIDHelperTest extends FileIDHelperTester
             ['folder//sam.jpg']
         ];
     }
-
 }

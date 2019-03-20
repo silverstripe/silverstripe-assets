@@ -34,6 +34,4 @@ interface FileIDHelper
      * @return ParsedFileID|null
      */
     public function parseFileID($fileID);
-
-
 }

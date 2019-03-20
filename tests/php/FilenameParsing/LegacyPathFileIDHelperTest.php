@@ -1,14 +1,14 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-use SilverStripe\Assets\FilenameParsing\LegacyPathFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 
-class LegacyPathFileIDHelperTest extends FileIDHelperTester
+class LegacyFileIDHelperTest extends FileIDHelperTester
 {
 
     protected function getHelper()
     {
-        return new LegacyPathFileIDHelper();
+        return new LegacyFileIDHelper();
     }
 
     /**
@@ -103,5 +103,4 @@ class LegacyPathFileIDHelperTest extends FileIDHelperTester
             ['subfolder/abcdef7890/sam__resizeXYZ.jpg'],
         ];
     }
-
 }

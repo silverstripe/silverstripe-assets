@@ -11,8 +11,10 @@ use League\Flysystem\Util;
 use LogicException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
-use SilverStripe\Assets\FilenameParsing\HashPathFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\NaturalPathFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
@@ -202,7 +204,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getVisibility($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         if ($this->getPublicFilesystem()->has($fileID)) {
             return self::VISIBILITY_PUBLIC;
         }
@@ -217,7 +219,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getAsStream($filename, $hash, $variant = null)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
         return $this
             ->getFilesystemFor($fileID)
             ->readStream($fileID);
@@ -225,7 +227,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getAsString($filename, $hash, $variant = null)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
         return $this
             ->getFilesystemFor($fileID)
             ->read($fileID);
@@ -233,7 +235,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getAsURL($filename, $hash, $variant = null, $grant = true)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
 
         // Check with filesystem this asset exists in
         $public = $this->getPublicFilesystem();
@@ -330,7 +332,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function delete($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         $protected = $this->deleteFromFilesystem($fileID, $this->getProtectedFilesystem());
         $public = $this->deleteFromFilesystem($fileID, $this->getPublicFilesystem());
         return $protected || $public;
@@ -344,13 +346,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($newName === $filename) {
             return $filename;
         }
+
+        $helper = $this->getDefaultFileIDHelper();
+
         $newName = $this->cleanFilename($newName);
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $helper->buildFileID($filename, $hash);
         $filesystem = $this->getFilesystemFor($fileID);
         foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
             // Get variant and build new ID for this variant
-            $variant = $this->getVariant($nextID);
-            $newID = $this->getFileID($newName, $hash, $variant);
+            $variant = $helper->parseFileID($nextID)->getVariant();
+            $newID = $helper->buildFileID($newName, $hash, $variant);
             $filesystem->rename($nextID, $newID);
         }
         // Truncate empty dirs
@@ -366,13 +371,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($newName === $filename) {
             return $filename;
         }
+
+        $helper = $this->getDefaultFileIDHelper();
         $newName = $this->cleanFilename($newName);
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $helper->buildFileID($filename, $hash);
         $filesystem = $this->getFilesystemFor($fileID);
         foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
             // Get variant and build new ID for this variant
-            $variant = $this->getVariant($nextID);
-            $newID = $this->getFileID($newName, $hash, $variant);
+            $variant = $helper->parseFileID($nextID)->getVariant();
+            $newID = $helper->buildFileID($newName, $hash, $variant);
             $filesystem->copy($nextID, $newID);
         }
         return $newName;
@@ -441,7 +448,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function publish($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         $protected = $this->getProtectedFilesystem();
         $public = $this->getPublicFilesystem();
         $this->moveBetweenFilesystems($fileID, $protected, $public);
@@ -449,7 +456,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function protect($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         $public = $this->getPublicFilesystem();
         $protected = $this->getProtectedFilesystem();
         $this->moveBetweenFilesystems($fileID, $public, $protected);
@@ -481,7 +488,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     public function grant($filename, $hash)
     {
         $session = Controller::curr()->getRequest()->getSession();
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         $granted = $session->get(self::GRANTS_SESSION) ?: array();
         $granted[$fileID] = true;
         $session->set(self::GRANTS_SESSION, $granted);
@@ -489,7 +496,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function revoke($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         $session = Controller::curr()->getRequest()->getSession();
         $granted = $session->get(self::GRANTS_SESSION) ?: array();
         unset($granted[$fileID]);
@@ -502,7 +509,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function canView($filename, $hash)
     {
-        $fileID = $this->getFileID($filename, $hash);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash);
         if ($this->getProtectedFilesystem()->has($fileID)) {
             return $this->isGranted($fileID);
         }
@@ -609,14 +616,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             throw new InvalidArgumentException("File hash is missing");
         }
 
-        $filename = $this->cleanFilename($filename);
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $helper = $this->getDefaultFileIDHelper();
+
+        $filename = $helper->cleanFilename($filename);
+        $fileID = $helper->buildFileID($filename, $hash, $variant);
 
         // Check conflict resolution scheme
         $resolvedID = $this->resolveConflicts($conflictResolution, $fileID);
         if ($resolvedID !== false) {
             // Check if source file already exists on the filesystem
-            $mainID = $this->getFileID($filename, $hash);
+            $mainID = $helper->buildFileID($filename, $hash);
             $filesystem = $this->getFilesystemFor($mainID);
 
             // If writing a new file use the correct visibility
@@ -636,7 +645,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             }
 
             // in case conflict resolution renamed the file, return the renamed
-            $filename = $this->getOriginalFilename($resolvedID);
+            $filename = $helper->parseFileID($resolvedID)->getFilename();
         } elseif (empty($variant)) {
             // If deferring to the existing file, return the sha of the existing file,
             // unless we are writing a variant (which has the same hash value as its original file)
@@ -684,7 +693,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getMetadata($filename, $hash, $variant = null)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
         $filesystem = $this->getFilesystemFor($fileID);
         if ($filesystem) {
             return $filesystem->getMetadata($fileID);
@@ -694,7 +703,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getMimeType($filename, $hash, $variant = null)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
         $filesystem = $this->getFilesystemFor($fileID);
         if ($filesystem) {
             return $filesystem->getMimetype($fileID);
@@ -704,7 +713,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function exists($filename, $hash, $variant = null)
     {
-        $fileID = $this->getFileID($filename, $hash, $variant);
+        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
         $filesystem = $this->getFilesystemFor($fileID);
         return !empty($filesystem);
     }
@@ -774,8 +783,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         return Injector::inst()->get(
             $this->useLegacyFilenames() ?
-                NaturalPathFileIDHelper::class :
-                HashPathFileIDHelper::class
+                NaturalFileIDHelper::class :
+                HashFileIDHelper::class
         );
     }
 
@@ -793,10 +802,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
-     * Get Filename and Variant from fileid
+     * Get Filename and Variant from FileID
      *
      * @param string $fileID
      * @return array
+     * @deprecated 1.4.0 Use `$this->getDefaultFileIDHelper()->parseFileID()` instead.
      */
     protected function parseFileID($fileID)
     {
@@ -808,26 +818,27 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * Try to parse a file ID using the old SilverStripe 3 format legacy or the SS4 legacy filename format.
      *
      * @param string $fileID
-     * @return array
+     * @return ParsedFileID
      */
     private function parseLegacyFileID($fileID)
     {
-        // assets/folder/_resampled/ResizedImageWzEwMCwxMzNd/basename.extension
-        $ss3Pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
-        // assets/folder/basename__ResizedImageWzEwMCwxMzNd.extension
-        $ss4LegacyPattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        $helperClasses = [
+            LegacyFileIDHelper::class,
+            NaturalFileIDHelper::class
+        ];
 
-        // not a valid file (or not a part of the filesystem)
-        if (!preg_match($ss3Pattern, $fileID, $matches) && !preg_match($ss4LegacyPattern, $fileID, $matches)) {
-            return null;
+        // Go through a list of possible file parser and try to find one that works
+        foreach ($helperClasses as $helperClass) {
+            /** @var FileIDHelper $helper */
+            $helper = Injector::inst()->get($helperClass);
+            $parsedFileID = $helper->parseFileID($fileID);
+            if ($parsedFileID) {
+                return $parsedFileID;
+            }
         }
 
-        $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
-        $variant = isset($matches['variant']) ? $matches['variant'] : null;
-        return [
-            'Filename' => $filename,
-            'Variant' => $variant
-        ];
+        // Couldn't find any
+        return null;
     }
 
     /**
@@ -835,6 +846,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID Adapter specific identifier for this file/version
      * @return string Filename for this file, omitting hash and variant
+     * @deprecated 1.4.0 Use `$this->getDefaultFileIDHelper()->parseFileID()->getFilename()` instead
      */
     protected function getOriginalFilename($fileID)
     {
@@ -847,6 +859,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID
      * @return string
+     * @deprecated 1.4.0 Use `$this->getDefaultFileIDHelper()->parseFileID()->getVariant()` instead
      */
     protected function getVariant($fileID)
     {
@@ -862,12 +875,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function removeVariant($fileID)
     {
-        $parsedFiledID = $this->getDefaultFileIDHelper()->parseFileID($fileID);
+        $helper = $this->getDefaultFileIDHelper();
+        $parsedFiledID = $helper->parseFileID($fileID);
         if ($parsedFiledID) {
-            $variant = $parsedFiledID->getVariant($fileID);
-            if ($variant) {
-                return str_replace("__{$variant}", '', $fileID);
-            }
+            return $helper->buildFileID($parsedFiledID->getFilename(), $parsedFiledID->getHash());
         }
 
         return $fileID;
@@ -882,13 +893,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $hash Hash of original file
      * @param string $variant (if given)
      * @return string Adapter specific identifier for this file/version
+     * @deprecated 1.4.0 Use `$this->getDefaultFileIDHelper()->buildFileID()` instead.
      */
     protected function getFileID($filename, $hash, $variant = null)
     {
         return $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
     }
-
-
 
     /**
      * Ensure each adapter re-generates its own server configuration files
@@ -965,19 +975,21 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             return '';
         }
 
-        $parsedFileID = $this->parseFileID($asset);
-        if ($parsedFileID && $parsedFileID['Hash']) {
+        $helper = $this->getDefaultFileIDHelper();
+
+        $parsedFileID = $helper->parseFileID($asset);
+        if ($parsedFileID && $parsedFileID->getHash()) {
             // Try to find a live version of this file
             $stage = Versioned::get_stage();
             Versioned::set_stage(Versioned::LIVE);
-            $file = File::get()->filter(['FileFilename' => $parsedFileID['Filename']])->first();
+            $file = File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
             Versioned::set_stage($stage);
 
             // If we found a matching live file, let's see if our hash was publish at any point
             if ($file) {
                 $oldVersionCount = $file->allVersions(
                     [
-                        ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID['Hash']) . '%'],
+                        ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID->getHash()) . '%'],
                         ['not "FileHash" like ?' => DB::get_conn()->escapeString($file->getHash())],
                         '"WasPublished"' => true
                     ],
@@ -986,7 +998,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 )->count();
                 // Our hash was published at some other stage
                 if ($oldVersionCount > 0) {
-                    return $this->getFileID($file->getFilename(), $file->getHash(), $parsedFileID['Variant']);
+                    return $helper->buildFileID(
+                        $file->getFilename(),
+                        $file->getHash(),
+                        $parsedFileID->getVariant()
+                    );
                 }
             }
         }
@@ -994,8 +1010,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Let's see if $asset is a legacy URL that can be map to a current file
         $parsedFileID = $this->parseLegacyFileID($asset);
         if ($parsedFileID) {
-            $filename = $parsedFileID['Filename'];
-            $variant = $parsedFileID['Variant'];
+            $filename = $parsedFileID->getFilename();
+            $variant = $parsedFileID->getVariant();
             // Let's try to match the plain file name
             $stage = Versioned::get_stage();
             Versioned::set_stage(Versioned::LIVE);
@@ -1003,7 +1019,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             Versioned::set_stage($stage);
 
             if ($file) {
-                return $this->getFileID($filename, $file->getHash(), $variant);
+                return $helper->buildFileID($filename, $file->getHash(), $variant);
             }
         }
 

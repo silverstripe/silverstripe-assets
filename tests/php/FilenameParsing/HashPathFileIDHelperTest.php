@@ -1,14 +1,14 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-use SilverStripe\Assets\FilenameParsing\HashPathFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 
-class HashPathFileIDHelperTest extends FileIDHelperTester
+class HashFileIDHelperTest extends FileIDHelperTester
 {
 
     protected function getHelper()
     {
-        return new HashPathFileIDHelper();
+        return new HashFileIDHelper();
     }
 
     /**
@@ -37,7 +37,7 @@ class HashPathFileIDHelperTest extends FileIDHelperTester
             [
                 'subfolder/under_score/abcdef7890/sam_double_dots__resizeXYZ.tar.gz', [
                     'subfolder/under_score/sam_double_dots.tar.gz', 'abcdef7890', 'resizeXYZ'
-            ]],
+                ]],
         ];
     }
 
@@ -89,5 +89,4 @@ class HashPathFileIDHelperTest extends FileIDHelperTester
             ['folder/not10characters/sam.jpg'],
         ];
     }
-
 }

@@ -5,17 +5,21 @@ namespace SilverStripe\Assets\FilenameParsing;
 use SilverStripe\Core\Injector\Injectable;
 
 /**
- * Parsed SS3 style legacy asset URLs. e.g.: `Uploads/_resampled/ResizedImageWzYwLDgwXQ/sam.jpg`
+ * Parsed Natural path URLs. Natural path are the same hashless path that appear in the CMS.
  *
- * SS3 legacy paths are no longer used in SilverStripe 4, but a way to parse them is needed for redirecting old SS3
- * urls.
+ * Natural paths are used by the public adapter from SilverStripe 4.4 and on the protected adapter when
+ * `legacy_filenames` is enabled.
+ *
+ * e.g.: `Uploads/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class LegacyPathFileIDHelper implements FileIDHelper
+class NaturalFileIDHelper implements FileIDHelper
 {
     use Injectable;
 
     public function buildFileID($filename, $hash, $variant = null)
     {
+        // Since we use double underscore to delimit variants, eradicate them from filename
+        $filename = $this->cleanFilename($filename);
         $name = basename($filename);
 
         // Split extension
@@ -29,14 +33,13 @@ class LegacyPathFileIDHelper implements FileIDHelper
 
         // Add directory
         $dirname = ltrim(dirname($filename), '.');
+        if ($dirname) {
+            $fileID = $dirname . '/' . $fileID;
+        }
 
         // Add variant
         if ($variant) {
-            $fileID = '_resampled/' . $variant . '/' . $fileID;
-        }
-
-        if ($dirname) {
-            $fileID = $dirname . '/' . $fileID;
+            $fileID .= '__' . $variant;
         }
 
         // Add extension
@@ -47,21 +50,16 @@ class LegacyPathFileIDHelper implements FileIDHelper
         return $fileID;
     }
 
+
     public function cleanFilename($filename)
     {
-        // There's not really any relevant cleaning rule for legacy. It's not important any way because we won't
-        // generating legacy URLs, aside from maybe for testing.
-        return $filename;
+        // Since we use double underscore to delimit variants, eradicate them from filename
+        return preg_replace('/_{2,}/', '_', $filename);
     }
 
-    /**
-     * @note LegacyPathFileIDHelper is meant to fail when parsing newer format fileIDs with a variant e.g.:
-     * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without variant, it should return the same
-     * results as natural paths.
-     */
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {

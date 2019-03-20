@@ -13,7 +13,7 @@ use SilverStripe\Core\Injector\Injectable;
  *
  * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class HashPathFileIDHelper implements FileIDHelper
+class HashFileIDHelper implements FileIDHelper
 {
     use Injectable;
 

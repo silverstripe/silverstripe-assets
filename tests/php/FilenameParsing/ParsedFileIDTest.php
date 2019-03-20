@@ -1,7 +1,6 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Dev\SapphireTest;
 
@@ -35,5 +34,4 @@ class ParsedFileIDTest extends SapphireTest
         $this->assertEquals('resizeXYZ', $tuple['Variant']);
         $this->assertEquals('abcdef7890', $tuple['Hash']);
     }
-
 }

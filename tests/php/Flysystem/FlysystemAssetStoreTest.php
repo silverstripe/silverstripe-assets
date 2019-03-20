@@ -60,11 +60,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->publicAdapter->expects($this->once())->method('getPublicUrl')->willReturn('public.jpg');
         $this->protectedFilesystem->expects($this->never())->method('has');
 
-        /** @var FlysystemAssetStore|PHPUnit_Framework_MockObject_MockObject $assetStore */
-        $assetStore = $this->getMockBuilder(FlysystemAssetStore::class)
-            ->setMethods(['getFileID'])
-            ->getMock();
-        $assetStore->expects($this->once())->method('getFileID')->willReturn('public.jpg');
+        $assetStore = new FlysystemAssetStore();
 
         $assetStore->setPublicFilesystem($this->publicFilesystem);
         $assetStore->setProtectedFilesystem($this->protectedFilesystem);
@@ -83,12 +79,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->protectedFilesystem->expects($this->once())->method('has')->willReturn(true);
         $this->protectedAdapter->expects($this->once())->method('getProtectedUrl')->willReturn('protected.jpg');
 
-        /** @var FlysystemAssetStore|PHPUnit_Framework_MockObject_MockObject $assetStore */
-        $assetStore = $this->getMockBuilder(FlysystemAssetStore::class)
-            ->setMethods(['getFileID', 'grant'])
-            ->getMock();
-        $assetStore->expects($this->once())->method('getFileID')->willReturn('protected.jpg');
-        $assetStore->expects($grant ? $this->once() : $this->never())->method('grant');
+        $assetStore = new FlysystemAssetStore();
 
         $assetStore->setPublicFilesystem($this->publicFilesystem);
         $assetStore->setProtectedFilesystem($this->protectedFilesystem);

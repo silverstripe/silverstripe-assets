@@ -27,7 +27,7 @@ class ParsedFileID
      * @param string $variant
      * @param string $hash
      */
-    public function __construct($fileID, $filename, $variant='', $hash='')
+    public function __construct($fileID, $filename, $variant = '', $hash = '')
     {
         $this->fileID = $fileID;
         $this->filename = $filename;
@@ -83,7 +83,4 @@ class ParsedFileID
             'Hash'      => $this->hash ?: null
         ];
     }
-
-
-
 }

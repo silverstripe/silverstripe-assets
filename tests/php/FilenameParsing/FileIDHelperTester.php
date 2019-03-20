@@ -1,7 +1,6 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Dev\SapphireTest;
@@ -16,32 +15,32 @@ abstract class FileIDHelperTester extends SapphireTest
     /**
      * @return FileIDHelper
      */
-    protected abstract function getHelper();
+    abstract protected function getHelper();
 
     /**
      * List of valid file IDs and their matching component. The first parameter can be use the deduc the second, and
      * the second can be used to build the first.
      * @return array
      */
-    public abstract function fileIDComponents();
+    abstract public function fileIDComponents();
 
     /**
      * List of unclean buildFileID inputs and their expected output. Second parameter can build the first, but not the
      * other way around.
      * @return array
      */
-    public abstract function dirtyFileIDComponents();
+    abstract public function dirtyFileIDComponents();
 
     /**
      * List of potentially dirty filename and their clean equivalent
      * @return array
      */
-    public abstract function dirtyFilenames();
+    abstract public function dirtyFilenames();
 
     /**
      * List of broken file ID that will break the hash parser regex.
      */
-    public abstract function brokenFileID();
+    abstract public function brokenFileID();
 
     /**
      * @dataProvider fileIDComponents
@@ -60,7 +59,7 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testCleanFilename($expected, $input)
     {
         $help = $this->getHelper();
-        $this->assertEquals($expected , $help->cleanFilename($input));
+        $this->assertEquals($expected, $help->cleanFilename($input));
     }
 
     /**

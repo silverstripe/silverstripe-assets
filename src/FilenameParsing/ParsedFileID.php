@@ -36,6 +36,7 @@ class ParsedFileID
     }
 
     /**
+     * The Original File ID that was parsed.
      * @return string
      */
     public function getOriginalFileID()
@@ -44,6 +45,7 @@ class ParsedFileID
     }
 
     /**
+     * Filename component.
      * @return string
      */
     public function getFilename()
@@ -52,6 +54,7 @@ class ParsedFileID
     }
 
     /**
+     * Variant component. Usually a string representing some resized version of an image.
      * @return string
      */
     public function getVariant()
@@ -60,6 +63,7 @@ class ParsedFileID
     }
 
     /**
+     * Hash build from the content of the file. Usually the first 10 characters of sha1 hash.
      * @return string
      */
     public function getHash()
@@ -67,22 +71,17 @@ class ParsedFileID
         return $this->hash;
     }
 
-
+    /**
+     * Convert this parsed file ID to an array representation.
+     * @return array
+     */
     public function getTuple()
     {
-        $tuple = [
-            'Filename' => $this->filename
+        return [
+            'Filename'  => $this->filename,
+            'Variant'   => $this->variant ?: null,
+            'Hash'      => $this->hash ?: null
         ];
-
-        if ($this->variant) {
-            $tuple['Variant'] = $this->variant;
-        }
-
-        if ($this->hash) {
-            $tuple['Hash'] = $this->hash;
-        }
-
-        return $tuple;
     }
 
 

@@ -2,6 +2,9 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
+/**
+ * Helps build and parse FileIDs according to a predefined format.
+ */
 interface FileIDHelper
 {
 
@@ -25,10 +28,10 @@ interface FileIDHelper
     public function cleanFilename($filename);
 
     /**
-     * Get Filename, Variant and Hash from a file id
+     * Get Filename, Variant and Hash from a fileID. If a FileID can not be parsed, returns `null`.
      *
      * @param string $fileID
-     * @return ParsedFileID
+     * @return ParsedFileID|null
      */
     public function parseFileID($fileID);
 

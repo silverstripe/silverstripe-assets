@@ -4,20 +4,24 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use SilverStripe\Core\Injector\Injectable;
 
+/**
+ * Parsed Hash path URLs. Hash path group a file and its variant under a directory based on an hash generated from the
+ * content of the original file.
+ *
+ * Hash path are used by the Protected asset adapter and was the default for the public adapter prior to
+ * SilverStripe 4.4.
+ *
+ * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`
+ */
 class HashPathFileIDHelper implements FileIDHelper
 {
     use Injectable;
 
+    /**
+     * Default length at which hashes are truncated.
+     */
     const HASH_TRUNCATE_LENGTH = 10;
 
-    /**
-     * Map file tuple (hash, name, variant) to a filename to be used by flysystem
-     *
-     * @param string $filename Name of file
-     * @param string $hash Hash of original file
-     * @param string $variant (if given)
-     * @return string Adapter specific identifier for this file/version
-     */
     public function buildFileID($filename, $hash, $variant = null)
     {
         // Since we use double underscore to delimit variants, eradicate them from filename
@@ -52,25 +56,12 @@ class HashPathFileIDHelper implements FileIDHelper
         return $fileID;
     }
 
-
-    /**
-     * Performs filename cleanup before sending it back.
-     *
-     * @param string $filename
-     * @return string
-     */
     public function cleanFilename($filename)
     {
         // Since we use double underscore to delimit variants, eradicate them from filename
         return preg_replace('/_{2,}/', '_', $filename);
     }
 
-    /**
-     * Get Filename, Variant and Hash from a file id
-     *
-     * @param string $fileID
-     * @return ParsedFileID
-     */
     public function parseFileID($fileID)
     {
         $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-zA-Z0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';

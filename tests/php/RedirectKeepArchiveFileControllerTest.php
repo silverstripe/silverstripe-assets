@@ -94,4 +94,107 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             'Old Hash URL of unpublished files should return 200 when access is granted'
         );
     }
+
+    /**
+     * When keeping archives. The old files should still be there. So the protected adapter should deny you access to
+     * them.
+     *
+     * @dataProvider fileList
+     */
+    public function testRedirectAfterDeleting($fixtureID)
+    {
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, $fixtureID);
+        $file->publishSingle();
+        $v1Url = $file->getURL(false);
+
+        $file->setFromString('version 2', $file->getFilename());
+        $file->write();
+        $file->publishSingle();
+        $v2Url = $file->getURL(false);
+
+        $file->doUnpublish();
+        $file->delete();
+
+        $response = $this->get('/assets/' . $file->getFilename());
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Legacy URL of archived files should return 404'
+        );
+
+        $response = $this->get($v1Url);
+        $this->assertResponse(
+            403,
+            '',
+            false,
+            $response,
+            'Old Hash URL of archived files should return 403'
+        );
+
+        $response = $this->get($v2Url);
+        $this->assertResponse(
+            403,
+            '',
+            false,
+            $response,
+            'Archived file should return 403'
+        );
+    }
+
+    /**
+     * When keeping archives. The old files should still be there. So the protected adapter should deny you access to
+     * them.
+     *
+     * @dataProvider fileList
+     */
+    public function testResolvedArchivedFile($fixtureID)
+    {
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, $fixtureID);
+        $file->publishSingle();
+        $v1Url = $file->getURL(false);
+        $v1Hash = $file->getHash();
+
+        $file->setFromString('version 2', $file->getFilename());
+        $file->write();
+        $file->publishSingle();
+        $v2Url = $file->getURL(false);
+        $v2Hash = $file->getHash();
+
+        $file->doUnpublish();
+        $file->delete();
+
+        $this->getAssetStore()->grant($file->getFilename(), $v1Hash);
+        $this->getAssetStore()->grant($file->getFilename(), $v2Hash);
+
+        $response = $this->get('/assets/' . $file->getFilename());
+        $this->assertResponse(
+            404,
+            '',
+            false,
+            $response,
+            'Legacy URL of archived files should return 404'
+        );
+
+        $response = $this->get($v1Url);
+        $this->assertResponse(
+            200,
+            'version 1',
+            false,
+            $response,
+            'Older versions of archived file should resolve when access is granted'
+        );
+
+        $response = $this->get($v2Url);
+        $this->assertResponse(
+            200,
+            'version 2',
+            false,
+            $response,
+            'Archived files should resolve when access is granted'
+        );
+    }
 }

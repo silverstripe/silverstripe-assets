@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Dev;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Filesystem as SSFilesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
@@ -76,6 +77,8 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         $backend = new TestAssetStore();
         $backend->setPublicFilesystem($publicFilesystem);
         $backend->setProtectedFilesystem($protectedFilesystem);
+        $backend->setPublicResolutionStrategy(Injector::inst()->get(FileResolutionStrategy::class . '.public'));
+        $backend->setProtectedResolutionStrategy(Injector::inst()->get(FileResolutionStrategy::class . '.protected'));
         Injector::inst()->registerService($backend, AssetStore::class);
         Injector::inst()->registerService($backend, AssetStoreRouter::class);
 

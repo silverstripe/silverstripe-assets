@@ -22,6 +22,25 @@ SilverStripe\Core\Injector\Injector:
       FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\ProtectedAdapter'
       FilesystemConfig:
         visibility: private
+  # Define public resolution strategy
+  SilverStripe\Assets\FilenameParsing\FileResolutionStrategy.public:
+    class: SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy
+    properties:
+      ResolutionFileIDHelpers:
+        - '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
+        - '%$SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper'
+        - '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
+      DefaultFileIDHelper: '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
+      VersionedStage: Live
+  # Define protected resolution strategy
+  SilverStripe\Assets\FilenameParsing\FileResolutionStrategy.protected:
+    class: SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy
+    properties:
+      DefaultFileIDHelper: '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
+      ResolutionFileIDHelpers:
+        - '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
+        - '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
+      VersionedStage: Stage
 ---
 Name: assetscore
 ---

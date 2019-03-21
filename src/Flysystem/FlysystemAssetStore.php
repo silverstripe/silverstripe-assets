@@ -11,6 +11,7 @@ use League\Flysystem\Util;
 use LogicException;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
@@ -51,6 +52,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @var Filesystem
      */
     private $protectedFilesystem = null;
+
+    /**
+     * File resolution strategy to use with the public adapter.
+     * @var FileResolutionStrategy
+     */
+    private $publicResolutionStrategy = null;
+
+    /**
+     * File resolution strategy to use with the protected adapter.
+     * @var FileResolutionStrategy
+     */
+    private $protectedResolutionStrategy = null;
 
     /**
      * Enable to use legacy filename behaviour (omits hash)
@@ -165,6 +178,38 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             throw new Exception("Filesystem misconfiguration error");
         }
         return $this->protectedFilesystem;
+    }
+
+    /**
+     * @return FileResolutionStrategy
+     */
+    public function getPublicResolutionStrategy()
+    {
+        return $this->publicResolutionStrategy;
+    }
+
+    /**
+     * @param FileResolutionStrategy $publicResolutionStrategy
+     */
+    public function setPublicResolutionStrategy($publicResolutionStrategy)
+    {
+        $this->publicResolutionStrategy = $publicResolutionStrategy;
+    }
+
+    /**
+     * @return FileResolutionStrategy
+     */
+    public function getProtectedResolutionStrategy()
+    {
+        return $this->protectedResolutionStrategy;
+    }
+
+    /**
+     * @param FileResolutionStrategy $protectedResolutionStrategy
+     */
+    public function setProtectedResolutionStrategy($protectedResolutionStrategy)
+    {
+        $this->protectedResolutionStrategy = $protectedResolutionStrategy;
     }
 
     /**
@@ -928,7 +973,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getResponseFor($asset)
     {
-
         $public = $this->getPublicFilesystem();
         $protected = $this->getProtectedFilesystem();
 
@@ -944,14 +988,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // We might be able to redirect to a live version.
         }
 
-        // If we found a URL to redirect to
-        if ($redirectUrl = $this->searchForEquivalentFileID($asset)) {
-            if ($redirectUrl != $asset && $public->has($redirectUrl)) {
-                return $this->createRedirectResponse($redirectUrl);
-            } else {
-                // Something weird is going on e.g. a publish file without a physical file
-                return $this->createMissingResponse();
-            }
+        // Check if we can find a URL to redirect to
+        $strategy = $this->getPublicResolutionStrategy();
+        if ($strategy && $redirectUrl = $strategy->resolveFileID($asset, $public)) {
+            return $this->createRedirectResponse($redirectUrl);
         }
 
         // Deny if file is protected and denied

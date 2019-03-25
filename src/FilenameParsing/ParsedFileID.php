@@ -22,17 +22,17 @@ class ParsedFileID
 
     /**
      * ParsedFileID constructor.
-     * @param string $fileID
      * @param string $filename
-     * @param string $variant
      * @param string $hash
+     * @param string $variant
+     * @param string $fileID Original FileID use to generate this ParsedFileID
      */
-    public function __construct($fileID, $filename, $variant = '', $hash = '')
+    public function __construct($filename, $hash = '', $variant = '', $fileID = '')
     {
-        $this->fileID = $fileID;
         $this->filename = $filename;
-        $this->variant = $variant ?: '';
         $this->hash = $hash ?: '';
+        $this->variant = $variant ?: '';
+        $this->fileID = $fileID ?: '';
     }
 
     /**

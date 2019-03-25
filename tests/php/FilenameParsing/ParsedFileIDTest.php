@@ -9,8 +9,7 @@ class ParsedFileIDTest extends SapphireTest
 
     public function testHashlessVariantlessFileID()
     {
-        $pFileId = new ParsedFileID('rando/original/filename.jpg', 'sam.jpg');
-        $this->assertEquals('rando/original/filename.jpg', $pFileId->getOriginalFileID());
+        $pFileId = new ParsedFileID('sam.jpg');
         $this->assertEquals('sam.jpg', $pFileId->getFilename());
         $this->assertEmpty($pFileId->getVariant());
         $this->assertEmpty($pFileId->getHash());
@@ -23,7 +22,12 @@ class ParsedFileIDTest extends SapphireTest
 
     public function testHashVariantFileID()
     {
-        $pFileId = new ParsedFileID('rando/original/filename.jpg', 'sam.jpg', 'resizeXYZ', 'abcdef7890');
+        $pFileId = new ParsedFileID(
+            'sam.jpg',
+            'abcdef7890',
+            'resizeXYZ',
+            'rando/original/filename.jpg'
+        );
         $this->assertEquals('rando/original/filename.jpg', $pFileId->getOriginalFileID());
         $this->assertEquals('sam.jpg', $pFileId->getFilename());
         $this->assertEquals('resizeXYZ', $pFileId->getVariant());

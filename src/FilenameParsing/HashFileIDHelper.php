@@ -73,10 +73,10 @@ class HashFileIDHelper implements FileIDHelper
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
         return new ParsedFileID(
-            $fileID,
             $filename,
+            isset($matches['hash']) ? $matches['hash'] : '',
             isset($matches['variant']) ? $matches['variant'] : '',
-            isset($matches['hash']) ? $matches['hash'] : ''
+            $fileID
         );
     }
 }

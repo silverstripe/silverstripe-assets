@@ -53,7 +53,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $hash = $parsedFileID->getHash();
 
             $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
-            if ($tuple && $redirect = $this->searchForTuple($tuple, $adapter)) {
+            if ($tuple && $redirect = $this->searchForTuple($tuple, $adapter, false)) {
                 return $redirect;
             }
 
@@ -71,10 +71,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     private function resolveWithHash(ParsedFileID $parsedFileID)
     {
         // Try to find a version for a given stage
-        $stage = Versioned::get_stage();
-        Versioned::set_stage($this->getVersionedStage());
-        $file = File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
-        Versioned::set_stage($stage);
+        /** @var File $file */
+        $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
+            Versioned::set_stage($this->getVersionedStage());
+            return File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
+        });
 
         // Could not find a valid file, let's bail.
         if (!$file) {
@@ -114,11 +115,13 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $filename = $parsedFileID->getFilename();
         $variant = $parsedFileID->getVariant();
+
         // Let's try to match the plain file name
-        $stage = Versioned::get_stage();
-        Versioned::set_stage($this->getVersionedStage());
-        $file = File::get()->filter(['FileFilename' => $filename])->first();
-        Versioned::set_stage($stage);
+        /** @var File $file */
+        $file = Versioned::withVersionedMode(function () use ($filename) {
+            Versioned::set_stage($this->getVersionedStage());
+            return File::get()->filter(['FileFilename' => $filename])->first();
+        });
 
         if ($file) {
             return [
@@ -129,38 +132,79 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
     }
 
-    /**
-     * Given a file tuple, try to find it on this adapter using one of the supported format.
-     * @param array $tuple
-     * @return null
-     */
-    public function searchForTuple($tuple, Filesystem $adapter)
+    public function searchForTuple($tuple, Filesystem $adapter, $strict = true)
     {
-        // Pre-format our tuple
-        if (is_array($tuple)) {
-            $tupleData = $tuple;
-        } elseif ($tuple instanceof ParsedFileID) {
-            $tupleData = $tuple->getTuple();
-        } else {
-            throw new \InvalidArgumentException(
-                'AssetAdapter::hashForTuple expect $tuples to be an array or a ParsedFileID'
-            );
-        }
-        $filename = $tupleData['Filename'];
-        $hash = $tupleData['Hash'];
-        $variant = $tupleData['Variant'];
-
-
+        $parsedFileID = $this->preProcessTuple($tuple);
         $helpers = $this->getResolutionFileIDHelpers();
         array_unshift($helpers, $this->getDefaultFileIDHelper());
 
+        $enforceHash = $strict && $tuple->getHash();
+
         foreach ($helpers as $helper) {
-            $fileID = $helper->buildFileID($filename, $hash, $variant);
+            $fileID = $helper->buildFileID(
+                $parsedFileID->getFilename(),
+                $parsedFileID->getHash(),
+                $parsedFileID->getVariant()
+            );
             if ($adapter->has($fileID)) {
+                if ($enforceHash && !$this->validateHash($helper, $parsedFileID, $adapter)) {
+                    // We found a file, but its hash doesn't match the hash of our tuple.
+                     continue;
+                }
                 return $fileID;
             }
         }
         return null;
+    }
+
+    /**
+     * Try to validate the hash of a physical file against the expected hash from the parsed file ID.
+     * @param FileIDHelper $helper
+     * @param ParsedFileID $parsedFileID
+     * @param Filesystem $adapter
+     * @return bool
+     */
+    private function validateHash(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $adapter)
+    {
+        // We assumme that hashless parsed file ID are always valid
+        if (!$parsedFileID->getHash()) {
+            return true;
+        }
+
+        // Re build the file ID but without the variant
+        $fileID = $helper->buildFileID(
+            $parsedFileID->getFilename(),
+            $parsedFileID->getHash()
+        );
+
+        // Couldn't find the original file, let's bail.
+        if (!$adapter->has($fileID)) {
+            return false;
+        }
+
+        // Check if the physical hash of the file starts with our parsed file ID hash
+        $actualHash = sha1($adapter->read($fileID));
+        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+    }
+
+    /**
+     * Receive a tuple under various formats and normalise it back to a ParsedFileID object.
+     * @param $tuple
+     * @return ParsedFileID
+     * @throws \InvalidArgumentException
+     */
+    private function preProcessTuple($tuple)
+    {
+        // Pre-format our tuple
+        if ($tuple instanceof ParsedFileID) {
+            return $tuple;
+        } elseif (!is_array($tuple)) {
+            throw new \InvalidArgumentException(
+                'AssetAdapter expect $tuples to be an array or a ParsedFileID'
+            );
+        }
+
+        return new ParsedFileID($tuple['Filename'], $tuple['Hash'], $tuple['Variant']);
     }
 
     /**
@@ -190,7 +234,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     /**
      * @param FileIDHelper[] $resolutionFileIDHelpers
      */
-    public function setResolutionFileIDHelpers($resolutionFileIDHelpers)
+    public function setResolutionFileIDHelpers(array $resolutionFileIDHelpers)
     {
         $this->resolutionFileIDHelpers = $resolutionFileIDHelpers;
     }
@@ -209,5 +253,16 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     public function setVersionedStage($versionedStage)
     {
         $this->versionedStage = $versionedStage;
+    }
+
+
+    public function buildFileID($tuple)
+    {
+        $parsedFileID = $this->preProcessTuple($tuple);
+        return $this->getDefaultFileIDHelper()->buildFileID(
+            $parsedFileID->getFilename(),
+            $parsedFileID->getHash(),
+            $parsedFileID->getVariant()
+        );
     }
 }

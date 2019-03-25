@@ -68,9 +68,10 @@ class NaturalFileIDHelper implements FileIDHelper
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
         return new ParsedFileID(
-            $fileID,
             $filename,
-            isset($matches['variant']) ? $matches['variant'] : ''
+            '',
+            isset($matches['variant']) ? $matches['variant'] : '',
+            $fileID
         );
     }
 }

@@ -76,4 +76,21 @@ class LegacyFileIDHelper implements FileIDHelper
             $fileID
         );
     }
+
+    public function isVariantOf($fileID, ParsedFileID $original)
+    {
+        $variant = $this->parseFileID($fileID);
+        return $variant && $variant->getFilename() == $original->getFilename();
+    }
+
+    public function lookForVariantIn(ParsedFileID $parsedFileID)
+    {
+        $folder = dirname($parsedFileID->getFilename());
+        if ($folder == '.') {
+            $folder = '';
+        } else {
+            $folder .= '/';
+        }
+        return $folder . '_resampled';
+    }
 }

@@ -43,6 +43,18 @@ abstract class FileIDHelperTester extends SapphireTest
     abstract public function brokenFileID();
 
     /**
+     * List of `fileID` and `original` parsedFileID and whatever the `fileID` is a variant of `original`
+     * @return array[]
+     */
+    abstract public function variantOf();
+
+    /**
+     * List of parsedFieldID and a matching expected path where its variants should be search for.
+     * @return array[]
+     */
+    abstract public function variantIn();
+
+    /**
      * @dataProvider fileIDComponents
      * @dataProvider dirtyFileIDComponents
      */
@@ -90,4 +102,26 @@ abstract class FileIDHelperTester extends SapphireTest
         $parsedFiledID = $help->parseFileID($input);
         $this->assertNull($parsedFiledID);
     }
+
+
+    /**
+     * @dataProvider variantOf
+     */
+    public function testVariantOf($variantFileID, ParsedFileID $original, $expected)
+    {
+        $help = $this->getHelper();
+        $isVariantOf = $help->isVariantOf($variantFileID, $original);
+        $this->assertEquals($expected, $isVariantOf);
+    }
+
+    /**
+     * @dataProvider variantIn
+     */
+    public function testLookForVariantIn(ParsedFileID $original, $expected)
+    {
+        $help = $this->getHelper();
+        $path = $help->lookForVariantIn($original);
+        $this->assertEquals($expected, $path);
+    }
+
 }

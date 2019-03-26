@@ -35,7 +35,7 @@ class HashFileIDHelper implements FileIDHelper
             $name = substr($name, 0, $pos);
         }
 
-        $fileID = substr($hash, 0, self::HASH_TRUNCATE_LENGTH) . '/' . $name;
+        $fileID = $this->truncate($hash) . '/' . $name;
 
         // Add directory
         $dirname = ltrim(dirname($filename), '.');
@@ -79,4 +79,34 @@ class HashFileIDHelper implements FileIDHelper
             $fileID
         );
     }
+
+    public function isVariantOf($fileID, ParsedFileID $original)
+    {
+        $variant = $this->parseFileID($fileID);
+        return $variant &&
+            $variant->getFilename() == $original->getFilename() &&
+            $variant->getHash() == $this->truncate($original->getHash());
+    }
+
+    public function lookForVariantIn(ParsedFileID $parsedFileID)
+    {
+        $folder = dirname($parsedFileID->getFilename());
+        if ($folder == '.') {
+            $folder = '';
+        } else {
+            $folder .= '/';
+        }
+        return  $folder . $this->truncate($parsedFileID->getHash());
+    }
+
+    /**
+     * Truncate a hash to a predefined length
+     * @param $hash
+     * @return string
+     */
+    private function truncate($hash)
+    {
+        return substr($hash, 0, self::HASH_TRUNCATE_LENGTH);
+    }
+
 }

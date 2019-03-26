@@ -2,6 +2,7 @@
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
 class HashFileIDHelperTest extends FileIDHelperTester
 {
@@ -11,11 +12,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
         return new HashFileIDHelper();
     }
 
-    /**
-     * List of valid file IDs and their matching component. The first parameter can be use the deduc the second, and
-     * the second can be used to build the first.
-     * @return array
-     */
     public function fileIDComponents()
     {
         return [
@@ -41,11 +37,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of unclean buildFileID inputs and their expected output. Second parameter can build the first, but not the
-     * other way around.
-     * @return array
-     */
     public function dirtyFileIDComponents()
     {
         return [
@@ -62,10 +53,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of potentially dirty filename and their clean equivalent
-     * @return array
-     */
     function dirtyFilenames()
     {
         return [
@@ -77,9 +64,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of broken file ID that will break the hash parser regex.
-     */
     public function brokenFileID()
     {
         return [
@@ -87,6 +71,74 @@ class HashFileIDHelperTest extends FileIDHelperTester
             ['sam__resizeXYZ.jpg'],
             ['folder//sam.jpg'],
             ['folder/not10characters/sam.jpg'],
+        ];
+    }
+
+    public function variantOf()
+    {
+        return [
+            [
+                'abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'abcdef7890/sam.jpg',
+                new ParsedFileID('sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'folder/abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'folder/abcdef7890/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'folder/abcdef7890/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef78901', 'truncate-10-char-hash'),
+                true
+            ],
+            [
+                'folder/abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890', 'ResizeXXX'),
+                true
+            ],
+            [
+                'folder/abcdef7890/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890', 'ResizeXXX'),
+                true
+            ],
+            [
+                'abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('wrong-folder/sam.jpg', 'abcdef7890'),
+                false
+            ],
+            [
+                'abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('sam.jpg', 'badhash'),
+                false
+            ],
+            [
+                'folder/abcdef7890/sam__ResizeXYZ.jpg',
+                new ParsedFileID('folder-wrong-file-name.jpg', 'abcdef7890'),
+                false
+            ],
+        ];
+    }
+
+    public function variantIn()
+    {
+        return [
+            [new ParsedFileID('sam.jpg', 'abcdef7890'), 'abcdef7890'],
+            [new ParsedFileID('folder/sam.jpg', 'abcdef7890'), 'folder/abcdef7890'],
+            [new ParsedFileID('sam.jpg', 'abcdef7890'), 'abcdef7890'],
+            [new ParsedFileID('folder/sam.jpg', 'abcdef7890'), 'folder/abcdef7890'],
+            [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef78901'), 'folder/abcdef7890'],
+            [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef7890', 'ResizeXXX'), 'folder/abcdef7890'],
         ];
     }
 }

@@ -34,4 +34,20 @@ interface FileIDHelper
      * @return ParsedFileID|null
      */
     public function parseFileID($fileID);
+
+    /**
+     * Determine if the provided fileID is a variant of `$parsedFileID`.
+     * @param string $fileID
+     * @param ParsedFileID $parsedFileID
+     * @return boolean
+     */
+    public function isVariantOf($fileID, ParsedFileID $parsedFileID);
+
+    /**
+     * Compute the relative path where variants of the provided parsed file ID are expected to be stored.
+     *
+     * @param ParsedFileID $parsedFileID
+     * @return string
+     */
+    public function lookForVariantIn(ParsedFileID $parsedFileID);
 }

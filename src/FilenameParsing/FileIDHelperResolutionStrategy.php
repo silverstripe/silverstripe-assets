@@ -265,4 +265,39 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $parsedFileID->getVariant()
         );
     }
+
+    public function findVariants($tuple, Filesystem $filesystem)
+    {
+        $parsedID = $this->preProcessTuple($tuple);
+
+        $helpers = $this->getResolutionFileIDHelpers();
+        array_unshift($helpers, $this->getDefaultFileIDHelper());
+
+        // Search for a helper that will allow us to find a file
+        /** @var FileIDHelper $helper */
+        $helper = null;
+        foreach ($helpers as $helperToTry) {
+            $fileID = $helperToTry->buildFileID(
+                $parsedFileID->getFilename(),
+                $parsedFileID->getHash()
+            );
+            if ($adapter->has($fileID)) {
+                $helper = $helperToTry;
+                break;
+            }
+        }
+
+        if (!$helper) {
+            // Could not find the file,
+            return null;
+        }
+
+        $folder = $helper->lookForVariantIn($parsedID);
+        $possibleVariants = $filesystem->listContents($folder, true);
+        foreach ($possibleVariants as $possibleVariant) {
+            if ($helper->isVariantOf($possibleVariant, $parsedID)) {
+                yield $possibleVariant;
+            }
+        }
+    }
 }

@@ -74,4 +74,16 @@ class NaturalFileIDHelper implements FileIDHelper
             $fileID
         );
     }
+
+    public function isVariantOf($fileID, ParsedFileID $original)
+    {
+        $variant = $this->parseFileID($fileID);
+        return $variant && $variant->getFilename() == $original->getFilename();
+    }
+
+    public function lookForVariantIn(ParsedFileID $parsedFileID)
+    {
+        $folder = dirname($parsedFileID->getFilename());
+        return $folder == '.' ? '' : $folder;
+    }
 }

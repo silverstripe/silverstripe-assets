@@ -2,6 +2,7 @@
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
 class LegacyFileIDHelperTest extends FileIDHelperTester
 {
@@ -11,11 +12,6 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
         return new LegacyFileIDHelper();
     }
 
-    /**
-     * List of valid file IDs and their matching component. The first parameter can be use the deduc the second, and
-     * the second can be used to build the first.
-     * @return array
-     */
     public function fileIDComponents()
     {
         return [
@@ -40,11 +36,6 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of unclean buildFileID inputs and their expected output. Second parameter can build the first, but not the
-     * other way around.
-     * @return array
-     */
     public function dirtyFileIDComponents()
     {
         return [
@@ -72,10 +63,6 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of potentially dirty filename and their clean equivalent
-     * @return array
-     */
     function dirtyFilenames()
     {
         return [
@@ -87,9 +74,6 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * List of broken file ID that will break the hash parser regex.
-     */
     public function brokenFileID()
     {
         return [
@@ -101,6 +85,94 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
             ['subfolder/sam__resizeXYZ.jpg'],
             ['abcdef7890/sam__resizeXYZ.jpg'],
             ['subfolder/abcdef7890/sam__resizeXYZ.jpg'],
+        ];
+    }
+
+    public function variantOf()
+    {
+        return [
+            [
+                '_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('sam.jpg'),
+                true
+            ],
+            [
+                'sam.jpg',
+                new ParsedFileID('sam.jpg'),
+                true
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('folder/sam.jpg'),
+                true
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('folder/sam.jpg'),
+                true
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890'),
+                true
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', '', 'ResizeXXX'),
+                true
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', '', 'ResizeXXX' ),
+                true
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890', 'ResizeXXX'),
+                true
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('folder/sam.jpg', 'abcdef7890', 'ResizeXXX'),
+                true
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('wrong-folder/sam.jpg', 'abcdef7890'),
+                false
+            ],
+            [
+                'folder/sam.jpg',
+                new ParsedFileID('wrong-file-name.jpg', 'folder'),
+                false
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('wrong-folder/sam.jpg', 'abcdef7890'),
+                false
+            ],
+            [
+                'folder/_resampled/ResizeXYZ/sam.jpg',
+                new ParsedFileID('wrong-file-name.jpg', 'folder'),
+                false
+            ],
+        ];
+    }
+
+    public function variantIn()
+    {
+        return [
+            [new ParsedFileID('sam.jpg', 'abcdef7890'), '_resampled'],
+            [new ParsedFileID('folder/sam.jpg', 'abcdef7890'), 'folder/_resampled'],
+            [new ParsedFileID('sam.jpg', 'abcdef7890'), '_resampled'],
+            [new ParsedFileID('folder/sam.jpg', 'abcdef7890'), 'folder/_resampled'],
+            [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef78901'), 'folder/_resampled'],
+            [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef7890', 'ResizeXXX'), 'folder/_resampled'],
         ];
     }
 }

@@ -37,7 +37,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      */
     private $versionedStage = Versioned::DRAFT;
 
-    public function resolveFileID($fileID, Filesystem $adapter)
+    public function resolveFileID($fileID, Filesystem $filesystem)
     {
         // If File is not versionable, let's bail
         if (!class_exists(Versioned::class) || !File::has_extension(Versioned::class)) {
@@ -53,7 +53,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $hash = $parsedFileID->getHash();
 
             $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
-            if ($tuple && $redirect = $this->searchForTuple($tuple, $adapter, false)) {
+
+            if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
                 return $redirect;
             }
 
@@ -66,7 +67,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     /**
      * Try to find a DB reference for this parsed file ID. Return a file tuple if a equivalent file is found.
      * @param ParsedFileID $parsedFileID
-     * @return array|null
+     * @return ParsedFileID|null
      */
     private function resolveWithHash(ParsedFileID $parsedFileID)
     {
@@ -80,6 +81,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         // Could not find a valid file, let's bail.
         if (!$file) {
             return null;
+        }
+
+        $dbHash = $file->getHash();
+        if (strpos($dbHash, $parsedFileID->getHash()) === 0) {
+            return $parsedFileID;
         }
 
         // If we found a matching live file, let's see if our hash was publish at any point
@@ -97,12 +103,10 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $oldVersionCount = $file->allVersions($versionFilters, "", 1)->count();
         // Our hash was published at some other stage
         if ($oldVersionCount > 0) {
-            return [
-                'Filename' => $file->getFilename(),
-                'Hash' => $file->getHash(),
-                'Variant' => $parsedFileID->getVariant()
-            ];
+            return new ParsedFileID($file->getFilename(), $file->getHash(), $parsedFileID->getVariant());
         }
+
+        return null;
     }
 
     /**
@@ -132,13 +136,13 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
     }
 
-    public function searchForTuple($tuple, Filesystem $adapter, $strict = true)
+    public function searchForTuple($tuple, Filesystem $filesystem, $strict = true)
     {
         $parsedFileID = $this->preProcessTuple($tuple);
         $helpers = $this->getResolutionFileIDHelpers();
         array_unshift($helpers, $this->getDefaultFileIDHelper());
 
-        $enforceHash = $strict && $tuple->getHash();
+        $enforceHash = $strict && $parsedFileID->getHash();
 
         foreach ($helpers as $helper) {
             $fileID = $helper->buildFileID(
@@ -146,8 +150,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 $parsedFileID->getHash(),
                 $parsedFileID->getVariant()
             );
-            if ($adapter->has($fileID)) {
-                if ($enforceHash && !$this->validateHash($helper, $parsedFileID, $adapter)) {
+            if ($filesystem->has($fileID)) {
+                if ($enforceHash && !$this->validateHash($helper, $parsedFileID, $filesystem)) {
                     // We found a file, but its hash doesn't match the hash of our tuple.
                      continue;
                 }
@@ -161,10 +165,10 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * Try to validate the hash of a physical file against the expected hash from the parsed file ID.
      * @param FileIDHelper $helper
      * @param ParsedFileID $parsedFileID
-     * @param Filesystem $adapter
+     * @param Filesystem $filesystem
      * @return bool
      */
-    private function validateHash(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $adapter)
+    private function validateHash(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $filesystem)
     {
         // We assumme that hashless parsed file ID are always valid
         if (!$parsedFileID->getHash()) {
@@ -178,12 +182,12 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         );
 
         // Couldn't find the original file, let's bail.
-        if (!$adapter->has($fileID)) {
+        if (!$filesystem->has($fileID)) {
             return false;
         }
 
         // Check if the physical hash of the file starts with our parsed file ID hash
-        $actualHash = sha1($adapter->read($fileID));
+        $actualHash = sha1($filesystem->read($fileID));
         return strpos($actualHash, $parsedFileID->getHash()) === 0;
     }
 
@@ -268,7 +272,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function findVariants($tuple, Filesystem $filesystem)
     {
-        $parsedID = $this->preProcessTuple($tuple);
+        $parsedFileID = $this->preProcessTuple($tuple);
 
         $helpers = $this->getResolutionFileIDHelpers();
         array_unshift($helpers, $this->getDefaultFileIDHelper());
@@ -281,7 +285,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 $parsedFileID->getFilename(),
                 $parsedFileID->getHash()
             );
-            if ($adapter->has($fileID)) {
+            if ($filesystem->has($fileID)) {
                 $helper = $helperToTry;
                 break;
             }
@@ -292,11 +296,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return null;
         }
 
-        $folder = $helper->lookForVariantIn($parsedID);
+        $folder = $helper->lookForVariantIn($parsedFileID);
         $possibleVariants = $filesystem->listContents($folder, true);
         foreach ($possibleVariants as $possibleVariant) {
-            if ($helper->isVariantOf($possibleVariant, $parsedID)) {
-                yield $possibleVariant;
+            if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
+                yield $possibleVariant['path'];
             }
         }
     }

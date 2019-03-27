@@ -128,7 +128,7 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
             ],
             [
                 'folder/sam.jpg',
-                new ParsedFileID('folder/sam.jpg', '', 'ResizeXXX' ),
+                new ParsedFileID('folder/sam.jpg', '', 'ResizeXXX'),
                 true
             ],
             [

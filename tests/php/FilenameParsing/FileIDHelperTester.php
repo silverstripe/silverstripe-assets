@@ -123,5 +123,4 @@ abstract class FileIDHelperTester extends SapphireTest
         $path = $help->lookForVariantIn($original);
         $this->assertEquals($expected, $path);
     }
-
 }

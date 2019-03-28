@@ -44,7 +44,7 @@ class MockFileIDHelper implements TestOnly, FileIDHelper
             $this->filename,
             $this->hash,
             $this->variant,
-            $this->fileID
+            $fileID
         );
     }
 

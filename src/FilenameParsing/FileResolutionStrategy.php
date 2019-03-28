@@ -12,7 +12,7 @@ interface FileResolutionStrategy
      * Try to resolve a file ID against the provided Filesystem.
      * @param string $fileID
      * @param Filesystem $filesystem
-     * @return string|null Alternative FileID where the user should be redirected to.
+     * @return ParsedFileID|null Alternative FileID where the user should be redirected to.
      */
     public function resolveFileID($fileID, Filesystem $filesystem);
 
@@ -21,12 +21,13 @@ interface FileResolutionStrategy
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem
      * @param boolean $strict Whatever we should enforce a hash check on the file we find
-     * @return string|null FileID
+     * @return ParsedFileID|null FileID
      */
     public function searchForTuple($tuple, Filesystem $filesystem, $strict = true);
 
+
     /**
-     * Build a file ID for the provided tuple, irrespective of whatever the file exists on the provided adapter or not.
+     * Build a file ID for the provided tuple, irrespective of its existence.
      *
      * Should always return the prefered file ID for this resolution strategy.
      *
@@ -39,7 +40,7 @@ interface FileResolutionStrategy
      * Find all the variants of the provided tuple
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem
-     * @return generator|string[]|null
+     * @return generator|ParsedFileID[]|null
      */
     public function findVariants($tuple, Filesystem $filesystem);
 }

@@ -331,21 +331,20 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
      */
     public function testFindVariant($strategy, $tuple)
     {
-        $this->fs->write('RootFile.txt', 'version 1');
         $this->fs->write('Folder/FolderFile.pdf', 'version 1');
         $this->fs->write('Folder/SubFolder/SubFolderFile.pdf', 'version 1');
+        $this->fs->write('RootFile.txt', 'version 1');
 
-        $expected = ['Folder/FolderFile.pdf', 'Folder/SubFolder/SubFolderFile.pdf'];
+        $expectedPaths = ['Folder/FolderFile.pdf', 'Folder/SubFolder/SubFolderFile.pdf'];
 
-        $variants = [];
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
-        foreach ($variantGenerator as $variant) {
-            $variants[] = $variant;
+        /** @var ParsedFileID $parsedFileID */
+        foreach ($variantGenerator as $parsedFileID) {
+            $this->assertNotEmpty($expectedPaths);
+            $expectedPath = array_shift($expectedPaths);
+            $this->assertEquals($expectedPath, $parsedFileID->getFileID());
         }
 
-        sort($expected);
-        sort($variants);
-
-        $this->assertEquals($expected, $variants);
+        $this->assertEmpty($expectedPaths);
     }
 }

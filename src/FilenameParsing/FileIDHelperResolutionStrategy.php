@@ -39,6 +39,24 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if (!$parsedFileID) {
+                continue;
+            }
+
+            if ($redirect = $this->searchForTuple($parsedFileID, $filesystem, false)) {
+                return $redirect;
+            }
+
+            // If our helper managed to parse the file id, but could not resolve to an actual physical file,
+            // there's nothing else we can do.
+            return null;
+        }
+    }
+
+    public function resolveFileIDToLatest($fileID, Filesystem $filesystem)
+    {
         // If File is not versionable, let's bail
         if (!class_exists(Versioned::class) || !File::has_extension(Versioned::class)) {
             return null;
@@ -53,6 +71,9 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $hash = $parsedFileID->getHash();
 
             $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
+
+            var_dump(get_class($fileIDHelper));
+            var_dump($tuple);
 
             if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
                 return $redirect;
@@ -155,7 +176,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                     // We found a file, but its hash doesn't match the hash of our tuple.
                      continue;
                 }
-                return $fileID;
+                return $parsedFileID->setFileID($fileID);
             }
         }
         return null;
@@ -300,7 +321,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $possibleVariants = $filesystem->listContents($folder, true);
         foreach ($possibleVariants as $possibleVariant) {
             if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                yield $possibleVariant['path'];
+                yield $parsedFileID->setFileID($possibleVariant['path']);
             }
         }
     }

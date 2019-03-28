@@ -3,7 +3,7 @@
 namespace SilverStripe\Assets\FilenameParsing;
 
 /**
- * Parsed fileID broken down into its sub-components.
+ * Immutable representation of a parsed fileID broken down into its sub-components.
  */
 class ParsedFileID
 {
@@ -36,10 +36,10 @@ class ParsedFileID
     }
 
     /**
-     * The Original File ID that was parsed.
+     * The File ID associated with this ParsedFileID if known, or blank if unknown.
      * @return string
      */
-    public function getOriginalFileID()
+    public function getFileID()
     {
         return $this->fileID;
     }
@@ -82,5 +82,41 @@ class ParsedFileID
             'Variant'   => $this->variant ?: null,
             'Hash'      => $this->hash ?: null
         ];
+    }
+
+    /**
+     * @param string $fileID
+     * @return self
+     */
+    public function setFileID($fileID)
+    {
+        return new self($this->filename, $this->hash, $this->variant, $fileID);
+    }
+
+    /**
+     * @param string $filename
+     * @return self
+     */
+    public function setFilename($filename)
+    {
+        return new self($filename, $this->hash, $this->variant, $this->fileID);
+    }
+
+    /**
+     * @param string $variant
+     * @return self
+     */
+    public function setVariant($variant)
+    {
+        return new self($this->filename, $this->hash, $variant, $this->fileID);
+    }
+
+    /**
+     * @param string $hash
+     * @return self
+     */
+    public function setHash($hash)
+    {
+        return new self($this->filename, $hash, $this->variant, $this->fileID);
     }
 }

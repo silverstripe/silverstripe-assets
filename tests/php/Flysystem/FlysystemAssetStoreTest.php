@@ -4,9 +4,11 @@ namespace SilverStripe\Assets\Tests\Flysystem;
 
 use League\Flysystem\Filesystem;
 use PHPUnit_Framework_MockObject_MockObject;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 
 class FlysystemAssetStoreTest extends SapphireTest
@@ -40,7 +42,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has'])
+            ->setMethods(['has', 'read'])
             ->setConstructorArgs([$this->publicAdapter])
             ->getMock();
 
@@ -49,23 +51,27 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has'])
+            ->setMethods(['has', 'read'])
             ->setConstructorArgs([$this->protectedAdapter])
             ->getMock();
     }
 
     public function testGetAsUrlDoesntGrantForPublicAssets()
     {
-        $this->publicFilesystem->expects($this->once())->method('has')->willReturn(true);
-        $this->publicAdapter->expects($this->once())->method('getPublicUrl')->willReturn('public.jpg');
+        $this->publicFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(true);
+        $this->publicFilesystem->expects($this->atLeastOnce())->method('read')->willReturn('some dummy content');
+        $this->publicAdapter->expects($this->atLeastOnce())->method('getPublicUrl')->willReturn('public.jpg');
         $this->protectedFilesystem->expects($this->never())->method('has');
 
-        $assetStore = new FlysystemAssetStore();
+        $injector = Injector::inst();
 
+        $assetStore = new FlysystemAssetStore();
         $assetStore->setPublicFilesystem($this->publicFilesystem);
         $assetStore->setProtectedFilesystem($this->protectedFilesystem);
+        $assetStore->setPublicResolutionStrategy($injector->get(FileResolutionStrategy::class . '.public'));
+        $assetStore->setProtectedResolutionStrategy($injector->get(FileResolutionStrategy::class . '.protected'));
 
-        $this->assertSame('public.jpg', $assetStore->getAsURL('foo', 'bar'));
+        $this->assertSame('public.jpg', $assetStore->getAsURL('foo', sha1('some dummy content')));
     }
 
     /**
@@ -74,17 +80,21 @@ class FlysystemAssetStoreTest extends SapphireTest
      */
     public function testGetAsUrlWithGrant($grant)
     {
-        $this->publicFilesystem->expects($this->once())->method('has')->willReturn(false);
+        $this->publicFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(false);
         $this->publicAdapter->expects($this->never())->method('getPublicUrl');
-        $this->protectedFilesystem->expects($this->once())->method('has')->willReturn(true);
-        $this->protectedAdapter->expects($this->once())->method('getProtectedUrl')->willReturn('protected.jpg');
+        $this->protectedFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(true);
+        $this->protectedAdapter->expects($this->atLeastOnce())->method('getProtectedUrl')->willReturn('protected.jpg');
+        $this->protectedFilesystem->expects($this->atLeastOnce())->method('read')->willReturn('some dummy content');
+
+        $injector = Injector::inst();
 
         $assetStore = new FlysystemAssetStore();
-
         $assetStore->setPublicFilesystem($this->publicFilesystem);
         $assetStore->setProtectedFilesystem($this->protectedFilesystem);
+        $assetStore->setPublicResolutionStrategy($injector->get(FileResolutionStrategy::class . '.public'));
+        $assetStore->setProtectedResolutionStrategy($injector->get(FileResolutionStrategy::class . '.protected'));
 
-        $this->assertSame('protected.jpg', $assetStore->getAsURL('foo', 'bar', 'baz', $grant));
+        $this->assertSame('protected.jpg', $assetStore->getAsURL('foo', sha1('some dummy content'), 'baz', $grant));
     }
 
     /**

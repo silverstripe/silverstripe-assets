@@ -118,7 +118,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         ];
         if ($this->getVersionedStage() == Versioned::LIVE) {
             // If we a limited to the Live stage, let's only look at files that have bee published
-            $versionFilters['WasPublished'] = true;
+            $versionFilters['"WasPublished"'] = true;
         }
 
         $oldVersionCount = $file->allVersions($versionFilters, "", 1)->count();

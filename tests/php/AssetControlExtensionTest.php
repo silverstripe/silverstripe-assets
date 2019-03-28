@@ -128,6 +128,7 @@ class AssetControlExtensionTest extends SapphireTest
         $object1->delete();
         $object2->delete();
         $object3->delete();
+
         $this->assertFalse($object1->Download->exists());
         $this->assertFalse($object1->Header->exists());
         $this->assertFalse($object2->Image->exists());

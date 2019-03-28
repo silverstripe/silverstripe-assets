@@ -585,8 +585,8 @@ class AssetStoreTest extends SapphireTest
 
         // Test protected file storage
         $backend->protect($fishTuple['Filename'], $fishTuple['Hash']);
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
@@ -612,13 +612,23 @@ class AssetStoreTest extends SapphireTest
 
         // Publish reverts visibility
         $backend->publish($fishTuple['Filename'], $fishTuple['Hash']);
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
         $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
             AssetStore::VISIBILITY_PUBLIC,
             $backend->getVisibility($fishTuple['Filename'], $fishTuple['Hash'])
+        );
+
+        // Protected urls should go through asset routing mechanism
+        $this->assertEquals(
+            '/' . ASSETS_DIR . '/AssetStoreTest/parent/lovely-fish.jpg',
+            $backend->getAsURL($fishTuple['Filename'], $fishTuple['Hash'])
+        );
+        $this->assertEquals(
+            '/' . ASSETS_DIR . '/AssetStoreTest/parent/lovely-fish__copy.jpg',
+            $backend->getAsURL($fishVariantTuple['Filename'], $fishVariantTuple['Hash'], $fishVariantTuple['Variant'])
         );
     }
 

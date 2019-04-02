@@ -1,0 +1,20 @@
+SilverStripe\CMS\Model\SiteTree:
+  page1:
+    Title: 'my page'
+    Content: >
+      <p>this needs to be rewritten: <a href="/assets/document.pdf">link to file</a></p>
+      <p>and so does this: <img src="/assets/myimage.jpg"></p>
+
+      <p>but not this: <a href="[file_link id=2]">link to file</a></p>
+      <p>and neither this: <a href="/assets/invalid_document.pdf">link to file</a></p>
+
+SilverStripe\Assets\Image:
+  image1:
+    Name: myimage.jpg
+    FileFilename: myimage.jpg
+    FileHash: 6ee53356ec
+SilverStripe\Assets\File:
+  document:
+    Name: document.pdf
+    FileFilename: document.pdf
+    FileHash: 6ee53356ec

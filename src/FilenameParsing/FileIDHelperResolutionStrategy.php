@@ -72,9 +72,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
             $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
 
-            var_dump(get_class($fileIDHelper));
-            var_dump($tuple);
-
             if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
                 return $redirect;
             }
@@ -208,7 +205,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
 
         // Check if the physical hash of the file starts with our parsed file ID hash
-        $actualHash = sha1($filesystem->read($fileID));
+        $stream = $filesystem->readStream($fileID);
+        $hc = hash_init('sha1');
+        hash_update_stream($hc, $stream);
+        $actualHash = hash_final($hc);
+
         return strpos($actualHash, $parsedFileID->getHash()) === 0;
     }
 
@@ -306,7 +307,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 $parsedFileID->getFilename(),
                 $parsedFileID->getHash()
             );
-            if ($filesystem->has($fileID)) {
+            if ($filesystem->has($fileID) && $this->validateHash($helperToTry, $parsedFileID, $filesystem)) {
                 $helper = $helperToTry;
                 break;
             }

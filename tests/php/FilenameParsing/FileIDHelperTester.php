@@ -86,7 +86,7 @@ abstract class FileIDHelperTester extends SapphireTest
         $expectedVariant = isset($expected[2]) ? $expected[2] : '';
 
         $this->assertNotNull($parsedFiledID);
-        $this->assertEquals($input, $parsedFiledID->getOriginalFileID());
+        $this->assertEquals($input, $parsedFiledID->getFileID());
         $this->assertEquals($expectedFilename, $parsedFiledID->getFilename());
         $this->assertEquals($expectedHash, $parsedFiledID->getHash());
         $this->assertEquals($expectedVariant, $parsedFiledID->getVariant());

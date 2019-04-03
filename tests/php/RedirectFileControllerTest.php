@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\ProtectedFileController;
@@ -12,6 +14,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * @skipUpgrade
@@ -39,19 +42,29 @@ class RedirectFileControllerTest extends FunctionalTest
         // Create a test files for each of the fixture references
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             /** @var File $file */
-            $path = TestAssetStore::getLocalPath($file);
-            Filesystem::makeFolder(dirname($path));
-            $fh = fopen($path, "w+");
-            fwrite($fh, 'version 1');
-            fclose($fh);
+
+            $file->File->Hash = sha1('version 1');
+            $file->write();
 
             // Create variant for each file
-            $this->getAssetStore()->setFromString(
-                str_repeat('y', 100),
-                $file->Filename,
-                $file->Hash,
-                'variant'
+            $file->setFromString(
+                'version 1',
+                $file->getFilename(),
+                $file->getHash(),
+                null,
+                ['visibility' => AssetStore::VISIBILITY_PUBLIC]
             );
+
+            // Create variant for each file
+//            $file->setFromString(
+//                'version 1 - variant',
+//                $file->Filename,
+//                $file->getHash(),
+//                'variant'
+//            );
+
+
+//            $file->publishSingle();
         }
     }
 
@@ -79,7 +92,11 @@ class RedirectFileControllerTest extends FunctionalTest
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
 
-        $response = $this->get('/assets/' . $file->getFilename());
+        $hashHelper = new HashFileIDHelper();
+        $hashUrl = $hashHelper->buildFileID($file->getFilename(), $file->getHash());
+
+        $response = $this->get('/assets/' . $hashUrl);
+
         $this->assertResponse(
             404,
             '',
@@ -89,13 +106,14 @@ class RedirectFileControllerTest extends FunctionalTest
         );
 
         $file->publishSingle();
-        $response = $this->get('/assets/' . $file->getFilename());
+
+        $response = $this->get('/assets/' . $hashUrl);
         $this->assertResponse(
             302,
             '',
             $file->getURL(false),
             $response,
-            'Legacy URL for published file should return 302'
+            'Hash URL of public file should redirect to published file with 302'
         );
 
         $response = $this->get($response->getHeader('location'));
@@ -114,17 +132,21 @@ class RedirectFileControllerTest extends FunctionalTest
      */
     public function testRedirectWithDraftFile($fixtureID)
     {
+        $hashHelper = new HashFileIDHelper();
+
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
         $file->publishSingle();
+        $v1HashUrl = '/assets/' . $hashHelper->buildFileID($file->getFilename(), $file->getHash());
         $v1Url = $file->getURL(false);
 
-        $file->setFromString('version 2', $file->getFilename());
+        $file->File->Hash = sha1('version 2');
+        $file->setFromString('version 2', $file->getFilename(), null, null, ['visibility' => FlysystemAssetStore::VISIBILITY_PROTECTED]);
         $file->write();
         $v2Url = $file->getURL(false);
 
         // Before publishing second draft file
-        $response = $this->get('/assets/' . $file->getFilename());
+        $response = $this->get($v1HashUrl);
         $this->assertResponse(
             302,
             '',
@@ -320,8 +342,10 @@ class RedirectFileControllerTest extends FunctionalTest
         $file->setFromLocalFile(__DIR__ . '/ImageTest/landscape-to-portrait.jpg', $file->FileFilename);
         $file->write();
         $file->publishSingle();
+        $hash = substr($file->getHash(), 0, 10);
         $ico = $file->ScaleWidth(32);
         $icoUrl = $ico->getURL(false);
+        
         $suffix = $ico->getVariant();
 
         $response = $this->get($icoUrl);
@@ -333,13 +357,13 @@ class RedirectFileControllerTest extends FunctionalTest
             'Publish variant sghould resolve with 200'
         );
 
-        $response = $this->get("/assets/{$foldername}{$filename}__$suffix.$ext");
+        $response = $this->get("/assets/{$foldername}{$hash}/{$filename}__$suffix.$ext");
         $this->assertResponse(
             302,
             '',
             $icoUrl,
             $response,
-            'Legacy path to variant should redirect.'
+            'Hash path variant of public file should redirect to natural path.'
         );
 
         $response = $this->get("/assets/{$foldername}_resampled/$suffix/$filename.$ext");
@@ -357,13 +381,13 @@ class RedirectFileControllerTest extends FunctionalTest
         $ico = $file->ScaleWidth(32);
         $icoV2Url = $ico->getURL(false);
 
-        $response = $this->get($icoUrl);
+        $response = $this->get("/assets/{$foldername}{$hash}/{$filename}__$suffix.$ext");
         $this->assertResponse(
             302,
             '',
             $icoV2Url,
             $response,
-            'Old URL to variant should redirect with 302'
+            'Old Hash URL of public file should redirect to natural path of file.'
         );
     }
 

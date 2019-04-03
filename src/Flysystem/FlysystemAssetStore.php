@@ -185,6 +185,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     public function getPublicResolutionStrategy()
     {
+        if (!$this->publicResolutionStrategy) {
+            $this->publicResolutionStrategy = Injector::inst()->get(FileResolutionStrategy::class . '.public');
+        }
+
+        if (!$this->publicResolutionStrategy) {
+            throw new Exception("Filesystem misconfiguration error");
+        }
         return $this->publicResolutionStrategy;
     }
 
@@ -201,6 +208,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     public function getProtectedResolutionStrategy()
     {
+        if (!$this->protectedResolutionStrategy) {
+            $this->protectedResolutionStrategy = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
+        }
+
+        if (!$this->protectedResolutionStrategy) {
+            throw new Exception("Filesystem misconfiguration error");
+        }
         return $this->protectedResolutionStrategy;
     }
 
@@ -363,18 +377,22 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getAsStream($filename, $hash, $variant = null)
     {
-        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
-        return $this
-            ->getFilesystemFor($fileID)
-            ->readStream($fileID);
+        return $this->applyToFileOnFilesystem(
+            function (ParsedFileID $parsedFileID, FileSystem $fs, FileResolutionStrategy $strategy, $visibility) {
+                return $fs->readStream($parsedFileID->getFileID());
+            },
+            new ParsedFileID($filename, $hash, $variant)
+        );
     }
 
     public function getAsString($filename, $hash, $variant = null)
     {
-        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
-        return $this
-            ->getFilesystemFor($fileID)
-            ->read($fileID);
+        return $this->applyToFileOnFilesystem(
+            function (ParsedFileID $parsedFileID, FileSystem $fs, FileResolutionStrategy $strategy, $visibility) {
+                return $fs->read($parsedFileID->getFileID());
+            },
+            new ParsedFileID($filename, $hash, $variant)
+        );
     }
 
     public function getAsURL($filename, $hash, $variant = null, $grant = true)
@@ -385,19 +403,19 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $public = $this->getPublicFilesystem();
         $protected = $this->getProtectedFilesystem();
 
-        if ($fileID = $this->getPublicResolutionStrategy()->searchForTuple($tuple, $public)) {
+        if ($parsedFileID = $this->getPublicResolutionStrategy()->searchForTuple($tuple, $public)) {
             /** @var PublicAdapter $publicAdapter */
             $publicAdapter = $public->getAdapter();
-            return $publicAdapter->getPublicUrl($fileID);
+            return $publicAdapter->getPublicUrl($parsedFileID->getFileID());
         }
 
-        if ($fileID = $this->getProtectedResolutionStrategy()->searchForTuple($tuple, $protected)) {
+        if ($parsedFileID = $this->getProtectedResolutionStrategy()->searchForTuple($tuple, $protected)) {
             if ($grant) {
-                $this->grant($filename, $hash);
+                $this->grant($parsedFileID->getFilename(), $parsedFileID->getHash());
             }
             /** @var ProtectedAdapter $protectedAdapter */
             $protectedAdapter = $protected->getAdapter();
-            return $protectedAdapter->getProtectedUrl($fileID);
+            return $protectedAdapter->getProtectedUrl($parsedFileID->getFileID());
         }
 
         $fileID = $this->getPublicResolutionStrategy()->buildFileID($tuple);
@@ -699,6 +717,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         Filesystem $to,
         FileResolutionStrategy $toStrategy
     ) {
+        $idsToDelete = [];
+
         /** @var ParsedFileID $variantParsedFileID */
         foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
             // Copy via stream
@@ -710,10 +730,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             if (is_resource($stream)) {
                 fclose($stream);
             }
-            $from->delete($fromFileID);
+            $idsToDelete[] = $fromFileID;
+        }
 
+        foreach ($idsToDelete as $fileID) {
+            $from->delete($fileID);
             // Truncate empty dirs
-            $this->truncateDirectory(dirname($fromFileID), $from);
+            $this->truncateDirectory(dirname($fileID), $from);
         }
     }
 
@@ -830,11 +853,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = array())
     {
         // Set default conflict resolution
-        if (empty($config['conflict'])) {
-            $conflictResolution = $this->getDefaultConflictResolution($variant);
-        } else {
-            $conflictResolution = $config['conflict'];
-        }
+        $conflictResolution = empty($config['conflict'])
+            ? $this->getDefaultConflictResolution($variant)
+            : $config['conflict'];
+
 
         // Validate parameters
         if ($variant && $conflictResolution === AssetStore::CONFLICT_RENAME) {
@@ -848,50 +870,73 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             throw new InvalidArgumentException("File hash is missing");
         }
 
-        $helper = $this->getDefaultFileIDHelper();
+        $parsedFileID = new ParsedFileID($filename, $hash, $variant);
 
-        $filename = $helper->cleanFilename($filename);
-        $fileID = $helper->buildFileID($filename, $hash, $variant);
-
-        // Check conflict resolution scheme
-        $resolvedID = $this->resolveConflicts($conflictResolution, $fileID);
-        if ($resolvedID !== false) {
-            // Check if source file already exists on the filesystem
-            $mainID = $helper->buildFileID($filename, $hash);
-            $filesystem = $this->getFilesystemFor($mainID);
-
-            // If writing a new file use the correct visibility
-            if (!$filesystem) {
-                // Default to public store unless requesting protected store
-                if (isset($config['visibility']) && $config['visibility'] === self::VISIBILITY_PROTECTED) {
-                    $filesystem = $this->getProtectedFilesystem();
-                } else {
-                    $filesystem = $this->getPublicFilesystem();
+        $fsObjs = $this->applyToFileOnFilesystem(
+            function (
+                ParsedFileID $parsedFileID,
+                Filesystem $fs,
+                FileResolutionStrategy $strategy, $visibility
+            ) use ($hash) {
+                if ($hash) {
+                    $stream = $fs->readStream($parsedFileID->getFileID());
+                    $hc = hash_init('sha1');
+                    hash_update_stream($hc, $stream);
+                    $hashFromFile = hash_final($hc);
+                    if (strpos($hashFromFile, $hash) !== 0) {
+                        return false;
+                    }
                 }
-            }
+                return [$parsedFileID, $fs, $strategy, $visibility];
+            }, $parsedFileID
+        );
 
-            // Submit and validate result
-            $result = $callback($filesystem, $resolvedID);
-            if (!$result) {
-                throw new Exception("Could not save {$filename}");
+        if ($fsObjs) {
+            list($parsedFileID, $fs, $strategy, $visibility) = $fsObjs;
+        } else {
+            if (isset($config['visibility']) && $config['visibility'] === self::VISIBILITY_PROTECTED) {
+                $fs = $this->getProtectedFilesystem();
+                $strategy = $this->getProtectedResolutionStrategy();
+                $visibility = self::VISIBILITY_PROTECTED;
+            } else {
+                $fs = $this->getPublicFilesystem();
+                $strategy = $this->getPublicResolutionStrategy();
+                $visibility = self::VISIBILITY_PUBLIC;
             }
-
-            // in case conflict resolution renamed the file, return the renamed
-            $filename = $helper->parseFileID($resolvedID)->getFilename();
-        } elseif (empty($variant)) {
-            // If deferring to the existing file, return the sha of the existing file,
-            // unless we are writing a variant (which has the same hash value as its original file)
-            $stream = $this
-                ->getFilesystemFor($fileID)
-                ->readStream($fileID);
-            $hash = $this->getStreamSHA1($stream);
         }
 
-        return array(
-            'Filename' => $filename,
-            'Hash' => $hash,
-            'Variant' => $variant
-        );
+        $targetFileID = $strategy->buildFileID($parsedFileID);
+
+        // If overwrite is requested, simply put
+        if ($conflictResolution === AssetStore::CONFLICT_OVERWRITE || !$fs->has($targetFileID)) {
+            $parsedFileID = $parsedFileID->setFileID($targetFileID);
+        } elseif ($conflictResolution === static::CONFLICT_EXCEPTION) {
+            throw new InvalidArgumentException("File already exists at path {$fileID}");
+        } elseif ($conflictResolution === static::CONFLICT_RENAME) {
+            foreach ($this->fileGeneratorFor($fileID) as $candidate) {
+                if (!$fs->has($candidate)) {
+                    $parsedFileID = $parsedFileID->setFileID($candidate);
+                    break;
+                }
+            }
+        } else {
+            // Use exists file
+            if (empty($variant)) {
+                // If deferring to the existing file, return the sha of the existing file,
+                // unless we are writing a variant (which has the same hash value as its original file)
+                $hash = $this->getStreamSHA1($fs->readStream($targetFileID));
+                $parsedFileID = $parsedFileID->setHash($hash);
+            }
+            return $parsedFileID->getTuple();
+        }
+
+        // Submit and validate result
+        $result = $callback($fs, $parsedFileID->getFileID());
+        if (!$result) {
+            throw new Exception("Could not save {$filename}");
+        }
+
+        return $parsedFileID->getTuple();
     }
 
     /**
@@ -970,7 +1015,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Otherwise, check if this exists
-        $exists = $this->getFilesystemFor($fileID);
+        $exists = $this->applyToFileOnFilesystem(function () { return true; }, $fileID);
         if (!$exists) {
             return $fileID;
         }
@@ -985,7 +1030,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Rename
             case static::CONFLICT_RENAME: {
                 foreach ($this->fileGeneratorFor($fileID) as $candidate) {
-                    if (!$this->getFilesystemFor($candidate)) {
+                    $exists = $this->applyToFileOnFilesystem(function () { return true; }, $candidate);
+                    if (!$exists) {
                         return $candidate;
                     }
                 }

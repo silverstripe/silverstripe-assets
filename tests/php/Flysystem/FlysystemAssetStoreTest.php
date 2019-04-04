@@ -4,10 +4,12 @@ namespace SilverStripe\Assets\Tests\Flysystem;
 
 use League\Flysystem\Filesystem;
 use PHPUnit_Framework_MockObject_MockObject;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
+use SilverStripe\Assets\Tests\FilenameParsing\FileIDHelperResolutionStrategyTest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 
@@ -33,6 +35,12 @@ class FlysystemAssetStoreTest extends SapphireTest
      */
     protected $protectedFilesystem;
 
+    /** @var FileResolutionStrategy */
+    protected $publicStrategy;
+
+    /** @var FileResolutionStrategy */
+    protected $protectedStrategy;
+
     protected function setUp()
     {
         parent::setUp();
@@ -42,7 +50,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read'])
+            ->setMethods(['has', 'read', 'readStream'])
             ->setConstructorArgs([$this->publicAdapter])
             ->getMock();
 
@@ -51,15 +59,26 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read'])
+            ->setMethods(['has', 'read', 'readStream'])
             ->setConstructorArgs([$this->protectedAdapter])
+            ->getMock();
+
+        $this->publicStrategy = $this->getMockBuilder(FileIDHelperResolutionStrategy::class)
+            ->setMethods(['searchForTuple'])
+            ->getMock();
+
+        $this->protectedStrategy = $this->getMockBuilder(FileIDHelperResolutionStrategy::class)
+            ->setMethods(['searchForTuple'])
             ->getMock();
     }
 
     public function testGetAsUrlDoesntGrantForPublicAssets()
     {
         $this->publicFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(true);
-        $this->publicFilesystem->expects($this->atLeastOnce())->method('read')->willReturn('some dummy content');
+        $this->publicFilesystem
+            ->expects($this->atLeastOnce())
+            ->method('readStream')
+            ->willReturn(fopen('data://text/plain,some dummy content','r'));
         $this->publicAdapter->expects($this->atLeastOnce())->method('getPublicUrl')->willReturn('public.jpg');
         $this->protectedFilesystem->expects($this->never())->method('has');
 
@@ -84,7 +103,9 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->publicAdapter->expects($this->never())->method('getPublicUrl');
         $this->protectedFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(true);
         $this->protectedAdapter->expects($this->atLeastOnce())->method('getProtectedUrl')->willReturn('protected.jpg');
-        $this->protectedFilesystem->expects($this->atLeastOnce())->method('read')->willReturn('some dummy content');
+        $this->protectedFilesystem->expects($this->atLeastOnce())
+            ->method('readStream')
+            ->willReturn(fopen('data://text/plain,some dummy content','r'));
 
         $injector = Injector::inst();
 

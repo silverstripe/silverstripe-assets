@@ -346,7 +346,7 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
-        $this->assertEquals('/assets/FileTest/55b443b601/FileTest.txt', $rootfile->getURL());
+        $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
     }
 
     public function testGetAbsoluteURL()
@@ -354,7 +354,7 @@ class FileTest extends SapphireTest
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
         $this->assertEquals(
-            Director::absoluteBaseURL() . 'assets/FileTest/55b443b601/FileTest.txt',
+            Director::absoluteBaseURL() . 'assets/FileTest/FileTest.txt',
             $rootfile->getAbsoluteURL()
         );
     }

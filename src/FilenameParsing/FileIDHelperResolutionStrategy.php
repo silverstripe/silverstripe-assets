@@ -55,7 +55,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
     }
 
-    public function resolveFileIDToLatest($fileID, Filesystem $filesystem)
+    public function softResolveFileID($fileID, Filesystem $filesystem)
     {
         // If File is not versionable, let's bail
         if (!class_exists(Versioned::class) || !File::has_extension(Versioned::class)) {
@@ -322,8 +322,13 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $possibleVariants = $filesystem->listContents($folder, true);
         foreach ($possibleVariants as $possibleVariant) {
             if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                yield $parsedFileID->setFileID($possibleVariant['path']);
+                yield $helper->parseFileID($possibleVariant['path']);
             }
         }
+    }
+    
+    public function cleanFilename($filename)
+    {
+        return $this->getDefaultFileIDHelper()->cleanFilename($filename);
     }
 }

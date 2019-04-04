@@ -17,6 +17,14 @@ interface FileResolutionStrategy
     public function resolveFileID($fileID, Filesystem $filesystem);
 
     /**
+     * Try to resolve a file ID against the provided Filesystem looking at newer version of the file.
+     * @param string $fileID
+     * @param Filesystem $filesystem
+     * @return ParsedFileID|null Alternative FileID where the user should be redirected to.
+     */
+    public function softResolveFileID($fileID, Filesystem $filesystem);
+
+    /**
      * Try to find a file ID for an existing file the provided file tuple.
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem
@@ -43,4 +51,11 @@ interface FileResolutionStrategy
      * @return generator|ParsedFileID[]|null
      */
     public function findVariants($tuple, Filesystem $filesystem);
+
+    /**
+     * Normalise a filename to be consistent with this file reoslution startegy.
+     * @param string $filename
+     * @return string
+     */
+    public function cleanFilename($filename);
 }

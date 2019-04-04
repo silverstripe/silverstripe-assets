@@ -83,7 +83,6 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         return $list;
     }
 
-
     /**
      * This method checks that FileID resolve when access directly.
      * @dataProvider fileHelperList
@@ -104,53 +103,10 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $expectedPath = $helper->buildFileID($fileDO->getFilename(), $fileDO->getHash());
         $this->fs->write($expectedPath, 'version 1');
 
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
-        $this->assertEquals($expectedPath, $redirect, 'Resolution strategy should have found a file.');
-
-        $strategy->setVersionedStage(Versioned::LIVE);
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
-        $this->assertNull($redirect, 'Resolution strategy expect file to be published');
-
-        $fileDO->publishSingle();
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
-        $this->assertEquals($expectedPath, $redirect, 'Resolution strategy should have found a publish file');
-    }
-
-    /**
-     * This method check that older url get redirect to the later ones. This is only relevant for File Scheme with
-     * explicit hash. Natural path URL don't change even when the hash of the file does.
-     * @dataProvider fileList
-     */
-    public function testResolveOlderFileID($fixtureID)
-    {
-        /** @var File $fileDO */
-        $fileDO = $this->objFromFixture(File::class, $fixtureID);
-        $helper = new HashFileIDHelper();
-
-        $oldHash = $fileDO->FileHash;
-        $newerHash = sha1('version 1');
-        $fileDO->FileHash = $newerHash;
-        $fileDO->write();
-
-        $strategy = new FileIDHelperResolutionStrategy();
-        $strategy->setDefaultFileIDHelper($helper);
-        $strategy->setResolutionFileIDHelpers([$helper]);
-        $strategy->setVersionedStage(Versioned::DRAFT);
-
-        $expectedPath = $helper->buildFileID($fileDO->getFilename(), $newerHash);
-        $originalFileID = $helper->buildFileID($fileDO->getFilename(), $oldHash);
-        $this->fs->write($expectedPath, 'version 1');
-
-        $redirect = $strategy->resolveFileID($originalFileID, $this->fs);
-        $this->assertEquals($expectedPath, $redirect, 'Resolution strategy should have found a file.');
-
-        $strategy->setVersionedStage(Versioned::LIVE);
-        $redirect = $strategy->resolveFileID($originalFileID, $this->fs);
-        $this->assertNull($redirect, 'Resolution strategy expect file to be published');
-
-        $fileDO->publishSingle();
-        $redirect = $strategy->resolveFileID($originalFileID, $this->fs);
-        $this->assertNull($redirect, 'The original file never was published so Live resolution should fail');
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+        $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
     }
 
     /**
@@ -174,16 +130,142 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $expectedPath = $helper->buildFileID($fileDO->getFilename(), $fileDO->getHash());
         $this->fs->write($expectedPath, 'version 1');
 
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
-        $this->assertEquals($expectedPath, $redirect, 'Resolution strategy should have found a file.');
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+    }
+
+    /**
+     * This method checks that resolve fails when there's an hash mismatch
+     * @dataProvider fileHelperList
+     */
+    public function testBadHashResolveFileID($fixtureID, FileIDHelper $helper)
+    {
+        /** @var File $fileDO */
+        $fileDO = $this->objFromFixture(File::class, $fixtureID);
+        $mockHelper = new BrokenFileIDHelper('nonsense.txt', 'nonsense', '', 'nonsense.txt', true, '');
+
+        $fileDO->FileHash = sha1('broken content that does not mtach the expected content');
+        $fileDO->write();
+
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper($mockHelper);
+        $strategy->setResolutionFileIDHelpers([$mockHelper, $helper]);
+        $strategy->setVersionedStage(Versioned::DRAFT);
+
+        $expectedPath = $helper->buildFileID($fileDO->getFilename(), $fileDO->getHash());
+        $this->fs->write($expectedPath, 'version 1');
+
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+    }
+
+
+    /**
+     * This method checks that FileID resolve when access directly.
+     * @dataProvider fileHelperList
+     */
+    public function testDirectSoftResolveFileID($fixtureID, FileIDHelper $helper)
+    {
+        /** @var File $fileDO */
+        $fileDO = $this->objFromFixture(File::class, $fixtureID);
+
+        $fileDO->FileHash = sha1('version 1');
+        $fileDO->write();
+
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper($helper);
+        $strategy->setResolutionFileIDHelpers([$helper]);
+        $strategy->setVersionedStage(Versioned::DRAFT);
+
+        $expectedPath = $helper->buildFileID($fileDO->getFilename(), $fileDO->getHash());
+        $this->fs->write($expectedPath, 'version 1');
+
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+        $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
+        $this->assertEmpty($fileDO->getVariant());
 
         $strategy->setVersionedStage(Versioned::LIVE);
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
         $this->assertNull($redirect, 'Resolution strategy expect file to be published');
 
         $fileDO->publishSingle();
-        $redirect = $strategy->resolveFileID($expectedPath, $this->fs);
-        $this->assertEquals($expectedPath, $redirect, 'Resolution strategy should have found a publish file');
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+        $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
+        $this->assertEmpty($fileDO->getVariant());
+    }
+
+    /**
+     * This method check that older url get redirect to the later ones. This is only relevant for File Scheme with
+     * explicit hash. Natural path URL don't change even when the hash of the file does.
+     * @dataProvider fileList
+     */
+    public function testSoftResolveOlderFileID($fixtureID)
+    {
+        /** @var File $fileDO */
+        $fileDO = $this->objFromFixture(File::class, $fixtureID);
+        $helper = new HashFileIDHelper();
+
+        $oldHash = $fileDO->FileHash;
+        $newerHash = sha1('version 1');
+        $fileDO->FileHash = $newerHash;
+        $fileDO->write();
+
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper($helper);
+        $strategy->setResolutionFileIDHelpers([$helper]);
+        $strategy->setVersionedStage(Versioned::DRAFT);
+
+        $expectedPath = $helper->buildFileID($fileDO->getFilename(), $newerHash);
+        $originalFileID = $helper->buildFileID($fileDO->getFilename(), $oldHash);
+        $this->fs->write($expectedPath, 'version 1');
+
+        $redirect = $strategy->softResolveFileID($originalFileID, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+
+        $strategy->setVersionedStage(Versioned::LIVE);
+        $redirect = $strategy->softResolveFileID($originalFileID, $this->fs);
+        $this->assertNull($redirect, 'Resolution strategy expect file to be published');
+
+        $fileDO->publishSingle();
+        $redirect = $strategy->softResolveFileID($originalFileID, $this->fs);
+        $this->assertNull($redirect, 'The original file never was published so Live resolution should fail');
+    }
+
+    /**
+     * This method checks that FileID resolve when their file ID Scheme is a secondary resolution mechanism.
+     * @dataProvider fileHelperList
+     */
+    public function testSecondarySoftResolveFileID($fixtureID, FileIDHelper $helper)
+    {
+        /** @var File $fileDO */
+        $fileDO = $this->objFromFixture(File::class, $fixtureID);
+        $mockHelper = new BrokenFileIDHelper('nonsense.txt', 'nonsense', '', 'nonsense.txt', true, '');
+
+        $fileDO->FileHash = sha1('version 1');
+        $fileDO->write();
+
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper($mockHelper);
+        $strategy->setResolutionFileIDHelpers([$mockHelper, $helper]);
+        $strategy->setVersionedStage(Versioned::DRAFT);
+
+        $expectedPath = $helper->buildFileID($fileDO->getFilename(), $fileDO->getHash());
+        $this->fs->write($expectedPath, 'version 1');
+
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
+
+        $strategy->setVersionedStage(Versioned::LIVE);
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertNull($redirect, 'Resolution strategy expect file to be published');
+
+        $fileDO->publishSingle();
+        $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
+        $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a publish file');
     }
 
     /**
@@ -267,23 +349,23 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $this->fs->write($expected, 'version 1');
 
-        $fileID = $strategy->searchForTuple($tuple, $this->fs, false);
-        $this->assertEquals($expected, $fileID, 'The file has been written');
+        $found = $strategy->searchForTuple($tuple, $this->fs, false);
+        $this->assertEquals($expected, $found->getFileID(), 'The file has been written');
 
-        $fileID = $strategy->searchForTuple($tuple, $this->fs, true);
-        $this->assertEquals($expected, $fileID, 'The file has been written');
+        $found = $strategy->searchForTuple($tuple, $this->fs, true);
+        $this->assertEquals($expected, $found->getFileID(), 'The file has been written');
 
         $this->fs->put($expected, 'the hash will change and will not match our tuple');
 
-        $fileID = $strategy->searchForTuple($tuple, $this->fs, false);
+        $found = $strategy->searchForTuple($tuple, $this->fs, false);
         $this->assertEquals(
             $expected,
-            $fileID,
+            $found->getFileID(),
             'With strict set to false, we still find a file even if the hash does not match'
         );
 
-        $fileID = $strategy->searchForTuple($tuple, $this->fs, true);
-        $this->assertNull($fileID, 'Our file does not match the hash and we asked for a strict hash check');
+        $found = $strategy->searchForTuple($tuple, $this->fs, true);
+        $this->assertNull($found, 'Our file does not match the hash and we asked for a strict hash check');
     }
 
     public function findVariantsStrategyVariation()
@@ -292,7 +374,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $mockHelper = new MockFileIDHelper(
             'Folder/FolderFile.pdf',
             substr(sha1('version 1'), 0, 10),
-            '',
+            'mockedvariant',
             'Folder/FolderFile.pdf',
             true,
             'Folder'
@@ -332,10 +414,15 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function testFindVariant($strategy, $tuple)
     {
         $this->fs->write('Folder/FolderFile.pdf', 'version 1');
+        $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
         $this->fs->write('Folder/SubFolder/SubFolderFile.pdf', 'version 1');
         $this->fs->write('RootFile.txt', 'version 1');
 
-        $expectedPaths = ['Folder/FolderFile.pdf', 'Folder/SubFolder/SubFolderFile.pdf'];
+        $expectedPaths = [
+            'Folder/FolderFile.pdf',
+            'Folder/FolderFile__mockedvariant.pdf',
+            'Folder/SubFolder/SubFolderFile.pdf'
+        ];
 
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
         /** @var ParsedFileID $parsedFileID */
@@ -343,6 +430,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
             $this->assertNotEmpty($expectedPaths);
             $expectedPath = array_shift($expectedPaths);
             $this->assertEquals($expectedPath, $parsedFileID->getFileID());
+            $this->assertEquals('mockedvariant', $parsedFileID->getVariant());
         }
 
         $this->assertEmpty($expectedPaths);

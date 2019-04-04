@@ -33,18 +33,25 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
     {
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
-        $file->publishSingle();
+        $v1HashUrl = $file->getURL(false);
         $v1hash = $file->getHash();
-        $v1Url = $file->getURL(false);
+        $file->publishSingle();
 
-        $file->setFromString('version 2', $file->getFilename());
+        $file->File->Hash = sha1('version 2');
+        $file->setFromString(
+            'version 2',
+            $file->getFilename(),
+            $file->getHash(),
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+        );
         $file->write();
+        $v2HashUrl = $file->getURL(false);
+        $file->publishSingle();
         $v2Url = $file->getURL(false);
 
-        $file->publishSingle();
-
         $this->getAssetStore()->grant($file->getFilename(), $v1hash);
-        $response = $this->get($v1Url);
+        $response = $this->get($v1HashUrl);
         $this->getAssetStore()->revoke($file->getFilename(), $v1hash);
         $this->assertResponse(
             200,
@@ -57,7 +64,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         $file->doUnpublish();
 
         // After unpublishing file
-        $response = $this->get($v2Url);
+        $response = $this->get($v2HashUrl);
         $this->assertResponse(
             403,
             '',
@@ -66,16 +73,16 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             'Unpublish file should return 403'
         );
 
-        $response = $this->get('/assets/' . $file->getFilename());
+        $response = $this->get($v2Url);
         $this->assertResponse(
             404,
             '',
             false,
             $response,
-            'Legacy URL of unpublish files should return 404'
+            'Natural path URL of unpublish files should return 404'
         );
 
-        $response = $this->get($v1Url);
+        $response = $this->get($v1HashUrl);
         $this->assertResponse(
             403,
             '',
@@ -85,7 +92,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         );
 
         $this->getAssetStore()->grant($file->getFilename(), $v1hash);
-        $response = $this->get($v1Url);
+        $response = $this->get($v1HashUrl);
         $this->assertResponse(
             200,
             'version 1',
@@ -105,15 +112,26 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
     {
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
-        $file->publishSingle();
-        $v1Url = $file->getURL(false);
+        $v1HashUrl = $file->getURL(false);
 
-        $file->setFromString('version 2', $file->getFilename());
-        $file->write();
         $file->publishSingle();
-        $v2Url = $file->getURL(false);
+
+        $file->File->Hash = sha1('version 2');
+        $file->setFromString(
+            'version 2',
+            $file->getFilename(),
+            $file->getHash(),
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+        );
+
+        $file->write();
+        $v2HashUrl = $file->getURL(false);
+
+        $file->publishSingle();
 
         $file->doUnpublish();
+
         $file->delete();
 
         $response = $this->get('/assets/' . $file->getFilename());
@@ -122,19 +140,17 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             '',
             false,
             $response,
-            'Legacy URL of archived files should return 404'
+            'Natural Path URL of archived files should return 404'
         );
-
-        $response = $this->get($v1Url);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v1HashUrl,
             403,
             '',
             false,
-            $response,
             'Old Hash URL of archived files should return 403'
         );
 
-        $response = $this->get($v2Url);
+        $response = $this->get($v2HashUrl);
         $this->assertResponse(
             403,
             '',
@@ -154,14 +170,21 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
     {
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
+        $v1HashUrl = $file->getURL(false);
         $file->publishSingle();
-        $v1Url = $file->getURL(false);
         $v1Hash = $file->getHash();
 
-        $file->setFromString('version 2', $file->getFilename());
+        $file->File->Hash = sha1('version 2');
+        $file->setFromString(
+            'version 2',
+            $file->getFilename(),
+            $file->getHash(),
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+        );
         $file->write();
+        $v2HashUrl = $file->getURL(false);
         $file->publishSingle();
-        $v2Url = $file->getURL(false);
         $v2Hash = $file->getHash();
 
         $file->doUnpublish();
@@ -170,30 +193,27 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         $this->getAssetStore()->grant($file->getFilename(), $v1Hash);
         $this->getAssetStore()->grant($file->getFilename(), $v2Hash);
 
-        $response = $this->get('/assets/' . $file->getFilename());
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $file->getFilename(),
             404,
             '',
             false,
-            $response,
             'Legacy URL of archived files should return 404'
         );
 
-        $response = $this->get($v1Url);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v1HashUrl,
             200,
             'version 1',
             false,
-            $response,
             'Older versions of archived file should resolve when access is granted'
         );
 
-        $response = $this->get($v2Url);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v2HashUrl,
             200,
             'version 2',
             false,
-            $response,
             'Archived files should resolve when access is granted'
         );
     }

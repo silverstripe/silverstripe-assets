@@ -52,7 +52,7 @@ class RedirectFileControllerTest extends FunctionalTest
                 $file->getFilename(),
                 $file->getHash(),
                 null,
-                ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+                ['visibility' => AssetStore::VISIBILITY_PROTECTED]
             );
 
             // Create variant for each file
@@ -93,21 +93,20 @@ class RedirectFileControllerTest extends FunctionalTest
         $file = $this->objFromFixture(File::class, $fixtureID);
 
         $hashHelper = new HashFileIDHelper();
-        $hashUrl = $hashHelper->buildFileID($file->getFilename(), $file->getHash());
+        $hashUrl = '/assets/' . $hashHelper->buildFileID($file->getFilename(), $file->getHash());
 
-        $response = $this->get('/assets/' . $hashUrl);
-
+        $response = $this->get($hashUrl);
         $this->assertResponse(
-            404,
+            403,
             '',
             false,
             $response,
-            'Legacy URL for unpublished file should return 404'
+            'Hash URL for unpublished file should return 403'
         );
 
         $file->publishSingle();
 
-        $response = $this->get('/assets/' . $hashUrl);
+        $response = $this->get($hashUrl);
         $this->assertResponse(
             302,
             '',
@@ -179,16 +178,19 @@ class RedirectFileControllerTest extends FunctionalTest
      */
     public function testRedirectAfterPublishSecondVersion($fixtureID)
     {
+        $hashHelper = new HashFileIDHelper();
+        
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
         $file->publishSingle();
-        $v1Url = $file->getURL(false);
+        $v1HashUrl = '/assets/' . $hashHelper->buildFileID($file->getFilename(), $file->getHash(), $file->getVariant());
 
         $file->setFromString('version 2', $file->getFilename());
         $file->write();
-        $v2Url = $file->getURL(false);
 
+        $v2HashUrl = '/assets/' . $hashHelper->buildFileID($file->getFilename(), $file->getHash(), $file->getVariant());
         $file->publishSingle();
+        $v2Url = $file->getURL(false);
 
         // After publishing second draft file
         $response = $this->get($v2Url);
@@ -200,16 +202,16 @@ class RedirectFileControllerTest extends FunctionalTest
             'Publish version should resolve with 200'
         );
 
-        $response = $this->get('/assets/' . $file->getFilename());
+        $response = $this->get($v2HashUrl);
         $this->assertResponse(
             302,
             '',
             $v2Url,
             $response,
-            'Legacy URL should redirect to the latest live version'
+            'Latest hash URL should redirect to the latest natural path URL'
         );
 
-        $response = $this->get($v1Url);
+        $response = $this->get($v1HashUrl);
         $this->assertResponse(
             302,
             '',
@@ -421,6 +423,28 @@ class RedirectFileControllerTest extends FunctionalTest
     protected function getAssetStore()
     {
         return Injector::inst()->get(AssetStore::class);
+    }
+
+
+    /**
+     * Fetch a file asset url and assert that the reponse meet some criteria
+     * @param string $url URL to fetch. The URL is normalise to always start with `/assets/`
+     * @param string $code Expected response HTTP code
+     * @param string $body Expected body of the response. Only checked for non-error codes
+     * @param string|false $location Expected location header or false for non-redirect response
+     * @param string $message Failed assertion message
+     */
+    protected function assertGetResponse($url, $code, $body, $location, $message = '')
+    {
+        // Make sure the url is prefix with assets
+        $url = '/assets/' . preg_replace('#^/?(assets)?\/?#', '', $url);
+        $this->assertResponse(
+            $code,
+            $body,
+            $location,
+            $this->get($url),
+            ($message ? "$message\n" : "") . "Fetching $url failed"
+        );
     }
 
     /**

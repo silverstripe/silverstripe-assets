@@ -548,17 +548,22 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             return $filename;
         }
 
-        $helper = $this->getDefaultFileIDHelper();
-        $newName = $this->cleanFilename($newName);
-        $fileID = $helper->buildFileID($filename, $hash);
-        $filesystem = $this->getFilesystemFor($fileID);
-        foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
-            // Get variant and build new ID for this variant
-            $variant = $helper->parseFileID($nextID)->getVariant();
-            $newID = $helper->buildFileID($newName, $hash, $variant);
-            $filesystem->copy($nextID, $newID);
-        }
-        return $newName;
+        /** @var ParsedFileID $newParsedFiledID */
+        $newParsedFiledID = $newParsedFiledID = $this->applyToFileOnFilesystem(
+            function (ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy) use ($newName) {
+                $newName = $strategy->cleanFilename($newName);
+                foreach ($strategy->findVariants($pfid, $fs) as $variantParsedFileID) {
+                    $fromFileID = $variantParsedFileID->getFileID();
+                    $toFileID = $strategy->buildFileID($variantParsedFileID->setFilename($newName));
+                    $fs->copy($fromFileID, $toFileID);
+                }
+                
+                return $pfid->setFilename($newName);
+            },
+            new ParsedFileID($filename, $hash)
+        );
+        
+        return $newParsedFiledID ? $newParsedFiledID->getFilename(): null;
     }
 
     /**
@@ -913,7 +918,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         } elseif ($conflictResolution === static::CONFLICT_EXCEPTION) {
             throw new InvalidArgumentException("File already exists at path {$fileID}");
         } elseif ($conflictResolution === static::CONFLICT_RENAME) {
-            foreach ($this->fileGeneratorFor($fileID) as $candidate) {
+            foreach ($this->fileGeneratorFor($targetFileID) as $candidate) {
                 if (!$fs->has($candidate)) {
                     $parsedFileID = $parsedFileID->setFileID($candidate);
                     break;
@@ -970,22 +975,24 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getMetadata($filename, $hash, $variant = null)
     {
-        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
-        $filesystem = $this->getFilesystemFor($fileID);
-        if ($filesystem) {
-            return $filesystem->getMetadata($fileID);
-        }
-        return null;
+        // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
+        return $this->applyToFileOnFilesystem(
+            function (ParsedFileID $parsedFileID, Filesystem $fs) {
+                return $fs->getMetadata($parsedFileID->getFileID());
+            },
+            new ParsedFileID($filename, $hash, $variant)
+        );
     }
 
     public function getMimeType($filename, $hash, $variant = null)
     {
-        $fileID = $this->getDefaultFileIDHelper()->buildFileID($filename, $hash, $variant);
-        $filesystem = $this->getFilesystemFor($fileID);
-        if ($filesystem) {
-            return $filesystem->getMimetype($fileID);
-        }
-        return null;
+        // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
+        return $this->applyToFileOnFilesystem(
+            function (ParsedFileID $parsedFileID, Filesystem $fs) {
+                return $fs->getMimetype($parsedFileID->getFileID());
+            },
+            new ParsedFileID($filename, $hash, $variant)
+        );
     }
 
     public function exists($filename, $hash, $variant = null)
@@ -1200,7 +1207,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // Check if we can find a URL to redirect to
         $strategy = $this->getPublicResolutionStrategy();
-        if ($strategy && $parsedFileID = $strategy->resolveFileIDToLatest($asset, $public)) {
+        if ($strategy && $parsedFileID = $strategy->softResolveFileID($asset, $public)) {
             return $this->createRedirectResponse($parsedFileID->getFileID());
         }
 

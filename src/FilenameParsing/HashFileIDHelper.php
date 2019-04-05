@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
+use InvalidArgumentException;
 use SilverStripe\Core\Injector\Injectable;
 
 /**
@@ -24,6 +25,10 @@ class HashFileIDHelper implements FileIDHelper
 
     public function buildFileID($filename, $hash, $variant = null)
     {
+        if (empty($hash)) {
+            throw new InvalidArgumentException('HashFileIDHelper::buildFileID requires an $hash value.');
+        }
+
         // Since we use double underscore to delimit variants, eradicate them from filename
         $filename = $this->cleanFilename($filename);
         $name = basename($filename);
@@ -74,7 +79,7 @@ class HashFileIDHelper implements FileIDHelper
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
         return new ParsedFileID(
             $filename,
-            isset($matches['hash']) ? $matches['hash'] : '',
+            $matches['hash'],
             isset($matches['variant']) ? $matches['variant'] : '',
             $fileID
         );

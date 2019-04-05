@@ -7,6 +7,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\FileNameFilter;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\DataObject;
@@ -46,20 +47,21 @@ class FolderTest extends SapphireTest
             )
         );
 
-        // Create a test folders for each of the fixture references
-        foreach (Folder::get() as $folder) {
-            $path = TestAssetStore::getLocalPath($folder);
-            Filesystem::makeFolder($path);
-        }
-
         // Create a test files for each of the fixture references
-        $files = File::get()->exclude('ClassName', Folder::class);
-        foreach ($files as $file) {
-            $path = TestAssetStore::getLocalPath($file);
-            Filesystem::makeFolder(dirname($path));
-            $fh = fopen($path, "w+");
-            fwrite($fh, str_repeat('x', 1000000));
-            fclose($fh);
+        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
+            /** @var File $file */
+
+            $file->File->Hash = sha1('version 1');
+            $file->write();
+
+            // Create variant for each file
+            $file->setFromString(
+                'version 1',
+                $file->getFilename(),
+                $file->getHash(),
+                null,
+                ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+            );
         }
     }
 
@@ -176,11 +178,13 @@ class FolderTest extends SapphireTest
         // set ParentID. This should cause updateFilesystem to be called on all children
         $folder1->ParentID = $folder2->ID;
         $folder1->write();
+//        die();
 
         // Check if the file in the folder moved along
         /** @var File $file1Draft */
         $file1Draft = Versioned::get_by_stage(File::class, Versioned::DRAFT)->byID($file1->ID);
-        $this->assertFileExists(TestAssetStore::getLocalPath($file1Draft));
+//        var_dump(ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt');
+        $this->assertFileExists(ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt');
 
         $this->assertEquals(
             'FileTest-folder2/FileTest-folder1/File1.txt',
@@ -190,7 +194,7 @@ class FolderTest extends SapphireTest
 
         // File should be located in new folder
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/55b443b601/File1.txt',
+            ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt',
             TestAssetStore::getLocalPath($file1Draft)
         );
 
@@ -198,14 +202,14 @@ class FolderTest extends SapphireTest
         /** @var File $file1Live */
         $file1Live = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($file1->ID);
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/FileTest-folder1/55b443b601/File1.txt',
+            ASSETS_PATH . '/FolderTest/FileTest-folder1/58a74a7aa4/File1.txt',
             TestAssetStore::getLocalPath($file1Live)
         );
 
         // Publishing the draft to live should move the new file to the public store
         $file1Draft->publishRecursive();
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/FileTest-folder2/FileTest-folder1/55b443b601/File1.txt',
+            ASSETS_PATH . '/FolderTest/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt',
             TestAssetStore::getLocalPath($file1Draft)
         );
     }
@@ -240,7 +244,7 @@ class FolderTest extends SapphireTest
 
         // File should be located in new folder
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/.protected/FileTest-folder1-changed/55b443b601/File1.txt',
+            ASSETS_PATH . '/FolderTest/.protected/FileTest-folder1-changed/58a74a7aa4/File1.txt',
             TestAssetStore::getLocalPath($file1)
         );
     }

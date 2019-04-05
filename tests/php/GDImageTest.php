@@ -38,4 +38,9 @@ class GDImageTest extends ImageTest
         $backend = $image->getImageBackend();
         $this->assertEquals('gd', $backend->getImageManager()->config['driver']);
     }
+
+    public function testGetTagWithTitle()
+    {
+        parent::testGetTagWithTitle();
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests\Shortcodes;
 
+use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest\EditableObject;
 use SilverStripe\Dev\SapphireTest;
@@ -16,11 +17,26 @@ class FileBrokenLinksTest extends SapphireTest
         EditableObject::class,
     ];
 
+    public function setUp()
+    {
+        parent::setUp();
+
+        // Set backend root to /ImageTest
+        TestAssetStore::activate('FileBrokenLinksTest');
+    }
+
+    public function tearDown()
+    {
+        TestAssetStore::reset();
+        parent::tearDown();
+    }
+
+
     public function testDeletingFileMarksBackedPagesAsBroken()
     {
         // Test entry
         $file = new File();
-        $file->setFromString('test', 'test-file.txt');
+        $file->setFromString('test', 'test-file.txt', sha1('test'));
         $file->write();
 
         // Parent object

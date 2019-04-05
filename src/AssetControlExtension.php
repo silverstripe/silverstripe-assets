@@ -130,12 +130,6 @@ class AssetControlExtension extends DataExtension
         // When deleting from stage then check if we should archive assets
         $archive = $this->owner->config()->get('keep_archived_assets');
 
-        // Publish assets
-        $this->publishAll($manipulations->getPublicAssets());
-
-        // Protect assets
-        $this->protectAll($manipulations->getProtectedAssets());
-
         // Check deletion policy
         $deletedAssets = $manipulations->getDeletedAssets();
         if ($archive && $this->isVersioned()) {
@@ -145,6 +139,11 @@ class AssetControlExtension extends DataExtension
             // Otherwise remove all assets
             $this->deleteAll($deletedAssets);
         }
+
+        // Publish assets
+        $this->publishAll($manipulations->getPublicAssets());
+        // Protect assets
+        $this->protectAll($manipulations->getProtectedAssets());
     }
 
     /**

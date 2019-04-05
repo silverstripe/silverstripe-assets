@@ -881,7 +881,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             function (
                 ParsedFileID $parsedFileID,
                 Filesystem $fs,
-                FileResolutionStrategy $strategy, $visibility
+                FileResolutionStrategy $strategy,
+                $visibility
             ) use ($hash) {
                 if ($hash) {
                     $stream = $fs->readStream($parsedFileID->getFileID());
@@ -893,7 +894,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     }
                 }
                 return [$parsedFileID, $fs, $strategy, $visibility];
-            }, $parsedFileID
+            },
+            $parsedFileID
         );
 
         if ($fsObjs) {
@@ -997,6 +999,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function exists($filename, $hash, $variant = null)
     {
+        if (empty($filename) || empty($hash)) {
+            return false;
+        }
+
         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
         return $this->applyToFileOnFilesystem(
             function ($parsedfid) {
@@ -1022,7 +1028,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Otherwise, check if this exists
-        $exists = $this->applyToFileOnFilesystem(function () { return true; }, $fileID);
+        $exists = $this->applyToFileOnFilesystem(function () {
+            return true;
+        }, $fileID);
         if (!$exists) {
             return $fileID;
         }
@@ -1037,7 +1045,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Rename
             case static::CONFLICT_RENAME: {
                 foreach ($this->fileGeneratorFor($fileID) as $candidate) {
-                    $exists = $this->applyToFileOnFilesystem(function () { return true; }, $candidate);
+                    $exists = $this->applyToFileOnFilesystem(function () {
+                        return true;
+                    }, $candidate);
                     if (!$exists) {
                         return $candidate;
                     }

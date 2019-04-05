@@ -51,15 +51,14 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         $v2Url = $file->getURL(false);
 
         $this->getAssetStore()->grant($file->getFilename(), $v1hash);
-        $response = $this->get($v1HashUrl);
-        $this->getAssetStore()->revoke($file->getFilename(), $v1hash);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v1HashUrl,
             200,
             'version 1',
             false,
-            $response,
             'Old Hash URL of live file should return 200 when access is granted'
         );
+        $this->getAssetStore()->revoke($file->getFilename(), $v1hash);
 
         $file->doUnpublish();
 

@@ -82,6 +82,7 @@ class FileTest extends SapphireTest
         fclose($fh);
 
         $file = new File();
+        $file->File->Hash = sha1_file($testfilePath);
         $file->setFromLocalFile($testfilePath);
         $file->ParentID = $folder->ID;
         $file->write();

@@ -78,7 +78,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->publicFilesystem
             ->expects($this->atLeastOnce())
             ->method('readStream')
-            ->willReturn(fopen('data://text/plain,some dummy content','r'));
+            ->willReturn(fopen('data://text/plain,some dummy content', 'r'));
         $this->publicAdapter->expects($this->atLeastOnce())->method('getPublicUrl')->willReturn('public.jpg');
         $this->protectedFilesystem->expects($this->never())->method('has');
 
@@ -105,7 +105,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->protectedAdapter->expects($this->atLeastOnce())->method('getProtectedUrl')->willReturn('protected.jpg');
         $this->protectedFilesystem->expects($this->atLeastOnce())
             ->method('readStream')
-            ->willReturn(fopen('data://text/plain,some dummy content','r'));
+            ->willReturn(fopen('data://text/plain,some dummy content', 'r'));
 
         $injector = Injector::inst();
 

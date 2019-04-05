@@ -322,7 +322,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $possibleVariants = $filesystem->listContents($folder, true);
         foreach ($possibleVariants as $possibleVariant) {
             if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                yield $helper->parseFileID($possibleVariant['path']);
+                yield $helper->parseFileID($possibleVariant['path'])->setHash($parsedFileID->getHash());
             }
         }
     }

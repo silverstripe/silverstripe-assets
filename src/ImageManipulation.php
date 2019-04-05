@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets;
 
+use BadMethodCallException;
+use Closure;
 use InvalidArgumentException;
 use LogicException;
 use SilverStripe\Assets\Storage\AssetContainer;
@@ -50,6 +52,11 @@ trait ImageManipulation
      * @var Image_Backend
      */
     protected $imageBackend;
+
+    /**
+     * @var Closure
+     */
+    protected $beforeManipulateCallback;
 
     /**
      * If image resizes are allowed
@@ -672,6 +679,28 @@ trait ImageManipulation
     }
 
     /**
+     * @param string $format
+     * @return AssetContainer
+     */
+    public function EncodeAs($format)
+    {
+        $this->beforeManipulate(function (Image_Backend $backend, &$filename, $hash, $variant, $store) use ($format) {
+            if (!method_exists($backend, 'supportsReencoding') || !$backend->supportsReencoding()) {
+                $backendClass = get_class($backend);
+                throw new BadMethodCallException("Image backend {$backendClass} does not support re-encoding images");
+            }
+
+            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $filename = preg_replace("/\.{$extension}$/", ".{$format}", $filename);
+        });
+
+        $variant = $this->variantName(__FUNCTION__, $format);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) {
+            return $backend;
+        });
+    }
+
+    /**
      * Get HTML for img containing the icon for this file
      *
      * @return DBHTMLText
@@ -934,6 +963,12 @@ trait ImageManipulation
         // otherwise use the existing variant
         $store = Injector::inst()->get(AssetStore::class);
         $tuple = $manipulationResult = null;
+
+        $backend = $this->getImageBackend();
+        if ($this->beforeManipulateCallback) {
+            $this->beforeManipulateCallback->__invoke($backend, $filename, $hash, $variant, $store);
+        }
+
         if (!$store->exists($filename, $hash, $variant)) {
             // Circumvent generation of thumbnails if we only want to get existing ones
             if (!$this->getAllowGeneration()) {

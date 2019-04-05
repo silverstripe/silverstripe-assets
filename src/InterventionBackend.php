@@ -100,6 +100,14 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
+     * @return bool
+     */
+    public function supportsReencoding()
+    {
+        return true;
+    }
+
+    /**
      * @return string The temporary local path for this image
      */
     public function getTempPath()

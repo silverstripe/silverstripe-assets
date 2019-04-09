@@ -16,6 +16,8 @@ matrix:
       env: DB=MYSQL PHPUNIT_TEST=1
     - php: 7.1
       env: DB=MYSQL PDO=1 PHPUNIT_COVERAGE_TEST=1
+    - php: 7.2
+      env: DB=PGSQL PHPUNIT_TEST=1
 
 before_script:
   - printf "\n" | pecl install imagick

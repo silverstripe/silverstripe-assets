@@ -39,20 +39,15 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
-        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
-            $parsedFileID = $fileIDHelper->parseFileID($fileID);
-            if (!$parsedFileID) {
-                continue;
-            }
+        $parsedFileID = $this->parsedFileID($fileID);
 
-            if ($redirect = $this->searchForTuple($parsedFileID, $filesystem, false)) {
-                return $redirect;
-            }
-
-            // If our helper managed to parse the file id, but could not resolve to an actual physical file,
-            // there's nothing else we can do.
-            return null;
+        if ($redirect = $this->searchForTuple($parsedFileID, $filesystem, false)) {
+            return $redirect;
         }
+
+        // If our helper managed to parse the file id, but could not resolve to an actual physical file,
+        // there's nothing else we can do.
+        return null;
     }
 
     public function softResolveFileID($fileID, Filesystem $filesystem)
@@ -62,24 +57,22 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return null;
         }
 
-        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
-            $parsedFileID = $fileIDHelper->parseFileID($fileID);
-            if (!$parsedFileID) {
-                continue;
-            }
+        $parsedFileID = $this->parsedFileID($fileID);
 
-            $hash = $parsedFileID->getHash();
-
-            $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
-
-            if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
-                return $redirect;
-            }
-
-            // If our helper managed to parse the file id, but could not resolve to an actual physical file,
-            // there's nothing else we can do.
+        if (!$parsedFileID) {
             return null;
         }
+
+        $hash = $parsedFileID->getHash();
+        $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
+
+        if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
+            return $redirect;
+        }
+
+        // If our helper managed to parse the file id, but could not resolve to an actual physical file,
+        // there's nothing else we can do.
+        return null;
     }
 
     /**
@@ -330,5 +323,17 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     public function cleanFilename($filename)
     {
         return $this->getDefaultFileIDHelper()->cleanFilename($filename);
+    }
+    
+    public function parsedFileID($fileID)
+    {
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if ($parsedFileID) {
+                return $parsedFileID;
+            }
+        }
+
+        return null;
     }
 }

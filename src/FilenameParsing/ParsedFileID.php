@@ -79,8 +79,8 @@ class ParsedFileID
     {
         return [
             'Filename'  => $this->filename,
-            'Variant'   => $this->variant ?: null,
-            'Hash'      => $this->hash ?: null
+            'Variant'   => $this->variant ?: '',
+            'Hash'      => $this->hash ?: ''
         ];
     }
 

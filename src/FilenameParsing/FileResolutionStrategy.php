@@ -45,6 +45,13 @@ interface FileResolutionStrategy
     public function buildFileID($tuple);
 
     /**
+     * Try to resolve the provided file ID string irrespective of whatever it exists on the Filesystem or not.
+     * @param $fileID
+     * @return ParsedFileID
+     */
+    public function parsedFileID($fileID);
+
+    /**
      * Find all the variants of the provided tuple
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem

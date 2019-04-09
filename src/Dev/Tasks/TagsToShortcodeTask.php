@@ -14,7 +14,13 @@ class TagsToShortcodeTask extends BuildTask
 
     protected $title = 'Rewrite tags to shortcodes';
 
-    protected $description = "Rewrites tags to shortcodes in any HTMLText field";
+    protected $description = "
+        Rewrites tags to shortcodes in any HTMLText field
+
+		Parameters:
+		- baseClass: The base class that will be used to look up HTMLText fields. Defaults to SilverStripe\ORM\DataObject
+		- includeBaseClass: Whether to include the base class' HTMLText fields or not
+    ";
 
     /**
      * @param \SilverStripe\Control\HTTPRequest $request
@@ -22,7 +28,10 @@ class TagsToShortcodeTask extends BuildTask
      */
     public function run($request)
     {
-        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper(
+            $request->getVar('baseClass'),
+            isset($request->getVars()['includeBaseClass'])
+        );
         $tagsToShortcodeHelper->run();
 
         echo 'DONE';

@@ -49,13 +49,27 @@ class TagsToShortcodeHelper
     /** @var FlysystemAssetStore */
     private $flysystemAssetStore;
 
-    public function __construct()
+    /** @var string */
+    private $baseClass;
+
+    /** @var bool */
+    private $includeBaseClass;
+
+    /**
+     * TagsToShortcodeHelper constructor.
+     * @param string $baseClass The base class that will be used to look up HTMLText fields
+     * @param bool $includeBaseClass Whether to include the base class' HTMLText fields or not
+     */
+    public function __construct($baseClass = DataObject::class, bool $includeBaseClass = false)
     {
         $flysystemAssetStore = singleton(AssetStore::class);
         if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
             throw new InvalidArgumentException("FlysystemAssetStore missing");
         }
         $this->flysystemAssetStore = $flysystemAssetStore;
+
+        $this->baseClass = $baseClass ?: DataObject::class;
+        $this->includeBaseClass = $includeBaseClass;
     }
 
     /**
@@ -68,7 +82,7 @@ class TagsToShortcodeHelper
         $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS));
         $this->validAttributesPattern = implode('|', static::VALID_ATTRIBUTES);
 
-        $classes = ClassInfo::getFieldMap(DataObject::class, false, 'HTMLText');
+        $classes = ClassInfo::getFieldMap($this->baseClass, $this->includeBaseClass, 'HTMLText');
         foreach ($classes as $class => $tables) {
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {

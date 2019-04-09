@@ -437,16 +437,25 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Callback for saving content
-        $callback = function (Filesystem $filesystem, $fileID) use ($path) {
+        $callback = function (Filesystem $fs, $fileID) use ($path) {
             // Read contents as string into flysystem
             $handle = fopen($path, 'r');
             if ($handle === false) {
                 throw new InvalidArgumentException("$path could not be opened for reading");
             }
-            $result = $filesystem->putStream($fileID, $handle);
-            if (is_resource($handle)) {
-                fclose($handle);
+
+            // If there's already a file where we want to write and that file has the same sha1 hash as our source file
+            // We just let the existing file sit there pretend to have writen it. This avoid a weird edge case where
+            // We try to move an existing file to its own location which causes us to override the file with zero bytes
+            if ($fs->has($fileID) && $this->getStreamSHA1($handle) === $this->getStreamSHA1($fs->readStream($fileID))) {
+                if (is_resource($handle)) {
+                    fclose($handle);
+                }
+
+                return true;
             }
+
+            $result = $fs->putStream($fileID, $handle);
             return $result;
         };
 
@@ -491,7 +500,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         };
 
         // When saving original filename, generate hash
-        if (!$variant) {
+        if (!$hash && !$variant) {
             $hash = $this->getStreamSHA1($stream);
         }
 
@@ -523,20 +532,30 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             return $filename;
         }
 
-        $helper = $this->getDefaultFileIDHelper();
+        return $this->applyToFileOnFilesystem(
+            function (ParsedFileID $parsedFileID, Filesystem $fs, FileResolutionStrategy $strategy) use ($newName) {
 
-        $newName = $this->cleanFilename($newName);
-        $fileID = $helper->buildFileID($filename, $hash);
-        $filesystem = $this->getFilesystemFor($fileID);
-        foreach ($this->findVariants($fileID, $filesystem) as $nextID) {
-            // Get variant and build new ID for this variant
-            $variant = $helper->parseFileID($nextID)->getVariant();
-            $newID = $helper->buildFileID($newName, $hash, $variant);
-            $filesystem->rename($nextID, $newID);
-        }
-        // Truncate empty dirs
-        $this->truncateDirectory(dirname($fileID), $filesystem);
-        return $newName;
+                $destParsedFileID = $parsedFileID->setFilename($newName);
+
+                // Move all variants around
+                foreach ($strategy->findVariants($parsedFileID, $fs) as $originParsedFileID) {
+                    $origin = $originParsedFileID->getFileID();
+                    $destination = $strategy->buildFileID(
+                        $destParsedFileID->setVariant($originParsedFileID->getVariant())
+                    );
+                    $fs->rename($origin, $destination);
+                    $this->truncateDirectory(dirname($origin), $fs);
+                }
+
+                // Build and parsed non-variant file ID so we can figure out what the new name file name is
+                $cleanFilename = $strategy->parsedFileID(
+                    $strategy->buildFileID($destParsedFileID)
+                )->getFilename();
+
+                return $cleanFilename;
+            },
+            new ParsedFileID($filename, $hash)
+        );
     }
 
     public function copy($filename, $hash, $newName)
@@ -886,12 +905,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             ) use ($hash) {
                 if ($hash) {
                     $stream = $fs->readStream($parsedFileID->getFileID());
-                    $hc = hash_init('sha1');
-                    hash_update_stream($hc, $stream);
-                    $hashFromFile = hash_final($hc);
+                    $hashFromFile = $this->getStreamSHA1($stream);
                     if (strpos($hashFromFile, $hash) !== 0) {
                         return false;
                     }
+                    $parsedFileID = $parsedFileID->setHash($hashFromFile);
                 }
                 return [$parsedFileID, $fs, $strategy, $visibility];
             },
@@ -918,11 +936,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($conflictResolution === AssetStore::CONFLICT_OVERWRITE || !$fs->has($targetFileID)) {
             $parsedFileID = $parsedFileID->setFileID($targetFileID);
         } elseif ($conflictResolution === static::CONFLICT_EXCEPTION) {
-            throw new InvalidArgumentException("File already exists at path {$fileID}");
+            throw new InvalidArgumentException("File already exists at path {$targetFileID}");
         } elseif ($conflictResolution === static::CONFLICT_RENAME) {
             foreach ($this->fileGeneratorFor($targetFileID) as $candidate) {
                 if (!$fs->has($candidate)) {
-                    $parsedFileID = $parsedFileID->setFileID($candidate);
+                    $parsedFileID = $strategy->parsedFileID($candidate)->setHash($hash);
                     break;
                 }
             }
@@ -1005,8 +1023,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
         return $this->applyToFileOnFilesystem(
-            function ($parsedfid) {
-                return true;
+            function (ParsedFileID $parsedFileID, Filesystem $fs, FileResolutionStrategy $strategy) use ($hash) {
+                $mainParsedFileID = $strategy->searchForTuple($parsedFileID->setVariant(''), $fs);
+                $stream = $fs->readStream($mainParsedFileID->getFileID());
+                $hashFromFile = $this->getStreamSHA1($stream);
+                return strpos($hashFromFile, $hash) === 0;
             },
             new ParsedFileID($filename, $hash, $variant)
         ) ?: false;

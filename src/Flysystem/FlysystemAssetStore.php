@@ -66,7 +66,19 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     private $protectedResolutionStrategy = null;
 
     /**
-     * Enable to use legacy filename behaviour (omits hash)
+     * Enable to use legacy filename behaviour (omits hash and uses the natural filename).
+     *
+     * This setting was only required for SilverStripe prior to the 4.4.0 release.
+     * This release re-introduced natural filenames as the default mode for public files.
+     * See https://docs.silverstripe.org/en/4/developer_guides/files/file_migration/
+     * and https://docs.silverstripe.org/en/4/changelogs/4.4.0/ for details.
+     *
+     * If you have migrated to 4.x prior to the 4.4.0 release with this setting turned on,
+     * the setting won't have any effect starting with this release.
+     *
+     * If you have migrated to 4.x prior to the 4.4.0 release with this setting turned off,
+     * we recommend that you run the file migration task as outlined
+     * in https://docs.silverstripe.org/en/4/changelogs/4.4.0/
      *
      * Note that if using legacy filenames then duplicate files will not work.
      *
@@ -576,12 +588,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     $toFileID = $strategy->buildFileID($variantParsedFileID->setFilename($newName));
                     $fs->copy($fromFileID, $toFileID);
                 }
-                
+
                 return $pfid->setFilename($newName);
             },
             new ParsedFileID($filename, $hash)
         );
-        
+
         return $newParsedFiledID ? $newParsedFiledID->getFilename(): null;
     }
 

@@ -2,6 +2,13 @@
 
 namespace SilverStripe\Assets\Dev\Tasks;
 
+use InvalidArgumentException;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
@@ -38,6 +45,18 @@ class TagsToShortcodeHelper
 
     /** @var string */
     private $validAttributesPattern;
+
+    /** @var FlysystemAssetStore */
+    private $flysystemAssetStore;
+
+    public function __construct()
+    {
+        $flysystemAssetStore = singleton(AssetStore::class);
+        if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
+            throw new InvalidArgumentException("FlysystemAssetStore missing");
+        }
+        $this->flysystemAssetStore = $flysystemAssetStore;
+    }
 
     /**
      * @throws \ReflectionException
@@ -124,20 +143,15 @@ class TagsToShortcodeHelper
      * @param string $tag
      * @return array
      */
-    private function getTupleFromTag(string $tag)
+    private function getTagTuple(string $tag)
     {
-        preg_match('/.*<('.$this->validTagsPattern.').*('.$this->validAttributesPattern.')="([^"]*)"/i', $tag, $matches);
-        $tagType = $matches[1];
-        $src = $matches[3];
-        $fileName = basename($src);
-        $filePath = dirname($src);
-
-        return [
-            $tagType,
-            $src,
-            $fileName,
-            $filePath
-        ];
+        $pattern = sprintf(
+            '/.*<(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
+            $this->validTagsPattern,
+            $this->validAttributesPattern
+        );
+        preg_match($pattern, $tag, $matches);
+        return $matches;
     }
 
     /**
@@ -205,32 +219,42 @@ class TagsToShortcodeHelper
         return static::VALID_TAGS[$tagType];
     }
 
+    private function getParsedFileIDFromSrc(string $src)
+    {
+        $fileIDHelperResolutionStrategy = new FileIDHelperResolutionStrategy();
+        $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
+            new HashFileIDHelper(),
+            new LegacyFileIDHelper(),
+            $defaultFileIDHelper = new NaturalFileIDHelper(),
+        ]);
+        $fileIDHelperResolutionStrategy->setDefaultFileIDHelper($defaultFileIDHelper);
+
+        $filesystem = $this->flysystemAssetStore->getPublicFilesystem();
+
+        // set fileID to the filepath relative to assets dir
+        $pattern = '/^\\' . DIRECTORY_SEPARATOR . '?' . ASSETS_DIR . '?\\' . DIRECTORY_SEPARATOR . '?/';
+        $fileID = preg_replace($pattern, '', $src);
+
+        return $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+    }
+
     /**
      * @param string $tag
      * @return string|null Returns the new tag or null if the tag does not need to be rewritten
      */
     private function getNewTag(string $tag)
     {
-        list($tagType, $src, $fileName, $filePath) = $this->getTupleFromTag($tag);
+        list('tagType' => $tagType, 'src' => $src) = $this->getTagTuple($tag);
 
         // Search for a File object containing this filename
+        $parsedFileID = $this->getParsedFileIDFromSrc($src);
         /** @var File $file */
-        if ($file = File::get()->filter('FileFilename:PartialMatch', $fileName)->first()) {
-            // Create new source based on a file hashcode
-            $newSrc = $filePath . DIRECTORY_SEPARATOR;
-
-            // Only include the filehash subfolder in the path if not resampled
-            if (strpos($src, '_resampled') == false) {
-                $hashShort = substr($file->FileHash, 0, 10);
-                // Make sure we don't include any old hash
-                if ($hashShort == basename($filePath)) {
-                    $newSrc = dirname($filePath) . DIRECTORY_SEPARATOR . $hashShort . DIRECTORY_SEPARATOR;
-                } else {
-                    $newSrc .= $hashShort . DIRECTORY_SEPARATOR;
-                }
-            }
-
-            $newSrc .= $fileName;
+        if (
+            $parsedFileID
+            && ($file = File::get()->filter('FileFilename:PartialMatch', $parsedFileID->getFilename())->first())
+        ) {
+            // Set the new src that points to the correct destination
+            $newSrc = DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $parsedFileID->getFileID();
 
             // Build up the shortcode
             $properties = static::getAttributes($tag, $tagType, $newSrc);
@@ -250,7 +274,6 @@ class TagsToShortcodeHelper
 
             return $tagNew;
         }
-
         return null;
     }
 }

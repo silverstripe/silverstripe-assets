@@ -6,5 +6,13 @@ Requires PHPUnit ^5.7
 <phpunit bootstrap="vendor/silverstripe/framework/tests/bootstrap.php" colors="true">
 	<testsuite name="Default">
 		<directory>tests/php</directory>
-    </testsuite>
+	</testsuite>
+	<filter>
+	<whitelist addUncoveredFilesFromWhitelist="true">
+		<directory suffix=".php">src/</directory>
+		<exclude>
+			<directory suffix=".php">tests/php/</directory>
+		</exclude>
+	</whitelist>
+</filter>
 </phpunit>

@@ -39,7 +39,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
-        $parsedFileID = $this->parsedFileID($fileID);
+        $parsedFileID = $this->parseFileID($fileID);
 
         if ($redirect = $this->searchForTuple($parsedFileID, $filesystem, false)) {
             return $redirect;
@@ -57,7 +57,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return null;
         }
 
-        $parsedFileID = $this->parsedFileID($fileID);
+        $parsedFileID = $this->parseFileID($fileID);
 
         if (!$parsedFileID) {
             return null;
@@ -144,6 +144,30 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 'Hash' => $file->getHash(),
                 'Variant' => $variant
             ];
+        }
+    }
+
+    /**
+     * @todo Right unit test
+     */
+    public function generateVariantFileID($tuple, Filesystem $fs)
+    {
+        $parsedFileID = $this->preProcessTuple($tuple);
+        if (empty($parsedFileID->getVariant())) {
+            return $this->searchForTuple($parsedFileID, $fs);
+        }
+
+        // Let's try to find a helper who can understand our file ID
+        foreach ($this->resolutionFileIDHelpers as $helper) {
+            if ($this->validateHash($helper, $parsedFileID, $fs)) {
+                return $parsedFileID->setFileID(
+                    $helper->buildFileID(
+                        $parsedFileID->getFilename(),
+                        $parsedFileID->getHash(),
+                        $parsedFileID->getVariant()
+                    )
+                );
+            }
         }
     }
 
@@ -325,7 +349,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         return $this->getDefaultFileIDHelper()->cleanFilename($filename);
     }
     
-    public function parsedFileID($fileID)
+    public function parseFileID($fileID)
     {
         foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
             $parsedFileID = $fileIDHelper->parseFileID($fileID);
@@ -335,5 +359,54 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
 
         return null;
+    }
+
+    /**
+     * @todo Write unit test
+     */
+    public function stripVariant($fileID)
+    {
+        // Normalise our parameters
+        if ($fileID instanceof ParsedFileID) {
+            $parsedFileID = $fileID;
+            $fileID = $parsedFileID->getFileID();
+
+            if (empty($fileID)) {
+                return $this->stripVariantFromParsedFileID($parsedFileID, $this->getDefaultFileIDHelper());
+            }
+        }
+
+        // Let's try to find a helper who can understand our file ID
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if ($parsedFileID) {
+                return $this->stripVariantFromParsedFileID($parsedFileID, $fileIDHelper);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param ParsedFileID $parsedFileID
+     * @param FileIDHelper $helper
+     * @return ParsedFileID
+     */
+    private function stripVariantFromParsedFileID(ParsedFileID $parsedFileID, FileIDHelper $helper)
+    {
+        if (empty($parsedFileID->getVariant())) {
+            // Our parsedFileID is already without a variant
+            return $parsedFileID;
+        }
+
+
+        // We were provided a ParsedFileID without an actual file ID.
+        // We'll build the fileID from our default helper
+        $filename = $parsedFileID->getFilename();
+        $hash = $parsedFileID->getHash();
+        $variant = '';
+        return $parsedFileID
+            ->setVariant('')
+            ->setFileID($helper->buildFileID($filename, $hash, $variant));
     }
 }

@@ -17,8 +17,8 @@ class ParsedFileIDTest extends SapphireTest
 
         $tuple = $pFileId->getTuple();
         $this->assertEquals('sam.jpg', $tuple['Filename']);
-        $this->assertNull($tuple['Variant']);
-        $this->assertNull($tuple['Hash']);
+        $this->assertEmpty($tuple['Variant']);
+        $this->assertEmpty($tuple['Hash']);
     }
 
     public function testHashVariantFileID()

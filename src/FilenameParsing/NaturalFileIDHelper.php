@@ -57,6 +57,7 @@ class NaturalFileIDHelper implements FileIDHelper
         return preg_replace('/_{2,}/', '_', $filename);
     }
 
+    /** @todo Update unit to test _resampled variants file id */
     public function parseFileID($fileID)
     {
         $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';

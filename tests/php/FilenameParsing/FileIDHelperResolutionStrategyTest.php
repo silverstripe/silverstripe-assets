@@ -435,4 +435,30 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $this->assertEmpty($expectedPaths);
     }
+
+    public function testParseFileID()
+    {
+        $brokenHelper = new BrokenFileIDHelper('nonsense.txt', 'nonsense', '', 'nonsense.txt', false, '');
+        $mockHelper = new MockFileIDHelper(
+            'Folder/FolderFile.pdf',
+            substr(sha1('version 1'), 0, 10),
+            'mockedvariant',
+            'Folder/FolderFile.pdf',
+            true,
+            'Folder'
+        );
+
+        $strategy = new FileIDHelperResolutionStrategy();
+
+        // Test that file ID gets resolved properly if a functional helper is provided
+        $strategy->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
+        $parsedFileID = $strategy->parseFileID('alpha/bravo.charlie');
+        $this->assertNotEmpty($parsedFileID);
+        $this->assertEquals('Folder/FolderFile.pdf', $parsedFileID->getFilename());
+
+        // Test that null is returned if no helper can parsed the file ID
+        $strategy->setResolutionFileIDHelpers([$brokenHelper]);
+        $parsedFileID = $strategy->parseFileID('alpha/bravo.charlie');
+        $this->assertEmpty($parsedFileID);
+    }
 }

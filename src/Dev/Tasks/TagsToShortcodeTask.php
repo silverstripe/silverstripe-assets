@@ -5,8 +5,9 @@ namespace SilverStripe\Assets\Dev\Tasks;
 use SilverStripe\Dev\BuildTask;
 
 /**
- * Class TagsToShortcodeTask
- * @package SilverStripe\Assets\Dev\Tasks
+ * SS4 and its File Migration Task changes the way in which files are stored in the assets folder, with files placed
+ * in subfolders named with partial hashmap values of the file version. This build task goes through the HTML content
+ * fields looking for instances of image links, and corrects the link path to what it should be, with an image shortcode.
  */
 class TagsToShortcodeTask extends BuildTask
 {

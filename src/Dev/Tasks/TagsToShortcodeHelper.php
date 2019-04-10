@@ -3,26 +3,29 @@
 namespace SilverStripe\Assets\Dev\Tasks;
 
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Assets\File;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\Connect\DatabaseException;
 use SilverStripe\ORM\Connect\Query;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\DB;
+use SilverStripe\ORM\DataObjectSchema;
+use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
 
 /**
  * SS4 and its File Migration Task changes the way in which files are stored in the assets folder, with files placed
- * in subfolders named with partial hashmap values of the file version. This build task goes through the HTML content
+ * in subfolders named with partial hashmap values of the file version. This helper class goes through the HTML content
  * fields looking for instances of image links, and corrects the link path to what it should be, with an image shortcode.
  */
 class TagsToShortcodeHelper
@@ -60,7 +63,7 @@ class TagsToShortcodeHelper
      * @param string $baseClass The base class that will be used to look up HTMLText fields
      * @param bool $includeBaseClass Whether to include the base class' HTMLText fields or not
      */
-    public function __construct($baseClass, bool $includeBaseClass = false)
+    public function __construct($baseClass = null, $includeBaseClass = false)
     {
         $flysystemAssetStore = singleton(AssetStore::class);
         if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
@@ -82,12 +85,21 @@ class TagsToShortcodeHelper
         $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS));
         $this->validAttributesPattern = implode('|', static::VALID_ATTRIBUTES);
 
-        $classes = ClassInfo::getFieldMap($this->baseClass, $this->includeBaseClass, 'HTMLText');
+        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, ['HTMLText', 'HTMLVarchar']);
         foreach ($classes as $class => $tables) {
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
                     try {
-                        $records = DB::query("SELECT \"ID\", \"$field\" FROM \"{$table}\" WHERE \"$field\" RLIKE '<(".$this->validTagsPattern.")'");
+                        $sqlSelect = SQLSelect::create(
+                            ['ID', $field],
+                            $table
+                        );
+                        $whereAnys = [];
+                        foreach (array_keys(static::VALID_TAGS) as $tag) {
+                            $whereAnys[]= "\"$table\".\"Content\" LIKE '%<$tag%'";
+                        }
+                        $sqlSelect->addWhereAny($whereAnys);
+                        $records = $sqlSelect->execute();
                         $this->rewriteFieldForRecords($records, $table, $field);
                     } catch (DatabaseException $exception) {
                     }
@@ -102,7 +114,7 @@ class TagsToShortcodeHelper
      * @param string $updateTable
      * @param string $field
      */
-    private function rewriteFieldForRecords(Query $records, string $updateTable, string $field)
+    private function rewriteFieldForRecords(Query $records, $updateTable, $field)
     {
         foreach ($records as $row) {
             $content = $row[$field];
@@ -114,7 +126,7 @@ class TagsToShortcodeHelper
             $updateSQL = SQLUpdate::create($updateTable)->addWhere(['"ID"' => $row['ID']]);
             $updateSQL->addAssignments(["\"$field\"" => $newContent]);
             $updateSQL->execute();
-            DB::alteration_message('Updated page with ID ' . $row['ID'], 'changed');
+            Injector::inst()->get(LoggerInterface::class)->info("Updated page with ID {$row['ID']}");
         }
     }
 
@@ -122,7 +134,7 @@ class TagsToShortcodeHelper
      * @param string $content
      * @return string
      */
-    private function getNewContent(string $content)
+    public function getNewContent($content)
     {
         $tags = $this->getTagsInContent($content);
         foreach ($tags as $tag) {
@@ -157,7 +169,7 @@ class TagsToShortcodeHelper
      * @param string $tag
      * @return array
      */
-    private function getTagTuple(string $tag)
+    private function getTagTuple($tag)
     {
         $pattern = sprintf(
             '/.*<(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
@@ -169,71 +181,11 @@ class TagsToShortcodeHelper
     }
 
     /**
-     * Gets the value of a given attribute from a tag.
-     * @param $tag
-     * @param $attribute
-     * @return null
+     * @param string $src
+     * @return null|ParsedFileID
+     * @throws \League\Flysystem\Exception
      */
-    private static function getAttribute($tag, $attribute)
-    {
-        $propertyValue = null;
-        $needle = $attribute . '="';
-        if (strpos($tag, $needle)) {
-            $propertyValue = explode('"', explode($needle, $tag)[1])[0];
-        }
-
-        return $propertyValue;
-    }
-
-    /**
-     * Extracts an array of attributes from a tag.
-     * @param string $tag
-     * @param string $tagType
-     * @param $id
-     * @param $newSrc
-     * @return array
-     */
-    private static function getAttributes(string $tag, string $tagType, $newSrc)
-    {
-        $attributes = [];
-
-        if ($tagType == 'img') {
-            $imgAttributes = [
-                'src' => $newSrc,
-            ];
-
-            if ($title = static::getAttribute($tag, 'title')) {
-                $imgAttributes['title'] = $title;
-            }
-            if ($width = static::getAttribute($tag, 'width')) {
-                $imgAttributes['width'] = $width;
-            }
-            if ($height = static::getAttribute($tag, 'height')) {
-                $imgAttributes['height'] = $height;
-            }
-            if ($class = static::getAttribute($tag, 'class')) {
-                $imgAttributes['class'] = $class;
-            }
-            if ($alt = static::getAttribute($tag, 'alt')) {
-                $imgAttributes['alt'] = $alt;
-            }
-
-            $attributes = array_merge($attributes, $imgAttributes);
-        }
-
-        return $attributes;
-    }
-
-    /**
-     * @param string $tagType
-     * @return string
-     */
-    private static function getShortCodeTypeFromTagType(string $tagType)
-    {
-        return static::VALID_TAGS[$tagType];
-    }
-
-    private function getParsedFileIDFromSrc(string $src)
+    private function getParsedFileIDFromSrc($src)
     {
         $fileIDHelperResolutionStrategy = new FileIDHelperResolutionStrategy();
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
@@ -243,47 +195,68 @@ class TagsToShortcodeHelper
         ]);
         $fileIDHelperResolutionStrategy->setDefaultFileIDHelper($defaultFileIDHelper);
 
-        $filesystem = $this->flysystemAssetStore->getPublicFilesystem();
-
         // set fileID to the filepath relative to assets dir
+//        $pattern = '/^\\/?' . ASSETS_DIR . '?\\/?/';
         $pattern = '/^\\' . DIRECTORY_SEPARATOR . '?' . ASSETS_DIR . '?\\' . DIRECTORY_SEPARATOR . '?/';
         $fileID = preg_replace($pattern, '', $src);
 
-        return $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+        // Try resolving with public filesystem first
+        $filesystem = $this->flysystemAssetStore->getPublicFilesystem();
+        $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+        if (!$parsedFileId) {
+            // Try resolving with protected filesystem
+            $filesystem = $this->flysystemAssetStore->getProtectedFilesystem();
+            $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+        }
+        return $parsedFileId;
     }
 
     /**
      * @param string $tag
      * @return string|null Returns the new tag or null if the tag does not need to be rewritten
      */
-    private function getNewTag(string $tag)
+    private function getNewTag($tag)
     {
-        list('tagType' => $tagType, 'src' => $src) = $this->getTagTuple($tag);
+        $tuple = $this->getTagTuple($tag);
+        $tagType = $tuple['tagType'];
+        $src = $tuple['src'];
 
         // Search for a File object containing this filename
         $parsedFileID = $this->getParsedFileIDFromSrc($src);
+        if (!$parsedFileID) {
+            return null;
+        }
+
         /** @var File $file */
-        if ($parsedFileID && ($file = File::get()->filter('FileFilename:PartialMatch', $parsedFileID->getFilename())->first())) {
-            // Set the new src that points to the correct destination
-            $newSrc = DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $parsedFileID->getFileID();
-
-            // Build up the shortcode
-            $properties = static::getAttributes($tag, $tagType, $newSrc);
-            $shortCodeType = static::getShortCodeTypeFromTagType($tagType);
-
-            $attributesString = "";
-            foreach ($properties as $key => $value) {
-                $attributesString .= "$key=\"$value\" ";
+        $file = File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();
+        $liveFile = SQLSelect::create('ID', 'File_Live', ['FileFilename' => $parsedFileID->getFilename()])->count() > 0;
+        $hasFile = $file || $liveFile;
+        if ($parsedFileID && $hasFile) {
+            if ($tagType == 'img') {
+                $find = [
+                    '/<img/',
+                    '/src\s*=\s*".*?"/',
+                    '/href\s*=\s*".*?"/',
+                    '/>/',
+                ];
+                $replace = [
+                    '[image',
+                    "src=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
+                    "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
+                    " id={$file->ID}]",
+                ];
+                $shortcode = preg_replace($find, $replace, $tag);
+            } elseif ($tagType == 'a') {
+                $attribute = 'href';
+                $find= "/$attribute\s*=\s*\".*?\"/";
+                $replace = "$attribute=\"[file_link id={$file->ID}]\"";
+                $shortcode = preg_replace($find, $replace, $tag);
+            } else {
+                return null;
             }
-            $attributesString .= "id={$file->ID}";
-            $tagNew = "[$shortCodeType $attributesString]";
+            return $shortcode;
 
-            // only replace the href, not the whole tag
-            if ($tagType == 'a') {
-                $tagNew = preg_replace('/(.*<.*(?:'.$this->validAttributesPattern.')=")([^"]*)(")/i', '$1'.$tagNew.'$3', $tag);
-            }
 
-            return $tagNew;
         }
         return null;
     }

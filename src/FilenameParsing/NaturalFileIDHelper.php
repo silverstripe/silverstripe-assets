@@ -62,7 +62,7 @@ class NaturalFileIDHelper implements FileIDHelper
         $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
-        if (!preg_match($pattern, $fileID, $matches)) {
+        if (!preg_match($pattern, $fileID, $matches) || strpos($matches['folder'], '_resampled') !== false) {
             return null;
         }
 

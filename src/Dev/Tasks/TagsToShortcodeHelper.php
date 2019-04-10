@@ -60,7 +60,7 @@ class TagsToShortcodeHelper
      * @param string $baseClass The base class that will be used to look up HTMLText fields
      * @param bool $includeBaseClass Whether to include the base class' HTMLText fields or not
      */
-    public function __construct($baseClass = DataObject::class, bool $includeBaseClass = false)
+    public function __construct($baseClass, bool $includeBaseClass = false)
     {
         $flysystemAssetStore = singleton(AssetStore::class);
         if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {

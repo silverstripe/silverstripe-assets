@@ -1016,7 +1016,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     [
                         ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID['Hash']) . '%'],
                         ['not "FileHash" like ?' => DB::get_conn()->escapeString($file->getHash())],
-                        'WasPublished' => true
+                        '"WasPublished"' => true
                     ],
                     "",
                     1

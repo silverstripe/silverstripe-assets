@@ -263,10 +263,7 @@ class TagsToShortcodeHelper
         // Search for a File object containing this filename
         $parsedFileID = $this->getParsedFileIDFromSrc($src);
         /** @var File $file */
-        if (
-            $parsedFileID
-            && ($file = File::get()->filter('FileFilename:PartialMatch', $parsedFileID->getFilename())->first())
-        ) {
+        if ($parsedFileID && ($file = File::get()->filter('FileFilename:PartialMatch', $parsedFileID->getFilename())->first())) {
             // Set the new src that points to the correct destination
             $newSrc = DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $parsedFileID->getFileID();
 

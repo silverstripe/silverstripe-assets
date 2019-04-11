@@ -312,11 +312,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 // Build a parsed file ID to pass back to the closure
                 if ($fileID instanceof ParsedFileID) {
                     // Let's try validating the hash of our file
-                    $stream = $fs->readStream($fileIdStr);
-                    if (!empty($fileID->getHash()) &&
-                        !$this->validateStreamHash($stream, $fileID->getHash())
-                    ) {
-                        continue;
+                    if ($fileID->getHash()) {
+                        $mainFileID = $strategy->buildFileID($strategy->stripVariant($fileID));
+                        $stream = $fs->readStream($mainFileID);
+                        if (!$this->validateStreamHash($stream, $fileID->getHash())) {
+                            continue;
+                        }
                     }
                     // We already have a ParsedFileID, we just need to set the matching file ID string
                     $closesureParsedFileID = $fileID->setFileID($fileIdStr);

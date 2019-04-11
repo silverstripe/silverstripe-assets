@@ -39,6 +39,7 @@ abstract class ImageTest extends SapphireTest
         foreach ($files as $image) {
             $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
             $image->setFromLocalFile($sourcePath, $image->Filename);
+            $image->publishSingle();
         }
 
         // Set default config

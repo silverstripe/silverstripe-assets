@@ -37,16 +37,13 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         $v1hash = $file->getHash();
         $file->publishSingle();
 
-        $file->File->Hash = sha1('version 2');
         $file->setFromString(
             'version 2',
-            $file->getFilename(),
-            $file->getHash(),
-            null,
-            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+            $file->getFilename()
         );
         $file->write();
         $v2HashUrl = $file->getURL(false);
+        
         $file->publishSingle();
         $v2Url = $file->getURL(false);
 
@@ -63,40 +60,36 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         $file->doUnpublish();
 
         // After unpublishing file
-        $response = $this->get($v2HashUrl);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v2HashUrl,
             403,
             '',
             false,
-            $response,
             'Unpublish file should return 403'
         );
 
-        $response = $this->get($v2Url);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v2Url,
             404,
             '',
             false,
-            $response,
             'Natural path URL of unpublish files should return 404'
         );
 
-        $response = $this->get($v1HashUrl);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v1HashUrl,
             403,
             '',
             false,
-            $response,
             'Old Hash URL of unpublished files should return 403'
         );
 
         $this->getAssetStore()->grant($file->getFilename(), $v1hash);
-        $response = $this->get($v1HashUrl);
-        $this->assertResponse(
+        $this->assertGetResponse(
+            $v1HashUrl,
             200,
             'version 1',
             false,
-            $response,
             'Old Hash URL of unpublished files should return 200 when access is granted'
         );
     }
@@ -215,5 +208,13 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
             false,
             'Archived files should resolve when access is granted'
         );
+    }
+
+    /**
+     * @dataProvider imageList
+     */
+    public function testVariantRedirect($folderFixture, $filename, $ext)
+    {
+        parent::testVariantRedirect($folderFixture, $filename, $ext);
     }
 }

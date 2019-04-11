@@ -752,7 +752,7 @@ class UploadTest extends SapphireTest
         /** @var Image $image */
         $image = $uploadImage();
         $resampled = $image->ResizedImage(123, 456);
-        $resampledPath = TestAssetStore::getLocalPath($resampled);
+        $resampledPath = ASSETS_PATH . "/UploadTest/.protected/Uploads/f5c7c2f814/UploadTest-testUpload__{$resampled->getVariant()}.jpg";
         $this->assertFileExists($resampledPath);
 
         // Re-upload the image, overwriting the original

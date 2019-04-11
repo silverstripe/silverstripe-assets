@@ -133,15 +133,17 @@ class AssetControlExtension extends DataExtension
         // Check deletion policy
         $deletedAssets = $manipulations->getDeletedAssets();
         if ($archive && $this->isVersioned()) {
+            // Publish assets
+            $this->swapAll($manipulations->getPublicAssets());
             // Archived assets are kept protected
             $this->protectAll($deletedAssets);
         } else {
+            // Publish assets
+            $this->publishAll($manipulations->getPublicAssets());
             // Otherwise remove all assets
             $this->deleteAll($deletedAssets);
         }
 
-        // Publish assets
-        $this->publishAll($manipulations->getPublicAssets());
         // Protect assets
         $this->protectAll($manipulations->getProtectedAssets());
     }
@@ -264,6 +266,32 @@ class AssetControlExtension extends DataExtension
         $store = $this->getAssetStore();
         foreach ($assets as $asset) {
             $store->delete($asset['Filename'], $asset['Hash']);
+        }
+    }
+
+    /**
+     * Move all assets in the list to the public store
+     *
+     * @param array $assets
+     */
+    protected function swapAll($assets)
+    {
+        if (empty($assets)) {
+            return;
+        }
+
+        $store = $this->getAssetStore();
+
+        // The `swap` method was introduced in the 1.4 release. It wasn't added to the interface to avoid breaking
+        // custom implementation. If it's not available on our store, we fallback to a publish/protect
+        if (method_exists($store, 'swapPublish')) {
+            foreach ($assets as $asset) {
+                $store->swapPublish($asset['Filename'], $asset['Hash']);
+            }
+        } else {
+            foreach ($assets as $asset) {
+                $store->publish($asset['Filename'], $asset['Hash']);
+            }
         }
     }
 

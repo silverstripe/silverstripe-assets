@@ -291,15 +291,42 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             self::VISIBILITY_PROTECTED
         ];
 
-        // First we try
+        if (is_array($fileID)) {
+            $fileID = new ParsedFileID($fileID);
+        }
+
+        /** @var Filesystem $fs */
+        /** @var FileResolutionStrategy $strategy */
+        /** @var string $visibility */
+
+        // First we try to search for exact file id string match
         foreach ([$publicSet, $protectedSet] as $set) {
             list($fs, $strategy, $visibility) = $set;
-            $fileIdStr = is_string($fileID) ? $fileID : $strategy->buildFileID($fileID);
+
+            // Get a FileID string based on the type of FileID
+            $fileIdStr = $fileID instanceof ParsedFileID ?
+                $strategy->buildFileID($fileID):
+                $fileIdStr = $fileID;
+
             if ($fs->has($fileIdStr)) {
+                // Build a parsed file ID to pass back to the closure
+                if ($fileID instanceof ParsedFileID) {
+                    // Let's try validating the hash of our file
+                    $stream = $fs->readStream($fileIdStr);
+                    if (!empty($fileID->getHash()) &&
+                        !$this->validateStreamHash($stream, $fileID->getHash())
+                    ) {
+                        continue;
+                    }
+                    // We already have a ParsedFileID, we just need to set the matching file ID string
+                    $closesureParsedFileID = $fileID->setFileID($fileIdStr);
+                } else {
+                    // We need to resolve our string file ID to get a Parsed File ID.
+                    $closesureParsedFileID = $strategy->resolveFileID($fileIdStr, $fs);
+                }
+
                 $response = $closure(
-                    ($fileID instanceof ParsedFileID) ?
-                        $fileID->setFileID($fileIdStr) :
-                        $strategy->resolveFileID($fileIdStr, $fs),
+                    $closesureParsedFileID,
                     $fs,
                     $strategy,
                     $visibility
@@ -310,11 +337,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             }
         }
 
+        // Let's fall back to using our FileResolution strategy to see if our FileID matches alternative formats
         foreach ([$publicSet, $protectedSet] as $set) {
             list($fs, $strategy, $visibility) = $set;
-            $parsedFileID = is_string($fileID) ?
-                $strategy->resolveFileID($fileID, $fs) :
-                $strategy->searchForTuple($fileID, $fs);
+
+            $parsedFileID = $fileID instanceof ParsedFileID ?
+                $strategy->searchForTuple($fileID, $fs, $strictHashCheck) :
+                $strategy->resolveFileID($fileID, $fs);
+
             if ($parsedFileID) {
                 $response = $closure($parsedFileID, $fs, $strategy, $visibility);
                 if ($response !== false) {
@@ -649,11 +679,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function publish($filename, $hash)
     {
+        if ($this->getVisibility($filename, $hash) === AssetStore::VISIBILITY_PUBLIC) {
+            // The file is already publish
+            return;
+        }
+
         $parsedFileID = new ParsedFileID($filename, $hash);
         $protected = $this->getProtectedFilesystem();
         $public = $this->getPublicFilesystem();
-
-        $expectedPublicFileID = $this->getPublicResolutionStrategy()->buildFileID($parsedFileID);
 
         $this->moveBetweenFileStore(
             $parsedFileID,
@@ -664,8 +697,84 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         );
     }
 
+    /**
+     * Similar to publish, only any existing files that would be overriden by publishing will be moved back to the
+     * protected store.
+     * @param $filename
+     * @param $hash
+     */
+    public function swapPublish($filename, $hash)
+    {
+        if ($this->getVisibility($filename, $hash) === AssetStore::VISIBILITY_PUBLIC) {
+            // The file is already publish
+            return;
+        }
+
+        $parsedFileID = new ParsedFileID($filename, $hash);
+        $from = $this->getProtectedFilesystem();
+        $to = $this->getPublicFilesystem();
+        $fromStrategy = $this->getProtectedResolutionStrategy();
+        $toStrategy = $this->getPublicResolutionStrategy();
+        // Contain a list of temporary file that needs to be move to the $from store once we are done.
+
+
+        // Look for files that might be overriden by publishing to destination store, those need to be stashed away
+        /** @var ParsedFileID $variantParsedFileID */
+        $swapFileIDStr = $toStrategy->buildFileID($parsedFileID);
+        $swapFiles = [];
+        if ($to->has($swapFileIDStr)) {
+            $swapParsedFileID = $toStrategy->resolveFileID($swapFileIDStr, $to);
+            foreach ($toStrategy->findVariants($swapParsedFileID, $to) as $variantParsedFileID) {
+                $toFileID = $variantParsedFileID->getFileID();
+                $fromFileID = $fromStrategy->buildFileID($variantParsedFileID);
+
+                // Cache destination file into the origin store under a `.swap` directory
+                $stream = $to->readStream($toFileID);
+                $from->putStream('.swap/' . $fromFileID, $stream);
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+                $swapFiles[] = $variantParsedFileID->setFileID($fromFileID);
+
+                // Blast existing variants from the destination
+                $to->delete($toFileID);
+                $this->truncateDirectory(dirname($toFileID), $to);
+            }
+        }
+
+
+        // Let's find all the variants on the origin store ... those need to be moved to the destination
+        /** @var ParsedFileID $variantParsedFileID */
+        foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
+            // Copy via stream
+            $fromFileID = $variantParsedFileID->getFileID();
+            $toFileID = $toStrategy->buildFileID($variantParsedFileID);
+
+            $stream = $from->readStream($fromFileID);
+            $to->putStream($toFileID, $stream);
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+
+            // Remove the origin file and keep the file ID
+            $from->delete($fromFileID);
+            $this->truncateDirectory(dirname($fromFileID), $from);
+        }
+
+        foreach ($swapFiles as $variantParsedFileID) {
+            $fileID = $variantParsedFileID->getFileID();
+            $from->rename('.swap/' . $fileID, $fileID);
+        }
+        $from->deleteDir('.swap');
+    }
+
     public function protect($filename, $hash)
     {
+        if ($this->getVisibility($filename, $hash) === AssetStore::VISIBILITY_PROTECTED) {
+            // The file is already protected
+            return;
+        }
+
         $parsedFileID = new ParsedFileID($filename, $hash);
         $protected = $this->getProtectedFilesystem();
         $public = $this->getPublicFilesystem();
@@ -717,10 +826,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         Filesystem $from,
         FileResolutionStrategy $fromStrategy,
         Filesystem $to,
-        FileResolutionStrategy $toStrategy
+        FileResolutionStrategy $toStrategy,
+        $swap = false
     ) {
-        $idsToDelete = [];
-
+        // Let's find all the variants on the origin store ... those need to be moved to the destination
         /** @var ParsedFileID $variantParsedFileID */
         foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
             // Copy via stream
@@ -732,13 +841,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             if (is_resource($stream)) {
                 fclose($stream);
             }
-            $idsToDelete[] = $fromFileID;
-        }
 
-        foreach ($idsToDelete as $fileID) {
-            $from->delete($fileID);
-            // Truncate empty dirs
-            $this->truncateDirectory(dirname($fileID), $from);
+            // Remove the origin file and keep the file ID
+            $idsToDelete[] = $fromFileID;
+            $from->delete($fromFileID);
+            $this->truncateDirectory(dirname($fromFileID), $from);
         }
     }
 
@@ -820,6 +927,36 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $context = hash_init('sha1');
         hash_update_stream($context, $stream);
         return hash_final($context);
+    }
+
+    /**
+     * Validate that a resource stream start with the provided partial hash
+     * @param resource $stream
+     * @param string $partialHash
+     * @return bool
+     */
+    private function validateStreamHash($stream, $partialHash)
+    {
+        $fullHash = $this->getStreamSHA1($stream);
+        return $this->validateHash($fullHash, $partialHash);
+    }
+
+    /**
+     * Validate that the provided hashes are equivalent. Partial hashes can be provided.
+     * @param string $firstHash
+     * @param string $secondHash
+     * @return bool
+     */
+    private function validateHash($firstHash, $secondHash)
+    {
+        // Empty hash will always return false, because they are no validatable
+        if (empty($firstHash) || empty($secondHash)) {
+            throw new InvalidArgumentException('FlysystemAssetStore::validateHash can not validate empty hashes');
+        }
+        // Return true if $firstHash start with $secondHash or if $secondHash starts with $firstHash
+        return
+            strpos($firstHash, $secondHash) === 0 ||
+            strpos($secondHash, $firstHash) === 0;
     }
 
     /**
@@ -1025,10 +1162,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 if ($parsedFileID && $originalFileID = $parsedFileID->getFileID()) {
                     if ($fs->has($originalFileID)) {
                         $stream = $fs->readStream($originalFileID);
-                        $hashFromFile = $this->getStreamSHA1($stream);
 
                         // If the hash of the file doesn't match we return false, because we want to keep looking.
-                        return strpos($hashFromFile, $hash) === 0 ? true : false;
+                        return $this->validateStreamHash($stream, $hash) ? true : false;
                     }
                 }
 

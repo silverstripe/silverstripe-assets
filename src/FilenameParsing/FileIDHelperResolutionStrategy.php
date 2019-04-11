@@ -190,6 +190,9 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                     // We found a file, but its hash doesn't match the hash of our tuple.
                      continue;
                 }
+                if (empty($parsedFileID->getHash()) && $fullHash = $this->findHashOf($helper, $parsedFileID, $filesystem)) {
+                    $parsedFileID = $parsedFileID->setHash($fullHash);
+                }
                 return $parsedFileID->setFileID($fileID);
             }
         }
@@ -210,6 +213,20 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return true;
         }
 
+        // Check if the physical hash of the file starts with our parsed file ID hash
+        $actualHash = $this->findHashOf($helper, $parsedFileID, $filesystem);
+        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+    }
+
+    /**
+     * Get the full hash for the provided Parsed File ID,
+     * @param FileIDHelper $helper
+     * @param ParsedFileID $parsedFileID
+     * @param Filesystem $filesystem
+     * @return bool|string
+     */
+    private function findHashOf(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $filesystem)
+    {
         // Re build the file ID but without the variant
         $fileID = $helper->buildFileID(
             $parsedFileID->getFilename(),
@@ -221,13 +238,13 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return false;
         }
 
-        // Check if the physical hash of the file starts with our parsed file ID hash
+        // Get hash from stream
         $stream = $filesystem->readStream($fileID);
         $hc = hash_init('sha1');
         hash_update_stream($hc, $stream);
-        $actualHash = hash_final($hc);
+        $fullHash = hash_final($hc);
 
-        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+        return $fullHash;
     }
 
     /**

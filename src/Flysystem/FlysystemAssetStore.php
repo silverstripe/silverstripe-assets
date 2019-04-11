@@ -443,56 +443,40 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $filename = basename($path);
         }
 
-        // Callback for saving content
-        $callback = function (Filesystem $fs, $fileID) use ($path) {
-            // Read contents as string into flysystem
-            $handle = fopen($path, 'r');
-            if ($handle === false) {
-                throw new InvalidArgumentException("$path could not be opened for reading");
-            }
-
-            // If there's already a file where we want to write and that file has the same sha1 hash as our source file
-            // We just let the existing file sit there pretend to have writen it. This avoid a weird edge case where
-            // We try to move an existing file to its own location which causes us to override the file with zero bytes
-            if ($fs->has($fileID) && $this->getStreamSHA1($handle) === $this->getStreamSHA1($fs->readStream($fileID))) {
-                if (is_resource($handle)) {
-                    fclose($handle);
-                }
-
-                return true;
-            }
-
-            $result = $fs->putStream($fileID, $handle);
-            return $result;
-        };
-
-        // When saving original filename, generate hash
-        if (!$variant) {
-            $hash = sha1_file($path);
+        $stream = fopen($path, 'r');
+        if ($stream === false) {
+            throw new InvalidArgumentException("$path could not be opened for reading");
         }
 
-        // Submit to conflict check
-        return $this->writeWithCallback($callback, $filename, $hash, $variant, $config);
+        try {
+            return $this->setFromStream($stream, $filename, $hash, $variant, $config);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
     }
 
     public function setFromString($data, $filename, $hash = null, $variant = null, $config = array())
     {
-        // Callback for saving content
-        $callback = function (Filesystem $filesystem, $fileID) use ($data) {
-            return $filesystem->put($fileID, $data);
-        };
-
-        // When saving original filename, generate hash
-        if (!$variant) {
-            $hash = sha1($data);
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $data);
+        rewind($stream);
+        try {
+            return $this->setFromStream($stream, $filename, $hash, $variant, $config);
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
         }
-
-        // Submit to conflict check
-        return $this->writeWithCallback($callback, $filename, $hash, $variant, $config);
     }
 
     public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array())
     {
+        if (empty($filename)) {
+            throw new InvalidArgumentException('$filename can not be empty');
+        }
+
         // If the stream isn't rewindable, write to a temporary filename
         if (!$this->isSeekableStream($stream)) {
             $path = $this->getStreamAsFile($stream);
@@ -503,6 +487,17 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // Callback for saving content
         $callback = function (Filesystem $filesystem, $fileID) use ($stream) {
+            // If there's already a file where we want to write and that file has the same sha1 hash as our source file
+            // We just let the existing file sit there pretend to have writen it. This avoid a weird edge case where
+            // We try to move an existing file to its own location which causes us to override the file with zero bytes
+            if ($filesystem->has($fileID)) {
+                $newHash = $this->getStreamSHA1($stream);
+                $oldHash = $this->getStreamSHA1($filesystem->readStream($fileID));
+                if ($newHash === $oldHash) {
+                    return true;
+                }
+            }
+
             return $filesystem->putStream($fileID, $stream);
         };
 

@@ -449,8 +449,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish1Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish.jpg',
+            '/assets/directory/lovely-fish.jpg',
             $backend->getAsURL($fish1Tuple['Filename'], $fish1Tuple['Hash'])
         );
 
@@ -487,8 +488,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish3Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
+            '/assets/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish3Tuple['Filename'], $fish3Tuple['Hash'])
         );
 
@@ -508,8 +510,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish4Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
+            '/assets/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish4Tuple['Filename'], $fish4Tuple['Hash'])
         );
 
@@ -529,8 +532,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish5Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
+            '/assets/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish5Tuple['Filename'], $fish5Tuple['Hash'])
         );
     }

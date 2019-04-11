@@ -701,4 +701,62 @@ class AssetStoreTest extends SapphireTest
         $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'somevariant'));
         $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'anothervariant'));
     }
+
+    public function testStoreLocationWritingLogic()
+    {
+        $backend = $this->getBackend();
+
+        // Test defaults
+        $tuple = $backend->setFromString('defaultsToProtectedStore', 'defaultsToProtectedStore.txt');
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PROTECTED,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        // Test protected
+        $tuple = $backend->setFromString(
+            'explicitely Protected Store',
+            'explicitelyProtectedStore.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+        );
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PROTECTED,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        $tuple = $backend->setFromString(
+            'variant Protected Store',
+            'explicitelyProtectedStore.txt',
+            $tuple['Hash'],
+            'variant'
+        );
+        $hash = substr($tuple['Hash'], 0, 10);
+        $this->assertFileExists(
+            ASSETS_PATH .
+            "/AssetStoreTest/.protected/$hash/explicitelyProtectedStore__variant.txt"
+        );
+
+        // Test public
+        $tuple = $backend->setFromString(
+            'explicitely public Store',
+            'explicitelyPublicStore.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PUBLIC,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        $tuple = $backend->setFromString(
+            'variant public Store',
+            'explicitelyPublicStore.txt',
+            $tuple['Hash'],
+            'variant'
+        );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/explicitelyPublicStore__variant.txt');
+    }
 }

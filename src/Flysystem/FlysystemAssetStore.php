@@ -220,6 +220,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     public function getProtectedResolutionStrategy()
     {
+        // This is here for people who enabled legacy_filenames in SS4.0/4.1/4.2/4.3
+        if ($this->useLegacyFilenames()) {
+            return Injector::inst()->get(FileResolutionStrategy::class . '.protectedLegacy');
+        }
+
         if (!$this->protectedResolutionStrategy) {
             $this->protectedResolutionStrategy = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
         }

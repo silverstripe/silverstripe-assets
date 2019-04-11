@@ -35,21 +35,6 @@ class ProtectedFileControllerTest extends FunctionalTest
 
         // Create a test files for each of the fixture references
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-            /** @var File $file */
-//            $path = TestAssetStore::getLocalPath($file);
-//            Filesystem::makeFolder(dirname($path));
-//            $fh = fopen($path, "w+");
-//            fwrite($fh, str_repeat('x', 1000000));
-//            fclose($fh);
-//
-//            // Create variant for each file
-//            $this->getAssetStore()->setFromString(
-//                str_repeat('y', 100),
-//                $file->Filename,
-//                $file->Hash,
-//                'variant'
-//            );
-
             $file->setFromString(str_repeat('x', 1000000), $file->Filename);
             $file->setFromString(str_repeat('y', 100), $file->Filename, $file->Hash, 'variant');
             $file->write();

@@ -82,6 +82,7 @@ class FileTest extends SapphireTest
         fclose($fh);
 
         $file = new File();
+
         $file->File->Hash = sha1_file($testfilePath);
         $file->setFromLocalFile($testfilePath);
         $file->ParentID = $folder->ID;
@@ -347,6 +348,9 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        $rootfile->publishSingle();
         $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
     }
 
@@ -354,6 +358,12 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+        $this->assertEquals(
+            Director::absoluteBaseURL() . 'assets/55b443b601/FileTest.txt',
+            $rootfile->getAbsoluteURL()
+        );
+
+        $rootfile->publishSingle();
         $this->assertEquals(
             Director::absoluteBaseURL() . 'assets/FileTest/FileTest.txt',
             $rootfile->getAbsoluteURL()

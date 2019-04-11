@@ -202,14 +202,14 @@ class FolderTest extends SapphireTest
         /** @var File $file1Live */
         $file1Live = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($file1->ID);
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/FileTest-folder1/58a74a7aa4/File1.txt',
+            ASSETS_PATH . '/FolderTest/FileTest-folder1/File1.txt',
             TestAssetStore::getLocalPath($file1Live)
         );
 
         // Publishing the draft to live should move the new file to the public store
         $file1Draft->publishRecursive();
         $this->assertEquals(
-            ASSETS_PATH . '/FolderTest/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt',
+            ASSETS_PATH . '/FolderTest/FileTest-folder2/FileTest-folder1/File1.txt',
             TestAssetStore::getLocalPath($file1Draft)
         );
     }

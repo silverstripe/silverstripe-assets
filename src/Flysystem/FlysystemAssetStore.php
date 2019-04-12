@@ -1045,6 +1045,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         if ($fsObjs) {
             list($parsedFileID, $fs, $strategy, $visibility) = $fsObjs;
+            $targetFileID = $parsedFileID->getFileID();
         } else {
             if (isset($config['visibility']) && $config['visibility'] === self::VISIBILITY_PUBLIC) {
                 $fs = $this->getPublicFilesystem();
@@ -1055,9 +1056,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 $strategy = $this->getProtectedResolutionStrategy();
                 $visibility = self::VISIBILITY_PROTECTED;
             }
+            $targetFileID = $strategy->buildFileID($parsedFileID);
         }
-
-        $targetFileID = $strategy->buildFileID($parsedFileID);
 
         // If overwrite is requested, simply put
         if ($conflictResolution === AssetStore::CONFLICT_OVERWRITE || !$fs->has($targetFileID)) {

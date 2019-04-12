@@ -41,15 +41,6 @@ SilverStripe\Core\Injector\Injector:
         - '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
         - '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
       VersionedStage: Stage
-  SilverStripe\Assets\FilenameParsing\FileResolutionStrategy.protectedLegacy:
-    class: SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy
-    properties:
-      ResolutionFileIDHelpers:
-        - '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
-        - '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
-        - '%$SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper'
-      DefaultFileIDHelper: '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
-      VersionedStage: Stage
 ---
 Name: assetscore
 ---

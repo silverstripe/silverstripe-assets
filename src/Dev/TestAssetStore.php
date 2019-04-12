@@ -177,6 +177,11 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         return parent::getOriginalFilename($fileID);
     }
 
+    public function getFilesystemFor($fileID)
+    {
+        return parent::getFilesystemFor($fileID);
+    }
+
     public function removeVariant($fileID)
     {
         return parent::removeVariant($fileID);

@@ -23,8 +23,14 @@ class HashFileIDHelper implements FileIDHelper
      */
     const HASH_TRUNCATE_LENGTH = 10;
 
-    public function buildFileID($filename, $hash, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null)
     {
+        if ($filename instanceof ParsedFileID) {
+            $hash =  $filename->getHash();
+            $variant =  $filename->getVariant();
+            $filename =  $filename->getFilename();
+        }
+
         if (empty($hash)) {
             throw new InvalidArgumentException('HashFileIDHelper::buildFileID requires an $hash value.');
         }

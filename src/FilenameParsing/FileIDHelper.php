@@ -11,12 +11,12 @@ interface FileIDHelper
     /**
      * Map file tuple (hash, name, variant) to a filename to be used by flysystem
      *
-     * @param string $filename Name of file
+     * @param string|ParsedFileID $filename Name of file or ParsedFileID object
      * @param string $hash Hash of original file
      * @param string $variant (if given)
      * @return string Adapter specific identifier for this file/version
      */
-    public function buildFileID($filename, $hash, $variant = null);
+    public function buildFileID($filename, $hash = null, $variant = null);
 
 
     /**

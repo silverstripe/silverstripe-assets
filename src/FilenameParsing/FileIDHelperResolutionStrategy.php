@@ -148,9 +148,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
     }
 
-    /**
-     * @todo Right unit test
-     */
     public function generateVariantFileID($tuple, Filesystem $fs)
     {
         $parsedFileID = $this->preProcessTuple($tuple);
@@ -170,6 +167,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 );
             }
         }
+
+        return null;
     }
 
     public function searchForTuple($tuple, Filesystem $filesystem, $strict = true)
@@ -414,15 +413,15 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         return null;
     }
 
-    /**
-     * @todo Write unit test
-     */
     public function stripVariant($fileID)
     {
+        $hash = '';
+
         // Normalise our parameters
         if ($fileID instanceof ParsedFileID) {
             $parsedFileID = $fileID;
             $fileID = $parsedFileID->getFileID();
+            $hash = $parsedFileID->getHash();
 
             if (empty($fileID)) {
                 return $this->stripVariantFromParsedFileID($parsedFileID, $this->getDefaultFileIDHelper());
@@ -433,6 +432,9 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
             $parsedFileID = $fileIDHelper->parseFileID($fileID);
             if ($parsedFileID) {
+                if ($hash) {
+                    $parsedFileID = $parsedFileID->setHash($hash);
+                }
                 return $this->stripVariantFromParsedFileID($parsedFileID, $fileIDHelper);
             }
         }
@@ -447,19 +449,12 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      */
     private function stripVariantFromParsedFileID(ParsedFileID $parsedFileID, FileIDHelper $helper)
     {
-        if (empty($parsedFileID->getVariant())) {
-            // Our parsedFileID is already without a variant
-            return $parsedFileID;
+        $parsedFileID = $parsedFileID->setVariant('');
+
+        try {
+            return $parsedFileID->setFileID($helper->buildFileID($parsedFileID));
+        } catch (InvalidArgumentException $ex) {
+            return null;
         }
-
-
-        // We were provided a ParsedFileID without an actual file ID.
-        // We'll build the fileID from our default helper
-        $filename = $parsedFileID->getFilename();
-        $hash = $parsedFileID->getHash();
-        $variant = '';
-        return $parsedFileID
-            ->setVariant('')
-            ->setFileID($helper->buildFileID($filename, $hash, $variant));
     }
 }

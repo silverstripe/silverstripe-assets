@@ -62,6 +62,7 @@ abstract class FileIDHelperTester extends SapphireTest
     {
         $help = $this->getHelper();
         $this->assertEquals($expected, $help->buildFileID(...$input));
+        $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input)));
     }
 
 

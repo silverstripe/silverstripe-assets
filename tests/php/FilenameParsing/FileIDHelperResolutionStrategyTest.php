@@ -7,6 +7,7 @@ use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
@@ -383,7 +384,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         // Set up some dummy file
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1("The quick brown fox jumps over the lazy dog.");
+        $hash = sha1($content);
         $filename = 'folder/file.txt';
         $variant = 'uppercase';
         $dbFile = new File(['FileFilename' => $filename, 'FileHash' => $hash]);
@@ -542,5 +543,83 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $strategy->setResolutionFileIDHelpers([$brokenHelper]);
         $parsedFileID = $strategy->parseFileID('alpha/bravo.charlie');
         $this->assertEmpty($parsedFileID);
+    }
+
+    public function listVariantwihtoutFileID()
+    {
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $variant = 'uppercase';
+        $pfID = new ParsedFileID($filename, $hash);
+        $variantPfid = $pfID->setVariant($variant);
+        $naturalHelper = new NaturalFileIDHelper();
+        $naturalPath = $naturalHelper->buildFileID($filename, $hash);
+        $hashHelper = new HashFileIDHelper();
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+
+        return [
+            [$naturalPath, $content, $pfID, $naturalPath],
+            [$hashPath, $content, $pfID, $hashPath],
+            [$naturalPath, $content, $variantPfid, $naturalHelper->buildFileID($variantPfid)],
+            [$hashPath, $content, $variantPfid, $hashHelper->buildFileID($variantPfid)],
+            ['non/exisitant/file.txt', $content, $variantPfid, null],
+            [$naturalPath, 'bad hash', $variantPfid, null],
+            [$hashPath, 'bad hash', $variantPfid, null],
+        ];
+    }
+
+    /**
+     * @dataProvider listVariantwihtoutFileID
+     */
+    public function testGenerateVariantFileID($mainFilePath, $content, ParsedFileID $variantPfid, $expectedFileID)
+    {
+        /** @var FileResolutionStrategy $strategy */
+        $strategy = Injector::inst()->get(FileResolutionStrategy::class . '.public');
+        $this->fs->write($mainFilePath, $content);
+
+        $responsePfid = $strategy->generateVariantFileID($variantPfid, $this->fs);
+        if ($expectedFileID) {
+            $this->assertEquals($expectedFileID, $responsePfid->getFileID());
+        } else {
+            $this->assertNull($responsePfid);
+        }
+    }
+
+    public function listVariantParsedFiledID()
+    {
+        $pfid = new ParsedFileID('folder/file.txt', 'abcdef7890');
+        return [
+            [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file.txt'],
+            [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file.txt'],
+            [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file__variant.txt'],
+            [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file__variant.txt'],
+
+            [$pfid->setFileID('folder/file.txt'), $pfid],
+            [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file.txt')],
+            [$pfid->setFileID('folder/abcdef7890/file.txt'), $pfid->setFileID('folder/abcdef7890/file.txt')],
+            [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file__variant.txt')],
+            [$pfid->setFileID('folder/abcdef7890/file.txt'), $pfid->setFileID('folder/abcdef7890/file__variant.txt')],
+        ];
+    }
+
+    /**
+     * @dataProvider listVariantParsedFiledID
+     */
+    public function testStripVariant(ParsedFileID $expected, $input)
+    {
+        /** @var FileResolutionStrategy $strategy */
+        $strategy = Injector::inst()->get(FileResolutionStrategy::class . '.public');
+
+        $actual = $strategy->stripVariant($input);
+
+        if ($expected) {
+            $this->assertEquals($expected->getFilename(), $actual->getFilename());
+            $this->assertEquals($expected->getHash(), $actual->getHash());
+            $this->assertEmpty($actual->getVariant());
+            $this->assertEquals($expected->getFileID(), $actual->getFileID());
+        } else {
+            $this->assertNull($actual);
+        }
     }
 }

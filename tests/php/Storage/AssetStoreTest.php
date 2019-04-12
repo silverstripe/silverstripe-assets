@@ -3,8 +3,12 @@
 namespace SilverStripe\Assets\Tests\Storage;
 
 use Exception;
+use League\Flysystem\Filesystem;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
@@ -835,5 +839,55 @@ class AssetStoreTest extends SapphireTest
             $store->getFilesystemFor($naturalPath),
             $naturalPath . ' exists on public store'
         );
+    }
+
+    public function listOfVariantsToWrite()
+    {
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $variant = 'uppercase';
+        $parsedFiledID = new ParsedFileID($filename, $hash);
+        $variantParsedFiledID = $parsedFiledID->setVariant($variant);
+
+        $hashHelper = new HashFileIDHelper();
+        $hashPath = $hashHelper->buildFileID($parsedFiledID);
+        $variantHashPath = $hashHelper->buildFileID($variantParsedFiledID);
+        $naturalHelper = new NaturalFileIDHelper();
+        $naturalPath = $naturalHelper->buildFileID($parsedFiledID);
+        $variantNaturalPath = $naturalHelper->buildFileID($variantParsedFiledID);
+
+        return [
+            ['Public', $hashPath, $content, $variantParsedFiledID, $variantHashPath],
+            ['Public', $variantNaturalPath, $content, $variantParsedFiledID, $variantNaturalPath],
+            ['Protected', $hashPath, $content, $variantParsedFiledID, $variantHashPath],
+            ['Protected', $variantNaturalPath, $content, $variantParsedFiledID, $variantNaturalPath],
+        ];
+    }
+
+    /**
+     * Make sure that variants are written next to their parent file
+     * @dataProvider listOfVariantsToWrite
+     */
+    public function testVariantWriteNextToFile(
+        $fsName,
+        $mainFilePath,
+        $content,
+        ParsedFileID $variantParsedFileID,
+        $expectedVariantPath
+    ) {
+        $fsMethod = "get{$fsName}Filesystem";
+
+        /** @var Filesystem $fs */
+        $fs = $this->getBackend()->$fsMethod();
+        $fs->write($mainFilePath, $content);
+        $this->getBackend()->setFromString(
+            'variant content',
+            $variantParsedFileID->getFilename(),
+            $variantParsedFileID->getHash(),
+            $variantParsedFileID->getVariant()
+        );
+
+        $this->assertTrue($fs->has($expectedVariantPath));
     }
 }

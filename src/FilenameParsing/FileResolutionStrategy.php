@@ -26,7 +26,7 @@ interface FileResolutionStrategy
 
     /**
      * Build a file ID for a variant so it follows the pattern of it's original file. The variant may not exists on the
-     * Filesystem yet, but the original file has to. This is to make sure that variant file alway follow the same
+     * Filesystem yet, but the original file has to. This is to make sure that variant file always follow the same
      * pattern as the original file they are attached to.
      * @param ParsedFileID|array $tuple
      * @param Filesystem $filesystem

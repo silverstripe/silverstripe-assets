@@ -14,8 +14,14 @@ class LegacyFileIDHelper implements FileIDHelper
 {
     use Injectable;
 
-    public function buildFileID($filename, $hash, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null)
     {
+        if ($filename instanceof ParsedFileID) {
+            $hash =  $filename->getHash();
+            $variant =  $filename->getVariant();
+            $filename =  $filename->getFilename();
+        }
+
         $name = basename($filename);
 
         // Split extension

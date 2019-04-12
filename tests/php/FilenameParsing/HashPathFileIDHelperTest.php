@@ -1,6 +1,7 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
+use InvalidArgumentException;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
@@ -140,5 +141,13 @@ class HashFileIDHelperTest extends FileIDHelperTester
             [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef78901'), 'folder/abcdef7890'],
             [new ParsedFileID('folder/truncate-hash.jpg', 'abcdef7890', 'ResizeXXX'), 'folder/abcdef7890'],
         ];
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testHashlessBuildFileID()
+    {
+        $this->getHelper()->buildFileID('Filename.txt', '');
     }
 }

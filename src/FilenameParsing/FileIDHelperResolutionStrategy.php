@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
+use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
@@ -179,18 +180,53 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         $enforceHash = $strict && $parsedFileID->getHash();
 
+        // When trying to resolve a file ID it's possible that we don't know it's hash.
+        // We'll try our best to get it from the DB
+        if (empty($parsedFileID->getHash())) {
+            $filename = $parsedFileID->getFilename();
+            if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
+                   $hashList = Versioned::withVersionedMode(function () use ($filename) {
+                       Versioned::set_stage($this->getVersionedStage());
+                       $vals = File::get()->map('ID', 'FileFilename')->toArray();
+                       return File::get()
+                           ->filter(['FileFilename' => $filename, 'FileVariant' => null])
+                           ->limit(1)
+                           ->column('FileHash');
+                   });
+            } else {
+                $hashList = File::get()
+                   ->filter(['FileFilename' => $filename])
+                   ->limit(1)
+                   ->column('FileHash');
+            }
+
+            // In theory, we could get more than one file with the same Filename. We wouldn't know how to tell
+            // them apart any way so we'll just look at the first hash
+            if (!empty($hashList)) {
+                $parsedFileID = $parsedFileID->setHash($hashList[0]);
+            }
+        }
+
         foreach ($helpers as $helper) {
-            $fileID = $helper->buildFileID(
-                $parsedFileID->getFilename(),
-                $parsedFileID->getHash(),
-                $parsedFileID->getVariant()
-            );
+            try {
+                $fileID = $helper->buildFileID(
+                    $parsedFileID->getFilename(),
+                    $parsedFileID->getHash(),
+                    $parsedFileID->getVariant()
+                );
+            } catch (InvalidArgumentException $ex) {
+                // Some file ID helper will throw an exception if you ask them to build a file ID wihtout an hash
+                continue;
+            }
+
             if ($filesystem->has($fileID)) {
                 if ($enforceHash && !$this->validateHash($helper, $parsedFileID, $filesystem)) {
                     // We found a file, but its hash doesn't match the hash of our tuple.
                      continue;
                 }
-                if (empty($parsedFileID->getHash()) && $fullHash = $this->findHashOf($helper, $parsedFileID, $filesystem)) {
+                if (empty($parsedFileID->getHash()) &&
+                    $fullHash = $this->findHashOf($helper, $parsedFileID, $filesystem)
+                ) {
                     $parsedFileID = $parsedFileID->setHash($fullHash);
                 }
                 return $parsedFileID->setFileID($fileID);

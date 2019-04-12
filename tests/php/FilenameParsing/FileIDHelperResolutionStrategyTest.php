@@ -368,6 +368,88 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertNull($found, 'Our file does not match the hash and we asked for a strict hash check');
     }
 
+    /**
+     * SearchForTuple as some weird logic when dealing with Hashless parsed ID
+     */
+    public function testHashlessSearchForTuple()
+    {
+        // Set up strategy
+        $strategy = new FileIDHelperResolutionStrategy();
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+        $strategy->setDefaultFileIDHelper($hashHelper);
+        $strategy->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
+        $strategy->setVersionedStage(Versioned::DRAFT);
+
+        // Set up some dummy file
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1("The quick brown fox jumps over the lazy dog.");
+        $filename = 'folder/file.txt';
+        $variant = 'uppercase';
+        $dbFile = new File(['FileFilename' => $filename, 'FileHash' => $hash]);
+        $fs = $this->fs;
+
+        // Set up paths
+        $pfID = new ParsedFileID($filename, '', '');
+        $variantPfID = new ParsedFileID($filename, '', $variant);
+        $naturalPath = $naturalHelper->buildFileID($filename, $hash);
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+        $variantNaturalPath = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $variantHashPath = $hashHelper->buildFileID($filename, $hash, $variant);
+
+        // No file yet
+        $this->assertNull($strategy->searchForTuple($pfID, $fs));
+        $this->assertNull($strategy->searchForTuple($variantPfID, $fs));
+
+        // Looking for a natural path file not in DB
+        $fs->write($naturalPath, $content);
+
+        $respPfID = $strategy->searchForTuple($pfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash());
+        $this->assertNull($strategy->searchForTuple($variantPfID, $fs));
+
+        // Looking for a natural path variant file not in DB
+        $fs->write($variantNaturalPath, strtoupper($content));
+
+        $respPfID = $strategy->searchForTuple($variantPfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
+
+        // Looking for hash path of file NOT in DB
+        $fs->rename($naturalPath, $hashPath);
+        $fs->rename($variantNaturalPath, $variantHashPath);
+        $this->assertNull($strategy->searchForTuple($pfID, $fs), 'strategy does not know in what folder to look');
+        $this->assertNull($strategy->searchForTuple($variantPfID, $fs), 'strategy does not know in what folder to look');
+
+        // Looking for hash path of file IN DB
+        $dbFile->write();
+
+        $respPfID = $strategy->searchForTuple($pfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash(), 'Should have found the hash in the DB and found the file');
+
+        $respPfID = $strategy->searchForTuple($variantPfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
+
+        // Looking for hash path of file IN DB but not in targeted stage
+        $strategy->setVersionedStage(Versioned::LIVE);
+        $this->assertNull($strategy->searchForTuple($pfID, $fs), 'strategy should only look at live record');
+        $this->assertNull($strategy->searchForTuple($variantPfID, $fs), 'strategy should only look at live record');
+
+        // Looking for hash path of file IN DB and IN targeted stage
+        $dbFile->publishSingle();
+
+        $respPfID = $strategy->searchForTuple($pfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash(), 'Should have found the hash in the DB and found the file');
+
+        $respPfID = $strategy->searchForTuple($variantPfID, $fs);
+        $this->assertNotNull($respPfID);
+        $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
+    }
+
     public function findVariantsStrategyVariation()
     {
         $brokenHelper = new BrokenFileIDHelper('nonsense.txt', 'nonsense', '', 'nonsense.txt', false, '');

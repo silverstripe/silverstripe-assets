@@ -429,7 +429,8 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * Test that legacy filenames work as expected
+     * Test that legacy filenames work as expected. This test is somewhate reduntant now because legacy filename
+     * should be ignored.
      */
     public function testLegacyFilenames()
     {
@@ -449,9 +450,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish1Tuple
         );
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/a870de278b/lovely-fish.jpg');
         $this->assertEquals(
-            '/assets/directory/lovely-fish.jpg',
+            '/assets/directory/a870de278b/lovely-fish.jpg',
             $backend->getAsURL($fish1Tuple['Filename'], $fish1Tuple['Hash'])
         );
 
@@ -488,19 +489,20 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish3Tuple
         );
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/33be1b95cb/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/directory/lovely-fish-v2.jpg',
+            '/assets/directory/33be1b95cb/lovely-fish-v2.jpg',
             $backend->getAsURL($fish3Tuple['Filename'], $fish3Tuple['Hash'])
         );
 
         // Write back original file, but with CONFLICT_EXISTING. The file should not change
+        $backend->publish('directory/lovely-fish-v2.jpg', '33be1b95cba0358fe54e8b13532162d52f97421c');
         $fish4Tuple = $backend->setFromLocalFile(
             $fish1,
             'directory/lovely-fish-v2.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
+            ['conflict' => AssetStore::CONFLICT_USE_EXISTING, 'visibility' => AssetStore::VISIBILITY_PUBLIC]
         );
         $this->assertEquals(
             array(
@@ -510,9 +512,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish4Tuple
         );
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/directory/lovely-fish-v2.jpg',
+            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish4Tuple['Filename'], $fish4Tuple['Hash'])
         );
 
@@ -522,7 +524,7 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish-v2.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE)
+            array('conflict' => AssetStore::CONFLICT_OVERWRITE, 'visibility' => AssetStore::VISIBILITY_PUBLIC)
         );
         $this->assertEquals(
             array(
@@ -532,9 +534,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish5Tuple
         );
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/lovely-fish-v2.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/directory/lovely-fish-v2.jpg',
+            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish5Tuple['Filename'], $fish5Tuple['Hash'])
         );
     }
@@ -551,9 +553,9 @@ class AssetStoreTest extends SapphireTest
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution(null));
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution('somevariant'));
 
-        // Enable legacy filenames
+        // Enable legacy filenames -- legacy filename used to have different conflict resolution prior to 1.4.0
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
-        $this->assertEquals(AssetStore::CONFLICT_RENAME, $store->getDefaultConflictResolution(null));
+        $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution(null));
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution('somevariant'));
     }
 
@@ -762,5 +764,76 @@ class AssetStoreTest extends SapphireTest
             'variant'
         );
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/explicitelyPublicStore__variant.txt');
+    }
+
+    public function testGetFilesystemFor()
+    {
+        $store = $this->getBackend();
+
+        $publicFs = $store->getPublicFilesystem();
+        $protectedFs = $store->getProtectedFilesystem();
+
+        $hash = sha1('hello');
+        $hashPath = substr($hash, 0, 10) . '/hello.txt';
+        $naturalPath = 'hello.txt';
+
+        $file = new File();
+        $file->File->Filename = $naturalPath;
+        $file->File->Hash = $hash;
+        $file->write();
+        $file->publishRecursive();
+
+        // Protected only
+        $protectedFs->write($hashPath, 'hello');
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' is protected and does not exist on public store'
+        );
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' should be rewritten to its hash path which exists on the protected'
+        );
+
+        // Public and protected
+        $publicFs->write($naturalPath, 'hello');
+        $store->setFromString(
+            'hello',
+            'hello.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' exists on protected store and even if it has a resolvable public equivalent'
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' exists on public store even it has a protected resovlable equivalent'
+        );
+
+        // Public only
+        $protectedFs->delete($hashPath);
+        $store->setFromString(
+            'hello',
+            'hello.txt',
+            'abcdef7890',
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' should be rewritten to its natural path which exists on the public store'
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' exists on public store'
+        );
     }
 }

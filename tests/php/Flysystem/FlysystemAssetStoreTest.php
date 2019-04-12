@@ -128,4 +128,62 @@ class FlysystemAssetStoreTest extends SapphireTest
             [false],
         ];
     }
+
+    public function testPublicFilesystem()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $assetStore->setPublicFilesystem($this->publicFilesystem);
+        $this->assertEquals($this->publicFilesystem, $assetStore->getPublicFilesystem());
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testBadPublicFilesystem()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $assetStore->setPublicFilesystem($this->protectedFilesystem);
+    }
+
+    public function testProtectedFilesystem()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $assetStore->setProtectedFilesystem($this->protectedFilesystem);
+        $this->assertEquals($this->protectedFilesystem, $assetStore->getProtectedFilesystem());
+    }
+
+    /**
+     * @expectedException InvalidArgumentException
+     */
+    public function testBadProtectedFilesystem()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $assetStore->setProtectedFilesystem($this->publicFilesystem);
+    }
+
+    public function testPublicResolutionStrategy()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $strategy = $assetStore->getPublicResolutionStrategy();
+        $expected = Injector::inst()->get(FileResolutionStrategy::class . '.public');
+        $this->assertEquals($expected, $strategy);
+
+        $expected = new FileIDHelperResolutionStrategy();
+        $assetStore->setPublicResolutionStrategy($expected);
+        $strategy = $assetStore->getPublicResolutionStrategy();
+        $this->assertEquals($expected, $strategy);
+    }
+
+    public function testProtectedResolutionStrategy()
+    {
+        $assetStore = new FlysystemAssetStore();
+        $strategy = $assetStore->getProtectedResolutionStrategy();
+        $expected = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
+        $this->assertEquals($expected, $strategy);
+
+        $expected = new FileIDHelperResolutionStrategy();
+        $assetStore->setProtectedResolutionStrategy($expected);
+        $strategy = $assetStore->getProtectedResolutionStrategy();
+        $this->assertEquals($expected, $strategy);
+    }
 }

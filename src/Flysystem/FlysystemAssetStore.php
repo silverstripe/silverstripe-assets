@@ -5,7 +5,7 @@ namespace SilverStripe\Assets\Flysystem;
 use Generator;
 use InvalidArgumentException;
 use League\Flysystem\Directory;
-use League\Flysystem\Exception;
+use League\Flysystem\Exception as FlysystemException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use LogicException;
@@ -13,8 +13,6 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -26,8 +24,6 @@ use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\DB;
-use SilverStripe\Versioned\Versioned;
 
 /**
  * Asset store based on flysystem Filesystem as a backend
@@ -80,9 +76,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * we recommend that you run the file migration task as outlined
      * in https://docs.silverstripe.org/en/4/changelogs/4.4.0/
      *
-     * Note that if using legacy filenames then duplicate files will not work.
-     *
      * @config
+     * @deprecated 1.4.0
      * @var bool
      */
     private static $legacy_filenames = false;
@@ -138,6 +133,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * Assign new flysystem backend
      *
      * @param Filesystem $filesystem
+     * @throws InvalidArgumentException
      * @return $this
      */
     public function setPublicFilesystem(Filesystem $filesystem)
@@ -167,6 +163,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * Assign filesystem to use for non-public files
      *
      * @param Filesystem $filesystem
+     * @throws InvalidArgumentException
      * @return $this
      */
     public function setProtectedFilesystem(Filesystem $filesystem)
@@ -182,12 +179,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * Get filesystem to use for non-public files
      *
      * @return Filesystem
-     * @throws Exception
+     * @throws LogicException
      */
     public function getProtectedFilesystem()
     {
         if (!$this->protectedFilesystem) {
-            throw new Exception("Filesystem misconfiguration error");
+            throw new LogicException("Filesystem misconfiguration error");
         }
         return $this->protectedFilesystem;
     }
@@ -202,7 +199,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         if (!$this->publicResolutionStrategy) {
-            throw new Exception("Filesystem misconfiguration error");
+            throw new LogicException("Filesystem misconfiguration error");
         }
         return $this->publicResolutionStrategy;
     }
@@ -210,27 +207,23 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     /**
      * @param FileResolutionStrategy $publicResolutionStrategy
      */
-    public function setPublicResolutionStrategy($publicResolutionStrategy)
+    public function setPublicResolutionStrategy(FileResolutionStrategy $publicResolutionStrategy)
     {
         $this->publicResolutionStrategy = $publicResolutionStrategy;
     }
 
     /**
      * @return FileResolutionStrategy
+     * @throws LogicException
      */
     public function getProtectedResolutionStrategy()
     {
-        // This is here for people who enabled legacy_filenames in SS4.0/4.1/4.2/4.3
-        if ($this->useLegacyFilenames()) {
-            return Injector::inst()->get(FileResolutionStrategy::class . '.protectedLegacy');
-        }
-
         if (!$this->protectedResolutionStrategy) {
             $this->protectedResolutionStrategy = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
         }
 
         if (!$this->protectedResolutionStrategy) {
-            throw new Exception("Filesystem misconfiguration error");
+            throw new LogicException("Filesystem misconfiguration error");
         }
         return $this->protectedResolutionStrategy;
     }
@@ -238,7 +231,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     /**
      * @param FileResolutionStrategy $protectedResolutionStrategy
      */
-    public function setProtectedResolutionStrategy($protectedResolutionStrategy)
+    public function setProtectedResolutionStrategy(FileResolutionStrategy $protectedResolutionStrategy)
     {
         $this->protectedResolutionStrategy = $protectedResolutionStrategy;
     }
@@ -254,7 +247,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         return $this->applyToFileOnFilesystem(
             function (ParsedFileID $parsedFileID, Filesystem $fs) {
-                return fs;
+                return $fs;
             },
             $fileID
         );
@@ -965,7 +958,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param resource $stream
      * @return string Filename of resulting stream content
-     * @throws Exception
+     * @throws FlysystemException
      */
     protected function getStreamAsFile($stream)
     {
@@ -973,14 +966,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $file = tempnam(sys_get_temp_dir(), 'ssflysystem');
         $buffer = fopen($file, 'w');
         if (!$buffer) {
-            throw new Exception("Could not create temporary file");
+            throw new FlysystemException("Could not create temporary file");
         }
 
         // Transfer from given stream
         Util::rewindStream($stream);
         stream_copy_to_stream($stream, $buffer);
         if (!fclose($buffer)) {
-            throw new Exception("Could not write stream to temporary file");
+            throw new FlysystemException("Could not write stream to temporary file");
         }
 
         return $file;
@@ -1007,7 +1000,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $variant Variant to write
      * @param array $config Write options. {@see AssetStore}
      * @return array Tuple associative array (Filename, Hash, Variant)
-     * @throws Exception
+     * @throws FlysystemException
      */
     protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = array())
     {
@@ -1092,7 +1085,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Submit and validate result
         $result = $callback($fs, $parsedFileID->getFileID());
         if (!$result) {
-            throw new Exception("Could not save {$filename}");
+            throw new FlysystemException("Could not save {$filename}");
         }
 
         return $parsedFileID->getTuple();
@@ -1106,20 +1099,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getDefaultConflictResolution($variant)
     {
-        // If using new naming scheme (segment by hash) it's normally safe to overwrite files.
-        // Variants are also normally safe to overwrite, since lazy-generation is implemented at a higher level.
-        $legacy = $this->useLegacyFilenames();
-        if (!$legacy || $variant) {
-            return AssetStore::CONFLICT_OVERWRITE;
-        }
-
-        // Legacy behaviour is to rename
-        return AssetStore::CONFLICT_RENAME;
+        return AssetStore::CONFLICT_OVERWRITE;
     }
 
     /**
-     * Determine if legacy filenames should be used. These do not have hash path parts.
-     *
+     * Determine if legacy filenames should be used. This no longuer makes any difference with the introduction of
+     * FileResolutionStartegies.
+     * @deprecated 1.4.0
      * @return bool
      */
     protected function useLegacyFilenames()
@@ -1181,7 +1167,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $conflictResolution
      * @param string $fileID
      * @return string|false Safe filename to write to. If false, then don't write, and use existing file.
-     * @throws Exception
+     * @throws InvalidArgumentException
      */
     protected function resolveConflicts($conflictResolution, $fileID)
     {

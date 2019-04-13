@@ -38,7 +38,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
         // Add variant
         if ($variant) {
-            $fileID = '_resampled/' . $variant . '/' . $fileID;
+            $fileID = '_resampled/' . str_replace('_', '/', $variant) . '/' . $fileID;
         }
 
         if ($dirname) {
@@ -67,7 +67,7 @@ class LegacyFileIDHelper implements FileIDHelper
      */
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {
@@ -78,7 +78,7 @@ class LegacyFileIDHelper implements FileIDHelper
         return new ParsedFileID(
             $filename,
             '',
-            isset($matches['variant']) ? $matches['variant'] : '',
+            isset($matches['variant']) ? str_replace('/', '_', $matches['variant']) : '',
             $fileID
         );
     }

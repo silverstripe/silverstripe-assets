@@ -35,6 +35,10 @@ class HashFileIDHelperTest extends FileIDHelperTester
                 'subfolder/under_score/abcdef7890/sam_double_dots__resizeXYZ.tar.gz', [
                     'subfolder/under_score/sam_double_dots.tar.gz', 'abcdef7890', 'resizeXYZ'
                 ]],
+            [
+                'subfolder/under_score/abcdef7890/sam_double_dots__stack_variant.tar.gz', [
+                'subfolder/under_score/sam_double_dots.tar.gz', 'abcdef7890', 'stack_variant'
+                ]],
         ];
     }
 

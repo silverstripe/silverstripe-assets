@@ -33,6 +33,9 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
             ['subfolder/under_score/_resampled/resizeXYZ/sam_double_dots.tar.gz', [
                 'subfolder/under_score/sam_double_dots.tar.gz', '', 'resizeXYZ'
             ]],
+            ['subfolder/under_score/_resampled/stack/variant/sam_double_dots.tar.gz', [
+                'subfolder/under_score/sam_double_dots.tar.gz', '', 'stack_variant'
+            ]],
         ];
     }
 

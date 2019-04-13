@@ -34,6 +34,9 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
             ['subfolder/under_score/sam_double_dots__resizeXYZ.tar.gz', [
                 'subfolder/under_score/sam_double_dots.tar.gz', '', 'resizeXYZ'
             ]],
+            ['subfolder/under_score/sam_double_dots__stack_variant.tar.gz', [
+                'subfolder/under_score/sam_double_dots.tar.gz', '', 'stack_variant'
+            ]],
         ];
     }
 

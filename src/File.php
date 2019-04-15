@@ -256,14 +256,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $apply_restrictions_to_admin = true;
 
     /**
-     * If enabled, legacy file dataobjects will be automatically imported into the APL
-     *
-     * @config
-     * @var bool
-     */
-    private static $migrate_legacy_file = false;
-
-    /**
      * @config
      * @var boolean
      */
@@ -1204,21 +1196,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return '';
         }
         return (string)$this->renderWith($template);
-    }
-
-    public function requireDefaultRecords()
-    {
-        parent::requireDefaultRecords();
-
-        // Check if old file records should be migrated
-        if (!$this->config()->get('migrate_legacy_file')) {
-            return;
-        }
-
-        $migrated = FileMigrationHelper::singleton()->run();
-        if ($migrated) {
-            DB::alteration_message("{$migrated} File DataObjects upgraded", "changed");
-        }
     }
 
     /**

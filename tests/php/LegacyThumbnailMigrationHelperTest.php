@@ -43,8 +43,6 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
     public function setUp()
     {
-        Config::nest(); // additional nesting here necessary
-        Config::modify()->merge(File::class, 'migrate_legacy_file', false);
         parent::setUp();
 
         // Set backend root to /LegacyThumbnailMigrationHelperTest/assets
@@ -68,7 +66,6 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
         parent::tearDown();
-        Config::unnest();
     }
 
     public function testMigratesThumbnailsForProtectedFiles()

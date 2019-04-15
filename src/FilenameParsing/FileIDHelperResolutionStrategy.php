@@ -382,16 +382,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             }
         }
 
-        if (!$helper) {
-            // Could not find the file,
-            return null;
-        }
+        if ($helper) {
 
-        $folder = $helper->lookForVariantIn($parsedFileID);
-        $possibleVariants = $filesystem->listContents($folder, true);
-        foreach ($possibleVariants as $possibleVariant) {
-            if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                yield $helper->parseFileID($possibleVariant['path'])->setHash($parsedFileID->getHash());
+            $folder = $helper->lookForVariantIn($parsedFileID);
+            $possibleVariants = $filesystem->listContents($folder, true);
+            foreach ($possibleVariants as $possibleVariant) {
+                if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
+                    yield $helper->parseFileID($possibleVariant['path'])->setHash($parsedFileID->getHash());
+                }
             }
         }
     }

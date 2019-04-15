@@ -170,12 +170,14 @@ class FileMigrationHelper
         // if 'LastEdited' date static is enabled, update file's last edited using SQL query
         if ($this->config()->get('keep_lastedited_date') && $lastEditedDate) {
             // Draft table
-            $update = SQLUpdate::create('File')->addWhere(['ID' => $file->ID]);
+            $table = DataObject::singleton(File::class)->baseTable();
+            $update = SQLUpdate::create($table)->addWhere(['ID' => $file->ID]);
             $update->assign('LastEdited', $lastEditedDate);
             $update->execute();
 
             // Live table
-            $update = SQLUpdate::create('File_Live')->addWhere(['ID' => $file->ID]);
+            $table = DataObject::singleton(File::class)->stageTable($table, Versioned::LIVE);
+            $update = SQLUpdate::create($table)->addWhere(['ID' => $file->ID]);
             $update->assign('LastEdited', $lastEditedDate);
             $update->execute();
         }

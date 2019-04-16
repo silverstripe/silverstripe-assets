@@ -2,13 +2,16 @@
 
 namespace SilverStripe\Assets;
 
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Logging\PreformattedEchoHandler;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -66,6 +69,13 @@ class FileMigrationHelper
      */
     public function run($base = null)
     {
+        if (Director::is_cli()) {
+            // Inject real-time log handler
+            if ($this->logger instanceof Logger) {
+                $this->logger->pushHandler(new PreformattedEchoHandler());
+            }
+        }
+
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }

@@ -349,6 +349,14 @@ abstract class ImageTest extends SapphireTest
         $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 
+    public function testGenerateImageInSameFolderAsOriginal()
+    {
+        // All fixtures are in a subfolder
+        $original = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $generated = $original->Pad(200, 200, 'CCCCCC', 0);
+        $this->assertEquals($original->Parent()->getFilename(), $generated->Parent()->getFilename());
+    }
+
     /**
      * Ensure dimensions are cached
      */

@@ -16,6 +16,7 @@ use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\ExtendedAssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
@@ -28,7 +29,7 @@ use SilverStripe\Core\Injector\Injector;
 /**
  * Asset store based on flysystem Filesystem as a backend
  */
-class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
+class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flushable
 {
     use Configurable;
 
@@ -699,6 +700,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             && !$filesystem->listContents($dirname)
         ) {
             $filesystem->deleteDir($dirname);
+            $this->truncateDirectory(dirname($dirname), $filesystem);
         }
     }
 
@@ -745,12 +747,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         );
     }
 
-    /**
-     * Similar to publish, only any existing files that would be overriden by publishing will be moved back to the
-     * protected store.
-     * @param $filename
-     * @param $hash
-     */
+
     public function swapPublish($filename, $hash)
     {
         if ($this->getVisibility($filename, $hash) === AssetStore::VISIBILITY_PUBLIC) {
@@ -1531,5 +1528,48 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         return $response;
+    }
+
+    public function normalisePath($fileID)
+    {
+        return $this->applyToFileOnFilesystem(
+            function (...$args) {
+                return $this->normaliseToDefaultPath(...$args);
+            },
+            $fileID
+        );
+    }
+
+    public function normalise($filename, $hash)
+    {
+        return $this->applyToFileOnFilesystem(
+            function (...$args) {
+                return $this->normaliseToDefaultPath(...$args);
+            },
+            new ParsedFileID($filename, $hash)
+        );
+    }
+
+    /**
+     * Given a parsed file ID move the matching file and all its variant to the default position as defined by the
+     * provided startegy.
+     * @param ParsedFileID $pfid
+     * @param Filesystem $fs
+     * @param FileResolutionStrategy $strategy
+     * @return array List of new file names with the old name as the key
+     */
+    private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
+    {
+        $ops = [];
+        foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
+            $origin = $variantPfid->getFileID();
+            $targetVariantFileID = $strategy->buildFileID($variantPfid);
+            if ($targetVariantFileID !== $origin) {
+                $fs->rename($origin, $targetVariantFileID);
+                $ops[$origin] = $targetVariantFileID;
+                $this->truncateDirectory(dirname($origin), $fs);
+            }
+        }
+        return $ops;
     }
 }

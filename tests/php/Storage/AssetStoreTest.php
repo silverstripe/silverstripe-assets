@@ -3,10 +3,13 @@
 namespace SilverStripe\Assets\Tests\Storage;
 
 use Exception;
+use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
@@ -889,5 +892,228 @@ class AssetStoreTest extends SapphireTest
         );
 
         $this->assertTrue($fs->has($expectedVariantPath));
+    }
+
+
+    public function listOfFilesToNormalise()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+        $legacyHelper = new LegacyFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+        $legacyPath = $legacyHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content);
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+        $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$hashPath => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
+            [$protected, [$filename => $content], $filename, $hash, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $filename, $hash, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+
+            // SS3 variants ... the protected store doesn't resolve SS3 paths
+            [
+                $public,
+                [$legacyPath => $content, $vLegacy => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFilesToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $filename
+     * @param string $hash
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
+    {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $this->getBackend()->normalise($filename, $hash);
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    public function listOfFileIDsToNormalise()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+        $legacyHelper = new LegacyFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+        $legacyPath = $legacyHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content);
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+        $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$hashPath => $content], $hashPath, [$filename], [$hashPath, dirname($hashPath)]],
+            [$protected, [$filename => $content], $filename, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $hashPath, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+
+            // SS3 variants ... the protected store doesn't resolve SS3 paths
+            [
+                $public,
+                [$legacyPath => $content, $vLegacy => $vContent],
+                $legacyPath,
+                [$filename, $vNatural],
+                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFileIDsToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $fileID
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalisePath($fsName, array $contents, $fileID, array $expected, array $notExpected = [])
+    {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $this->getBackend()->normalisePath($fileID);
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    /**
+     * @param $fs
+     * @return Filesystem
+     */
+    private function getFilesystem($fs)
+    {
+        switch (strtolower($fs)) {
+            case AssetStore::VISIBILITY_PUBLIC:
+                return $this->getBackend()->getPublicFilesystem();
+            case AssetStore::VISIBILITY_PROTECTED:
+                return $this->getBackend()->getProtectedFilesystem();
+            default:
+                new InvalidArgumentException('getFilesystem(): $fs must be an equal to a know visibility.');
+        }
+    }
+
+    private function writeDummyFiles($fsName, array $contents)
+    {
+        $fs = $this->getFilesystem($fsName);
+        foreach ($contents as $path => $content) {
+            $fs->write($path, $content);
+        }
     }
 }

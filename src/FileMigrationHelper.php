@@ -44,8 +44,20 @@ class FileMigrationHelper
      */
     private static $log_interval = 100;
 
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class,
+    ];
+
     /** @var LoggerInterface|null */
     private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * Perform migration
@@ -56,8 +68,6 @@ class FileMigrationHelper
      */
     public function run($base = null)
     {
-        $this->logger = Injector::inst()->get(LoggerInterface::class);
-
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }

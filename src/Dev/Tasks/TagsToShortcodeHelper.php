@@ -96,7 +96,7 @@ class TagsToShortcodeHelper
                         );
                         $whereAnys = [];
                         foreach (array_keys(static::VALID_TAGS) as $tag) {
-                            $whereAnys[]= "\"$table\".\"Content\" LIKE '%<$tag%'";
+                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
                         }
                         $sqlSelect->addWhereAny($whereAnys);
                         $records = $sqlSelect->execute();

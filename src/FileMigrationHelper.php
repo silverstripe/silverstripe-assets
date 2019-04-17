@@ -40,7 +40,7 @@ class FileMigrationHelper
      * Specifies the interval for every Nth file looped at which output will be logged.
      *
      * @config
-     * @var bool
+     * @var int
      */
     private static $log_interval = 100;
 

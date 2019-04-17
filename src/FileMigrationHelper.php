@@ -89,7 +89,7 @@ class FileMigrationHelper
 
             $success = $this->migrateFile($base, $file, $filename);
 
-            if ($processedCount % static::$log_interval === 0) {
+            if ($processedCount % $this->config()->get('log_interval') === 0) {
                 if ($this->logger) {
                     $this->logger->info("Iterated $processedCount out of $total files. Migrated $migratedCount files.");
                 }

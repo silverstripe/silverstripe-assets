@@ -54,17 +54,6 @@ class RedirectFileControllerTest extends FunctionalTest
                 null,
                 ['visibility' => AssetStore::VISIBILITY_PROTECTED]
             );
-
-            // Create variant for each file
-//            $file->setFromString(
-//                'version 1 - variant',
-//                $file->Filename,
-//                $file->getHash(),
-//                'variant'
-//            );
-
-
-//            $file->publishSingle();
         }
     }
 
@@ -77,17 +66,17 @@ class RedirectFileControllerTest extends FunctionalTest
     public function fileList()
     {
         return [
-            ['asdf'],
-            ['subfolderfile'],
-            ['double-extension'],
-            ['double-underscore'],
+            'root file' => ['asdf'],
+            'file in folder' => ['subfolderfile'],
+            'file with double extension' => ['double-extension'],
+            'path with double underscore' => ['double-underscore'],
         ];
     }
 
     /**
      * @dataProvider fileList
      */
-    public function testLegacyFilenameRedirect($fixtureID)
+    public function testPermanentFilenameRedirect($fixtureID)
     {
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
@@ -108,11 +97,59 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get($hashUrl);
         $this->assertResponse(
+            301,
+            '',
+            $file->getURL(false),
+            $response,
+            'Hash URL of public file should redirect to published file with 301'
+        );
+
+        $response = $this->get($response->getHeader('location'));
+        $this->assertResponse(
+            200,
+            'version 1',
+            false,
+            $response,
+            'Redirected legacy url should return 200'
+        );
+    }
+
+    /**
+     * This test a file publish under the hash path, will redirect natural path
+     * @dataProvider fileList
+     */
+    public function testTemporaryFilenameRedirect($fixtureID)
+    {
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, $fixtureID);
+
+        $hashHelper = new HashFileIDHelper();
+        $hashUrl = $hashHelper->buildFileID($file->getFilename(), $file->getHash());
+        $naturalUrl = $file->getFilename();
+
+        $response = $this->get('assets/' . $hashUrl);
+        $this->assertResponse(
+            403,
+            '',
+            false,
+            $response,
+            'Hash URL for unpublished file should return 403'
+        );
+
+        $file->publishSingle();
+
+        // This replicates a scenario where a file was publish under a hash path in SilverStripe 4.3
+        $store = $this->getAssetStore();
+        $fs = $store->getPublicFilesystem();
+        $fs->rename($naturalUrl, $hashUrl);
+
+        $response = $this->get('assets/' . $naturalUrl);
+        $this->assertResponse(
             302,
             '',
             $file->getURL(false),
             $response,
-            'Hash URL of public file should redirect to published file with 302'
+            'natural URL of published hash file should redirect with 302'
         );
 
         $response = $this->get($response->getHeader('location'));
@@ -147,11 +184,11 @@ class RedirectFileControllerTest extends FunctionalTest
         // Before publishing second draft file
         $response = $this->get($v1HashUrl);
         $this->assertResponse(
-            302,
+            301,
             '',
             $v1Url,
             $response,
-            'Legacy URL for published file should return 302 to live file'
+            'Legacy URL for published file should return 301 to live file'
         );
 
         $response = $this->get($response->getHeader('location'));
@@ -204,7 +241,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get($v2HashUrl);
         $this->assertResponse(
-            302,
+            301,
             '',
             $v2Url,
             $response,
@@ -213,7 +250,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get($v1HashUrl);
         $this->assertResponse(
-            302,
+            301,
             '',
             $v2Url,
             $response,
@@ -361,7 +398,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get("/assets/{$foldername}{$hash}/{$filename}__$suffix.$ext");
         $this->assertResponse(
-            302,
+            301,
             '',
             $icoUrl,
             $response,
@@ -370,7 +407,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get("/assets/{$foldername}_resampled/$suffix/$filename.$ext");
         $this->assertResponse(
-            302,
+            301,
             '',
             $icoUrl,
             $response,
@@ -385,7 +422,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
         $response = $this->get("/assets/{$foldername}{$hash}/{$filename}__$suffix.$ext");
         $this->assertResponse(
-            302,
+            301,
             '',
             $icoV2Url,
             $response,

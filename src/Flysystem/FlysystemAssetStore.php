@@ -245,7 +245,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getFilesystemFor($fileID)
     {
-        return $this->applyToFileOnFilesystem(
+        return $this->applyToFileIDOnFilesystem(
             function (ParsedFileID $parsedFileID, Filesystem $fs) {
                 return $fs;
             },
@@ -270,12 +270,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * Any other value the closure returns (including `null`) will be returned to the calling function.
      *
-     * @param callable $closure Action to apply.
+     * @param callable $callable Action to apply.
      * @param string|array|ParsedFileID $fileID File identication. Can be a string, a file tuple or a ParsedFileID
      * @param bool $strictHashCheck
      * @return mixed
      */
-    private function applyToFileOnFilesystem(callable $closure, $fileID, $strictHashCheck = true)
+    private function applyToFileOnFilesystem(callable $callable, ParsedFileID $parsedFileID, $strictHashCheck = true)
     {
         $publicSet = [
             $this->getPublicFilesystem(),
@@ -289,10 +289,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             self::VISIBILITY_PROTECTED
         ];
 
-        if (is_array($fileID)) {
-            $fileID = new ParsedFileID($fileID);
-        }
-
         /** @var Filesystem $fs */
         /** @var FileResolutionStrategy $strategy */
         /** @var string $visibility */
@@ -302,29 +298,22 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             list($fs, $strategy, $visibility) = $set;
 
             // Get a FileID string based on the type of FileID
-            $fileIdStr = $fileID instanceof ParsedFileID ?
-                $strategy->buildFileID($fileID):
-                $fileIdStr = $fileID;
+            $fileID =  $strategy->buildFileID($parsedFileID);
 
-            if ($fs->has($fileIdStr)) {
-                // Build a parsed file ID to pass back to the closure
-                if ($fileID instanceof ParsedFileID) {
-                    // Let's try validating the hash of our file
-                    if ($fileID->getHash()) {
-                        $mainFileID = $strategy->buildFileID($strategy->stripVariant($fileID));
-                        $stream = $fs->readStream($mainFileID);
-                        if (!$this->validateStreamHash($stream, $fileID->getHash())) {
-                            continue;
-                        }
+            if ($fs->has($fileID)) {
+                // Let's try validating the hash of our file
+                if ($parsedFileID->getHash()) {
+                    $mainFileID = $strategy->buildFileID($strategy->stripVariant($parsedFileID));
+                    $stream = $fs->readStream($mainFileID);
+                    if (!$this->validateStreamHash($stream, $parsedFileID->getHash())) {
+                        continue;
                     }
-                    // We already have a ParsedFileID, we just need to set the matching file ID string
-                    $closesureParsedFileID = $fileID->setFileID($fileIdStr);
-                } else {
-                    // We need to resolve our string file ID to get a Parsed File ID.
-                    $closesureParsedFileID = $strategy->resolveFileID($fileIdStr, $fs);
                 }
 
-                $response = $closure(
+                // We already have a ParsedFileID, we just need to set the matching file ID string
+                $closesureParsedFileID = $parsedFileID->setFileID($fileID);
+
+                $response = $callable(
                     $closesureParsedFileID,
                     $fs,
                     $strategy,
@@ -340,12 +329,70 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         foreach ([$publicSet, $protectedSet] as $set) {
             list($fs, $strategy, $visibility) = $set;
 
-            $parsedFileID = $fileID instanceof ParsedFileID ?
-                $strategy->searchForTuple($fileID, $fs, $strictHashCheck) :
-                $strategy->resolveFileID($fileID, $fs);
+            $closesureParsedFileID = $strategy->searchForTuple($parsedFileID, $fs, $strictHashCheck);
+
+            if ($closesureParsedFileID) {
+                $response = $callable($closesureParsedFileID, $fs, $strategy, $visibility);
+                if ($response !== false) {
+                    return $response;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Equivalent to `applyToFileOnFilesystem`, only it expects a `fileID1 string instead of a ParsedFileID.
+     *
+     * @param callable $callable Action to apply.
+     * @param string $fileID
+     * @param bool $strictHashCheck
+     * @return mixed
+     */
+    private function applyToFileIDOnFilesystem(callable $callable, $fileID, $strictHashCheck = true)
+    {
+        $publicSet = [
+            $this->getPublicFilesystem(),
+            $this->getPublicResolutionStrategy(),
+            self::VISIBILITY_PUBLIC
+        ];
+
+        $protectedSet = [
+            $this->getProtectedFilesystem(),
+            $this->getProtectedResolutionStrategy(),
+            self::VISIBILITY_PROTECTED
+        ];
+
+        /** @var Filesystem $fs */
+        /** @var FileResolutionStrategy $strategy */
+        /** @var string $visibility */
+
+        // First we try to search for exact file id string match
+        foreach ([$publicSet, $protectedSet] as $set) {
+            list($fs, $strategy, $visibility) = $set;
+
+            if ($fs->has($fileID)) {
+                $response = $callable(
+                    $strategy->resolveFileID($fileID, $fs),
+                    $fs,
+                    $strategy,
+                    $visibility
+                );
+                if ($response !== false) {
+                    return $response;
+                }
+            }
+        }
+
+        // Let's fall back to using our FileResolution strategy to see if our FileID matches alternative formats
+        foreach ([$publicSet, $protectedSet] as $set) {
+            list($fs, $strategy, $visibility) = $set;
+
+            $parsedFileID = $strategy->resolveFileID($fileID, $fs);
 
             if ($parsedFileID) {
-                $response = $closure($parsedFileID, $fs, $strategy, $visibility);
+                $response = $callable($parsedFileID, $fs, $strategy, $visibility);
                 if ($response !== false) {
                     return $response;
                 }
@@ -1177,7 +1224,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Otherwise, check if this exists
-        $exists = $this->applyToFileOnFilesystem(function () {
+        $exists = $this->applyToFileIDOnFilesystem(function () {
             return true;
         }, $fileID);
         if (!$exists) {
@@ -1194,7 +1241,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Rename
             case static::CONFLICT_RENAME: {
                 foreach ($this->fileGeneratorFor($fileID) as $candidate) {
-                    $exists = $this->applyToFileOnFilesystem(function () {
+                    $exists = $this->applyToFileIDOnFilesystem(function () {
                         return true;
                     }, $candidate);
                     if (!$exists) {

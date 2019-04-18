@@ -590,16 +590,28 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     {
         $pfid = new ParsedFileID('folder/file.txt', 'abcdef7890');
         return [
-            [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file.txt'],
-            [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file.txt'],
-            [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file__variant.txt'],
-            [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file__variant.txt'],
+            'Variantless Natural path' =>
+                [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file.txt'],
+            'Variantless Hash path' =>
+                [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file.txt'],
+            'Variant natural path' =>
+                [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file__variant.txt'],
+            'Variant hash path' =>
+                [$pfid->setFileID('folder/abcdef7890/file.txt'), 'folder/abcdef7890/file__variant.txt'],
 
-            [$pfid->setFileID('folder/file.txt'), $pfid],
-            [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file.txt')],
-            [$pfid->setFileID('folder/abcdef7890/file.txt'), $pfid->setFileID('folder/abcdef7890/file.txt')],
-            [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file__variant.txt')],
-            [$pfid->setFileID('folder/abcdef7890/file.txt'), $pfid->setFileID('folder/abcdef7890/file__variant.txt')],
+            'Variantless Natural path with ParsedFileID with undefined file ID' =>
+                [$pfid->setFileID('folder/file.txt'), $pfid],
+            'Variantless natural path with ParsedFileID with defined file ID' =>
+                [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file.txt')],
+            'Variantless hash path with ParsedFileID with defined FileID' =>
+                [$pfid->setFileID('folder/abcdef7890/file.txt'), $pfid->setFileID('folder/abcdef7890/file.txt')],
+            'Natural path with ParsedFileID with defined FileID' =>
+                [$pfid->setFileID('folder/file.txt'), $pfid->setFileID('folder/file__variant.txt')],
+            'Hash path with ParsedFileID with defined FileID' =>
+                [
+                    $pfid->setFileID('folder/abcdef7890/file.txt'),
+                    $pfid->setFileID('folder/abcdef7890/file__variant.txt')
+                ],
         ];
     }
 

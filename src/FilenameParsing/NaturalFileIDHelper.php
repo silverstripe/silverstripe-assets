@@ -11,6 +11,8 @@ use SilverStripe\Core\Injector\Injectable;
  * `legacy_filenames` is enabled.
  *
  * e.g.: `Uploads/sam__ResizedImageWzYwLDgwXQ.jpg`
+ *
+ * @internal This is still an evolving API. It may changed in the next minor release.
  */
 class NaturalFileIDHelper implements FileIDHelper
 {
@@ -62,8 +64,7 @@ class NaturalFileIDHelper implements FileIDHelper
         // Since we use double underscore to delimit variants, eradicate them from filename
         return preg_replace('/_{2,}/', '_', $filename);
     }
-
-    /** @todo Update unit to test _resampled variants file id */
+    
     public function parseFileID($fileID)
     {
         $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';

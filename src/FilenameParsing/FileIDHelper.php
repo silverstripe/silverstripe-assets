@@ -3,7 +3,9 @@
 namespace SilverStripe\Assets\FilenameParsing;
 
 /**
- * Helps build and parse FileIDs according to a predefined format.
+ * Helps build and parse Filename Identifiers (ake: FileIDs) according to a predefined format.
+ *
+ * @internal This is still an evolving API. It may change in the next minor release.
  */
 interface FileIDHelper
 {
@@ -20,7 +22,7 @@ interface FileIDHelper
 
 
     /**
-     * Performs filename cleanup before sending it back.
+     * Clean up filename to remove constructs that might clash with the underlying path format of this FileIDHelper.
      *
      * @param string $filename
      * @return string

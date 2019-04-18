@@ -59,6 +59,21 @@ class TagsToShortcodeHelper
     /** @var bool */
     private $includeBaseClass;
 
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class,
+    ];
+
+    /** @var LoggerInterface|null */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * TagsToShortcodeHelper constructor.
      * @param string $baseClass The base class that will be used to look up HTMLText fields
@@ -127,7 +142,9 @@ class TagsToShortcodeHelper
             $updateSQL = SQLUpdate::create($updateTable)->addWhere(['"ID"' => $row['ID']]);
             $updateSQL->addAssignments(["\"$field\"" => $newContent]);
             $updateSQL->execute();
-            Injector::inst()->get(LoggerInterface::class)->info("Updated page with ID {$row['ID']}");
+            if ($this->logger) {
+                $this->logger->info("Updated page with ID {$row['ID']}");
+            }
         }
     }
 

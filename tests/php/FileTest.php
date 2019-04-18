@@ -348,6 +348,9 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
 
         $rootfile->publishSingle();
@@ -358,6 +361,9 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals(
             Director::absoluteBaseURL() . 'assets/55b443b601/FileTest.txt',
             $rootfile->getAbsoluteURL()

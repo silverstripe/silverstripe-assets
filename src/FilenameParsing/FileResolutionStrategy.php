@@ -19,7 +19,7 @@ interface FileResolutionStrategy
     public function resolveFileID($fileID, Filesystem $filesystem);
 
     /**
-     * Try to resolve a file ID against the provided Filesystem looking at newer version of the file.
+     * Try to resolve a file ID against the provided Filesystem looking at newer versions of the file.
      * @param string $fileID
      * @param Filesystem $filesystem
      * @return ParsedFileID|null Alternative FileID where the user should be redirected to.
@@ -27,8 +27,8 @@ interface FileResolutionStrategy
     public function softResolveFileID($fileID, Filesystem $filesystem);
 
     /**
-     * Build a file ID for a variant so it follows the pattern of it's original file. The variant may not exists on the
-     * Filesystem yet, but the original file has to. This is to make sure that variant file always follow the same
+     * Build a file ID for a variant so it follows the pattern of its original file. The variant may not exist on the
+     * Filesystem yet, but the original file has to. This is to make sure that variant files always follow the same
      * pattern as the original file they are attached to.
      * @param ParsedFileID|array $tuple
      * @param Filesystem $filesystem
@@ -37,10 +37,10 @@ interface FileResolutionStrategy
     public function generateVariantFileID($tuple, Filesystem $filesystem);
 
     /**
-     * Try to find a file ID for an existing file the provided file tuple.
+     * Try to find a file ID for an existing file using the provided file tuple.
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem
-     * @param boolean $strict Whatever we should enforce a hash check on the file we find
+     * @param boolean $strict Whether we should enforce a hash check on the file we find
      * @return ParsedFileID|null FileID
      */
     public function searchForTuple($tuple, Filesystem $filesystem, $strict = true);
@@ -49,7 +49,7 @@ interface FileResolutionStrategy
     /**
      * Build a file ID for the provided tuple, irrespective of its existence.
      *
-     * Should always return the prefered file ID for this resolution strategy.
+     * Should always return the preferred file ID for this resolution strategy.
      *
      * @param array|ParsedFileID $tuple
      * @return string
@@ -57,7 +57,7 @@ interface FileResolutionStrategy
     public function buildFileID($tuple);
 
     /**
-     * Try to resolve the provided file ID string irrespective of whatever it exists on the Filesystem or not.
+     * Try to resolve the provided file ID string irrespective of whether it exists on the Filesystem or not.
      * @param $fileID
      * @return ParsedFileID
      */
@@ -72,7 +72,7 @@ interface FileResolutionStrategy
     public function findVariants($tuple, Filesystem $filesystem);
 
     /**
-     * Normalise a filename to be consistent with this file reoslution startegy.
+     * Normalise a filename to be consistent with this file resolution strategy.
      * @param string $filename
      * @return string
      */
@@ -81,7 +81,7 @@ interface FileResolutionStrategy
     /**
      * Given a fileID string or a Parsed File ID, create a matching ParsedFileID without any variant.
      * @param string|ParsedFileID $fileID
-     * @return ParsedFileID|null A ParsedFileID with a the expected FileID of the original file or null if the provided
+     * @return ParsedFileID|null A ParsedFileID with the expected FileID of the original file or null if the provided
      * $fileID could not be understood
      */
     public function stripVariant($fileID);

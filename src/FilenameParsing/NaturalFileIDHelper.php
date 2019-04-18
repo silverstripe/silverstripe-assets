@@ -5,7 +5,7 @@ namespace SilverStripe\Assets\FilenameParsing;
 use SilverStripe\Core\Injector\Injectable;
 
 /**
- * Parsed Natural path URLs. Natural path are the same hashless path that appear in the CMS.
+ * Parsed Natural path URLs. Natural path is the same hashless path that appears in the CMS.
  *
  * Natural paths are used by the public adapter from SilverStripe 4.4 and on the protected adapter when
  * `legacy_filenames` is enabled.

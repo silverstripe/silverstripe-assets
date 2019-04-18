@@ -113,6 +113,7 @@ class TagsToShortcodeHelper
                         $whereAnys = [];
                         foreach (array_keys(static::VALID_TAGS) as $tag) {
                             $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
+                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
                         }
                         $sqlSelect->addWhereAny($whereAnys);
                         $records = $sqlSelect->execute();
@@ -173,7 +174,7 @@ class TagsToShortcodeHelper
     {
         $resultTags = [];
 
-        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/', $content, $matches, PREG_SET_ORDER);
+        preg_match_all('/(<|[)('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?(>|])/', $content, $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -190,7 +191,7 @@ class TagsToShortcodeHelper
     private function getTagTuple($tag)
     {
         $pattern = sprintf(
-            '/.*<(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
+            '/.*(<|[)(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
             $this->validTagsPattern,
             $this->validAttributesPattern
         );
@@ -257,10 +258,10 @@ class TagsToShortcodeHelper
         if ($parsedFileID && $file) {
             if ($tagType == 'img') {
                 $find = [
-                    '/<img/',
+                    '/(<|[)img/',
                     '/src\s*=\s*".*?"/',
                     '/href\s*=\s*".*?"/',
-                    '/>/',
+                    '/(>|])/',
                 ];
                 $replace = [
                     '[image',

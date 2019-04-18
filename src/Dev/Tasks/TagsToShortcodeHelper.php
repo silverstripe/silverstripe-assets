@@ -148,9 +148,9 @@ class TagsToShortcodeHelper
     }
 
     /**
-     * Get all tags within some page content and return as array.
-     * @param $content
-     * @return array
+     * Get all tags within some page content and return them as an array.
+     * @param string $content The page content
+     * @return array An array of tags found
      */
     private function getTagsInContent($content)
     {

@@ -6,10 +6,10 @@ use InvalidArgumentException;
 use SilverStripe\Core\Injector\Injectable;
 
 /**
- * Parsed Hash path URLs. Hash path group a file and its variant under a directory based on an hash generated from the
+ * Parsed Hash path URLs. Hash paths group a file and its variant under a directory based on a hash generated from the
  * content of the original file.
  *
- * Hash path are used by the Protected asset adapter and was the default for the public adapter prior to
+ * Hash paths are used by the Protected asset adapter and was the default for the public adapter prior to
  * SilverStripe 4.4.
  *
  * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`

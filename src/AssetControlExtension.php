@@ -283,7 +283,7 @@ class AssetControlExtension extends DataExtension
         $store = $this->getAssetStore();
 
         // The `swap` method was introduced in the 1.4 release. It wasn't added to the interface to avoid breaking
-        // custom implementation. If it's not available on our store, we fallback to a publish/protect
+        // custom implementations. If it's not available on our store, we fall back to a publish/protect
         if (method_exists($store, 'swapPublish')) {
             foreach ($assets as $asset) {
                 $store->swapPublish($asset['Filename'], $asset['Hash']);

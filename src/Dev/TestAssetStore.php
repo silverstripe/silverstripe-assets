@@ -195,7 +195,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     protected function isSeekableStream($stream)
     {
         if (isset(self::$seekable_override)) {
-            // Unset the override so we don't get stuck in an efficit loop
+            // Unset the override so we don't get stuck in an infinite loop
             self::$seekable_override = null;
             return self::$seekable_override;
         }

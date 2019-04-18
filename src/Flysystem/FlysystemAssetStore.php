@@ -111,13 +111,20 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
 
     /**
-     * Define the HTTP Response code for request that should be redirected to a different URL. Defaults to a temporary
-     * redirection (302). Set to 308 if you would rather your redirections be permanent and indicate to search engine
-     * that they should index the other file.
+     * Define the HTTP Response code for request that should be temporarily redirected to a different URL. Defaults to
+     * 302.
      * @config
      * @var int
      */
     private static $redirect_response_code = 302;
+
+    /**
+     * Define the HTTP Response code for request that should be permanently redirected to a different URL. Defaults to
+     * 301.
+     * @config
+     * @var int
+     */
+    private static $permanent_redirect_response_code = 301;
 
     /**
      * Custom headers to add to all custom file responses
@@ -1423,7 +1430,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // Check if we can find a URL to redirect to
         if ($parsedFileID = $publicStrategy->softResolveFileID($asset, $public)) {
-            return $this->createRedirectResponse($parsedFileID->getFileID());
+            $redirectFileID = $parsedFileID->getFileID();
+            $permanentFileID = $publicStrategy->buildFileID($parsedFileID);
+            // If our redirect FileID is equal to the permanent file ID, this URL will never change
+            $code = $redirectFileID === $permanentFileID ?
+                $this->config()->get('permanent_redirect_response_code') :
+                $this->config()->get('redirect_response_code');
+            return $this->createRedirectResponse($redirectFileID, $code);
         }
 
         // Deny if file is protected and denied
@@ -1467,12 +1480,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * Redirect browser to specified file ID on the public store. Assumes an existence check for the fileID has
      * already occured.
      * @note This was introduced as a patch and will be rewritten/remove in SS4.4.
-     * @param $fileID
+     * @param string $fileID
+     * @param int $code
      * @return HTTPResponse
      */
-    private function createRedirectResponse($fileID)
+    private function createRedirectResponse($fileID, $code)
     {
-        $response = new HTTPResponse(null, $this->config()->get('redirect_response_code'));
+        $response = new HTTPResponse(null, $code);
         /** @var PublicAdapter $adapter */
         $adapter = $this->getPublicFilesystem()->getAdapter();
         $response->addHeader('Location', $adapter->getPublicUrl($fileID));

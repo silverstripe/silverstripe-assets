@@ -17,6 +17,8 @@ use SilverStripe\ORM\DB;
  * older file format to resolve.
  *
  * You may also provide a `VersionedStage` to only look at files that were published.
+ *
+ * @internal This is still an evolving API. It may change in the next minor release.
  */
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {
@@ -42,12 +44,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $parsedFileID = $this->parseFileID($fileID);
 
-        if ($redirect = $this->searchForTuple($parsedFileID, $filesystem, false)) {
-            return $redirect;
+        if ($parsedFileID) {
+            return $this->searchForTuple($parsedFileID, $filesystem, false);
         }
 
-        // If our helper managed to parse the file id, but could not resolve to an actual physical file,
-        // there's nothing else we can do.
+        // If we couldn't resolve the file ID, we bail
         return null;
     }
 
@@ -67,12 +68,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $hash = $parsedFileID->getHash();
         $tuple = $hash ? $this->resolveWithHash($parsedFileID) : $this->resolveHashless($parsedFileID);
 
-        if ($tuple && $redirect = $this->searchForTuple($tuple, $filesystem, false)) {
-            return $redirect;
+        if ($tuple) {
+            return $this->searchForTuple($tuple, $filesystem, false);
         }
 
-        // If our helper managed to parse the file id, but could not resolve to an actual physical file,
-        // there's nothing else we can do.
+        // If we couldn't resolve the file ID, we bail
         return null;
     }
 
@@ -146,6 +146,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 'Variant' => $variant
             ];
         }
+
+        return null;
     }
 
     public function generateVariantFileID($tuple, Filesystem $fs)
@@ -383,7 +385,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
 
         if ($helper) {
-
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
             foreach ($possibleVariants as $possibleVariant) {
@@ -415,17 +416,22 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $hash = '';
 
+        // File ID can be a string or a ParsedFileID
         // Normalise our parameters
         if ($fileID instanceof ParsedFileID) {
+            // Let's get data out of our parsed file ID
             $parsedFileID = $fileID;
             $fileID = $parsedFileID->getFileID();
             $hash = $parsedFileID->getHash();
 
+            // Our Parsed File ID has a blank FileID attached to it. This means we are dealing with a file that hasn't
+            // been create yet. Let's used our default file ID helper
             if (empty($fileID)) {
                 return $this->stripVariantFromParsedFileID($parsedFileID, $this->getDefaultFileIDHelper());
             }
         }
 
+        // We don't know what helper was use to build this file ID
         // Let's try to find a helper who can understand our file ID
         foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
             $parsedFileID = $fileIDHelper->parseFileID($fileID);

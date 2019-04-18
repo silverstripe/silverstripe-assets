@@ -9,6 +9,8 @@ use SilverStripe\Core\Injector\Injectable;
  *
  * SS3 legacy paths are no longer used in SilverStripe 4, but a way to parse them is needed for redirecting old SS3
  * urls.
+ *
+ * @internal This is still an evolving API. It may change in the next minor release.
  */
 class LegacyFileIDHelper implements FileIDHelper
 {

@@ -103,6 +103,9 @@ class ProtectedFileControllerTest extends FunctionalTest
 
     /**
      * Check public access to assets is available at the appropriate time
+     *
+     * Links to incorrect base (assets/ rather than assets/ProtectedFileControllerTest)
+     * because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
      */
     public function testAccessControl()
     {
@@ -179,6 +182,9 @@ class ProtectedFileControllerTest extends FunctionalTest
 
     /**
      * Test that access to folders is not permitted
+     *
+     * Links to incorrect base (assets/ rather than assets/ProtectedFileControllerTest)
+     * because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
      */
     public function testFolders()
     {

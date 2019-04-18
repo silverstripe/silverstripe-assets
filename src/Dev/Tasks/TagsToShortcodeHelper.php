@@ -22,6 +22,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectSchema;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * SS4 and its File Migration Task changes the way in which files are stored in the assets folder, with files placed
@@ -229,9 +230,14 @@ class TagsToShortcodeHelper
 
         /** @var File $file */
         $file = File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();
-        $liveFile = SQLSelect::create('ID', 'File_Live', ['FileFilename' => $parsedFileID->getFilename()])->count() > 0;
-        $hasFile = $file || $liveFile;
-        if ($parsedFileID && $hasFile) {
+        if (!$file) {
+            $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
+                Versioned::set_stage(Versioned::LIVE);
+                return File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();
+            });
+        }
+
+        if ($parsedFileID && $file) {
             if ($tagType == 'img') {
                 $find = [
                     '/<img/',

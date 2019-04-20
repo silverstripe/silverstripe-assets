@@ -2,12 +2,14 @@
 
 namespace SilverStripe\Assets;
 
+use Psr\Log\LoggerInterface;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -35,16 +37,41 @@ class FileMigrationHelper
     private static $delete_invalid_files = true;
 
     /**
+     * Specifies the interval for every Nth file looped at which output will be logged.
+     *
+     * @config
+     * @var int
+     */
+    private static $log_interval = 100;
+
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class,
+    ];
+
+    /** @var LoggerInterface|null */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    /**
      * Perform migration
      *
      * @param string $base Absolute base path (parent of assets folder). Will default to PUBLIC_PATH
      * @return int Number of files successfully migrated
+     * @throws \Exception
      */
     public function run($base = null)
     {
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }
+
         // Check if the File dataobject has a "Filename" field.
         // If not, cannot migrate
         /** @skipUpgrade */
@@ -57,26 +84,36 @@ class FileMigrationHelper
         Environment::increaseMemoryLimitTo();
 
         // Loop over all files
-        $count = 0;
+        $processedCount = $migratedCount = 0;
         $originalState = null;
         if (class_exists(Versioned::class)) {
             $originalState = Versioned::get_reading_mode();
             Versioned::set_stage(Versioned::DRAFT);
         }
 
-        foreach ($this->getFileQuery() as $file) {
+        $query = $this->getFileQuery();
+        $total = $query->count();
+        foreach ($query as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
 
             $success = $this->migrateFile($base, $file, $filename);
+
+            if ($processedCount % $this->config()->get('log_interval') === 0) {
+                if ($this->logger) {
+                    $this->logger->info("Iterated $processedCount out of $total files. Migrated $migratedCount files.");
+                }
+            }
+
+            $processedCount++;
             if ($success) {
-                $count++;
+                $migratedCount++;
             }
         }
         if (class_exists(Versioned::class)) {
             Versioned::set_reading_mode($originalState);
         }
-        return $count;
+        return $migratedCount;
     }
 
     /**
@@ -86,6 +123,7 @@ class FileMigrationHelper
      * @param File $file
      * @param string $legacyFilename
      * @return bool True if this file is imported successfully
+     * @throws \SilverStripe\ORM\ValidationException
      */
     protected function migrateFile($base, File $file, $legacyFilename)
     {
@@ -94,6 +132,9 @@ class FileMigrationHelper
         // Make sure this legacy file actually exists
         $path = $base . '/' . $legacyFilename;
         if (!file_exists($path)) {
+            if ($this->logger) {
+                $this->logger->warning("$legacyFilename not migrated because the file does not exist ($path)");
+            }
             return false;
         }
 
@@ -103,6 +144,9 @@ class FileMigrationHelper
         if (!in_array($extension, $allowed)) {
             if ($this->config()->get('delete_invalid_files')) {
                 $file->delete();
+            }
+            if ($this->logger) {
+                $this->logger->warning("$legacyFilename not migrated because the extension $extension is not a valid extension");
             }
             return false;
         }
@@ -151,7 +195,13 @@ class FileMigrationHelper
 
         if (!$useLegacyFilenames) {
             // removing the legacy file since it has been migrated now and not using legacy filenames
-            return unlink($path);
+            $removed = unlink($path);
+            if (!$removed) {
+                if ($this->logger) {
+                    $this->logger->warning("$legacyFilename was migrated, but failed to remove the legacy file ($path)");
+                }
+            }
+            return $removed;
         }
         return true;
     }
@@ -173,6 +223,7 @@ class FileMigrationHelper
      * Get list of File dataobjects to import
      *
      * @return DataList
+     * @throws \Exception
      */
     protected function getFileQuery()
     {
@@ -197,6 +248,7 @@ class FileMigrationHelper
      *
      * @deprecated 4.4.0
      * @return array
+     * @throws \Exception
      */
     protected function getFilenameArray()
     {

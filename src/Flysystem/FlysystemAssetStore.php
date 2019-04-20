@@ -9,6 +9,7 @@ use League\Flysystem\Exception;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use LogicException;
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
@@ -19,6 +20,8 @@ use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\DB;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * Asset store based on flysystem Filesystem as a backend
@@ -80,6 +83,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @var int
      */
     private static $missing_response_code = 404;
+
+
+    /**
+     * Define the HTTP Response code for request that should be redirected to a different URL. Defaults to a temporary
+     * redirection (302). Set to 308 if you would rather your redirections be permanent and indicate to search engine
+     * that they should index the other file.
+     * @config
+     * @var int
+     */
+    private static $redirect_response_code = 302;
 
     /**
      * Custom headers to add to all custom file responses
@@ -786,9 +799,37 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
         $variant = isset($matches['variant']) ? $matches['variant'] : null;
+        $hash = isset($matches['hash']) ? $matches['hash'] : null;
         return [
             'Filename' => $filename,
             'Variant' => $variant,
+            'Hash' => $hash
+        ];
+    }
+
+    /**
+     * Try to parse a file ID using the old SilverStripe 3 format legacy or the SS4 legacy filename format.
+     *
+     * @param string $fileID
+     * @return array
+     */
+    private function parseLegacyFileID($fileID)
+    {
+        // assets/folder/_resampled/ResizedImageWzEwMCwxMzNd/basename.extension
+        $ss3Pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^/.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        // assets/folder/basename__ResizedImageWzEwMCwxMzNd.extension
+        $ss4LegacyPattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+
+        // not a valid file (or not a part of the filesystem)
+        if (!preg_match($ss3Pattern, $fileID, $matches) && !preg_match($ss4LegacyPattern, $fileID, $matches)) {
+            return null;
+        }
+
+        $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = isset($matches['variant']) ? $matches['variant'] : null;
+        return [
+            'Filename' => $filename,
+            'Variant' => $variant
         ];
     }
 
@@ -914,24 +955,96 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getResponseFor($asset)
     {
-        // Check if file exists
-        $filesystem = $this->getFilesystemFor($asset);
-        if (!$filesystem) {
-            return $this->createMissingResponse();
+
+        $public = $this->getPublicFilesystem();
+        $protected = $this->getProtectedFilesystem();
+
+        // If the file exists on the public store, we just straight return it.
+        if ($public->has($asset)) {
+            return $this->createResponseFor($public, $asset);
         }
 
-        // Block directory access
-        if ($filesystem->get($asset) instanceof Directory) {
-            return $this->createDeniedResponse();
+        // If the file exists in the protected store and the user has been explicitely granted access to it
+        if ($protected->has($asset) && $this->isGranted($asset)) {
+            return $this->createResponseFor($protected, $asset);
+            // Let's not deny if the file is in the protected store, but is not granted.
+            // We might be able to redirect to a live version.
+        }
+
+        // If we found a URL to redirect to
+        if ($redirectUrl = $this->searchForEquivalentFileID($asset)) {
+            if ($redirectUrl != $asset && $public->has($redirectUrl)) {
+                return $this->createRedirectResponse($redirectUrl);
+            } else {
+                // Something weird is going on e.g. a publish file without a physical file
+                return $this->createMissingResponse();
+            }
         }
 
         // Deny if file is protected and denied
-        if ($filesystem === $this->getProtectedFilesystem() && !$this->isGranted($asset)) {
+        if ($protected->has($asset)) {
             return $this->createDeniedResponse();
         }
 
-        // Serve up file response
-        return $this->createResponseFor($filesystem, $asset);
+        // We've looked everywhere and couldn't find a file
+        return $this->createMissingResponse();
+    }
+
+    /**
+     * Given a FileID, try to find an equivalent file ID for a more recent file using the latest format.
+     * @param string $asset
+     * @return string
+     */
+    private function searchForEquivalentFileID($asset)
+    {
+        // If File is not versionable, let's bail
+        if (!class_exists(Versioned::class) || !File::has_extension(Versioned::class)) {
+            return '';
+        }
+
+        $parsedFileID = $this->parseFileID($asset);
+        if ($parsedFileID && $parsedFileID['Hash']) {
+            // Try to find a live version of this file
+            $stage = Versioned::get_stage();
+            Versioned::set_stage(Versioned::LIVE);
+            $file = File::get()->filter(['FileFilename' => $parsedFileID['Filename']])->first();
+            Versioned::set_stage($stage);
+
+            // If we found a matching live file, let's see if our hash was publish at any point
+            if ($file) {
+                $oldVersionCount = $file->allVersions(
+                    [
+                        ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID['Hash']) . '%'],
+                        ['not "FileHash" like ?' => DB::get_conn()->escapeString($file->getHash())],
+                        '"WasPublished"' => true
+                    ],
+                    "",
+                    1
+                )->count();
+                // Our hash was published at some other stage
+                if ($oldVersionCount > 0) {
+                    return $this->getFileID($file->getFilename(), $file->getHash(), $parsedFileID['Variant']);
+                }
+            }
+        }
+
+        // Let's see if $asset is a legacy URL that can be map to a current file
+        $parsedFileID = $this->parseLegacyFileID($asset);
+        if ($parsedFileID) {
+            $filename = $parsedFileID['Filename'];
+            $variant = $parsedFileID['Variant'];
+            // Let's try to match the plain file name
+            $stage = Versioned::get_stage();
+            Versioned::set_stage(Versioned::LIVE);
+            $file = File::get()->filter(['FileFilename' => $filename])->first();
+            Versioned::set_stage($stage);
+
+            if ($file) {
+                return $this->getFileID($filename, $file->getHash(), $variant);
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -942,6 +1055,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function createResponseFor(Filesystem $flysystem, $fileID)
     {
+        // Block directory access
+        if ($flysystem->get($fileID) instanceof Directory) {
+            return $this->createDeniedResponse();
+        }
+
         // Create streamable response
         $stream = $flysystem->readStream($fileID);
         $size = $flysystem->getSize($fileID);
@@ -954,6 +1072,22 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         foreach ($headers as $header => $value) {
             $response->addHeader($header, $value);
         }
+        return $response;
+    }
+
+    /**
+     * Redirect browser to specified file ID on the public store. Assumes an existence check for the fileID has
+     * already occured.
+     * @note This was introduced as a patch and will be rewritten/remove in SS4.4.
+     * @param $fileID
+     * @return HTTPResponse
+     */
+    private function createRedirectResponse($fileID)
+    {
+        $response = new HTTPResponse(null, $this->config()->get('redirect_response_code'));
+        /** @var PublicAdapter $adapter */
+        $adapter = $this->getPublicFilesystem()->getAdapter();
+        $response->addHeader('Location', $adapter->getPublicUrl($fileID));
         return $response;
     }
 

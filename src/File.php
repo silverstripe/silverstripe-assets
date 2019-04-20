@@ -147,6 +147,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'BackLinks',
     ];
 
+    private static $indexes = array(
+        'FileHash' => true
+    );
+
     private static $defaults = array(
         "ShowInSearch" => 1,
     );

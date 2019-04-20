@@ -69,7 +69,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
             /** @var AssetStore $store */
             $store = Injector::inst()->get(AssetStore::class);
             if (!empty($item['filename'])) {
-                $store->grant($item['filename'], $item['hash']);
+                $store->getAsURL($item['filename'], $item['hash']);
             }
             return $item['markup'];
         }

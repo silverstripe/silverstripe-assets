@@ -11,14 +11,22 @@ matrix:
   fast_finish: true
   include:
     - php: 7.1
-      env: DB=MYSQL PHPUNIT_TEST=1 PHPCS_TEST=1
-    - php: 7.2
       env: DB=MYSQL PHPUNIT_TEST=1
     - php: 7.2
-      env: DB=MYSQL PDO=1 PHPUNIT_COVERAGE_TEST=1
+      env: DB=MYSQL PHPUNIT_TEST=1
+    - php: 7.3
+      env: DB=MYSQL PHPUNIT_TEST=1
+    - php: 7.2
+      env: DB=MYSQL PHPUNIT_COVERAGE_TEST=1 PHPCS_TEST=1
+    - php: 7.3
+      env: DB=MYSQL PHPUNIT_TEST=1 PDO=1
+    - php: 7.3
+      env: DB=PGSQL PHPUNIT_TEST=1
 
 before_script:
 # Init PHP
+  - printf "\n" | pecl install imagick
+  - composer self-update || true
   - phpenv rehash
   - phpenv config-rm xdebug.ini
   - export PATH=~/.config/composer/vendor/bin:$PATH
@@ -27,6 +35,7 @@ before_script:
 # Install composer dependencies
   - composer validate
   - composer require --no-update silverstripe/recipe-core:5.x-dev silverstripe/versioned:2.x-dev
+  - if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:3.x-dev --prefer-dist; fi
   - composer install --prefer-dist
   - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o; fi
 

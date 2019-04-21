@@ -2,16 +2,16 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use SilverStripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\Filesystem;
+use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Storage\ProtectedFileController;
-use SilverStripe\Assets\Folder;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\File;
+use SilverStripe\Control\HTTPResponse;
+use SilverStripe\Control\Session;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
-use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Assets\Dev\TestAssetStore;
 
 /**
  * @skipUpgrade
@@ -22,7 +22,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
     protected $autoFollowRedirection = false;
 
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
 
@@ -55,7 +55,7 @@ class RedirectFileControllerTest extends FunctionalTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown()
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -439,8 +439,12 @@ class RedirectFileControllerTest extends FunctionalTest
         return str_replace('RedirectFileControllerTest/', '', $path);
     }
 
-    public function get($url, $session = null, $headers = null, $cookies = null)
-    {
+    public function get(
+        string $url,
+        Session $session = null,
+        array $headers = null,
+        array $cookies = null
+    ) : HTTPResponse {
         return parent::get($this->normaliseUrl($url), $session, $headers, $cookies);
     }
 }

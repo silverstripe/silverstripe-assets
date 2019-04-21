@@ -1012,15 +1012,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
             // If we found a matching live file, let's see if our hash was publish at any point
             if ($file) {
-                $oldVersionCount = $file->allVersions(
-                    [
+                /** @var File&Versioned $file */
+                $oldVersionCount = $file->Versions()
+                    ->where([
                         ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID['Hash']) . '%'],
                         ['not "FileHash" like ?' => DB::get_conn()->escapeString($file->getHash())],
                         '"WasPublished"' => true
-                    ],
-                    "",
-                    1
-                )->count();
+                    ])->count();
                 // Our hash was published at some other stage
                 if ($oldVersionCount > 0) {
                     return $this->getFileID($file->getFilename(), $file->getHash(), $parsedFileID['Variant']);

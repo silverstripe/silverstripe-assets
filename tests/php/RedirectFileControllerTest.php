@@ -372,6 +372,7 @@ class RedirectFileControllerTest extends FunctionalTest
      */
     public function testDraftOnlyArchivedVersion($fixtureID)
     {
+        /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
         $v1Url = $file->getURL(false);
         $file->deleteFile();

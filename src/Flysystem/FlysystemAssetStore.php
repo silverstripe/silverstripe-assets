@@ -599,8 +599,15 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                     $destination = $strategy->buildFileID(
                         $destParsedFileID->setVariant($originParsedFileID->getVariant())
                     );
-                    $fs->rename($origin, $destination);
-                    $this->truncateDirectory(dirname($origin), $fs);
+                    if ($origin !== $destination) {
+                        if ($fs->has($destination)) {
+                            $fs->delete($origin);
+                        } else {
+                            $fs->rename($origin, $destination);
+                        }
+                        $this->truncateDirectory(dirname($origin), $fs);
+                    }
+
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is
@@ -630,7 +637,11 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                 foreach ($strategy->findVariants($pfid, $fs) as $variantParsedFileID) {
                     $fromFileID = $variantParsedFileID->getFileID();
                     $toFileID = $strategy->buildFileID($variantParsedFileID->setFilename($newName));
-                    $fs->copy($fromFileID, $toFileID);
+                    if ($fromFileID !== $toFileID) {
+                        if (!$fs->has($toFileID)) {
+                            $fs->copy($fromFileID, $toFileID);
+                        }
+                    }
                 }
 
                 return $pfid->setFilename($newName);
@@ -657,8 +668,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
             $deleted = true;
         }
 
-        // Truncate empty dirs
-        $this->truncateDirectory(dirname($fileID), $filesystem);
+
 
         return $deleted;
     }
@@ -841,6 +851,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
      * @param string $fileID
      * @param Filesystem $from
      * @param Filesystem $to
+     * @deprecated 1.4.0
      */
     protected function moveBetweenFilesystems($fileID, Filesystem $from, Filesystem $to)
     {
@@ -1532,7 +1543,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
 
     public function normalisePath($fileID)
     {
-        return $this->applyToFileOnFilesystem(
+        return $this->applyToFileIDOnFilesystem(
             function (...$args) {
                 return $this->normaliseToDefaultPath(...$args);
             },
@@ -1565,7 +1576,11 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
             $origin = $variantPfid->getFileID();
             $targetVariantFileID = $strategy->buildFileID($variantPfid);
             if ($targetVariantFileID !== $origin) {
-                $fs->rename($origin, $targetVariantFileID);
+                if ($fs->has($targetVariantFileID)) {
+                    $fs->delete($origin);
+                } else {
+                    $fs->rename($origin, $targetVariantFileID);
+                }
                 $ops[$origin] = $targetVariantFileID;
                 $this->truncateDirectory(dirname($origin), $fs);
             }

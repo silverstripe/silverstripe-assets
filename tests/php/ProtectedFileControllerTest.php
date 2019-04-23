@@ -35,20 +35,10 @@ class ProtectedFileControllerTest extends FunctionalTest
 
         // Create a test files for each of the fixture references
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-            /** @var File $file */
-            $path = TestAssetStore::getLocalPath($file);
-            Filesystem::makeFolder(dirname($path));
-            $fh = fopen($path, "w+");
-            fwrite($fh, str_repeat('x', 1000000));
-            fclose($fh);
-
-            // Create variant for each file
-            $this->getAssetStore()->setFromString(
-                str_repeat('y', 100),
-                $file->Filename,
-                $file->Hash,
-                'variant'
-            );
+            $file->setFromString(str_repeat('x', 1000000), $file->Filename);
+            $file->setFromString(str_repeat('y', 100), $file->Filename, $file->Hash, 'variant');
+            $file->write();
+            $file->publishRecursive();
         }
     }
 
@@ -113,15 +103,18 @@ class ProtectedFileControllerTest extends FunctionalTest
 
     /**
      * Check public access to assets is available at the appropriate time
+     *
+     * Links to incorrect base (assets/ rather than assets/ProtectedFileControllerTest)
+     * because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
      */
     public function testAccessControl()
     {
         $expectedContent = str_repeat('x', 1000000);
         $variantContent = str_repeat('y', 100);
 
-        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $result = $this->get('assets/FileTest.txt');
         $this->assertResponseEquals(200, $expectedContent, $result);
-        $result = $this->get('assets/55b443b601/FileTest__variant.txt');
+        $result = $this->get('assets/FileTest__variant.txt');
         $this->assertResponseEquals(200, $variantContent, $result);
 
         // Make this file protected
@@ -137,9 +130,9 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(403, null, $result);
 
         // Other assets remain available
-        $result = $this->get('assets/55b443b601/FileTest.pdf');
+        $result = $this->get('assets/FileTest.pdf');
         $this->assertResponseEquals(200, $expectedContent, $result);
-        $result = $this->get('assets/55b443b601/FileTest__variant.pdf');
+        $result = $this->get('assets/FileTest__variant.pdf');
         $this->assertResponseEquals(200, $variantContent, $result);
 
         // granting access will allow access
@@ -167,9 +160,9 @@ class ProtectedFileControllerTest extends FunctionalTest
             'FileTest.txt',
             '55b443b60176235ef09801153cca4e6da7494a0c'
         );
-        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $result = $this->get('assets/FileTest.txt');
         $this->assertResponseEquals(200, $expectedContent, $result);
-        $result = $this->get('assets/55b443b601/FileTest__variant.txt');
+        $result = $this->get('assets/FileTest__variant.txt');
         $this->assertResponseEquals(200, $variantContent, $result);
 
         // Deleting the file will make the response 404
@@ -181,10 +174,17 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(404, null, $result);
         $result = $this->get('assets/55b443b601/FileTest__variant.txt');
         $this->assertResponseEquals(404, null, $result);
+        $result = $this->get('assets/FileTest.txt');
+        $this->assertResponseEquals(404, null, $result);
+        $result = $this->get('assets/FileTest__variant.txt');
+        $this->assertResponseEquals(404, null, $result);
     }
 
     /**
      * Test that access to folders is not permitted
+     *
+     * Links to incorrect base (assets/ rather than assets/ProtectedFileControllerTest)
+     * because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
      */
     public function testFolders()
     {

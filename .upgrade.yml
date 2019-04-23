@@ -141,6 +141,14 @@ warnings:
     'SilverStripe\Assets\Image::AssetLibraryThumbnail()':
       message: 'Renamed to CMSThumbnail()'
       replacement: 'CMSThumbnail'
+    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->parseFileID()':
+      message: 'Replaced with getDefaultFileIDHelper()->parseFileID()'
+    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getFileID()':
+      message: 'Replace with getDefaultFileIDHelper()->buildFileID()'
+    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getOriginalFilename()':
+      message: 'Replace with getDefaultFileIDHelper()->parseFileID()->getFilename()'
+    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getVariant()':
+      message: 'Replace with getDefaultFileIDHelper()->parseFileID()->getVariant()'
 renameWarnings:
   - File
   - Image

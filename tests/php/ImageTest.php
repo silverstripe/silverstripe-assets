@@ -39,6 +39,7 @@ abstract class ImageTest extends SapphireTest
         foreach ($files as $image) {
             $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
             $image->setFromLocalFile($sourcePath, $image->Filename);
+            $image->publishSingle();
         }
 
         // Set default config
@@ -60,7 +61,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $expected = '<img src="/assets/ImageTest/folder/444065542b/test-image.png" alt="This is a image Title" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -88,7 +89,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $expected = '<img src="/assets/ImageTest/folder/444065542b/test-image.png" alt="test image" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="test image" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -99,7 +100,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
-        $expected = '<img src="/assets/ImageTest/folder/46affab704/test.image.with.dots.png" alt="test.image.with.dots" />';
+        $expected = '<img src="/assets/ImageTest/folder/test.image.with.dots.png" alt="test.image.with.dots" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);

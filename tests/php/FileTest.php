@@ -82,6 +82,8 @@ class FileTest extends SapphireTest
         fclose($fh);
 
         $file = new File();
+
+        $file->File->Hash = sha1_file($testfilePath);
         $file->setFromLocalFile($testfilePath);
         $file->ParentID = $folder->ID;
         $file->write();
@@ -346,15 +348,30 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
-        $this->assertEquals('/assets/FileTest/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        $rootfile->publishSingle();
+        $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
     }
 
     public function testGetAbsoluteURL()
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals(
-            Director::absoluteBaseURL() . 'assets/FileTest/55b443b601/FileTest.txt',
+            Director::absoluteBaseURL() . 'assets/55b443b601/FileTest.txt',
+            $rootfile->getAbsoluteURL()
+        );
+
+        $rootfile->publishSingle();
+        $this->assertEquals(
+            Director::absoluteBaseURL() . 'assets/FileTest/FileTest.txt',
             $rootfile->getAbsoluteURL()
         );
     }

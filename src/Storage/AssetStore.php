@@ -231,7 +231,7 @@ interface AssetStore
      * @param string $filename
      * @param string $hash
      * @param string $newName
-     * @return string Updated Filename, or null if copy failed
+     * @return string|null Updated Filename, or null if copy failed
      */
     public function copy($filename, $hash, $newName);
 

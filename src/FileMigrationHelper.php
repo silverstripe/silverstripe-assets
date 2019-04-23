@@ -75,6 +75,43 @@ class FileMigrationHelper
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }
+
+        // Set max time and memory limit
+        Environment::increaseTimeLimitTo();
+        Environment::increaseMemoryLimitTo();
+
+        $this->logger->info('MIGRATING SILVERSTRIPE 3 LEGACY FILES');
+        $ss3Count = $this->ss3Migration($base);
+
+        $this->logger->info('NORMALISE SILVERTSTRIPE 4 FILES');
+        $ss4Count = 0;
+        if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
+            $this->logger->info('Looking at live files');
+            $ss4Count += Versioned::withVersionedMode(function() {
+                Versioned::set_stage(Versioned::LIVE);
+                return $this->normaliseAllFiles('on the live stage');
+            });
+
+            $this->logger->info('Looking at draft files');
+            $ss4Count += Versioned::withVersionedMode(function() {
+                Versioned::set_stage(Versioned::DRAFT);
+                return $this->normaliseAllFiles('on the draft stage');
+            });
+        } else {
+            $ss4Count = $this->normaliseAllFiles('');
+        }
+
+        if ($ss4Count > 0) {
+            $this->logger->info(sprintf('%d files were normalised', $ss4Count));
+        } else {
+            $this->logger->info('No files needed to be normalised');
+        }
+
+        return $ss3Count + $ss4Count;
+    }
+
+    protected function ss3Migration($base)
+    {
         // Check if the File dataobject has a "Filename" field.
         // If not, cannot migrate
         /** @skipUpgrade */
@@ -82,14 +119,10 @@ class FileMigrationHelper
             return 0;
         }
 
-        // Set max time and memory limit
-        Environment::increaseTimeLimitTo();
-        Environment::increaseMemoryLimitTo();
-
-        // Loop over all files
-        $count = 0;
+        // Clean up SS3 files
+        $ss3Count = 0;
         $originalState = null;
-        if (class_exists(Versioned::class)) {
+        if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             $originalState = Versioned::get_reading_mode();
             Versioned::set_stage(Versioned::DRAFT);
         }
@@ -100,17 +133,30 @@ class FileMigrationHelper
 
             $success = $this->migrateFile($base, $file, $filename);
             if ($success) {
-                $count++;
+                $ss3Count++;
             }
         }
 
-        $this->deleteInvalidSilverStripeThreeFiles();
+        $ss3InvalidCount = $this->deleteInvalidSilverStripeThreeFiles();
 
+        // Show summary of results
+        if ($ss3Count > 0) {
+            $this->logger->info(sprintf('%d legacy files have been migrated.', $ss3Count));
+        } else {
+            $this->logger->info(sprintf('No SilverStripe 3 files have been migrated.', $ss3Count));
+        }
+
+        if ($ss3InvalidCount > 0) {
+            $this->logger->info(
+                sprintf('%d invalid SilverStripe 3 have been deleted from the DB.', $ss3InvalidCount)
+            );
+        }
 
         if (class_exists(Versioned::class)) {
             Versioned::set_reading_mode($originalState);
         }
-        return $count;
+
+        return $ss3Count;
     }
 
     /**
@@ -174,8 +220,10 @@ class FileMigrationHelper
         }
 
         $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
-        foreach ($results['Operations'] as $origin => $destination) {
-            $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
+        if (!empty($results['Operations'])) {
+            foreach ($results['Operations'] as $origin => $destination) {
+                $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
+            }
         }
 
         return true;
@@ -186,6 +234,8 @@ class FileMigrationHelper
      */
     private function deleteInvalidSilverStripeThreeFiles()
     {
+        $count = sizeof($this->legacyFileIDsToDelete);
+
         $chunks = array_chunk($this->legacyFileIDsToDelete, 100);
         $this->legacyFileIDsToDelete = [];
 
@@ -197,8 +247,34 @@ class FileMigrationHelper
                 $file->delete();
             }
         }
+
+        return $count;
     }
 
+    protected function normaliseAllFiles($stageString)
+    {
+        $count = 0;
+
+        $files = $this->chunk(File::get()->exclude('ClassName', [Folder::class, 'Folder']));
+
+        /** @var File $file */
+        foreach($files as $file) {
+            $results = $this->store->normalise($file->File->Filename, $file->File->Hash);
+            if ($results && !empty($results['Operations'])) {
+                $this->logger->info(
+                    sprintf('* %s has been normalised %s', $file->getFilename(), $stage)
+                );
+                foreach ($results['Operations'] as $origin => $destination) {
+                    $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
+                }
+                $count++;
+            }
+        }
+
+        return $count;
+
+    }
+    
     /**
      * Check if a file's classname is compatible with it's extension
      *

@@ -64,7 +64,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
     /**
      * @note LegacyFileIDHelper is meant to fail when parsing newer format fileIDs with a variant e.g.:
-     * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without variant, it should return the same
+     * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without a variant, it should return the same
      * results as natural paths.
      */
     public function parseFileID($fileID)

@@ -188,8 +188,8 @@ class ProtectedFileControllerTest extends FunctionalTest
      */
     public function testFolders()
     {
-        $result = $this->get('assets/55b443b601');
-        $this->assertResponseEquals(403, null, $result);
+        $result = $this->get('assets/does-not-exists');
+        $this->assertResponseEquals(404, null, $result);
 
         $result = $this->get('assets/FileTest-subfolder');
         $this->assertResponseEquals(403, null, $result);

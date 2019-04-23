@@ -10,15 +10,20 @@ SilverStripe\Assets\Image:
   image2:
     Name: myimage.jpg
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  fakePdf:
+    Name: myimage.pdf
 SilverStripe\Assets\File:
   file1:
-    Name: anotherfile.jpg
+    Name: anotherfile.txt
   file2:
-    Name: file.jpg
+    Name: file.doc
     ParentID: =>SilverStripe\Assets\Folder.parent
   file3:
-    Name: picture.jpg
+    Name: picture.pdf
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  badname:
+    Name: bad__name.zip
+    ParentID: =>SilverStripe\Assets\Folder.parent
   invalid:
     Name: myfile.exe
     ParentID: =>SilverStripe\Assets\Folder.subfolder

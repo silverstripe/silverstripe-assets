@@ -983,7 +983,10 @@ class AssetStoreTest extends SapphireTest
     {
         $this->writeDummyFiles($fsName, $contents);
 
-        $this->getBackend()->normalise($filename, $hash);
+        $results = $this->getBackend()->normalise($filename, $hash);
+
+        $this->assertEquals($filename, $results['Filename']);
+        $this->assertEquals($hash, $results['Hash']);
 
         $fs = $this->getFilesystem($fsName);
 
@@ -1079,7 +1082,12 @@ class AssetStoreTest extends SapphireTest
     {
         $this->writeDummyFiles($fsName, $contents);
 
-        $this->getBackend()->normalisePath($fileID);
+        $results = $this->getBackend()->normalisePath($fileID);
+
+        $this->assertEquals('folder/file.txt', $results['Filename']);
+        $this->assertTrue(
+            strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash']) === 0
+        );
 
         $fs = $this->getFilesystem($fsName);
 

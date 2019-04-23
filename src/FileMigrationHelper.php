@@ -2,12 +2,16 @@
 
 namespace SilverStripe\Assets;
 
+use LogicException;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -24,6 +28,16 @@ class FileMigrationHelper
     use Injectable;
     use Configurable;
 
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class,
+    ];
+
+    /** @var LoggerInterface */
+    private $logger;
+
+    /** @var FlysystemAssetStore */
+    private $store;
+
     /**
      * If a file fails to validate during migration, delete it.
      * If set to false, the record will exist but will not be attached to any filesystem
@@ -34,6 +48,15 @@ class FileMigrationHelper
      */
     private static $delete_invalid_files = true;
 
+    /** @var int[] List of files IDs to delete  */
+    protected $legacyFileIDsToDelete = [];
+
+
+    public function __construct()
+    {
+        $this->logger = new NullLogger();
+    }
+
     /**
      * Perform migration
      *
@@ -42,6 +65,13 @@ class FileMigrationHelper
      */
     public function run($base = null)
     {
+        $this->store = Injector::inst()->get(AssetStore::class);
+        if (!$this->store instanceof AssetStore || !method_exists($this->store, 'normalisePath')) {
+            throw new LogicException(
+                'FileMigrationHelper: Can not run if the default asset store does not have a `normalisePath` method.'
+            );
+        }
+
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }
@@ -64,7 +94,7 @@ class FileMigrationHelper
             Versioned::set_stage(Versioned::DRAFT);
         }
 
-        foreach ($this->getFileQuery() as $file) {
+        foreach ($this->getLegacyFileQuery() as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
 
@@ -73,6 +103,10 @@ class FileMigrationHelper
                 $count++;
             }
         }
+
+        $this->deleteInvalidSilverStripeThreeFiles();
+
+
         if (class_exists(Versioned::class)) {
             Versioned::set_reading_mode($originalState);
         }
@@ -89,8 +123,6 @@ class FileMigrationHelper
      */
     protected function migrateFile($base, File $file, $legacyFilename)
     {
-        $useLegacyFilenames = Config::inst()->get(FlysystemAssetStore::class, 'legacy_filenames');
-
         // Make sure this legacy file actually exists
         $path = $base . '/' . $legacyFilename;
         if (!file_exists($path)) {
@@ -102,7 +134,9 @@ class FileMigrationHelper
         $extension = strtolower($file->getExtension());
         if (!in_array($extension, $allowed)) {
             if ($this->config()->get('delete_invalid_files')) {
-                $file->delete();
+                // We're chunking out queries, we don't want to delete our entry right away, because that would
+                // alter the order of our results.
+                $this->legacyFileIDsToDelete[] = $file->ID;
             }
             return false;
         }
@@ -126,22 +160,12 @@ class FileMigrationHelper
 
         // Copy local file into this filesystem
         $filename = $file->generateFilename();
-        $result = $file->setFromLocalFile(
-            $path,
-            $filename,
-            null,
-            null,
-            [
-                'conflict' => $useLegacyFilenames ?
-                    AssetStore::CONFLICT_USE_EXISTING :
-                    AssetStore::CONFLICT_OVERWRITE
-            ]
-        );
+        $results = $this->store->normalisePath($filename);
 
         // Move file if the APL changes filename value
-        if ($result['Filename'] !== $filename) {
-            $file->setFilename($result['Filename']);
-        }
+        $file->File->Filename = $results['Filename'];
+        $file->File->Hash = $results['Hash'];
+
 
         // Save and publish
         $file->write();
@@ -149,11 +173,30 @@ class FileMigrationHelper
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
-        if (!$useLegacyFilenames) {
-            // removing the legacy file since it has been migrated now and not using legacy filenames
-            return unlink($path);
+        $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
+        foreach ($results['Operations'] as $origin => $destination) {
+            $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
         }
+
         return true;
+    }
+
+    /**
+     * Delete all the invalid SS3 files after we've run `migrateFile`.
+     */
+    private function deleteInvalidSilverStripeThreeFiles()
+    {
+        $chunks = array_chunk($this->legacyFileIDsToDelete, 100);
+        $this->legacyFileIDsToDelete = [];
+
+        // Unfortunately we can't run a query directly against the Files table, because it's versioned. We need to go
+        // through the ORM.
+        while ($chunkOfIDs = array_shift($chunks)) {
+            $files = File::get()->filter('ID', $chunkOfIDs);
+            foreach ($files as $file) {
+                $file->delete();
+            }
+        }
     }
 
     /**
@@ -182,6 +225,7 @@ class FileMigrationHelper
         return File::get()
             ->exclude('ClassName', [Folder::class, 'Folder'])
             ->filter('FileFilename', array('', null))
+            ->sort('ID')
             ->where(sprintf(
                 '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
                 $table,
@@ -190,6 +234,28 @@ class FileMigrationHelper
             ->alterDataQuery(function (DataQuery $query) use ($table) {
                 return $query->addSelectFromTable($table, ['Filename']);
             });
+    }
+
+    protected function getLegacyFileQuery()
+    {
+        return $this->chunk($this->getFileQuery());
+    }
+
+    private function chunk(DataList $query)
+    {
+        $chunkSize = 100;
+        $page = 0;
+        while ($chunk = $query->limit($chunkSize, $chunkSize * $page)->getIterator()) {
+            foreach ($chunk as $file) {
+                yield $file;
+            }
+
+            if ($chunk->count() < $chunkSize) {
+                break;
+            }
+
+            $page++;
+        }
     }
 
     /**

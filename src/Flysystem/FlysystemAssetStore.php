@@ -607,7 +607,6 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                         }
                         $this->truncateDirectory(dirname($origin), $fs);
                     }
-
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is
@@ -705,7 +704,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
     protected function truncateDirectory($dirname, Filesystem $filesystem)
     {
         if ($dirname
-            && ltrim(dirname($dirname), '.')
+            && ltrim($dirname, '.')
             && !$this->config()->get('keep_empty_dirs')
             && !$filesystem->listContents($dirname)
         ) {
@@ -1580,11 +1579,11 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                     $fs->delete($origin);
                 } else {
                     $fs->rename($origin, $targetVariantFileID);
+                    $ops[$origin] = $targetVariantFileID;
                 }
-                $ops[$origin] = $targetVariantFileID;
                 $this->truncateDirectory(dirname($origin), $fs);
             }
         }
-        return $ops;
+        return array_merge($pfid->getTuple(), ['Operations' => $ops]);
     }
 }

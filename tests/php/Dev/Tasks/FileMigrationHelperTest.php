@@ -1,15 +1,15 @@
 <?php
 
-namespace SilverStripe\Assets\Tests;
+namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\FileMigrationHelper;
+use SilverStripe\Assets\Dev\Tasks\FileMigrationHelper;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Tests\FileMigrationHelperTest\Extension;
+use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 
@@ -50,7 +50,7 @@ class FileMigrationHelperTest extends SapphireTest
         TestAssetStore::activate('FileMigrationHelperTest/assets');
 
         // Ensure that each file has a local record file in this new assets base
-        $from = __DIR__ . '/ImageTest/test-image-low-quality.jpg';
+        $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $dest = TestAssetStore::base_path() . '/' . $file->generateFilename();
             Filesystem::makeFolder(dirname($dest));
@@ -58,7 +58,7 @@ class FileMigrationHelperTest extends SapphireTest
         }
 
         // Let's create some variants for our images
-        $from = __DIR__ . '/ImageTest/test-image-high-quality.jpg';
+        $from = __DIR__ . '/../../ImageTest/test-image-high-quality.jpg';
         foreach (Image::get() as $file) {
             $dest = TestAssetStore::base_path() . '/' . $file->generateFilename();
             $dir = dirname($dest);
@@ -84,9 +84,6 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testMigration()
     {
-        // TODO Fix file migration test by adjusting file migration logic to new behaviour
-        // added through https://github.com/silverstripe/silverstripe-versioned/issues/177
-
         // Prior to migration, check that each file has empty Filename / Hash properties
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $filename = $file->generateFilename();

@@ -370,20 +370,22 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $helpers = $this->getResolutionFileIDHelpers();
         array_unshift($helpers, $this->getDefaultFileIDHelper());
 
+        /** @var FileIDHelper[] $resolvableHelpers */
+        $resolvableHelpers = [];
+
         // Search for a helper that will allow us to find a file
-        /** @var FileIDHelper $helper */
-        $helper = null;
         foreach ($helpers as $helper) {
             $fileID = $helper->buildFileID(
                 $parsedFileID->getFilename(),
                 $parsedFileID->getHash()
             );
 
-            if (!$filesystem->has($fileID) || !$this->validateHash($helper, $parsedFileID, $filesystem)) {
-                // This helper didn't find our file
-                continue;
+            if ($filesystem->has($fileID) && $this->validateHash($helper, $parsedFileID, $filesystem)) {
+                $resolvableHelpers[] = $helper;
             }
+        }
 
+        foreach ($resolvableHelpers as $helper) {
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
             foreach ($possibleVariants as $possibleVariant) {

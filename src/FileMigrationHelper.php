@@ -200,6 +200,8 @@ class FileMigrationHelper
                 if ($this->logger) {
                     $this->logger->warning("$legacyFilename was migrated, but failed to remove the legacy file ($path)");
                 }
+            } else if($this->logger) {
+                $this->logger->warning("Legacy file at $path was deleted");
             }
             return $removed;
         }

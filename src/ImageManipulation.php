@@ -871,6 +871,8 @@ trait ImageManipulation
                         $tuple = $store->setFromStream($result->getStream(), $filename, $hash, $variant);
                         return [$tuple, $result];
                     } finally {
+                        // Unload the Intervention Image resource so it can be garbaged collected
+                        $res = $backend->setImageResource(null);
                         gc_collect_cycles();
                     }
                 }
@@ -889,6 +891,8 @@ trait ImageManipulation
 
                         return [$tuple, $result];
                     } finally {
+                        // Unload the Intervention Image resource so it can be garbaged collected
+                        $res = $backend->setImageResource(null);
                         gc_collect_cycles();
                     }
                 }

@@ -312,10 +312,12 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                 // Let's try validating the hash of our file
                 if ($parsedFileID->getHash()) {
                     $mainFileID = $strategy->buildFileID($strategy->stripVariant($parsedFileID));
+
                     if (!$fs->has($mainFileID)) {
                         // The main file doesn't exists ... this is kind of weird.
                         continue;
                     }
+
                     $stream = $fs->readStream($mainFileID);
                     if (!$this->validateStreamHash($stream, $parsedFileID->getHash())) {
                         continue;
@@ -603,6 +605,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                     $destination = $strategy->buildFileID(
                         $destParsedFileID->setVariant($originParsedFileID->getVariant())
                     );
+
                     if ($origin !== $destination) {
                         if ($fs->has($destination)) {
                             $fs->delete($origin);
@@ -611,6 +614,7 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                         }
                         $this->truncateDirectory(dirname($origin), $fs);
                     }
+
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is
@@ -760,7 +764,12 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
         );
     }
 
-
+    /**
+     * Similar to publish, only any existing files that would be overriden by publishing will be moved back to the
+     * protected store.
+     * @param $filename
+     * @param $hash
+     */
     public function swapPublish($filename, $hash)
     {
         if ($this->getVisibility($filename, $hash) === AssetStore::VISIBILITY_PUBLIC) {

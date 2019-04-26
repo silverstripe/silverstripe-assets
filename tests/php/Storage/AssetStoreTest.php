@@ -894,7 +894,6 @@ class AssetStoreTest extends SapphireTest
         $this->assertTrue($fs->has($expectedVariantPath));
     }
 
-
     public function listOfFilesToNormalise()
     {
         $public = AssetStore::VISIBILITY_PUBLIC;

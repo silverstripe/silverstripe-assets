@@ -312,6 +312,10 @@ class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flush
                 // Let's try validating the hash of our file
                 if ($parsedFileID->getHash()) {
                     $mainFileID = $strategy->buildFileID($strategy->stripVariant($parsedFileID));
+                    if (!$fs->has($mainFileID)) {
+                        // The main file doesn't exists ... this is kind of weird.
+                        continue;
+                    }
                     $stream = $fs->readStream($mainFileID);
                     if (!$this->validateStreamHash($stream, $parsedFileID->getHash())) {
                         continue;

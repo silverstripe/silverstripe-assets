@@ -50,13 +50,14 @@ class FileMigrationHelper
      */
     private static $delete_invalid_files = true;
 
-    /** @var int[] List of files IDs to delete  */
-    protected $legacyFileIDsToDelete = [];
-
-
     public function __construct()
     {
         $this->logger = new NullLogger();
+    }
+
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -88,6 +89,9 @@ class FileMigrationHelper
         $this->logger->info('NORMALISE SILVERTSTRIPE 4 FILES');
         $ss4Count = 0;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
+            Versioned::prepopulate_versionnumber_cache(File::class, Versioned::LIVE);
+            Versioned::prepopulate_versionnumber_cache(File::class, Versioned::DRAFT);
+
             $this->logger->info('Looking at live files');
             $ss4Count += Versioned::withVersionedMode(function () {
                 Versioned::set_stage(Versioned::LIVE);
@@ -97,7 +101,7 @@ class FileMigrationHelper
             $this->logger->info('Looking at draft files');
             $ss4Count += Versioned::withVersionedMode(function () {
                 Versioned::set_stage(Versioned::DRAFT);
-                return $this->normaliseAllFiles('on the draft stage');
+                return $this->normaliseAllFiles('on the draft stage', true);
             });
         } else {
             $ss4Count = $this->normaliseAllFiles('');
@@ -139,19 +143,11 @@ class FileMigrationHelper
             }
         }
 
-        $ss3InvalidCount = $this->deleteInvalidSilverStripeThreeFiles();
-
         // Show summary of results
         if ($ss3Count > 0) {
             $this->logger->info(sprintf('%d legacy files have been migrated.', $ss3Count));
         } else {
             $this->logger->info(sprintf('No SilverStripe 3 files have been migrated.', $ss3Count));
-        }
-
-        if ($ss3InvalidCount > 0) {
-            $this->logger->info(
-                sprintf('%d invalid SilverStripe 3 have been deleted from the DB.', $ss3InvalidCount)
-            );
         }
 
         if (class_exists(Versioned::class)) {
@@ -182,9 +178,7 @@ class FileMigrationHelper
         $extension = strtolower($file->getExtension());
         if (!in_array($extension, $allowed)) {
             if ($this->config()->get('delete_invalid_files')) {
-                // We're chunking out queries, we don't want to delete our entry right away, because that would
-                // alter the order of our results.
-                $this->legacyFileIDsToDelete[] = $file->ID;
+                $file->delete();
             }
             return false;
         }
@@ -232,28 +226,12 @@ class FileMigrationHelper
     }
 
     /**
-     * Delete all the invalid SS3 files after we've run `migrateFile`.
+     * Go through the list of files and make sure each one is at its default location
+     * @param string $stageString Complement of information to append to the confirmation message
+     * @param bool $skipIdenticalStages Whatever files that are already present on an other stage should be skipped
+     * @return int
      */
-    private function deleteInvalidSilverStripeThreeFiles()
-    {
-        $count = sizeof($this->legacyFileIDsToDelete);
-
-        $chunks = array_chunk($this->legacyFileIDsToDelete, 100);
-        $this->legacyFileIDsToDelete = [];
-
-        // Unfortunately we can't run a query directly against the Files table, because it's versioned. We need to go
-        // through the ORM.
-        while ($chunkOfIDs = array_shift($chunks)) {
-            $files = File::get()->filter('ID', $chunkOfIDs);
-            foreach ($files as $file) {
-                $file->delete();
-            }
-        }
-
-        return $count;
-    }
-
-    protected function normaliseAllFiles($stageString)
+    protected function normaliseAllFiles($stageString, $skipIdenticalStages=false)
     {
         $count = 0;
 
@@ -261,6 +239,20 @@ class FileMigrationHelper
 
         /** @var File $file */
         foreach ($files as $file) {
+            // There's no point doing those checks the live and draft file are the same
+            if ($skipIdenticalStages && !$file->stagesDiffer()) {
+                continue;
+            }
+
+            if (!$this->store->exists($file->File->Filename, $file->File->Hash)) {
+                $this->logger->warning(sprintf(
+                    'Can not normalise %s / %s because it does not exists.',
+                    $file->File->Filename,
+                    $file->File->Hash
+                ));
+                continue;
+            }
+
             $results = $this->store->normalise($file->File->Filename, $file->File->Hash);
             if ($results && !empty($results['Operations'])) {
                 $this->logger->info(
@@ -302,7 +294,6 @@ class FileMigrationHelper
         return File::get()
             ->exclude('ClassName', [Folder::class, 'Folder'])
             ->filter('FileFilename', array('', null))
-            ->sort('ID')
             ->where(sprintf(
                 '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
                 $table,
@@ -318,20 +309,24 @@ class FileMigrationHelper
         return $this->chunk($this->getFileQuery());
     }
 
+    /**
+     * Split queries into smaller chunks to avoid using too much memory
+     * @param DataList $query
+     * @return Generator
+     */
     private function chunk(DataList $query)
     {
         $chunkSize = 100;
-        $page = 0;
-        while ($chunk = $query->limit($chunkSize, $chunkSize * $page)->getIterator()) {
+        $greaterThanID = 0;
+        $query = $query->limit($chunkSize)->sort('ID');
+        while ($chunk = $query->filter('ID:GreaterThan', $greaterThanID)) {
             foreach ($chunk as $file) {
                 yield $file;
             }
-
-            if ($chunk->count() < $chunkSize) {
+            if ($chunk->count() == 0) {
                 break;
             }
-
-            $page++;
+            $greaterThanID = $file->ID;
         }
     }
 

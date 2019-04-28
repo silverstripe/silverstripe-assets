@@ -231,7 +231,7 @@ class FileMigrationHelper
      * @param bool $skipIdenticalStages Whatever files that are already present on an other stage should be skipped
      * @return int
      */
-    protected function normaliseAllFiles($stageString, $skipIdenticalStages=false)
+    protected function normaliseAllFiles($stageString, $skipIdenticalStages = false)
     {
         $count = 0;
 

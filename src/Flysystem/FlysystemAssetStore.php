@@ -613,7 +613,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                         }
                         $this->truncateDirectory(dirname($origin), $fs);
                     }
-
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is

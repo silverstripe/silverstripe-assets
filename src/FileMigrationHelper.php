@@ -264,5 +264,4 @@ class FileMigrationHelper extends \SilverStripe\Assets\Dev\Tasks\FileMigrationHe
             ->execute()
             ->map(); // map ID to Filename
     }
-
 }

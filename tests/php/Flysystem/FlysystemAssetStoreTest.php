@@ -186,5 +186,4 @@ class FlysystemAssetStoreTest extends SapphireTest
         $strategy = $assetStore->getProtectedResolutionStrategy();
         $this->assertEquals($expected, $strategy);
     }
-
 }

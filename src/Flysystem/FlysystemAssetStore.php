@@ -16,7 +16,6 @@ use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Storage\ExtendedAssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
@@ -29,7 +28,7 @@ use SilverStripe\Core\Injector\Injector;
 /**
  * Asset store based on flysystem Filesystem as a backend
  */
-class FlysystemAssetStore implements ExtendedAssetStore, AssetStoreRouter, Flushable
+class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 {
     use Configurable;
 

@@ -1,19 +1,17 @@
 <?php
 
-namespace SilverStripe\Assets\Tests;
+namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\FileMigrationHelper;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\LegacyThumbnailMigrationHelper;
+use SilverStripe\Assets\Dev\Tasks\LegacyThumbnailMigrationHelper;
 use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Assets\Tests\FileMigrationHelperTest\Extension;
-use SilverStripe\Core\Config\Config;
+use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
 
@@ -49,7 +47,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         TestAssetStore::activate('LegacyThumbnailMigrationHelperTest/assets');
 
         // Ensure that each file has a local record file in this new assets base
-        $from = $this->joinPaths(__DIR__, 'ImageTest/test-image-low-quality.jpg');
+        $from = $this->joinPaths(__DIR__, '../../ImageTest/test-image-low-quality.jpg');
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             /** @var $file File */
             $file->setFromLocalFile($from, $file->generateFilename());

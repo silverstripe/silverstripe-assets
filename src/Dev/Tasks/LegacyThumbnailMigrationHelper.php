@@ -1,11 +1,12 @@
 <?php
 
-namespace SilverStripe\Assets;
+namespace SilverStripe\Assets\Dev\Tasks;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
+use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;

@@ -381,6 +381,31 @@ abstract class ImageTest extends SapphireTest
         $this->assertTrue($cache->has($customKey));
     }
 
+    public function testVariantParts()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $format = 'Pad';
+        $args = [331, 313, '222222', 0];
+        $name = $image->variantName($format, $args);
+        $this->assertEquals(
+            array_merge([$format], $args),
+            $image->variantParts($name)
+        );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testVariantPartsThrowsOnInvalidName()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $args = ['foo'];
+        $name = $image->variantName('Invalid', $args);
+        $image->variantParts($name);
+    }
+
     protected function getDimensionCacheKey($hash, $variant)
     {
         return InterventionBackend::CACHE_DIMENSIONS . sha1($hash .'-'.$variant);

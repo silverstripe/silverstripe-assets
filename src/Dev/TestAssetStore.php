@@ -132,10 +132,12 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     /**
      * Helper method to get local filesystem path for this file
      *
-     * @param  AssetContainer $asset
+     * @param AssetContainer $asset
+     * @param boolean $forceProtected
+     * @param boolean $relative Return path relative to asset store root.
      * @return string
      */
-    public static function getLocalPath(AssetContainer $asset, $forceProtected = false)
+    public static function getLocalPath(AssetContainer $asset, $forceProtected = false, $relative = false)
     {
         if ($asset instanceof Folder) {
             return self::base_path() . '/' . $asset->getFilename();
@@ -154,7 +156,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         }
         /** @var Local $adapter */
         $adapter = $filesystem->getAdapter();
-        return $adapter->applyPathPrefix($fileID);
+        return $relative ? $fileID : $adapter->applyPathPrefix($fileID);
     }
 
     public function cleanFilename($filename)

@@ -990,13 +990,45 @@ trait ImageManipulation
      * @param string $format The format name.
      * @param mixed $arg,... Additional arguments
      * @return string
-     * @throws InvalidArgumentException
      */
     public function variantName($format, $arg = null)
     {
         $args = func_get_args();
         array_shift($args);
         return $format . Convert::base64url_encode($args);
+    }
+
+    /**
+     * Reverses {@link variantName()}.
+     * The "format" part of a variant name is a method name on the owner of this trait.
+     * For legacy reasons, there's no delimiter between this part, and the encoded arguments.
+     * This means we have to use a whitelist of "known formats", based on methods
+     * available on the {@link Image} class as the "main" user of this trait.
+     * This class is commonly decorated with additional manipulation methods through {@link DataExtension}.
+     *
+     * @param $variantName
+     * @return array|null An array of arguments passed to {@link variantName}. The first item is the "format".
+     * @throws InvalidArgumentException
+     */
+    public function variantParts($variantName)
+    {
+        $methods = array_map('preg_quote', singleton(Image::class)->allMethodNames());
+
+        // Regex needs to be case insensitive since allMethodNames() is all lowercased
+        $regex = '#^(?<format>(' . implode('|', $methods) . '))(?<encodedargs>(.*))#i';
+        preg_match($regex, $variantName, $matches);
+
+        if (!$matches) {
+            throw new InvalidArgumentException('Invalid variant name: ' . $variantName);
+        }
+
+        $args = Convert::base64url_decode($matches['encodedargs']);
+        if (!$args) {
+            throw new InvalidArgumentException('Invalid variant name arguments: ' . $variantName);
+        }
+
+        return array_merge([$matches['format']], $args[0]);
+
     }
 
     /**

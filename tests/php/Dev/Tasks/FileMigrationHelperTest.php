@@ -11,6 +11,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
 
 /**

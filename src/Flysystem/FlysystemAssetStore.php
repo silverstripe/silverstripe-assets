@@ -311,6 +311,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 // Let's try validating the hash of our file
                 if ($parsedFileID->getHash()) {
                     $mainFileID = $strategy->buildFileID($strategy->stripVariant($parsedFileID));
+
+                    if (!$fs->has($mainFileID)) {
+                        // The main file doesn't exists ... this is kind of weird.
+                        continue;
+                    }
+
                     $stream = $fs->readStream($mainFileID);
                     if (!$this->validateStreamHash($stream, $parsedFileID->getHash())) {
                         continue;
@@ -598,8 +604,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     $destination = $strategy->buildFileID(
                         $destParsedFileID->setVariant($originParsedFileID->getVariant())
                     );
-                    $fs->rename($origin, $destination);
-                    $this->truncateDirectory(dirname($origin), $fs);
+
+                    if ($origin !== $destination) {
+                        if ($fs->has($destination)) {
+                            $fs->delete($origin);
+                        } else {
+                            $fs->rename($origin, $destination);
+                        }
+                        $this->truncateDirectory(dirname($origin), $fs);
+                    }
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is
@@ -629,7 +642,11 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 foreach ($strategy->findVariants($pfid, $fs) as $variantParsedFileID) {
                     $fromFileID = $variantParsedFileID->getFileID();
                     $toFileID = $strategy->buildFileID($variantParsedFileID->setFilename($newName));
-                    $fs->copy($fromFileID, $toFileID);
+                    if ($fromFileID !== $toFileID) {
+                        if (!$fs->has($toFileID)) {
+                            $fs->copy($fromFileID, $toFileID);
+                        }
+                    }
                 }
 
                 return $pfid->setFilename($newName);
@@ -656,8 +673,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $deleted = true;
         }
 
-        // Truncate empty dirs
-        $this->truncateDirectory(dirname($fileID), $filesystem);
+
 
         return $deleted;
     }
@@ -694,11 +710,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     protected function truncateDirectory($dirname, Filesystem $filesystem)
     {
         if ($dirname
-            && ltrim(dirname($dirname), '.')
+            && ltrim($dirname, '.')
             && !$this->config()->get('keep_empty_dirs')
             && !$filesystem->listContents($dirname)
         ) {
             $filesystem->deleteDir($dirname);
+            $this->truncateDirectory(dirname($dirname), $filesystem);
         }
     }
 
@@ -844,6 +861,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $fileID
      * @param Filesystem $from
      * @param Filesystem $to
+     * @deprecated 1.4.0
      */
     protected function moveBetweenFilesystems($fileID, Filesystem $from, Filesystem $to)
     {
@@ -1531,5 +1549,52 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         return $response;
+    }
+
+    public function normalisePath($fileID)
+    {
+        return $this->applyToFileIDOnFilesystem(
+            function (...$args) {
+                return $this->normaliseToDefaultPath(...$args);
+            },
+            $fileID
+        );
+    }
+
+    public function normalise($filename, $hash)
+    {
+        return $this->applyToFileOnFilesystem(
+            function (...$args) {
+                return $this->normaliseToDefaultPath(...$args);
+            },
+            new ParsedFileID($filename, $hash)
+        );
+    }
+
+    /**
+     * Given a parsed file ID move the matching file and all its variant to the default position as defined by the
+     * provided startegy.
+     * @param ParsedFileID $pfid
+     * @param Filesystem $fs
+     * @param FileResolutionStrategy $strategy
+     * @return array List of new file names with the old name as the key
+     */
+    private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
+    {
+        $ops = [];
+        foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
+            $origin = $variantPfid->getFileID();
+            $targetVariantFileID = $strategy->buildFileID($variantPfid);
+            if ($targetVariantFileID !== $origin) {
+                if ($fs->has($targetVariantFileID)) {
+                    $fs->delete($origin);
+                } else {
+                    $fs->rename($origin, $targetVariantFileID);
+                    $ops[$origin] = $targetVariantFileID;
+                }
+                $this->truncateDirectory(dirname($origin), $fs);
+            }
+        }
+        return array_merge($pfid->getTuple(), ['Operations' => $ops]);
     }
 }

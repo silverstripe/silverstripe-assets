@@ -14,14 +14,18 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Assets\Dev\Tasks\FileMigrationHelper as BaseFileMigrationHelper;
 
 /**
  * Service to help migrate File dataobjects to the new APL.
  *
  * This service does not alter these records in such a way that prevents downgrading back to 3.x
+ *
+ * @deprecated 1.4.0 Use \SilverStripe\Assets\Dev\Tasks\FileMigrationHelper instead
  */
-class FileMigrationHelper
+class FileMigrationHelper extends BaseFileMigrationHelper
 {
     use Injectable;
     use Configurable;
@@ -42,7 +46,7 @@ class FileMigrationHelper
      * @config
      * @var int
      */
-    private static $log_interval = 100;
+    private static $log_interval = 10;
 
     private static $dependencies = [
         'logger' => '%$' . LoggerInterface::class,
@@ -96,7 +100,6 @@ class FileMigrationHelper
         foreach ($query as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
-
             $success = $this->migrateFile($base, $file, $filename);
 
             if ($processedCount % $this->config()->get('log_interval') === 0) {
@@ -138,20 +141,29 @@ class FileMigrationHelper
             return false;
         }
 
-        // Remove this file if it violates allowed_extensions
-        $allowed = array_filter(File::getAllowedExtensions());
-        $extension = strtolower($file->getExtension());
-        if (!in_array($extension, $allowed)) {
+        $validationResult = $file->validate();
+        if (!$validationResult->isValid()) {
             if ($this->config()->get('delete_invalid_files')) {
                 $file->delete();
             }
             if ($this->logger) {
-                $this->logger->warning("$legacyFilename not migrated because the extension $extension is not a valid extension");
+                $messages = implode("\n\n", array_map(function ($msg) {
+                    return $msg['message'];
+                }, $validationResult->getMessages()));
+
+                $this->logger->warning(
+                    sprintf(
+                        "%s was not migrated because the file is not valid. More information: %s",
+                        $legacyFilename,
+                        $messages
+                    )
+                );
             }
             return false;
         }
 
         // Fix file classname if it has a classname that's incompatible with it's extention
+        $extension = $file->getExtension();
         if (!$this->validateFileClassname($file, $extension)) {
             // We disable validation (if it is enabled) so that we are able to write a corrected
             // classname, once that is changed we re-enable it for subsequent writes
@@ -166,6 +178,16 @@ class FileMigrationHelper
                 DataObject::Config()->set('validation_enabled', true);
             }
             $file = File::get_by_id($fileID);
+        }
+        
+        if (!is_readable($path)) {
+            if ($this->logger) {
+                $this->logger->warning(sprintf(
+                    'File at %s is not readable and could not be migrated.',
+                    $path
+                ));
+                return false;
+            }
         }
 
         // Copy local file into this filesystem
@@ -188,7 +210,19 @@ class FileMigrationHelper
         }
 
         // Save and publish
-        $file->write();
+        try {
+            $file->write();
+        } catch (ValidationException $e) {
+            if ($this->logger) {
+                $this->logger->error(sprintf(
+                    "File %s could not be migrated due to an error. 
+                    This problem likely existed before the migration began. Error: %s",
+                    $legacyFilename,
+                    $e->getMessage()
+                ));
+            }
+            return false;
+        }
         if (class_exists(Versioned::class)) {
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
@@ -205,7 +239,6 @@ class FileMigrationHelper
             }
             return $removed;
         }
-        return true;
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripe\Assets\Tests\FileMigrationHelperTest;
+namespace SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest;
 
 use SilverStripe\Assets\File;
 use SilverStripe\Dev\TestOnly;

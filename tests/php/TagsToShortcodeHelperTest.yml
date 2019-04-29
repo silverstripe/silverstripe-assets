@@ -2,13 +2,27 @@ SilverStripe\CMS\Model\SiteTree:
   page1:
     Title: 'my page'
     Content: >
-      <p>this needs to be rewritten: <a href="/assets/document.pdf">link to file</a></p>
-      <p>and so does this: <img src="/assets/myimage.jpg"></p>
-      <p>also this: <img src="assets/myimage.jpg"></p>
-      <p>and this: <img src="/assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="64" height="64"></p>
+      <p>file link <a href="/assets/document.pdf">link to file</a></p>
+      <p>natural path links
+        <img src="/assets/myimage.jpg">
+        <img src="assets/myimage.jpg">
+      </p>
+      <p>variant path <img src="/assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="64" height="64"></p>
+      <p>link to hash path <img src="/assets/6ee53356ec/myimage.jpg"></p>
+      <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
 
-      <p>but not this: <a href="[file_link id=2]">link to file</a></p>
-      <p>and neither this: <a href="/assets/invalid_document.pdf">link to file</a></p>
+      <p>ignored links
+        <a href="[file_link id=2]">link to file</a>
+        <a href="/assets/invalid_document.pdf">link to file</a>
+      </p>
+
+      <p broken html <img src="" </p>
+      <p>image tag with closing bracket <img src="assets/myimage.jpg"/></p>
+      <p>image tag inside a link <a href="/assets/document.pdf">link to file with image <img src="assets/myimage.jpg"></a></p>
+      <p>attributes with single quotes <img src='assets/myimage.jpg'></p>
+      <p>attributes without quotes <img src=assets/myimage.jpg></p>
+      <p>bad casing for tags or attributes <IMG Src="assets/myimage.jpg"></p>
+      <p>image that should not be updated <img src="non_existant.jpg"></p>
 
 SilverStripe\Assets\Image:
   image1:

@@ -174,7 +174,7 @@ class TagsToShortcodeHelper
     {
         $resultTags = [];
 
-        preg_match_all('/(<|[)('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?(>|])/', $content, $matches, PREG_SET_ORDER);
+        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/', $content, $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -191,7 +191,7 @@ class TagsToShortcodeHelper
     private function getTagTuple($tag)
     {
         $pattern = sprintf(
-            '/.*(<|[)(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
+            '/.*(?:<|\[)(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
             $this->validTagsPattern,
             $this->validAttributesPattern
         );
@@ -237,8 +237,11 @@ class TagsToShortcodeHelper
     private function getNewTag($tag)
     {
         $tuple = $this->getTagTuple($tag);
+        if (!isset($tuple['tagType']) || !isset($tuple['src'])) {
+            return null;
+        }
         $tagType = $tuple['tagType'];
-        $src = $tuple['src'];
+        $src = $tuple['src'] ?: $tuple['href'];
 
         // Search for a File object containing this filename
         $parsedFileID = $this->getParsedFileIDFromSrc($src);
@@ -258,10 +261,10 @@ class TagsToShortcodeHelper
         if ($parsedFileID && $file) {
             if ($tagType == 'img') {
                 $find = [
-                    '/(<|[)img/',
+                    '/(<|\[)img/',
                     '/src\s*=\s*".*?"/',
                     '/href\s*=\s*".*?"/',
-                    '/(>|])/',
+                    '/(>|\])/',
                 ];
                 $replace = [
                     '[image',

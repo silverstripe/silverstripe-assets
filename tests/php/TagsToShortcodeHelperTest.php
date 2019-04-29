@@ -71,8 +71,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $newPage = SiteTree::get()->first();
 
         self::assertEquals(<<<HTML
-<p>this needs to be rewritten: <a href="[file_link id=2]">link to file</a></p> <p>and so does this: [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>also this: [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>and this: [image src="/assets/6ee53356ec/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id=1]</p>
-<p>but not this: <a href="[file_link id=2]" class="ss-broken">link to file</a></p> <p>and neither this: <a href="/assets/invalid_document.pdf">link to file</a></p>
+<p>file link <a href="[file_link id=2]">link to file</a></p> <p>natural path links
+  [image src="/assets/6ee53356ec/myimage.jpg" id=1][image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>variant path [image src="/assets/6ee53356ec/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id=1]</p> <p>link to hash path [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
+<p>ignored links
+  <a href="[file_link id=2]" class="ss-broken">link to file</a>
+  <a href="/assets/invalid_document.pdf">link to file</a>
+</p>
+<p broken="" html="" src=""> </p><p>image tag with closing bracket [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image tag inside a link <a href="[file_link id=2]">link to file with image [image src="/assets/6ee53356ec/myimage.jpg" id=1]</a></p> <p>attributes with single quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>attributes without quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>bad casing for tags or attributes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image that should not be updated <img src="non_existant.jpg"></p>
 
 HTML
             , $newPage->Content, 'Content is not correct');

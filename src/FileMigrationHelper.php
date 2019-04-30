@@ -40,14 +40,6 @@ class FileMigrationHelper extends BaseFileMigrationHelper
      */
     private static $delete_invalid_files = true;
 
-    /**
-     * Specifies the interval for every Nth file looped at which output will be logged.
-     *
-     * @config
-     * @var int
-     */
-    private static $log_interval = 10;
-
     private static $dependencies = [
         'logger' => '%$' . LoggerInterface::class,
     ];
@@ -80,6 +72,7 @@ class FileMigrationHelper extends BaseFileMigrationHelper
         // If not, cannot migrate
         /** @skipUpgrade */
         if (!DB::get_schema()->hasField('File', 'Filename')) {
+            $this->logger->error('Database not ready for migration. Please run dev/build');
             return 0;
         }
 
@@ -96,26 +89,39 @@ class FileMigrationHelper extends BaseFileMigrationHelper
         }
 
         $query = $this->getFileQuery();
-        $total = $query->count();
+        $totalCount = $query->count();
+
+        if (!$totalCount) {
+            return 0;
+        }
+
+        $this->logger->info(sprintf('Migrating %d files', $totalCount));
+
         foreach ($query as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
-            $success = $this->migrateFile($base, $file, $filename);
 
-            if ($processedCount % $this->config()->get('log_interval') === 0) {
-                if ($this->logger) {
-                    $this->logger->info("Iterated $processedCount out of $total files. Migrated $migratedCount files.");
-                }
-            }
+            $this->logger->info(sprintf('Migrating %s', $filename));
+
+            $success = $this->migrateFile($base, $file, $filename);
 
             $processedCount++;
             if ($success) {
                 $migratedCount++;
             }
         }
+
         if (class_exists(Versioned::class)) {
             Versioned::set_reading_mode($originalState);
         }
+
+        if ($processedCount < $totalCount) {
+            $this->logger->warning(sprintf(
+                'Failed to migrate %d files, please review errors',
+                $totalCount - $processedCount
+            ));
+        }
+
         return $migratedCount;
     }
 
@@ -179,7 +185,7 @@ class FileMigrationHelper extends BaseFileMigrationHelper
             }
             $file = File::get_by_id($fileID);
         }
-        
+
         if (!is_readable($path)) {
             if ($this->logger) {
                 $this->logger->warning(sprintf(
@@ -239,6 +245,8 @@ class FileMigrationHelper extends BaseFileMigrationHelper
             }
             return $removed;
         }
+
+        return true;
     }
 
     /**

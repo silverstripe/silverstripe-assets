@@ -89,6 +89,9 @@ class TagsToShortcodeHelper
 
         $this->baseClass = $baseClass ?: DataObject::class;
         $this->includeBaseClass = $includeBaseClass;
+
+        $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS));
+        $this->validAttributesPattern = implode('|', static::VALID_ATTRIBUTES);
     }
 
     /**
@@ -97,9 +100,6 @@ class TagsToShortcodeHelper
     public function run()
     {
         Environment::increaseTimeLimitTo();
-
-        $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS));
-        $this->validAttributesPattern = implode('|', static::VALID_ATTRIBUTES);
 
         $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, ['HTMLText', 'HTMLVarchar']);
         foreach ($classes as $class => $tables) {

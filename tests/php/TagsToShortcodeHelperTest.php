@@ -8,6 +8,7 @@ use SilverStripe\Assets\Dev\Tasks\TagsToShortcodeHelper;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
 
 class TagsToShortcodeHelperTest extends SapphireTest
@@ -68,7 +69,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $tagsToShortcodeHelper->run();
 
         /** @var SiteTree $newPage */
-        $newPage = SiteTree::get()->first();
+        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
 
         self::assertEquals(<<<HTML
 <p>file link <a href="[file_link id=2]">link to file</a></p> <p>natural path links
@@ -82,4 +83,67 @@ class TagsToShortcodeHelperTest extends SapphireTest
 HTML
             , $newPage->Content, 'Content is not correct');
     }
+
+
+    /**
+     * @dataProvider newContentDataProvider
+     * @param string $input
+     * @param string|false $ouput If false, assume the input should be unchanged
+     */
+    public function testNewContent($input, $output=false)
+    {
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $this->assertEquals($output ?: $input, $tagsToShortcodeHelper->getNewContent($input));
+    }
+
+    public function newContentDataProvider()
+    {
+
+        return [
+            'external anchor' => ['<a href="https://silverstripe.org/assets/document.pdf">External link</a>'],
+            'link to file with starting slash' => [
+                '<a href="/assets/document.pdf">link to file</a>',
+                '<a href="[file_link id=2]">link to file</a>'
+            ],
+            'absolute link to file' => [
+                sprintf('<a href="%s/assets/document.pdf">link to file</a>', Environment::getEnv('SS_BASE_URL')),
+                '<a href="[file_link id=2]">link to file</a>'
+            ],
+            'link to file in paragraph' => [
+                '<p>file link <a href="/assets/document.pdf">link to file</a></p>',
+                '<p>file link <a href="[file_link id=2]">link to file</a></p>'
+            ],
+
+            'link to file without starting slash' => [
+                '<a href="assets/document.pdf">link to file</a>',
+                '<a href="[file_link id=2]">link to file</a>'
+            ],
+            'link with single quotes' => [
+                '<a href=\'assets/document.pdf\'>link to file</a>',
+                '<a href="[file_link id=2]">link to file</a>'
+            ],
+            'link with other attributes' => [
+                '<a href="assets/document.pdf" lang="fr" xml:lang="fr">link to file</a>',
+                '<a href="[file_link id=2]" lang="fr" xml:lang="fr">link to file</a>'
+            ],
+            'link with other attributes before href' => [
+                '<a lang="fr" xml:lang="fr" href="assets/document.pdf">link to file</a>',
+                '<a lang="fr" xml:lang="fr" href="[file_link id=2]">link to file</a>'
+            ],
+            'link tag broken over several line' => [
+                "<a \nhref=\"assets/document.pdf\" \n\t>\nlink to file \r\n \t</a>",
+                "<a \nhref=\"[file_link id=2]\" \n\t>\nlink to file \r\n \t</a>",
+            ],
+            'link with uppercase tag' => [
+                '<A href="assets/document.pdf">link to file</A>',
+                '<A href="[file_link id=2]">link to file</A>'
+            ],
+            'link with uppercase href' => [
+                '<a HREF="assets/document.pdf">link to file</a>',
+                '<a href="[file_link id=2]">link to file</a>'
+            ],
+            
+        ];
+    }
+
 }

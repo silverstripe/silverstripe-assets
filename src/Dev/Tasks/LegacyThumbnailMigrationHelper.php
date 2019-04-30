@@ -31,6 +31,8 @@ use SilverStripe\Versioned\Versioned;
  * - Does not migrate legacy thumbnails where the original file or folder
  *   has been renamed since an earlier 4.x migration run
  * - Does not filter out unused CMS thumbnails (they're using a new size now)
+ * - Does not move legacy thumbnails to the protected store if the original file
+ *   has been unpublished or protected since an earlier 4.x migration run
  */
 class LegacyThumbnailMigrationHelper
 {

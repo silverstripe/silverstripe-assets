@@ -4,9 +4,6 @@ namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
@@ -65,71 +62,6 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
         parent::tearDown();
-    }
-
-    /**
-     * Tests cases where files have already been migrated to 4.3 or older,
-     * and some images have since been unpublished or otherwise marked protected.
-     * The previously orphaned thumbnails wouldn't have been moved to the protected store in this case.
-     * The migration task should find those orphans, and reunite them with the original image.
-     * And they lived happily ever after.
-     */
-    public function testMigratesThumbnailsForProtectedFiles()
-    {
-        /** @var TestAssetStore $store */
-        $store = singleton(AssetStore::class); // will use TestAssetStore
-
-        // Remove the legacy helper, otherwise it'll move the _resampled files as well,
-        // which "pollutes" our test case.
-        /** @var FileIDHelperResolutionStrategy $strategy */
-        $publicStrategy = $store->getPublicResolutionStrategy();
-        $helpers = $publicStrategy->getResolutionFileIDHelpers();
-        $origHelpers = [];
-        foreach ($helpers as $i => $helper) {
-            $origHelpers[] = clone $helper;
-            if ($helper instanceof LegacyFileIDHelper) {
-                unset($helpers[$i]);
-            }
-        }
-        $publicStrategy->setResolutionFileIDHelpers($helpers);
-        $store->setPublicResolutionStrategy($publicStrategy);
-
-        /** @var Image $image */
-        $image = $this->objFromFixture(Image::class, 'nested');
-
-        $formats = ['ResizedImage' => [60,60]];
-        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats);
-
-        // Protect file *after* creating legacy fixture,
-        // but without moving the _resampled "orphan"
-        $image->protectFile();
-        $image->write();
-
-        // We need to retain the legacy helper for later assertions.
-        $publicStrategy->setResolutionFileIDHelpers($origHelpers);
-        $store->setPublicResolutionStrategy($publicStrategy);
-
-        $helper = new LegacyThumbnailMigrationHelper();
-        $moved = $helper->run($store);
-
-        $this->assertCount(1, $moved);
-
-        $publicVariants = $store->getPublicResolutionStrategy()
-            ->findVariants(
-                new ParsedFileID($image->Filename, $image->Hash),
-                $store->getPublicFilesystem()
-            );
-        $this->assertCount(0, $publicVariants);
-
-        $protectedVariants = $store->getProtectedResolutionStrategy()
-            ->findVariants(
-                new ParsedFileID($image->Filename, $image->Hash),
-                $store->getProtectedFilesystem()
-            );
-
-        // findVariants() returns *both* the original file and the variant
-        // See FileIDHelperResolutionStrategyTest->testFindVariant()
-        $this->assertCount(2, $protectedVariants);
     }
 
     public function testMigratesWithExistingThumbnailInNewLocation()

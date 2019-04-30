@@ -1,0 +1,11 @@
+SilverStripe\Assets\Folder:
+  parent:
+    Name: ParentFolder
+    CanViewType: NULL
+  subfolder:
+    Name: SubFolder
+    Parent: =>SilverStripe\Assets\Folder.parent
+    CanViewType: Anyone
+  anotherfolder:
+    Name: AnotherFolder
+    CanViewType:

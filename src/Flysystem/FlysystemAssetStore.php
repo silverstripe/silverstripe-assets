@@ -198,6 +198,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * @return FileResolutionStrategy
+     * @internal This API has not been formalised yet.
      */
     public function getPublicResolutionStrategy()
     {
@@ -213,6 +214,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * @param FileResolutionStrategy $publicResolutionStrategy
+     * @internal This API has not been formalised yet.
      */
     public function setPublicResolutionStrategy(FileResolutionStrategy $publicResolutionStrategy)
     {
@@ -222,6 +224,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     /**
      * @return FileResolutionStrategy
      * @throws LogicException
+     * @internal This API has not been formalised yet.
      */
     public function getProtectedResolutionStrategy()
     {
@@ -237,6 +240,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * @param FileResolutionStrategy $protectedResolutionStrategy
+     * @internal This API has not been formalised yet.
      */
     public function setProtectedResolutionStrategy(FileResolutionStrategy $protectedResolutionStrategy)
     {

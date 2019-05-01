@@ -270,13 +270,13 @@ class TagsToShortcodeHelper
                     '[image',
                     "src=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
                     "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
-                    " id={$file->ID}]",
+                    " id=\"{$file->ID}\"]",
                 ];
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
                 $find= "/$attribute\s*=\s*\".*?\"/";
-                $replace = "$attribute=\"[file_link id={$file->ID}]\"";
+                $replace = "$attribute=\"[file_link,id={$file->ID}]\"";
                 $shortcode = preg_replace($find, $replace, $tag);
             } else {
                 return null;

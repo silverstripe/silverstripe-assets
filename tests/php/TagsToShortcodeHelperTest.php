@@ -2,11 +2,13 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use DOMDocument;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Dev\Tasks\TagsToShortcodeHelper;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
+use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
@@ -73,18 +75,25 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $newPage = $this->objFromFixture(SiteTree::class, 'page1');
 
         $documentID = $this->idFromFixture(File::class, 'document');
+        $imageID = $this->idFromFixture(Image::class, 'image1');
 
-        self::assertEquals(<<<HTML
-<p>file link <a href="[file_link id={$documentID}]">link to file</a></p> <p>natural path links
-  [image src="/assets/6ee53356ec/myimage.jpg" id=1][image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>variant path [image src="/assets/6ee53356ec/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id=1]</p> <p>link to hash path [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
-<p>ignored links
-  <a href="[file_link id={$documentID}]" class="ss-broken">link to file</a>
-  <a href="/assets/invalid_document.pdf">link to file</a>
-</p>
-<p broken="" html="" src=""> </p><p>image tag with closing bracket [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image tag inside a link <a href="[file_link id={$documentID}]">link to file with image [image src="/assets/6ee53356ec/myimage.jpg" id=1]</a></p> <p>attributes with single quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>attributes without quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>bad casing for tags or attributes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image that should not be updated <img src="non_existant.jpg"></p>
+        $this->assertContains(
+            sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
+            $newPage->Content
+        );
 
-HTML
-            , $newPage->Content, 'Content is not correct');
+        $this->assertContains(
+            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf(
+                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                $imageID
+            ),
+            $newPage->Content
+        );
     }
 
 

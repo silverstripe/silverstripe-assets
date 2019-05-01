@@ -41,7 +41,7 @@ class FileMigrationHelper extends BaseFileMigrationHelper
     private static $delete_invalid_files = true;
 
     private static $dependencies = [
-        'logger' => '%$' . LoggerInterface::class,
+        'logger' => '%$' . LoggerInterface::class . '.quiet',
     ];
 
     /** @var LoggerInterface|null */
@@ -100,12 +100,18 @@ class FileMigrationHelper extends BaseFileMigrationHelper
         foreach ($query as $file) {
             // Bypass the accessor and the filename from the column
             $filename = $file->getField('Filename');
-
             $this->logger->info(sprintf('Migrating %s', $filename));
 
             $success = $this->migrateFile($base, $file, $filename);
 
             $processedCount++;
+            $this->logger->info(sprintf(
+                '[%d / %d, %d%% complete]',
+                $processedCount,
+                $totalCount,
+                floor(($processedCount / $totalCount) * 100)
+            ));
+
             if ($success) {
                 $migratedCount++;
             }
@@ -186,7 +192,7 @@ class FileMigrationHelper extends BaseFileMigrationHelper
             $file = File::get_by_id($fileID);
         }
 
-        if (!is_readable($path)) {
+        if (!is_readable($path) || fopen($path, 'r') === false) {
             if ($this->logger) {
                 $this->logger->warning(sprintf(
                     'File at %s is not readable and could not be migrated.',

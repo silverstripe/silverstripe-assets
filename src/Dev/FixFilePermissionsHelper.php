@@ -25,9 +25,9 @@ class FixFilePermissionsHelper
     public function run()
     {
         SQLUpdate::create(
-            File::singleton()->baseTable(),
+            '"' . File::singleton()->baseTable() . '"',
             ['CanViewType' => 'Inherit'],
-            ['ISNULL(CanViewType)', 'ClassName' => Folder::class]
+            ['ISNULL("CanViewType")', 'ClassName' => Folder::class]
         )->execute();
 
         // This part won't work if run from the CLI, because Apache and the CLI don't share the same cache.

@@ -24,11 +24,14 @@ class FixFolderPermissionsHelper
      */
     public function run()
     {
-        SQLUpdate::create(
-            '"' . File::singleton()->baseTable() . '"',
-            ['CanViewType' => 'Inherit'],
-            ['ISNULL("CanViewType")', 'ClassName' => Folder::class]
-        )->execute();
+        SQLUpdate::create()
+            ->setTable('"' . File::singleton()->baseTable() . '"')
+            ->setAssignments(['"CanViewType"' => 'Inherit'])
+            ->setWhere([
+                '"CanViewType" IS NULL',
+                '"ClassName"' => Folder::class
+            ])
+            ->execute();
 
         // This part won't work if run from the CLI, because Apache and the CLI don't share the same cache.
         InheritedPermissionFlusher::flush();

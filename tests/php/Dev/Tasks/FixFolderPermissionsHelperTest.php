@@ -18,9 +18,9 @@ class FixFolderPermissionsHelperTest extends SapphireTest
         $task = new FixFolderPermissionsHelper();
         $updated = $task->run();
 
-        $this->assertEquals('Inherit', Folder::get()->where(['Name' => 'ParentFolder'])->first()->CanViewType);
-        $this->assertEquals('Anyone', Folder::get()->where(['Name' => 'SubFolder'])->first()->CanViewType);
-        $this->assertEquals('Inherit', Folder::get()->where(['Name' => 'AnotherFolder'])->first()->CanViewType);
+        $this->assertEquals('Inherit', Folder::get()->filter('Name', 'ParentFolder')->first()->CanViewType);
+        $this->assertEquals('Anyone', Folder::get()->filter('Name', 'SubFolder')->first()->CanViewType);
+        $this->assertEquals('Inherit', Folder::get()->filter('Name', 'AnotherFolder')->first()->CanViewType);
         $this->assertEquals(2, $updated);
     }
 }

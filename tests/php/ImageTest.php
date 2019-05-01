@@ -349,6 +349,14 @@ abstract class ImageTest extends SapphireTest
         $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 
+    public function testGenerateImageInSameFolderAsOriginal()
+    {
+        // All fixtures are in a subfolder
+        $original = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $generated = $original->Pad(200, 200, 'CCCCCC', 0);
+        $this->assertEquals($original->Parent()->getFilename(), $generated->Parent()->getFilename());
+    }
+
     /**
      * Ensure dimensions are cached
      */
@@ -379,6 +387,31 @@ abstract class ImageTest extends SapphireTest
         );
         $customKey = $this->getDimensionCacheKey(sha1('anything'), 'custom-variant');
         $this->assertTrue($cache->has($customKey));
+    }
+
+    public function testVariantParts()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $format = 'Pad';
+        $args = [331, 313, '222222', 0];
+        $name = $image->variantName($format, $args);
+        $this->assertEquals(
+            array_merge([$format], $args),
+            $image->variantParts($name)
+        );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testVariantPartsThrowsOnInvalidName()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $args = ['foo'];
+        $name = $image->variantName('Invalid', $args);
+        $image->variantParts($name);
     }
 
     protected function getDimensionCacheKey($hash, $variant)

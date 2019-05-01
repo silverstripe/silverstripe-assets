@@ -11,6 +11,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
 
 /**
@@ -42,8 +43,6 @@ class FileMigrationHelperTest extends SapphireTest
 
     public function setUp()
     {
-        Config::nest(); // additional nesting here necessary
-        Config::modify()->merge(File::class, 'migrate_legacy_file', false);
         parent::setUp();
 
         // Set backend root to /FileMigrationHelperTest/assets
@@ -76,7 +75,6 @@ class FileMigrationHelperTest extends SapphireTest
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
         parent::tearDown();
-        Config::unnest();
     }
 
     /**

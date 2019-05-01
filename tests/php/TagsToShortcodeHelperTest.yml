@@ -29,6 +29,10 @@ SilverStripe\Assets\Image:
     Name: myimage.jpg
     FileFilename: myimage.jpg
     FileHash: 6ee53356ec
+  imageHashPath:
+    Name: hash-path.jpg
+    FileFilename: hash-path.jpg
+    FileHash: ce65335ee6
 SilverStripe\Assets\File:
   document:
     Name: document.pdf

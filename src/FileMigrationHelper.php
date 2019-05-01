@@ -44,7 +44,9 @@ class FileMigrationHelper extends BaseFileMigrationHelper
         'logger' => '%$' . LoggerInterface::class . '.quiet',
     ];
 
-    /** @var LoggerInterface|null */
+    /**
+     * @var LoggerInterface|null
+     */
     private $logger;
 
     /**

@@ -243,7 +243,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
         $cacheFilename = $this->joinPaths($cacheFilename, '_resampled');
 
-        foreach($formats as $format => $args) {
+        foreach ($formats as $format => $args) {
             $cacheFilename = $this->joinPaths(
                 $cacheFilename,
                 $format . Convert::base64url_encode($args)
@@ -275,7 +275,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         $resampled = $image;
 
         // Perform the manipulation (only to get the resulting path)
-        foreach($formats as $format => $args) {
+        foreach ($formats as $format => $args) {
             $resampled = call_user_func_array([$resampled, $format], $args);
             $resampleds [] = $resampled;
         }
@@ -296,7 +296,8 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     /**
      * @return string
      */
-    protected function joinPaths() {
+    protected function joinPaths()
+    {
         $paths = array();
 
         foreach (func_get_args() as $arg) {
@@ -305,6 +306,6 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
             }
         }
 
-        return preg_replace('#/+#','/',join('/', $paths));
+        return preg_replace('#/+#', '/', join('/', $paths));
     }
 }

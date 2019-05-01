@@ -1028,7 +1028,6 @@ trait ImageManipulation
         }
 
         return array_merge([$matches['format']], $args[0]);
-
     }
 
     /**

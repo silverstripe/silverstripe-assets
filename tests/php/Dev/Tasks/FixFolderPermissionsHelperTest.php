@@ -1,22 +1,22 @@
 <?php
 
-namespace SilverStripe\Assets\Tests;
+namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use SilverStripe\Assets\Folder;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Dev\Tasks\FixFilePermissionsHelper;
+use SilverStripe\Dev\Tasks\FixFolderPermissionsHelper;
 
 /**
  * Ensures that files with invalid permissions can be fixed.
  */
-class FixFilePermissionsTest extends SapphireTest
+class FixFolderPermissionsHelperTest extends SapphireTest
 {
-    protected static $fixture_file = 'FixFilePermissionsTest.yml';
+    protected static $fixture_file = 'FixFolderPermissionsHelperTest.yml';
 
     public function testTask()
     {
-        $fixFilePermissionsTask = new FixFilePermissionsHelper();
-        $updated = $fixFilePermissionsTask->run();
+        $task = new FixFolderPermissionsHelper();
+        $updated = $task->run();
 
         $this->assertEquals('Inherit', Folder::get()->where(['Name' => 'ParentFolder'])->first()->CanViewType);
         $this->assertEquals('Anyone', Folder::get()->where(['Name' => 'SubFolder'])->first()->CanViewType);

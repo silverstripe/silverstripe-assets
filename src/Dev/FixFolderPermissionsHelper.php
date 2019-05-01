@@ -15,7 +15,7 @@ use SilverStripe\Security\InheritedPermissionFlusher;
  * This helper class resets the `CanViewType` of files that are `NULL`.
  * You need to flush your cache after running this via CLI.
  */
-class FixFilePermissionsHelper
+class FixFolderPermissionsHelper
 {
     use Injectable;
 

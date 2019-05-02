@@ -174,7 +174,7 @@ class TagsToShortcodeHelper
     {
         $resultTags = [];
 
-        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/', $content, $matches, PREG_SET_ORDER);
+        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/i', $content, $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -191,7 +191,7 @@ class TagsToShortcodeHelper
     private function getTagTuple($tag)
     {
         $pattern = sprintf(
-            '/.*(?:<|\[)(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
+            '/.*(?:<|\[)(?<tagType>%s).*(?<attribute>%s)=(?:"|\')(?<src>[^"]*)(?:"|\')/i',
             $this->validTagsPattern,
             $this->validAttributesPattern
         );
@@ -240,7 +240,7 @@ class TagsToShortcodeHelper
         if (!isset($tuple['tagType']) || !isset($tuple['src'])) {
             return null;
         }
-        $tagType = $tuple['tagType'];
+        $tagType = strtolower($tuple['tagType']);
         $src = $tuple['src'] ?: $tuple['href'];
 
         // Search for a File object containing this filename
@@ -261,21 +261,23 @@ class TagsToShortcodeHelper
         if ($parsedFileID && $file) {
             if ($tagType == 'img') {
                 $find = [
-                    '/(<|\[)img/',
-                    '/src\s*=\s*".*?"/',
-                    '/href\s*=\s*".*?"/',
-                    '/(>|\])/',
+                    '/(<|\[)img/i',
+                    '/src\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/href\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/id\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/\s*(\/?>|\])/',
                 ];
                 $replace = [
                     '[image',
                     "src=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
                     "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
+                    "",
                     " id=\"{$file->ID}\"]",
                 ];
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
-                $find= "/$attribute\s*=\s*\".*?\"/";
+                $find= "/$attribute\s*=\s*(?:\"|').*?(?:\"|')/i";
                 $replace = "$attribute=\"[file_link,id={$file->ID}]\"";
                 $shortcode = preg_replace($find, $replace, $tag);
             } else {

@@ -75,16 +75,16 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $documentID = $this->idFromFixture(File::class, 'document');
 
         self::assertEquals(<<<HTML
-<p>file link <a href="[file_link id={$documentID}]">link to file</a></p> <p>natural path links
-  [image src="/assets/6ee53356ec/myimage.jpg" id=1][image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>variant path [image src="/assets/6ee53356ec/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id=1]</p> <p>link to hash path [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
+<p>file link <a href="[file_link,id={$documentID}]">link to file</a></p> <p>natural path links
+  [image src="/assets/6ee53356ec/myimage.jpg" id="1"][image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>variant path [image src="/assets/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id="1"]</p> <p>link to hash path [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
 <p>ignored links
-  <a href="[file_link id={$documentID}]" class="ss-broken">link to file</a>
+  <a href="[file_link,id=2]" class="ss-broken">link to file</a>
   <a href="/assets/invalid_document.pdf">link to file</a>
 </p>
-<p broken="" html="" src=""> </p><p>image tag with closing bracket [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image tag inside a link <a href="[file_link id={$documentID}]">link to file with image [image src="/assets/6ee53356ec/myimage.jpg" id=1]</a></p> <p>attributes with single quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>attributes without quotes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>bad casing for tags or attributes [image src="/assets/6ee53356ec/myimage.jpg" id=1]</p> <p>image that should not be updated <img src="non_existant.jpg"></p>
+<p broken="" html="" src=""> </p><p>image tag with closing bracket [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>image tag inside a link <a href="[file_link,id={$documentID}]">link to file with image [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</a></p> <p>attributes with single quotes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>attributes without quotes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>bad casing for tags or attributes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>image that should not be updated <img src="non_existant.jpg"></p>
 
 HTML
-            , $newPage->Content, 'Content is not correct');
+            , $newPage->Content);
     }
 
 
@@ -99,7 +99,8 @@ HTML
     public function testNewContent($input, $output=false)
     {
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
-        $this->assertEquals($output ?: $input, $tagsToShortcodeHelper->getNewContent($input));
+        $newContent = $tagsToShortcodeHelper->getNewContent($input);
+        $this->assertEquals($output ?: $input, $newContent);
     }
 
     /**
@@ -117,27 +118,27 @@ HTML
             ],
             'link to file in paragraph' => [
                 '<p>file link <a href="/assets/document.pdf">link to file</a></p>',
-                '<p>file link <a href="[file_link,id=3]">link to file</a></p>'
+                sprintf('<p>file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID)
             ],
             'link to file without starting slash' => [
                 '<a href="assets/document.pdf">link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'link with common attributes' => [
                 '<a title="a test" href="assets/document.pdf" target="_blank">link to file</a>',
-                '<a title="a test" href="[file_link,id=3]" target="_blank">link to file</a>'
+                sprintf('<a title="a test" href="[file_link,id=%d]" target="_blank">link to file</a>', $documentID)
             ],
             'link with other attributes' => [
                 '<a href="assets/document.pdf" lang="fr" xml:lang="fr">link to file</a>',
-                '<a href="[file_link,id=3]" lang="fr" xml:lang="fr">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]" lang="fr" xml:lang="fr">link to file</a>', $documentID)
             ],
             'link with other attributes before href' => [
                 '<a lang="fr" xml:lang="fr" href="assets/document.pdf">link to file</a>',
-                '<a lang="fr" xml:lang="fr" href="[file_link,id=3]">link to file</a>'
+                sprintf('<a lang="fr" xml:lang="fr" href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'link with empty attributes before href' => [
                 '<a href="assets/document.pdf" title="">link to file</a>',
-                '<a href="[file_link,id=3]" title="">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $documentID)
             ],
             'link to image' => [
                 '<a href="assets/myimage.jpg">link to file</a>',
@@ -169,22 +170,22 @@ HTML
                 '<img src="assets/myimage.jpg" alt="My Image" title="My image title">',
                 sprintf('[image src="/assets/6ee53356ec/myimage.jpg" alt="My Image" title="My image title" id="%d"]', $image1ID)
             ],
-            'image variant' => [
-                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" id="1"]'],
-            'image variant with size' => [
-                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" width="100" height="133" id="1"]'],
-            'image variant that has not been generated yet' => [
-                '<img src="assets/_resampled/ResizedImageWzIwMCwyNjZd/myimage.jpg" width="200" height="266">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" width="200" height="266" id="1"]'],
+//            'image variant' => [
+//                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage2.jpg">',
+//                '[image src="/assets/6ee53356ec/myimage2.jpg" id="1"]'],
+//            'image variant with size' => [
+//                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage2.jpg" width="100" height="133">',
+//                '[image src="/assets/6ee53356ec/myimage2.jpg" width="100" height="133" id="1"]'],
+//            'image variant that has not been generated yet' => [
+//                '<img src="assets/_resampled/ResizedImageWzIwMCwyNjZd/myimage2.jpg" width="200" height="266">',
+//                '[image src="/assets/6ee53356ec/myimage2.jpg" width="200" height="266" id="1"]'],
             'xhtml image' => [
                 '<img src="assets/myimage.jpg" />',
                 sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" title="" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',
@@ -211,19 +212,21 @@ HTML
      */
     public function newContentNoChangeDataProvider()
     {
+        $documentID = 3;
+
         return [
             'external anchor' => ['<a href="https://silverstripe.org/assets/document.pdf">External link</a>'],
             'link already using short code' => ['<a href="[file_link,id=2]">link to file</a>'],
             'link already using short code without comma' => ['<a href="[file_link id=2]">link to file</a>'],
             'link already using short code with id quote' => ['<a href="[file_link,id="2"]">link to file</a>'],
-            'link to a site tree object' => ['<a href="[sitetree_link,id=3]">Link to site tree</a>'],
+            'link to a site tree object' => [sprintf('<a href="[sitetree_link,id=%d]">Link to site tree</a>', $documentID)],
             'link with mailto href' => ['<a href="mailto:test@example.com">test@example.com</a>'],
             'link with comment in tag' => ['<a href="<!-- because why not -->">test@example.com</a>'],
             'link without closing >' => ['<a href="assets/document.pdf"'],
             'URL in content' => ['assets/document.pdf'],
 
             'external image' => ['<img src="https://silverstripe.com/assets/myimage.jpg">'],
-            'image already using shortcode' => ['[image src="/assets/6ee53356ec/myimage.jpg" id="3"]']
+            'image already using shortcode' => [sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $documentID)]
         ];
     }
 
@@ -234,7 +237,6 @@ HTML
     public function newContentNoDataDegradationDataProvider()
     {
         $image1ID = 1;
-        $documentID = 3;
 
         return [
             'absolute link to file' => [
@@ -258,15 +260,16 @@ HTML
     {
         $image1ID = 1;
         $documentID = 3;
+
         return [
             // Just make the regex case insensitive
             'link with uppercase tag' => [
                 '<A href="assets/document.pdf">link to file</A>',
-                '<A href="[file_link,id=3]">link to file</A>'
+                sprintf('<A href="[file_link,id=%d]">link to file</A>', $documentID)
             ],
             'link with uppercase href' => [
                 '<a HREF="assets/document.pdf">link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'image with weird case' => [
                 '<ImG src="assets/myimage.jpg">',
@@ -276,7 +279,7 @@ HTML
             // Check for single quotes as well
             'link with single quotes' => [
                 '<a href=\'assets/document.pdf\'>link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'image with single quotes' => [
                 "<img src='assets/myimage.jpg'>",
@@ -284,7 +287,4 @@ HTML
             ],
         ];
     }
-
-
-
 }

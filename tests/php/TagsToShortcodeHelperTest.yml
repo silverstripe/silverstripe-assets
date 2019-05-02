@@ -12,7 +12,7 @@ SilverStripe\CMS\Model\SiteTree:
       <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
 
       <p>ignored links
-        <a href="[file_link id=2]">link to file</a>
+        <a href="[file_link,id=2]">link to file</a>
         <a href="/assets/invalid_document.pdf">link to file</a>
       </p>
 

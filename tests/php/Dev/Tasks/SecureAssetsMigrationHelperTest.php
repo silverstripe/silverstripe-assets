@@ -178,5 +178,4 @@ TXT;
         $helper = new SecureAssetsMigrationHelper();
         $this->assertFalse($helper->htaccessMatch($htaccess));
     }
-
 }

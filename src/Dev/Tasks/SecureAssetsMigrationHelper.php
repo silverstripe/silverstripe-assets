@@ -5,10 +5,12 @@ namespace SilverStripe\Assets\Dev\Tasks;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Queries\SQLSelect;
 
 /**
@@ -36,10 +38,12 @@ class SecureAssetsMigrationHelper
     protected $htaccessRegexes = [];
 
     private static $dependencies = [
-        'logger' => '%$' . LoggerInterface::class,
+        'logger' => '%$' . LoggerInterface::class . '.quiet',
     ];
 
-    /** @var LoggerInterface */
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
     public function __construct()
@@ -73,14 +77,15 @@ class SecureAssetsMigrationHelper
         // or from an already used 4.x database with built-in asset protections.
         // Because the module itself has been removed in 4.x installs,
         // we can no longer tell the difference between those cases.
+        $fileTable = DataObject::getSchema()->baseDataTable(File::class);
         $securedFolders = SQLSelect::create()
-            ->setFrom('File')
+            ->setFrom("\"$fileTable\"")
             ->setSelect([
                 '"ID"',
                 '"FileFilename"',
             ])
             ->addWhere([
-                '"ClassName" = ?' => 'SilverStripe\Assets\Folder',
+                '"ClassName" = ?' => Folder::class,
                 // We don't need to check 'Inherited' permissions,
                 // since Apache applies parent .htaccess and the module doesn't create them in this case.
                 // See SecureFileExtension->needsAccessFile()
@@ -106,6 +111,7 @@ class SecureAssetsMigrationHelper
 
     /**
      * @param LoggerInterface $logger
+     * @return $this
      */
     public function setLogger(LoggerInterface $logger)
     {
@@ -133,7 +139,7 @@ class SecureAssetsMigrationHelper
             return false;
         }
 
-        foreach($lines as $i => $line) {
+        foreach ($lines as $i => $line) {
             if (!preg_match($regexes[$i], $line)) {
                 return false;
             }

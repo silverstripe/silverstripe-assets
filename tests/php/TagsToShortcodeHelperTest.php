@@ -12,6 +12,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Versioned\Versioned;
 
 class TagsToShortcodeHelperTest extends SapphireTest
 {
@@ -73,6 +74,47 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
         /** @var SiteTree $newPage */
         $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        $documentID = $this->idFromFixture(File::class, 'document');
+        $imageID = $this->idFromFixture(Image::class, 'image1');
+
+        $this->assertContains(
+            sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf(
+                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                $imageID
+            ),
+            $newPage->Content
+        );
+    }
+
+    public function testLivePageRewrite()
+    {
+        /** @var SiteTree $newPage */
+        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        $newPage->publishSingle();
+
+        $newPage->Content = '<p>Draft content</p>';
+        $newPage->write();
+
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        /** @var SiteTree $newPage */
+        $newPageID = $newPage->ID;
+        $newPage = Versioned::withVersionedMode(function () use ($newPageID) {
+            Versioned::set_stage(Versioned::LIVE);
+            return SiteTree::get()->byID($newPageID);
+        });
+
 
         $documentID = $this->idFromFixture(File::class, 'document');
         $imageID = $this->idFromFixture(Image::class, 'image1');

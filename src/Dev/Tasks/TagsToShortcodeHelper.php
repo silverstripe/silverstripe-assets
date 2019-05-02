@@ -208,7 +208,7 @@ class TagsToShortcodeHelper
     {
         $fileIDHelperResolutionStrategy = new FileIDHelperResolutionStrategy();
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
-            new HashFileIDHelper(),
+            $hashFileIdHelper = new HashFileIDHelper(),
             new LegacyFileIDHelper(),
             $defaultFileIDHelper = new NaturalFileIDHelper(),
         ]);
@@ -227,7 +227,16 @@ class TagsToShortcodeHelper
             $filesystem = $this->flysystemAssetStore->getProtectedFilesystem();
             $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
         }
-        return $parsedFileId;
+
+        if (!$parsedFileId) {
+            return null;
+        }
+
+        $parsedFileId = $parsedFileId->setVariant("");
+        $newFileId = $hashFileIdHelper->buildFileID($parsedFileId->getFilename(), $parsedFileId->getHash());
+        return $parsedFileId
+            ->setVariant("")
+            ->setFileID($newFileId);
     }
 
     /**

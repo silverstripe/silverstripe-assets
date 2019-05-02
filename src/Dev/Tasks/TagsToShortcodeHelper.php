@@ -243,8 +243,7 @@ class TagsToShortcodeHelper
         $fileIDHelperResolutionStrategy->setDefaultFileIDHelper($defaultFileIDHelper);
 
         // set fileID to the filepath relative to assets dir
-//        $pattern = '/^\\/?' . ASSETS_DIR . '?\\/?/';
-        $pattern = '/^\\' . DIRECTORY_SEPARATOR . '?' . ASSETS_DIR . '?\\' . DIRECTORY_SEPARATOR . '?/';
+        $pattern = sprintf('#^/?(%s/?)?#', ASSETS_DIR);
         $fileID = preg_replace($pattern, '', $src);
 
         // Try resolving with public filesystem first

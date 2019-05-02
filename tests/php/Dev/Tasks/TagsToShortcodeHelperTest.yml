@@ -19,7 +19,6 @@ SilverStripe\Assets\File:
   document:
     Name: document.pdf
     FileFilename: document.pdf
-#    FileHash: 6ee53356ec
     FileHash: 0ba2141b8996a615d7484536d7a97c27a1768407
 
 SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject:

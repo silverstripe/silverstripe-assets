@@ -305,6 +305,10 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 '<img src="assets/myimage.jpg" alt="My Image" title="My image title">',
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" alt="My Image" title="My image title" id="%d"]', $image1ID)
             ],
+            'image with uncommon attributes' => [
+                '<img src="assets/myimage.jpg" xml:lang="fr" lang="fr">',
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" xml:lang="fr" lang="fr" id="%d"]', $image1ID)
+            ],
             'image variant' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
                 '[image src="/assets/33be1b95cb/myimage.jpg" id="1"]'],

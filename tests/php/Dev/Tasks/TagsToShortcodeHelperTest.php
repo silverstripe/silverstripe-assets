@@ -1,8 +1,7 @@
 <?php
 
-namespace SilverStripe\Assets\Tests;
+namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
-use DOMDocument;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Dev\Tasks\TagsToShortcodeHelper;
@@ -41,7 +40,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         TestAssetStore::activate('TagsToShortcodeHelperTest/assets');
 
         // Ensure that each file has a local record file in this new assets base
-        $from = __DIR__ . '/ImageTest/test-image-low-quality.jpg';
+        $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
         $destinations = [];
 
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {

@@ -20,3 +20,18 @@ SilverStripe\Assets\File:
     Name: document.pdf
     FileFilename: document.pdf
     FileHash: 6ee53356ec
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject:
+  htmlObject:
+    HtmlLine: '<a href="/assets/document.pdf">link to file</a>'
+    Content: '<a href="/assets/document.pdf">Content Field</a>'
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject:
+  subHtmlObject:
+    HtmlLine: '<a href="/assets/document.pdf">HtmlObject Table</a>'
+    HtmlContent: '<img src="/assets/myimage.jpg" alt="SubHtmlObject Table">'
+    Content: '<a href="/assets/document.pdf">Content Field</a>'
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage:
+  stageless:
+    Content: '<a href="/assets/document.pdf">Stageless Versioned Object</a>'

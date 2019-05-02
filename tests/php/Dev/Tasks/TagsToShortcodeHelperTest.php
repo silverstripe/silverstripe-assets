@@ -8,6 +8,9 @@ use SilverStripe\Assets\Dev\Tasks\TagsToShortcodeHelper;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
@@ -16,6 +19,12 @@ use SilverStripe\Versioned\Versioned;
 class TagsToShortcodeHelperTest extends SapphireTest
 {
     protected static $fixture_file = 'TagsToShortcodeHelperTest.yml';
+
+    protected static $extra_dataobjects = [
+        HtmlObject::class,
+        SubHtmlObject::class,
+        NoStage::class
+    ];
 
     /**
      * get the BASE_PATH for this test
@@ -137,7 +146,70 @@ class TagsToShortcodeHelperTest extends SapphireTest
         );
     }
 
+    public function testRewriteRegularObject()
+    {
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
 
+        $htmlObject = $this->objFromFixture(HtmlObject::class, 'htmlObject');
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Content Field</a>', $documentID),
+            $htmlObject->Content
+        );
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID),
+            $htmlObject->HtmlLine
+        );
+
+    }
+
+    public function testRewriteSubclassObject()
+    {
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        $subHtmlObject = $this->objFromFixture(SubHtmlObject::class, 'subHtmlObject');
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+        $image1ID = $this->idFromFixture(image::class, 'image1');
+
+        $this->assertEquals(
+            sprintf('[image src="/assets/6ee53356ec/myimage.jpg" alt="SubHtmlObject Table" id="%d"]', $image1ID),
+            $subHtmlObject->HtmlContent
+        );
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Content Field</a>', $documentID),
+            $subHtmlObject->Content
+        );
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">HtmlObject Table</a>', $documentID),
+            $subHtmlObject->HtmlLine
+        );
+    }
+
+    public function testStagelessVersionedObject()
+    {
+        // This is just here to make sure that the logic for converting live content doesn't fall on its face when
+        // encountering a versioned object that does not support stages.
+
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        $stageless = $this->objFromFixture(NoStage::class, 'stageless');
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Stageless Versioned Object</a>', $documentID),
+            $stageless->Content
+        );
+    }
     /**
      * @dataProvider newContentConvertDataProvider
      * @dataProvider newContentNoChangeDataProvider

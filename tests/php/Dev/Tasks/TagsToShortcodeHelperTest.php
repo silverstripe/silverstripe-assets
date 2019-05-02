@@ -307,7 +307,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
                 '[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="1"]'],
             'image variant that has not been generated yet' => [
-                '<img src="assets/_resampled/ResizedImageWzIwMCwyNjZd/myimage.jpg" width="200" height="266">',
+                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="200" height="266">',
                 '[image src="/assets/33be1b95cb/myimage.jpg" width="200" height="266" id="1"]'],
             'xhtml image' => [
                 '<img src="assets/myimage.jpg" />',

@@ -49,23 +49,20 @@ class TagsToShortcodeHelperTest extends SapphireTest
         TestAssetStore::activate('TagsToShortcodeHelperTest/assets');
 
         // Ensure that each file has a local record file in this new assets base
-        $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
+
         $destinations = [];
 
-        foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
-            $destinations []= $file->Hash . DIRECTORY_SEPARATOR . $file->generateFilename();
+        /** @var File $file */
+        foreach (File::get()->filter('ClassName', File::class) as $file) {
+            $file->setFromString($file->getFilename(), $file->getFilename(), $file->getHash());
         }
 
-        // Create resampled file manually
-        $destinations []= 'myimage__ResizedImageWzY0LDY0XQ.jpg';
-        $destinations []= 'ce65335ee6/hash-path__ResizedImageWzY0LDY0XQ.jpg';
-
-        // Copy the files
-        foreach ($destinations as $destination) {
-            $destination = TestAssetStore::base_path() . DIRECTORY_SEPARATOR . $destination;
-            Filesystem::makeFolder(dirname($destination));
-            copy($from, $destination);
+        $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
+        foreach (Image::get() as $file) {
+            $file->setFromLocalFile($from, $file->getFilename(), $file->getHash());
+            $file->setFromLocalFile($from, $file->getFilename(), $file->getHash(), 'ResizedImageWzY0LDY0XQ');
         }
+
     }
 
     public function tearDown()
@@ -91,17 +88,28 @@ class TagsToShortcodeHelperTest extends SapphireTest
         );
 
         $this->assertContains(
-            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            sprintf('<p id="image">[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]</p>', $imageID),
             $newPage->Content
         );
 
         $this->assertContains(
             sprintf(
-                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                '<p id="variant">[image src="/assets/33be1b95cb/myimage.jpg" width="64" height="64" id="%d"]</p>',
                 $imageID
             ),
             $newPage->Content
         );
+    }
+
+    public function testPublishedFileRewrite()
+    {
+        $document = $this->objFromFixture(File::class, 'document');
+        $image = $this->objFromFixture(Image::class, 'image1');
+
+        $document->publishSingle();
+        $image->publishSingle();
+
+        $this->testRewrite();
     }
 
     public function testLivePageRewrite()
@@ -133,13 +141,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
         );
 
         $this->assertContains(
-            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            sprintf('<p id="image">[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]</p>', $imageID),
             $newPage->Content
         );
 
         $this->assertContains(
             sprintf(
-                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                '<p id="variant">[image src="/assets/33be1b95cb/myimage.jpg" width="64" height="64" id="%d"]</p>',
                 $imageID
             ),
             $newPage->Content
@@ -178,7 +186,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $image1ID = $this->idFromFixture(image::class, 'image1');
 
         $this->assertEquals(
-            sprintf('[image src="/assets/6ee53356ec/myimage.jpg" alt="SubHtmlObject Table" id="%d"]', $image1ID),
+            sprintf('[image src="/assets/33be1b95cb/myimage.jpg" alt="SubHtmlObject Table" id="%d"]', $image1ID),
             $subHtmlObject->HtmlContent
         );
 
@@ -221,7 +229,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
     public function testNewContent($input, $output=false)
     {
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
-        $this->assertEquals($output ?: $input, $tagsToShortcodeHelper->getNewContent($input));
+        $actual = $tagsToShortcodeHelper->getNewContent($input);
+        $this->assertEquals($output ?: $input, $actual);
     }
 
     /**
@@ -270,7 +279,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
             ],
             'link to hash url' => [
-                '<a href="assets/6ee53356ec/document.pdf">link to file</a>',
+                '<a href="assets/0ba2141b89/document.pdf">link to file</a>',
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'link to hash url variant' => [
@@ -285,42 +294,42 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
             'simple image' => [
                 '<img src="assets/myimage.jpg">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
             'image with common attributes' => [
                 '<img src="assets/myimage.jpg" alt="My Image" title="My image title">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" alt="My Image" title="My image title" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" alt="My Image" title="My image title" id="%d"]', $image1ID)
             ],
             'image variant' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" id="1"]'],
+                '[image src="/assets/33be1b95cb/myimage.jpg" id="1"]'],
             'image variant with size' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" width="100" height="133" id="1"]'],
+                '[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="1"]'],
             'image variant that has not been generated yet' => [
                 '<img src="assets/_resampled/ResizedImageWzIwMCwyNjZd/myimage.jpg" width="200" height="266">',
-                '[image src="/assets/6ee53356ec/myimage.jpg" width="200" height="266" id="1"]'],
+                '[image src="/assets/33be1b95cb/myimage.jpg" width="200" height="266" id="1"]'],
             'xhtml image' => [
                 '<img src="assets/myimage.jpg" />',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',
-                sprintf('<div class="captionImage leftAlone" style="width: 100px;">[image class="leftAlone" src="/assets/6ee53356ec/myimage.jpg" alt="sam" width="100" height="133" id="%d"]<p class="caption leftAlone">My caption</p></div>', $image1ID)
+                sprintf('<div class="captionImage leftAlone" style="width: 100px;">[image class="leftAlone" src="/assets/33be1b95cb/myimage.jpg" alt="sam" width="100" height="133" id="%d"]<p class="caption leftAlone">My caption</p></div>', $image1ID)
             ],
             'same image twice' => [
                 str_repeat('<img src="assets/myimage.jpg">', 2),
-                str_repeat(sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID), 2)
+                str_repeat(sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID), 2)
             ],
 
             'image inside file link' => [
                 '<a href="assets/document.pdf"><img src="assets/myimage.jpg"></a>',
                 sprintf(
-                    '<a href="[file_link,id=%d]">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</a>',
+                    '<a href="[file_link,id=%d]">[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]</a>',
                     $documentID,
                     $image1ID
                 )
@@ -345,7 +354,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             'URL in content' => ['assets/document.pdf'],
 
             'external image' => ['<img src="https://silverstripe.com/assets/myimage.jpg">'],
-            'image already using shortcode' => ['[image src="/assets/6ee53356ec/myimage.jpg" id="3"]']
+            'image already using shortcode' => ['[image src="/assets/33be1b95cb/myimage.jpg" id="3"]']
         ];
     }
 
@@ -367,7 +376,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             'link to valid file with Get param' => ['<a href="/assets/document.pdf?boom=pow">link to file</a>'],
             'image with custom id' => [
                 '<img src="assets/myimage.jpg" id="custom-id">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
         ];
     }
@@ -392,7 +401,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'image with weird case' => [
                 '<ImG src="assets/myimage.jpg">',
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
 
             // Check for single quotes as well
@@ -402,7 +411,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'image with single quotes' => [
                 "<img src='assets/myimage.jpg'>",
-                sprintf('[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
         ];
     }

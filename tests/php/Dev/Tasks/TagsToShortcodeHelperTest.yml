@@ -10,7 +10,7 @@ SilverStripe\Assets\Image:
   image1:
     Name: myimage.jpg
     FileFilename: myimage.jpg
-    FileHash: 6ee53356ec
+    FileHash: 33be1b95cba0358fe54e8b13532162d52f97421c
   imageHashPath:
     Name: hash-path.jpg
     FileFilename: hash-path.jpg
@@ -19,7 +19,8 @@ SilverStripe\Assets\File:
   document:
     Name: document.pdf
     FileFilename: document.pdf
-    FileHash: 6ee53356ec
+#    FileHash: 6ee53356ec
+    FileHash: 0ba2141b8996a615d7484536d7a97c27a1768407
 
 SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject:
   htmlObject:

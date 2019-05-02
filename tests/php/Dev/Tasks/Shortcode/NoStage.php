@@ -16,5 +16,4 @@ class NoStage extends DataObject implements TestOnly
     private static $db = [
         'Content' => 'HTMLText'
     ];
-
 }

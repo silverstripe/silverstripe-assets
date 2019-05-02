@@ -11,5 +11,4 @@ class SubHtmlObject extends HtmlObject implements TestOnly
     private static $db = [
         'HtmlContent' => 'HTMLText'
     ];
-
 }

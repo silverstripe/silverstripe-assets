@@ -102,38 +102,55 @@ class TagsToShortcodeHelper
     {
         Environment::increaseTimeLimitTo();
 
-        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, ['HTMLText', 'HTMLVarchar']);
+        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, [
+            'HTMLText',
+            'HTMLVarchar'
+        ]);
         foreach ($classes as $class => $tables) {
+            /** @var DataObject $singleton */
+            $singleton = singleton($class);
+            $hasVersions = $singleton->hasExtension(Versioned::class) && $singleton->hasStages();
+
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
 
                     /** @var DBField $dbField */
                     $dbField = DataObject::singleton($class)->dbObject($field);
-                    if (
-                        $dbField &&
+                    if ($dbField &&
                         $dbField->hasMethod('getProcessShortcodes') &&
                         !$dbField->getProcessShortcodes()) {
                         continue;
                     }
 
                     try {
-                        $sqlSelect = SQLSelect::create(
-                            ['ID', $field],
-                            $table
-                        );
-                        $whereAnys = [];
-                        foreach (array_keys(static::VALID_TAGS) as $tag) {
-                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
-                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
+                        // Update table
+                        $this->updateTable($table, $field);
+
+                        // Update live
+                        if ($hasVersions) {
+                            $this->updateTable($table.'_Live', $field);
                         }
-                        $sqlSelect->addWhereAny($whereAnys);
-                        $records = $sqlSelect->execute();
-                        $this->rewriteFieldForRecords($records, $table, $field);
                     } catch (DatabaseException $exception) {
                     }
                 }
             }
         }
+    }
+
+    private function updateTable(string $table, string $field)
+    {
+        $sqlSelect = SQLSelect::create(
+            ['ID', $field],
+            $table
+        );
+        $whereAnys = [];
+        foreach (array_keys(static::VALID_TAGS) as $tag) {
+            $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
+            $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
+        }
+        $sqlSelect->addWhereAny($whereAnys);
+        $records = $sqlSelect->execute();
+        $this->rewriteFieldForRecords($records, $table, $field);
     }
 
     /**
@@ -185,7 +202,7 @@ class TagsToShortcodeHelper
     {
         $resultTags = [];
 
-        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/', $content, $matches, PREG_SET_ORDER);
+        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/i', $content, $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -202,7 +219,7 @@ class TagsToShortcodeHelper
     private function getTagTuple($tag)
     {
         $pattern = sprintf(
-            '/.*(?:<|\[)(?<tagType>%s).*(?<attribute>%s)="(?<src>[^"]*)"/i',
+            '/.*(?:<|\[)(?<tagType>%s).*(?<attribute>%s)=(?:"|\')(?<src>[^"]*)(?:"|\')/i',
             $this->validTagsPattern,
             $this->validAttributesPattern
         );
@@ -219,7 +236,7 @@ class TagsToShortcodeHelper
     {
         $fileIDHelperResolutionStrategy = new FileIDHelperResolutionStrategy();
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
-            new HashFileIDHelper(),
+            $hashFileIdHelper = new HashFileIDHelper(),
             new LegacyFileIDHelper(),
             $defaultFileIDHelper = new NaturalFileIDHelper(),
         ]);
@@ -239,7 +256,15 @@ class TagsToShortcodeHelper
             $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
         }
 
-        return $parsedFileId;
+        if (!$parsedFileId) {
+            return null;
+        }
+
+        $parsedFileId = $parsedFileId->setVariant("");
+        $newFileId = $hashFileIdHelper->buildFileID($parsedFileId->getFilename(), $parsedFileId->getHash());
+        return $parsedFileId
+            ->setVariant("")
+            ->setFileID($newFileId);
     }
 
     /**
@@ -252,7 +277,7 @@ class TagsToShortcodeHelper
         if (!isset($tuple['tagType']) || !isset($tuple['src'])) {
             return null;
         }
-        $tagType = $tuple['tagType'];
+        $tagType = strtolower($tuple['tagType']);
         $src = $tuple['src'] ?: $tuple['href'];
 
         // Search for a File object containing this filename
@@ -273,29 +298,29 @@ class TagsToShortcodeHelper
         if ($parsedFileID && $file) {
             if ($tagType == 'img') {
                 $find = [
-                    '/(<|\[)img/',
-                    '/src\s*=\s*".*?"/',
-                    '/href\s*=\s*".*?"/',
-                    '/(>|\])/',
+                    '/(<|\[)img/i',
+                    '/src\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/href\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/id\s*=\s*(?:"|\').*?(?:"|\')/i',
+                    '/\s*(\/?>|\])/',
                 ];
                 $replace = [
                     '[image',
                     "src=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
                     "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
+                    "",
                     " id=\"{$file->ID}\"]",
                 ];
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
-                $find= "/$attribute\s*=\s*\".*?\"/";
+                $find= "/$attribute\s*=\s*(?:\"|').*?(?:\"|')/i";
                 $replace = "$attribute=\"[file_link,id={$file->ID}]\"";
                 $shortcode = preg_replace($find, $replace, $tag);
             } else {
                 return null;
             }
             return $shortcode;
-
-
         }
         return null;
     }

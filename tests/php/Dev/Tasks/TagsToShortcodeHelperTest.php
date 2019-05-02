@@ -64,7 +64,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
             $file->setFromLocalFile($from, $file->getFilename(), $file->getHash());
             $file->setFromLocalFile($from, $file->getFilename(), $file->getHash(), 'ResizedImageWzY0LDY0XQ');
         }
-
     }
 
     public function tearDown()
@@ -174,7 +173,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
             '<a href="/assets/document.pdf">This wont be converted</a>',
             $htmlObject->HtmlLineNoShortCode
         );
-
     }
 
     public function testRewriteSubclassObject()
@@ -230,7 +228,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
      * @param string $input
      * @param string|false $ouput If false, assume the input should be unchanged
      */
-    public function testNewContent($input, $output=false)
+    public function testNewContent($input, $output = false)
     {
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $actual = $tagsToShortcodeHelper->getNewContent($input);
@@ -252,27 +250,27 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'link to file in paragraph' => [
                 '<p>file link <a href="/assets/document.pdf">link to file</a></p>',
-                '<p>file link <a href="[file_link,id=3]">link to file</a></p>'
+                sprintf('<p>file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID)
             ],
             'link to file without starting slash' => [
                 '<a href="assets/document.pdf">link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'link with common attributes' => [
                 '<a title="a test" href="assets/document.pdf" target="_blank">link to file</a>',
-                '<a title="a test" href="[file_link,id=3]" target="_blank">link to file</a>'
+                sprintf('<a title="a test" href="[file_link,id=%d]" target="_blank">link to file</a>', $documentID)
             ],
             'link with other attributes' => [
                 '<a href="assets/document.pdf" lang="fr" xml:lang="fr">link to file</a>',
-                '<a href="[file_link,id=3]" lang="fr" xml:lang="fr">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]" lang="fr" xml:lang="fr">link to file</a>', $documentID)
             ],
             'link with other attributes before href' => [
                 '<a lang="fr" xml:lang="fr" href="assets/document.pdf">link to file</a>',
-                '<a lang="fr" xml:lang="fr" href="[file_link,id=3]">link to file</a>'
+                sprintf('<a lang="fr" xml:lang="fr" href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'link with empty attributes before href' => [
                 '<a href="assets/document.pdf" title="">link to file</a>',
-                '<a href="[file_link,id=3]" title="">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $documentID)
             ],
             'link to image' => [
                 '<a href="assets/myimage.jpg">link to file</a>',
@@ -311,7 +309,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
                 '[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="1"]'],
             'image variant that has not been generated yet' => [
-                '<img src="assets/_resampled/ResizedImageWzIwMCwyNjZd/myimage.jpg" width="200" height="266">',
+                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="200" height="266">',
                 '[image src="/assets/33be1b95cb/myimage.jpg" width="200" height="266" id="1"]'],
             'xhtml image' => [
                 '<img src="assets/myimage.jpg" />',
@@ -319,7 +317,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" title="" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',
@@ -346,12 +344,14 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function newContentNoChangeDataProvider()
     {
+        $documentID = 3;
+
         return [
             'external anchor' => ['<a href="https://silverstripe.org/assets/document.pdf">External link</a>'],
             'link already using short code' => ['<a href="[file_link,id=2]">link to file</a>'],
             'link already using short code without comma' => ['<a href="[file_link id=2]">link to file</a>'],
             'link already using short code with id quote' => ['<a href="[file_link,id="2"]">link to file</a>'],
-            'link to a site tree object' => ['<a href="[sitetree_link,id=3]">Link to site tree</a>'],
+            'link to a site tree object' => [sprintf('<a href="[sitetree_link,id=%d]">Link to site tree</a>', $documentID)],
             'link with mailto href' => ['<a href="mailto:test@example.com">test@example.com</a>'],
             'link with comment in tag' => ['<a href="<!-- because why not -->">test@example.com</a>'],
             'link without closing >' => ['<a href="assets/document.pdf"'],
@@ -369,7 +369,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
     public function newContentNoDataDegradationDataProvider()
     {
         $image1ID = 1;
-        $documentID = 3;
 
         return [
             'absolute link to file' => [
@@ -393,15 +392,16 @@ class TagsToShortcodeHelperTest extends SapphireTest
     {
         $image1ID = 1;
         $documentID = 3;
+
         return [
             // Just make the regex case insensitive
             'link with uppercase tag' => [
                 '<A href="assets/document.pdf">link to file</A>',
-                '<A href="[file_link,id=3]">link to file</A>'
+                sprintf('<A href="[file_link,id=%d]">link to file</A>', $documentID)
             ],
             'link with uppercase href' => [
                 '<a HREF="assets/document.pdf">link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'image with weird case' => [
                 '<ImG src="assets/myimage.jpg">',
@@ -411,7 +411,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             // Check for single quotes as well
             'link with single quotes' => [
                 '<a href=\'assets/document.pdf\'>link to file</a>',
-                '<a href="[file_link,id=3]">link to file</a>'
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
             ],
             'image with single quotes' => [
                 "<img src='assets/myimage.jpg'>",
@@ -419,7 +419,4 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
         ];
     }
-
-
-
 }

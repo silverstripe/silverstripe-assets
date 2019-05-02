@@ -14,5 +14,4 @@ class HtmlObject extends DataObject implements TestOnly
         'Content' => 'HTMLText',
         'ContentNoShortCode' => 'HTMLText(array("shortcodes"=>false))'
     ];
-
 }

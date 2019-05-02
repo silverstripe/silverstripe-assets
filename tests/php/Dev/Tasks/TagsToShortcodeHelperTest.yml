@@ -1,0 +1,37 @@
+SilverStripe\CMS\Model\SiteTree:
+  page1:
+    Title: 'my page'
+    Content: >
+      <p id="filelink">file link <a href="/assets/document.pdf">link to file</a></p>
+      <p id="image"><img src="/assets/myimage.jpg"></p>
+      <p id="variant"><img src="/assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="64" height="64"></p>
+
+SilverStripe\Assets\Image:
+  image1:
+    Name: myimage.jpg
+    FileFilename: myimage.jpg
+    FileHash: 6ee53356ec
+  imageHashPath:
+    Name: hash-path.jpg
+    FileFilename: hash-path.jpg
+    FileHash: ce65335ee6
+SilverStripe\Assets\File:
+  document:
+    Name: document.pdf
+    FileFilename: document.pdf
+    FileHash: 6ee53356ec
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject:
+  htmlObject:
+    HtmlLine: '<a href="/assets/document.pdf">link to file</a>'
+    Content: '<a href="/assets/document.pdf">Content Field</a>'
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject:
+  subHtmlObject:
+    HtmlLine: '<a href="/assets/document.pdf">HtmlObject Table</a>'
+    HtmlContent: '<img src="/assets/myimage.jpg" alt="SubHtmlObject Table">'
+    Content: '<a href="/assets/document.pdf">Content Field</a>'
+
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage:
+  stageless:
+    Content: '<a href="/assets/document.pdf">Stageless Versioned Object</a>'

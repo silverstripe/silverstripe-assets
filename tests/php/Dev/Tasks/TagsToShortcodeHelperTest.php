@@ -1,19 +1,30 @@
 <?php
 
-namespace SilverStripe\Assets\Tests;
+namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Dev\Tasks\TagsToShortcodeHelper;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
+use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Versioned\Versioned;
 
 class TagsToShortcodeHelperTest extends SapphireTest
 {
     protected static $fixture_file = 'TagsToShortcodeHelperTest.yml';
+
+    protected static $extra_dataobjects = [
+        HtmlObject::class,
+        SubHtmlObject::class,
+        NoStage::class
+    ];
 
     /**
      * get the BASE_PATH for this test
@@ -38,7 +49,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         TestAssetStore::activate('TagsToShortcodeHelperTest/assets');
 
         // Ensure that each file has a local record file in this new assets base
-        $from = __DIR__ . '/ImageTest/test-image-low-quality.jpg';
+        $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
         $destinations = [];
 
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
@@ -71,23 +82,134 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
         /** @var SiteTree $newPage */
         $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        $documentID = $this->idFromFixture(File::class, 'document');
+        $imageID = $this->idFromFixture(Image::class, 'image1');
+
+        $this->assertContains(
+            sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf(
+                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                $imageID
+            ),
+            $newPage->Content
+        );
+    }
+
+    public function testLivePageRewrite()
+    {
+        /** @var SiteTree $newPage */
+        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        $newPage->publishSingle();
+
+        $newPage->Content = '<p>Draft content</p>';
+        $newPage->write();
+
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        /** @var SiteTree $newPage */
+        $newPageID = $newPage->ID;
+        $newPage = Versioned::withVersionedMode(function () use ($newPageID) {
+            Versioned::set_stage(Versioned::LIVE);
+            return SiteTree::get()->byID($newPageID);
+        });
+
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+        $imageID = $this->idFromFixture(Image::class, 'image1');
+
+        $this->assertContains(
+            sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf('<p id="image">[image src="/assets/6ee53356ec/myimage.jpg" id="%d"]</p>', $imageID),
+            $newPage->Content
+        );
+
+        $this->assertContains(
+            sprintf(
+                '<p id="variant">[image src="/assets/6ee53356ec/myimage.jpg" width="64" height="64" id="%d"]</p>',
+                $imageID
+            ),
+            $newPage->Content
+        );
+    }
+
+    public function testRewriteRegularObject()
+    {
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        $htmlObject = $this->objFromFixture(HtmlObject::class, 'htmlObject');
 
         $documentID = $this->idFromFixture(File::class, 'document');
 
-        self::assertEquals(<<<HTML
-<p>file link <a href="[file_link,id={$documentID}]">link to file</a></p> <p>natural path links
-  [image src="/assets/6ee53356ec/myimage.jpg" id="1"][image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>variant path [image src="/assets/myimage__ResizedImageWzY0LDY0XQ.jpg" width="64" height="64" id="1"]</p> <p>link to hash path [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>link to external file <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png">link to external file</a></p>
-<p>ignored links
-  <a href="[file_link,id=2]" class="ss-broken">link to file</a>
-  <a href="/assets/invalid_document.pdf">link to file</a>
-</p>
-<p broken="" html="" src=""> </p><p>image tag with closing bracket [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>image tag inside a link <a href="[file_link,id={$documentID}]">link to file with image [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</a></p> <p>attributes with single quotes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>attributes without quotes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>bad casing for tags or attributes [image src="/assets/6ee53356ec/myimage.jpg" id="1"]</p> <p>image that should not be updated <img src="non_existant.jpg"></p>
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Content Field</a>', $documentID),
+            $htmlObject->Content
+        );
 
-HTML
-            , $newPage->Content);
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID),
+            $htmlObject->HtmlLine
+        );
+
     }
 
+    public function testRewriteSubclassObject()
+    {
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
 
+        $subHtmlObject = $this->objFromFixture(SubHtmlObject::class, 'subHtmlObject');
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+        $image1ID = $this->idFromFixture(image::class, 'image1');
+
+        $this->assertEquals(
+            sprintf('[image src="/assets/6ee53356ec/myimage.jpg" alt="SubHtmlObject Table" id="%d"]', $image1ID),
+            $subHtmlObject->HtmlContent
+        );
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Content Field</a>', $documentID),
+            $subHtmlObject->Content
+        );
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">HtmlObject Table</a>', $documentID),
+            $subHtmlObject->HtmlLine
+        );
+    }
+
+    public function testStagelessVersionedObject()
+    {
+        // This is just here to make sure that the logic for converting live content doesn't fall on its face when
+        // encountering a versioned object that does not support stages.
+
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+        $tagsToShortcodeHelper->run();
+
+        $stageless = $this->objFromFixture(NoStage::class, 'stageless');
+
+        $documentID = $this->idFromFixture(File::class, 'document');
+
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]">Stageless Versioned Object</a>', $documentID),
+            $stageless->Content
+        );
+    }
     /**
      * @dataProvider newContentConvertDataProvider
      * @dataProvider newContentNoChangeDataProvider

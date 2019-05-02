@@ -101,28 +101,46 @@ class TagsToShortcodeHelper
     {
         Environment::increaseTimeLimitTo();
 
-        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, ['HTMLText', 'HTMLVarchar']);
+        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, [
+            'HTMLText',
+            'HTMLVarchar'
+        ]);
         foreach ($classes as $class => $tables) {
+            /** @var DataObject $singleton */
+            $singleton = singleton($class);
+            $hasVersions = $singleton->hasExtension(Versioned::class) && $singleton->hasStages();
+
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
                     try {
-                        $sqlSelect = SQLSelect::create(
-                            ['ID', $field],
-                            $table
-                        );
-                        $whereAnys = [];
-                        foreach (array_keys(static::VALID_TAGS) as $tag) {
-                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
-                            $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
+                        // Update table
+                        $this->updateTable($table, $field);
+
+                        // Update live
+                        if ($hasVersions) {
+                            $this->updateTable($table.'_Live', $field);
                         }
-                        $sqlSelect->addWhereAny($whereAnys);
-                        $records = $sqlSelect->execute();
-                        $this->rewriteFieldForRecords($records, $table, $field);
                     } catch (DatabaseException $exception) {
                     }
                 }
             }
         }
+    }
+
+    private function updateTable(string $table, string $field)
+    {
+        $sqlSelect = SQLSelect::create(
+            ['ID', $field],
+            $table
+        );
+        $whereAnys = [];
+        foreach (array_keys(static::VALID_TAGS) as $tag) {
+            $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
+            $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
+        }
+        $sqlSelect->addWhereAny($whereAnys);
+        $records = $sqlSelect->execute();
+        $this->rewriteFieldForRecords($records, $table, $field);
     }
 
     /**

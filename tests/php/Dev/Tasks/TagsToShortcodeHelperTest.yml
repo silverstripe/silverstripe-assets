@@ -25,6 +25,7 @@ SilverStripe\Assets\File:
 SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject:
   htmlObject:
     HtmlLine: '<a href="/assets/document.pdf">link to file</a>'
+    HtmlLineNoShortCode: '<a href="/assets/document.pdf">This wont be converted</a>'
     Content: '<a href="/assets/document.pdf">Content Field</a>'
 
 SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject:

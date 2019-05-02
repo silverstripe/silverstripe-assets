@@ -20,6 +20,7 @@ use SilverStripe\ORM\Connect\DatabaseException;
 use SilverStripe\ORM\Connect\Query;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectSchema;
+use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Versioned\Versioned;
@@ -105,6 +106,16 @@ class TagsToShortcodeHelper
         foreach ($classes as $class => $tables) {
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
+
+                    /** @var DBField $dbField */
+                    $dbField = DataObject::singleton($class)->dbObject($field);
+                    if (
+                        $dbField &&
+                        $dbField->hasMethod('getProcessShortcodes') &&
+                        !$dbField->getProcessShortcodes()) {
+                        continue;
+                    }
+
                     try {
                         $sqlSelect = SQLSelect::create(
                             ['ID', $field],
@@ -227,6 +238,7 @@ class TagsToShortcodeHelper
             $filesystem = $this->flysystemAssetStore->getProtectedFilesystem();
             $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
         }
+
         return $parsedFileId;
     }
 

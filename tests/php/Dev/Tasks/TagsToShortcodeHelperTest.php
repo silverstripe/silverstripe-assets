@@ -13,7 +13,9 @@ use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Environment;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\ORM\FieldType\DBHTMLVarchar;
 use SilverStripe\Versioned\Versioned;
 
 class TagsToShortcodeHelperTest extends SapphireTest
@@ -169,14 +171,16 @@ class TagsToShortcodeHelperTest extends SapphireTest
         );
 
         $this->assertEquals(
-            sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID),
-            $htmlObject->HtmlLine
+            '<a href="/assets/document.pdf">This wont be converted</a>',
+            $htmlObject->HtmlLineNoShortCode
         );
 
     }
 
     public function testRewriteSubclassObject()
     {
+
+
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
@@ -196,7 +200,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         );
 
         $this->assertEquals(
-            sprintf('<a href="[file_link,id=%d]">HtmlObject Table</a>', $documentID),
+            sprintf('<a href="/assets/document.pdf">HtmlObject Table</a>', $documentID),
             $subHtmlObject->HtmlLine
         );
     }

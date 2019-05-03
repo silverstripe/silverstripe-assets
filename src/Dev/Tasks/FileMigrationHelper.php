@@ -122,7 +122,6 @@ class FileMigrationHelper
         // If not, cannot migrate
         /** @skipUpgrade */
         if (!DB::get_schema()->hasField('File', 'Filename')) {
-
             return 0;
         }
 

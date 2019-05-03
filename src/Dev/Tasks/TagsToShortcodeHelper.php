@@ -172,7 +172,7 @@ class TagsToShortcodeHelper
             $updateSQL->addAssignments(["\"$field\"" => $newContent]);
             $updateSQL->execute();
             if ($this->logger) {
-                $this->logger->info("Updated page with ID {$row['ID']}");
+                $this->logger->info("Updated record ID {$row['ID']} on table $updateTable");
             }
         }
     }

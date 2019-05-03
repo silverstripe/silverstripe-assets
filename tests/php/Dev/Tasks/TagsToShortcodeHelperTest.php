@@ -324,7 +324,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" title="" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',

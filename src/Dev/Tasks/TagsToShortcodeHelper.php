@@ -302,6 +302,7 @@ class TagsToShortcodeHelper
                     '/href\s*=\s*(?:"|\').*?(?:"|\')/i',
                     '/id\s*=\s*(?:"|\').*?(?:"|\')/i',
                     '/\s*(\/?>|\])/',
+                    '/\s?\S+=("")|(\'\')/'
                 ];
                 $replace = [
                     '[image',
@@ -309,6 +310,7 @@ class TagsToShortcodeHelper
                     "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
                     "",
                     " id=\"{$file->ID}\"]",
+                    "",
                 ];
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {

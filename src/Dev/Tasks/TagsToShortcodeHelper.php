@@ -11,6 +11,7 @@ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Assets\File;
@@ -102,7 +103,7 @@ class TagsToShortcodeHelper
     {
         Environment::increaseTimeLimitTo();
 
-        $classes = DataObjectSchema::getFieldMap($this->baseClass, $this->includeBaseClass, [
+        $classes = $this->getFieldMap($this->baseClass, $this->includeBaseClass, [
             'HTMLText',
             'HTMLVarchar'
         ]);
@@ -324,5 +325,68 @@ class TagsToShortcodeHelper
             return $shortcode;
         }
         return null;
+    }
+
+    /**
+     * Returns an array of the fields available for the provided class and its sub-classes as follows:
+     * <code>
+     * [
+     *  'ClassName' => [
+     *      'TableName' => [
+     *          'FieldName',
+     *          'FieldName2',
+     *      ],
+     *      'TableName2' => [
+     *          'FieldName3',
+     *      ],
+     *    ],
+     * ]
+     * </code>
+     *
+     * @param string|object $baseClass
+     * @param bool $includeBaseClass Whether to include fields in the base class or not
+     * @param string|string[] $fieldNames The field to get mappings for, for example 'HTMLText'. Can also be an array.
+     * Subclasses of DBFields must be defined explicitely.
+     * @return array An array of fields that derivec from $baseClass.
+     * @throws \ReflectionException
+     */
+    private function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
+    {
+        $mapping = [];
+        // Normalise $fieldNames to a string array
+        if (is_string($fieldNames)) {
+            $fieldNames = [$fieldNames];
+        }
+        // Add the FQNS classnames of the DBFields
+        $extraFieldNames = [];
+        foreach ($fieldNames as $fieldName) {
+            $dbField = Injector::inst()->get($fieldName);
+            if ($dbField && $dbField instanceof DBField) {
+                $extraFieldNames[] = get_class($dbField);
+            }
+        }
+        $fieldNames = array_merge($fieldNames, $extraFieldNames);
+        foreach (ClassInfo::subclassesFor($baseClass, $includeBaseClass) as $class) {
+            /** @var DataObjectSchema $schema */
+            $schema = singleton($class)->getSchema();
+            /** @var DataObject $fields */
+            $fields = $schema->fieldSpecs($class);
+            foreach ($fields as $field => $type) {
+                $type = preg_replace('/\(.*\)$/', '', $type);
+                if (in_array($type, $fieldNames)) {
+                    $table = $schema->tableForField($class, $field);
+                    if (!isset($mapping[$class])) {
+                        $mapping[$class] = [];
+                    }
+                    if (!isset($mapping[$class][$table])) {
+                        $mapping[$class][$table] = [];
+                    }
+                    if (!in_array($field, $mapping[$class][$table])) {
+                        $mapping[$class][$table][] = $field;
+                    }
+                }
+            }
+        }
+        return $mapping;
     }
 }

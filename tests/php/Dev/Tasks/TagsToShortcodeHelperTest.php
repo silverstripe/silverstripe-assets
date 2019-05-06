@@ -12,6 +12,7 @@ use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
@@ -378,9 +379,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $image1ID = 1;
 
         return [
-            'absolute link to file' => [
-                sprintf('<a href="%s/assets/document.pdf">link to file</a>', Environment::getEnv('SS_BASE_URL'))
-            ],
             'link tag broken over several line' => ["<a \nhref=\"assets/document.pdf\" \n>\nlink to file \r\n \t</a>"],
             'link to valid file with hash anchor' => ['<a href="/assets/document.pdf#boom">link to file</a>'],
             'link to valid file with Get param' => ['<a href="/assets/document.pdf?boom=pow">link to file</a>'],

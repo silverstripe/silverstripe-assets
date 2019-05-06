@@ -10,6 +10,6 @@ class SubHtmlObject extends HtmlObject implements TestOnly
 {
 
     private static $db = [
-        'HtmlContent' => DBHTMLText::class
+        'HtmlContent' => DBHTMLText::class . '(["shortcodes"=>true])'
     ];
 }

@@ -188,7 +188,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $subHtmlObject = $this->objFromFixture(SubHtmlObject::class, 'subHtmlObject');
 
         $documentID = $this->idFromFixture(File::class, 'document');
-        $image1ID = $this->idFromFixture(image::class, 'image1');
+        $image1ID = $this->idFromFixture(Image::class, 'image1');
 
         $this->assertEquals(
             sprintf('[image src="/assets/33be1b95cb/myimage.jpg" alt="SubHtmlObject Table" id="%d"]', $image1ID),

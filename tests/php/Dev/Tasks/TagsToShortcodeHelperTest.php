@@ -23,6 +23,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
 {
     protected static $fixture_file = 'TagsToShortcodeHelperTest.yml';
 
+    protected $usesTransactions = false;
+
     protected static $extra_dataobjects = [
         HtmlObject::class,
         SubHtmlObject::class,

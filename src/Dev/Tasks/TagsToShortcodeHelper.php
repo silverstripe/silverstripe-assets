@@ -138,7 +138,7 @@ class TagsToShortcodeHelper
         }
     }
 
-    private function updateTable(string $table, string $field)
+    private function updateTable($table, $field)
     {
         $sqlSelect = SQLSelect::create(
             ['ID', $field],

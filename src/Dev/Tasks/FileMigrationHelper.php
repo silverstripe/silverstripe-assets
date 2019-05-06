@@ -1,5 +1,4 @@
 <?php
-
 namespace SilverStripe\Assets\Dev\Tasks;
 
 use LogicException;
@@ -14,6 +13,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Logging\PreformattedEchoHandler;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -31,13 +31,17 @@ class FileMigrationHelper
     use Configurable;
 
     private static $dependencies = [
-        'logger' => '%$' . LoggerInterface::class,
+        'logger' => '%$' . LoggerInterface::class . '.quiet',
     ];
 
-    /** @var LoggerInterface */
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
-    /** @var FlysystemAssetStore */
+    /**
+     * @var FlysystemAssetStore
+     */
     private $store;
 
     /**
@@ -55,9 +59,15 @@ class FileMigrationHelper
         $this->logger = new NullLogger();
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @return $this
+     */
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+
+        return $this;
     }
 
     /**
@@ -125,6 +135,13 @@ class FileMigrationHelper
             return 0;
         }
 
+        $totalCount = $this->getFileQuery()->count();
+        if (!$totalCount) {
+            $this->logger->warning('No SilverStripe 3 legacy file');
+            return 0;
+        }
+        $this->logger->info(sprintf('Migrating %d files', $totalCount));
+
         // Clean up SS3 files
         $ss3Count = 0;
         $originalState = null;
@@ -173,17 +190,8 @@ class FileMigrationHelper
             return false;
         }
 
-        // Remove this file if it violates allowed_extensions
-        $allowed = array_filter(File::getAllowedExtensions());
-        $extension = strtolower($file->getExtension());
-        if (!in_array($extension, $allowed)) {
-            if ($this->config()->get('delete_invalid_files')) {
-                $file->delete();
-            }
-            return false;
-        }
-
-        // Fix file classname if it has a classname that's incompatible with it's extention
+        // Fix file classname if it has a classname that's incompatible with its extention
+        $extension = $file->getExtension();
         if (!$this->validateFileClassname($file, $extension)) {
             // We disable validation (if it is enabled) so that we are able to write a corrected
             // classname, once that is changed we re-enable it for subsequent writes
@@ -200,6 +208,27 @@ class FileMigrationHelper
             $file = File::get_by_id($fileID);
         }
 
+        // Remove invalid files
+        $validationResult = $file->validate();
+        if (!$validationResult->isValid()) {
+            if ($this->config()->get('delete_invalid_files')) {
+                $file->delete();
+            }
+            if ($this->logger) {
+                $messages = implode("\n\n", array_map(function ($msg) {
+                    return $msg['message'];
+                }, $validationResult->getMessages()));
+                $this->logger->warning(
+                    sprintf(
+                        "%s was not migrated because the file is not valid. More information: %s",
+                        $legacyFilename,
+                        $messages
+                    )
+                );
+            }
+            return false;
+        }
+
         // Copy local file into this filesystem
         $filename = $file->generateFilename();
         $results = $this->store->normalisePath($filename);
@@ -210,7 +239,20 @@ class FileMigrationHelper
 
 
         // Save and publish
-        $file->write();
+        try {
+            $file->write();
+        } catch (ValidationException $e) {
+            if ($this->logger) {
+                $this->logger->error(sprintf(
+                    "File %s could not be migrated due to an error. 
+                    This problem likely existed before the migration began. Error: %s",
+                    $legacyFilename,
+                    $e->getMessage()
+                ));
+            }
+            return false;
+        }
+
         if (class_exists(Versioned::class)) {
             $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }

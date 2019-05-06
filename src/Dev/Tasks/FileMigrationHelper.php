@@ -34,10 +34,14 @@ class FileMigrationHelper
         'logger' => '%$' . LoggerInterface::class . '.quiet',
     ];
 
-    /** @var LoggerInterface */
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
-    /** @var FlysystemAssetStore */
+    /**
+     * @var FlysystemAssetStore
+     */
     private $store;
 
     /**
@@ -55,9 +59,15 @@ class FileMigrationHelper
         $this->logger = new NullLogger();
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @return $this
+     */
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+
+        return $this;
     }
 
     /**

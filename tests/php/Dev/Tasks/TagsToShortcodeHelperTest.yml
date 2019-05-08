@@ -1,4 +1,4 @@
-SilverStripe\CMS\Model\SiteTree:
+SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\PseudoPage:
   page1:
     Title: 'my page'
     Content: >

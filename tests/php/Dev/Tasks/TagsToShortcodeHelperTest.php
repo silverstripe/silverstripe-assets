@@ -10,6 +10,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\PseudoPage;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
@@ -28,7 +29,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
     protected static $extra_dataobjects = [
         HtmlObject::class,
         SubHtmlObject::class,
-        NoStage::class
+        NoStage::class,
+        PseudoPage::class,
     ];
 
     /**
@@ -52,10 +54,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
     {
         // Set backend root to /TagsToShortcodeHelperTest/assets
         TestAssetStore::activate('TagsToShortcodeHelperTest/assets');
-
-        // Ensure that each file has a local record file in this new assets base
-
-        $destinations = [];
 
         /** @var File $file */
         foreach (File::get()->filter('ClassName', File::class) as $file) {
@@ -81,8 +79,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
-        /** @var SiteTree $newPage */
-        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        /** @var PseudoPage $newPage */
+        $newPage = $this->objFromFixture(PseudoPage::class, 'page1');
         $documentID = $this->idFromFixture(File::class, 'document');
         $imageID = $this->idFromFixture(Image::class, 'image1');
 
@@ -118,8 +116,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testLivePageRewrite()
     {
-        /** @var SiteTree $newPage */
-        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        /** @var PseudoPage $newPage */
+        $newPage = $this->objFromFixture(PseudoPage::class, 'page1');
         $newPage->publishSingle();
 
         $newPage->Content = '<p>Draft content</p>';
@@ -128,11 +126,11 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
-        /** @var SiteTree $newPage */
+        /** @var PseudoPage $newPage */
         $newPageID = $newPage->ID;
         $newPage = Versioned::withVersionedMode(function () use ($newPageID) {
             Versioned::set_stage(Versioned::LIVE);
-            return SiteTree::get()->byID($newPageID);
+            return PseudoPage::get()->byID($newPageID);
         });
 
 

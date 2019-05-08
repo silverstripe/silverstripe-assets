@@ -20,7 +20,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBHTMLVarchar;
 use SilverStripe\Versioned\Versioned;
 
-class   TagsToShortcodeHelperTest extends SapphireTest
+class TagsToShortcodeHelperTest extends SapphireTest
 {
     protected static $fixture_file = 'TagsToShortcodeHelperTest.yml';
 

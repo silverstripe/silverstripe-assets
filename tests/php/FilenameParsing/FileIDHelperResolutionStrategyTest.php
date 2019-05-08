@@ -508,6 +508,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         ];
 
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
+
         /** @var ParsedFileID $parsedFileID */
         foreach ($variantGenerator as $parsedFileID) {
             $this->assertNotEmpty($expectedPaths);
@@ -517,6 +518,41 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         }
 
         $this->assertEmpty($expectedPaths);
+    }
+
+    public function testFindHashlessVariant()
+    {
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper($naturalHelper = new NaturalFileIDHelper());
+        $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);
+
+        $expectedHash = sha1('version 1');
+
+        $this->fs->write('Folder/FolderFile.pdf', 'version 1');
+        $this->fs->write(
+            sprintf('Folder/%s/FolderFile.pdf', substr($expectedHash, 0, 10)),
+            'version 1'
+        );
+        $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
+
+        $expectedPaths = [
+            ['Folder/FolderFile.pdf', ''],
+            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
+            // The hash path won't be match, because we're not providing a hash
+        ];
+
+        $variantGenerator = $strategy->findVariants(new ParsedFileID('Folder/FolderFile.pdf'), $this->fs);
+
+        /** @var ParsedFileID $parsedFileID */
+        foreach ($variantGenerator as $parsedFileID) {
+            $this->assertNotEmpty($expectedPaths, 'More files were returned than expected');
+            $expectedPath = array_shift($expectedPaths);
+            $this->assertEquals($expectedPath[0], $parsedFileID->getFileID());
+            $this->assertEquals($expectedPath[1], $parsedFileID->getVariant());
+            $this->assertEquals($expectedHash, $parsedFileID->getHash());
+        }
+
+        $this->assertEmpty($expectedPaths, "Not all expected files were returned");
     }
 
     public function testParseFileID()

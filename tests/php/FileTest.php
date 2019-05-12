@@ -654,6 +654,44 @@ class FileTest extends SapphireTest
         $this->assertTrue($secureFile->canEdit($admin), 'Admins can edit any files');
     }
 
+    public function testCanView()
+    {
+        $file = $this->objFromFixture(Image::class, 'gif');
+        $secureFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+
+        // Test anonymous permissions
+        $this->logOut();
+        $this->assertFalse($file->canView(), "Anonymous users cannot view draft files");
+        $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $this->assertTrue($file->canView(), "Anonymous users can view public files");
+        $this->assertFalse($secureFile->canView(), "Anonymous users cannot view files with specific permissions");
+        
+        // Test permissionless user
+        $frontendUser = $this->objFromFixture(Member::class, 'frontend');
+        $this->assertTrue($file->canView($frontendUser), "Permissionless users can view files");
+        $this->assertFalse($secureFile->canView($frontendUser), "Permissionless users cannot view secure files");
+
+        // Test global CMS section users
+        $cmsUser = $this->objFromFixture(Member::class, 'cms');
+        $this->assertTrue($file->canView($cmsUser), "CMS users can view public files");
+        $this->assertFalse($secureFile->canView($cmsUser), "CMS users cannot view a file that is not assigned to them");
+
+        // Test cms access users without file access
+        $securityUser = $this->objFromFixture(Member::class, 'security');
+        $this->assertTrue($file->canView($securityUser), "Security CMS users can view public files");
+        $this->assertFalse($secureFile->canView($securityUser), "Security CMS users cannot view a file that is not assigned to them.");
+
+        // Asset-admin user can edit files their group is granted to
+        $assetAdminUser = $this->objFromFixture(Member::class, 'assetadmin');
+        $this->assertTrue($file->canView($assetAdminUser), "Asset admin users can view public files");
+        $this->assertTrue($secureFile->canView($assetAdminUser), "Asset admin can view files that are assigned to them");
+
+        // Test admin
+        $admin = $this->objFromFixture(Member::class, 'admin');
+        $this->assertTrue($file->canView($admin), "Admins can view files");
+        $this->assertTrue($secureFile->canView($admin), 'Admins can view files that are not necessarily assigned to them');
+    }
+
     public function testCanCreate()
     {
         $normalFolder = $this->objFromFixture(Folder::class, 'folder1');

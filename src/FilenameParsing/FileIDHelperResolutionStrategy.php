@@ -376,10 +376,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         // Search for a helper that will allow us to find a file
         foreach ($helpers as $helper) {
             try {
-                $fileID = $helper->buildFileID(
-                    $parsedFileID->getFilename(),
-                    $parsedFileID->getHash()
-                );
+                $fileID = $helper->buildFileID($parsedFileID->getFilename(), $parsedFileID->getHash());
 
                 if ($filesystem->has($fileID) && $this->validateHash($helper, $parsedFileID, $filesystem)) {
                     $resolvableHelpers[] = $helper;
@@ -396,9 +393,20 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
+            $possibleVariants = array_filter($possibleVariants, function ($possibleVariant) {
+                return $possibleVariant['type'] !== 'dir';
+            });
+            $possibleVariants = array_map(function ($possibleVariant) {
+                return $possibleVariant['path'];
+            }, $possibleVariants);
+
+
+            $possibleVariants[] = $helper->buildFileID($parsedFileID->getFilename(), $parsedFileID->getHash());
+            $possibleVariants = array_unique($possibleVariants);
+
             foreach ($possibleVariants as $possibleVariant) {
-                if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                    yield $helper->parseFileID($possibleVariant['path'])->setHash($hash);
+                if ($helper->isVariantOf($possibleVariant, $parsedFileID)) {
+                    yield $helper->parseFileID($possibleVariant)->setHash($hash);
                 }
             }
         }

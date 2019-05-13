@@ -5,6 +5,8 @@ use LogicException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -135,6 +137,22 @@ class FileMigrationHelper
             return 0;
         }
 
+        // Create a temporary SS3 Legacy File Resolution strategy for migrating SS3 Files
+        /** @var FileIDHelperResolutionStrategy $initialStrategy */
+        $initialStrategy = $this->store->getPublicResolutionStrategy();
+        if (!$initialStrategy instanceof FileIDHelperResolutionStrategy) {
+            $this->logger->warning(
+                'Skipping the SS3 file migration because the asset store is using an unsupported public file ' .
+                'resolution startegy'
+            );
+            return 0;
+        }
+        $ss3Strategy = new FileIDHelperResolutionStrategy();
+        $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
+        $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
+        $this->store->setPublicResolutionStrategy($ss3Strategy);
+
+        // Check if we have files to migrate
         $totalCount = $this->getFileQuery()->count();
         if (!$totalCount) {
             $this->logger->warning('No SilverStripe 3 legacy file');
@@ -142,7 +160,7 @@ class FileMigrationHelper
         }
         $this->logger->info(sprintf('Migrating %d files', $totalCount));
 
-        // Clean up SS3 files
+        // Set up things before going into the loop
         $ss3Count = 0;
         $originalState = null;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
@@ -150,14 +168,23 @@ class FileMigrationHelper
             Versioned::set_stage(Versioned::DRAFT);
         }
 
-        foreach ($this->getLegacyFileQuery() as $file) {
-            // Bypass the accessor and the filename from the column
-            $filename = $file->getField('Filename');
+        // Loop over the files to migrate
+        try {
+            foreach ($this->getLegacyFileQuery() as $file) {
+                // Bypass the accessor and the filename from the column
+                $filename = $file->getField('Filename');
 
-            $success = $this->migrateFile($base, $file, $filename);
-            if ($success) {
-                $ss3Count++;
+                $success = $this->migrateFile($base, $file, $filename);
+                if ($success) {
+                    $ss3Count++;
+                }
             }
+        } finally {
+            // Reset back to our initial state no matter what
+            if (class_exists(Versioned::class)) {
+                Versioned::set_reading_mode($originalState);
+            }
+            $this->store->setPublicResolutionStrategy($initialStrategy);
         }
 
         // Show summary of results
@@ -165,10 +192,6 @@ class FileMigrationHelper
             $this->logger->info(sprintf('%d legacy files have been migrated.', $ss3Count));
         } else {
             $this->logger->info(sprintf('No SilverStripe 3 files have been migrated.', $ss3Count));
-        }
-
-        if (class_exists(Versioned::class)) {
-            Versioned::set_reading_mode($originalState);
         }
 
         return $ss3Count;
@@ -240,7 +263,11 @@ class FileMigrationHelper
 
         // Save and publish
         try {
-            $file->write();
+            if (class_exists(Versioned::class)) {
+                $file->writeToStage(Versioned::LIVE);
+            } else {
+                $file->write();
+            }
         } catch (ValidationException $e) {
             if ($this->logger) {
                 $this->logger->error(sprintf(
@@ -251,10 +278,6 @@ class FileMigrationHelper
                 ));
             }
             return false;
-        }
-
-        if (class_exists(Versioned::class)) {
-            $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
         $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));

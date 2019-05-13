@@ -16,6 +16,18 @@ class LegacyFileIDHelper implements FileIDHelper
 {
     use Injectable;
 
+    /** @var bool */
+    private $failNewerVariant;
+
+    /**
+     * @param bool $failNewFormat Whatever FileID mapping to newer SS4 formats should be parsed.
+     */
+    public function __construct($failNewerVariant = true)
+    {
+        $this->failNewerVariant = $failNewerVariant;
+    }
+
+
     public function buildFileID($filename, $hash = null, $variant = null)
     {
         if ($filename instanceof ParsedFileID) {
@@ -65,11 +77,17 @@ class LegacyFileIDHelper implements FileIDHelper
     /**
      * @note LegacyFileIDHelper is meant to fail when parsing newer format fileIDs with a variant e.g.:
      * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without variant, it should return the same
-     * results as natural paths.
+     * results as natural paths. This behavior can be disabled by setting `failNewerVariant` to false on the
+     * constructor.
      */
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        if ($this->failNewerVariant) {
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+        } else {
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>([^/.])+))(?<extension>(\..+)*)$#';
+        }
+
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {

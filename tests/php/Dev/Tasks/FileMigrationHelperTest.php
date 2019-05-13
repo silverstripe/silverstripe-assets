@@ -13,6 +13,7 @@ use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\ORM\Queries\SQLUpdate;
 
 /**
  * Ensures that File dataobjects can be safely migrated from 3.x
@@ -47,6 +48,13 @@ class FileMigrationHelperTest extends SapphireTest
 
         // Set backend root to /FileMigrationHelperTest/assets
         TestAssetStore::activate('FileMigrationHelperTest/assets');
+
+        $badnameID = $this->idFromFixture(File::class, 'badname');
+        SQLUpdate::create(
+            '"File"',
+            ['"Filename"' => 'assets/ParentFolder/bad__name.zip', '"Name"' => 'bad__name.zip'],
+            ['"ID"' => $badnameID]
+        )->execute();
 
         // Ensure that each file has a local record file in this new assets base
         $from = __DIR__ . '/../../ImageTest/test-image-low-quality.jpg';
@@ -140,12 +148,6 @@ class FileMigrationHelperTest extends SapphireTest
         $this->assertNotEmpty($invalidID);
         $this->assertNull(File::get()->byID($invalidID));
 
-        # TODO confirm if we should delete the physical invalid file as well
-//        $this->assertFileNotExists(
-//            TestAssetStore::base_path() . '/ParentFolder/SubFolder/myfile.exe' ,
-//            'Invalid file should have been removed by migration'
-//        );
-
         // Ensure file with invalid filenames have been rename
         /** @var File $badname */
         $badname = $this->objFromFixture(File::class, 'badname');
@@ -158,6 +160,12 @@ class FileMigrationHelperTest extends SapphireTest
         // SS2.4 considered PDFs to be images. We should convert that back to Regular files
         $pdf = File::find('myimage.pdf');
         $this->assertEquals(File::class, $pdf->ClassName, 'Our PDF classnames should have been corrrected');
+
+        // Test that SS3 files with invalid SS4 names, get correctly rename
+        /** @var File $badname */
+        $badname = $this->objFromFixture(File::class, 'badname');
+        $this->assertEquals('ParentFolder/bad_name.zip', $badname->getFilename());
+        $this->assertFileExists(TestAssetStore::base_path() . '/ParentFolder/bad_name.zip');
     }
 
     public function testMigrationWithLegacyFilenames()

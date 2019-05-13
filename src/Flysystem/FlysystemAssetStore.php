@@ -1599,6 +1599,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 $this->truncateDirectory(dirname($origin), $fs);
             }
         }
+
+        // Our strategy will have clean up the name
+        $pfid = $pfid->setFilename($strategy->cleanFilename($pfid->getFilename()));
+
         return array_merge($pfid->getTuple(), ['Operations' => $ops]);
     }
 }

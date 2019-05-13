@@ -59,6 +59,13 @@ class FileMigrationHelperTest extends SapphireTest
         /** @var \League\Flysystem\Filesystem $fs */
         $fs = Injector::inst()->get(AssetStore::class)->getPublicFilesystem();
 
+        $badnameID = $this->idFromFixture(File::class, 'badname');
+        SQLUpdate::create(
+            '"File"',
+            ['"Filename"' => 'assets/ParentFolder/bad__name.zip', '"Name"' => 'bad__name.zip'],
+            ['"ID"' => $badnameID]
+        )->execute();
+
         // Ensure that each file has a local record file in this new assets base
         foreach (File::get()->filter('ClassName', File::class) as $file) {
             $filename = $file->generateFilename();
@@ -342,6 +349,12 @@ class FileMigrationHelperTest extends SapphireTest
             $bad->File->getHash(),
             "bad_name-v2.doc has the expected hash"
         );
+
+        // Test that SS3 files with invalid SS4 names, get correctly rename
+        /** @var File $badname */
+        $badname = $this->objFromFixture(File::class, 'badname');
+        $this->assertEquals('ParentFolder/bad_name.zip', $badname->getFilename());
+        $this->assertFileExists(TestAssetStore::base_path() . '/ParentFolder/bad_name.zip');
     }
 
     /**

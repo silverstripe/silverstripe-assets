@@ -276,6 +276,14 @@ class Upload_Validator
             return false;
         }
 
+        if (!$this->isCompleteUpload()) {
+            $this->errors[] = _t(
+                'SilverStripe\\Assets\\File.PARTIALUPLOAD',
+                'File did not finish uploading, please try again'
+            );
+            return false;
+        }
+
         // Check file isn't empty
         if ($this->isFileEmpty()) {
             $this->errors[] = _t('SilverStripe\\Assets\\File.NOFILESIZE', 'Filesize is zero bytes.');
@@ -315,7 +323,7 @@ class Upload_Validator
     public function isValidUpload()
     {
         // Check file upload
-        if ($this->tmpFile['error'] === UPLOAD_ERR_NO_FILE) {
+        if (in_array($this->tmpFile['error'], [UPLOAD_ERR_NO_FILE, UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE])) {
             return false;
         }
 
@@ -331,5 +339,15 @@ class Upload_Validator
         }
 
         return true;
+    }
+
+    /**
+     * Check whether the file was fully uploaded
+     *
+     * @return bool
+     */
+    public function isCompleteUpload()
+    {
+        return ($this->tmpFile['error'] !== UPLOAD_ERR_PARTIAL);
     }
 }

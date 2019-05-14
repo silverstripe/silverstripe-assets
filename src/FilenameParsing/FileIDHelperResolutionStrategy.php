@@ -402,7 +402,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             // Make sure our yield file has an hash
             $hash = $parsedFileID->getHash() ?: $this->findHashOf($helper, $parsedFileID, $filesystem);
 
-            // Find the correct folder to searcg for possible variants in
+            // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
 

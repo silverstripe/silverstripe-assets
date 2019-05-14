@@ -137,6 +137,14 @@ class FileMigrationHelper
             return 0;
         }
 
+        // Check if we have files to migrate
+        $totalCount = $this->getFileQuery()->count();
+        if (!$totalCount) {
+            $this->logger->warning('No SilverStripe 3 legacy file');
+            return 0;
+        }
+        $this->logger->info(sprintf('Migrating %d files', $totalCount));
+
         // Create a temporary SS3 Legacy File Resolution strategy for migrating SS3 Files
         /** @var FileIDHelperResolutionStrategy $initialStrategy */
         $initialStrategy = $this->store->getPublicResolutionStrategy();
@@ -152,21 +160,15 @@ class FileMigrationHelper
         $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
         $this->store->setPublicResolutionStrategy($ss3Strategy);
 
-        // Check if we have files to migrate
-        $totalCount = $this->getFileQuery()->count();
-        if (!$totalCount) {
-            $this->logger->warning('No SilverStripe 3 legacy file');
-            return 0;
-        }
-        $this->logger->info(sprintf('Migrating %d files', $totalCount));
-
-        // Set up things before going into the loop
-        $ss3Count = 0;
-        $originalState = null;
+        // Force stage to draft
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             $originalState = Versioned::get_reading_mode();
             Versioned::set_stage(Versioned::DRAFT);
         }
+
+        // Set up things before going into the loop
+        $ss3Count = 0;
+        $originalState = null;
 
         // Loop over the files to migrate
         try {

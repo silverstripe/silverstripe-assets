@@ -177,7 +177,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $parsedFileID = $this->preProcessTuple($tuple);
         $helpers = $this->getResolutionFileIDHelpers();
-        array_unshift($helpers, $this->getDefaultFileIDHelper());
+
+        // Add default helper to list of resolvable helpers
+        $defaultHelper = $this->getDefaultFileIDHelper();
+        $defaultHelperIndex = array_search($defaultHelper, $helpers);
+        if ($defaultHelperIndex !== false) {
+            unset($helpers[$defaultHelperIndex]);
+        }
+        array_unshift($helpers, $defaultHelper);
 
         $enforceHash = $strict && $parsedFileID->getHash();
 
@@ -366,7 +373,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $parsedFileID = $this->preProcessTuple($tuple);
 
         $helpers = $this->getResolutionFileIDHelpers();
-        array_unshift($helpers, $this->getDefaultFileIDHelper());
+        $defaultHelper = $this->getDefaultFileIDHelper();
+        if (!in_array($defaultHelper, $helpers)) {
+            array_unshift($helpers, $defaultHelper);
+        }
+
 
         /** @var FileIDHelper[] $resolvableHelpers */
         $resolvableHelpers = [];
@@ -399,8 +410,10 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             }, $possibleVariants);
 
 
-            $possibleVariants[] = $helper->buildFileID($parsedFileID->getFilename(), $parsedFileID->getHash());
-            $possibleVariants = array_unique($possibleVariants);
+            $mainVariant = $helper->buildFileID($parsedFileID->getFilename(), $parsedFileID->getHash());
+            if (!in_array($mainVariant, $possibleVariants) && $filesystem->has($mainVariant)) {
+                $possibleVariants[] = $mainVariant;
+            }
 
             foreach ($possibleVariants as $possibleVariant) {
                 if ($helper->isVariantOf($possibleVariant, $parsedFileID)) {

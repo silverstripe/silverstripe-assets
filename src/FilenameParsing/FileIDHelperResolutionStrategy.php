@@ -210,11 +210,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         foreach ($helpers as $helper) {
             try {
-                $fileID = $helper->buildFileID(
-                    $parsedFileID->getFilename(),
-                    $parsedFileID->getHash(),
-                    $parsedFileID->getVariant()
-                );
+                $fileID = $helper->buildFileID($parsedFileID, null, null, false);
             } catch (InvalidArgumentException $ex) {
                 // Some file ID helper will throw an exception if you ask them to build a file ID wihtout an hash
                 continue;
@@ -267,7 +263,9 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         // Re build the file ID but without the variant
         $fileID = $helper->buildFileID(
             $parsedFileID->getFilename(),
-            $parsedFileID->getHash()
+            $parsedFileID->getHash(),
+            '',
+            false
         );
 
         // Couldn't find the original file, let's bail.

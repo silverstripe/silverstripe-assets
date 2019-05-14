@@ -28,7 +28,7 @@ class LegacyFileIDHelper implements FileIDHelper
     }
 
 
-    public function buildFileID($filename, $hash = null, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
     {
         if ($filename instanceof ParsedFileID) {
             $hash =  $filename->getHash();

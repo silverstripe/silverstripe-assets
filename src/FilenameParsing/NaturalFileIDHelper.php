@@ -18,7 +18,7 @@ class NaturalFileIDHelper implements FileIDHelper
 {
     use Injectable;
 
-    public function buildFileID($filename, $hash = null, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
     {
         if ($filename instanceof ParsedFileID) {
             $hash =  $filename->getHash();
@@ -27,7 +27,9 @@ class NaturalFileIDHelper implements FileIDHelper
         }
 
         // Since we use double underscore to delimit variants, eradicate them from filename
-        $filename = $this->cleanFilename($filename);
+        if ($cleanfilename) {
+            $filename = $this->cleanFilename($filename);
+        }
         $name = basename($filename);
 
         // Split extension

@@ -173,7 +173,6 @@ class FileMigrationHelper
             foreach ($this->getLegacyFileQuery() as $file) {
                 // Bypass the accessor and the filename from the column
                 $filename = $file->getField('Filename');
-
                 $success = $this->migrateFile($base, $file, $filename);
                 if ($success) {
                     $ss3Count++;

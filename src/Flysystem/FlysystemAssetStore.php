@@ -1586,9 +1586,27 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
     {
         $ops = [];
+
+        // Let's make sure we are using a valid file name
+        $cleanFilename = $strategy->cleanFilename($pfid->getFilename());
+        // Check if our cleaned filename is different from the original filename
+        if ($cleanFilename !== $pfid->getFilename()) {
+            // We need to build a new filename that doesn't conflict with any existing file
+            $fileID = $strategy->buildFileID($pfid->setVariant('')->setFilename($cleanFilename));
+            if ($fs->has($fileID)) {
+                foreach ($this->fileGeneratorFor($fileID) as $candidate) {
+                    if (!$fs->has($candidate)) {
+                        $cleanFilename = $strategy->parseFileID($candidate)->getFilename();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Let's move all the variant
         foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
             $origin = $variantPfid->getFileID();
-            $targetVariantFileID = $strategy->buildFileID($variantPfid);
+            $targetVariantFileID = $strategy->buildFileID($variantPfid->setFilename($cleanFilename));
             if ($targetVariantFileID !== $origin) {
                 if ($fs->has($targetVariantFileID)) {
                     $fs->delete($origin);
@@ -1601,7 +1619,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Our strategy will have clean up the name
-        $pfid = $pfid->setFilename($strategy->cleanFilename($pfid->getFilename()));
+        $pfid = $pfid->setFilename($cleanFilename);
 
         return array_merge($pfid->getTuple(), ['Operations' => $ops]);
     }

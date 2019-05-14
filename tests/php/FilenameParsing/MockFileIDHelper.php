@@ -28,7 +28,7 @@ class MockFileIDHelper implements TestOnly, FileIDHelper
         $this->lookForVariantInVal = $lookForVariantIn;
     }
 
-    public function buildFileID($filename, $hash = null, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null, $cleanFilename = true)
     {
         return $this->fileID;
     }

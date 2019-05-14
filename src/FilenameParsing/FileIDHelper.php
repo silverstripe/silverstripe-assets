@@ -16,9 +16,10 @@ interface FileIDHelper
      * @param string|ParsedFileID $filename Name of file or ParsedFileID object
      * @param string $hash Hash of original file
      * @param string $variant (if given)
+     * @param bool $cleanfilename Whatever the filename should be cleaned before building the file ID. Defaults to true.
      * @return string Adapter specific identifier for this file/version
      */
-    public function buildFileID($filename, $hash = null, $variant = null);
+    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true);
 
 
     /**

@@ -10,8 +10,12 @@ SilverStripe\Assets\Image:
   image2:
     Name: myimage.jpg
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  ## SS2 would sometime treat PDF files as images
   fakePdf:
     Name: myimage.pdf
+  ## Image with an invalid SS4 name
+  badimage:
+    Name: bad__image.gif
 SilverStripe\Assets\File:
   file1:
     Name: anotherfile.txt
@@ -21,10 +25,19 @@ SilverStripe\Assets\File:
   file3:
     Name: picture.pdf
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  # SS4 doesn't allow files with double underscores
   badname:
     Name: bad__name.zip
     ParentID: =>SilverStripe\Assets\Folder.parent
+  badname2:
+    Name: bad__0.zip
+  # EXE files are not allowed
   invalid:
     Name: myfile.exe
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  # badnameconflict will want to override goodnameconflict
+  goodnameconflict:
+    Name: bad_name.doc
+  badnameconflict:
+    Name: bad__name.doc
 

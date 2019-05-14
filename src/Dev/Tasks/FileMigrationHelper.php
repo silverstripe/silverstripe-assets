@@ -6,6 +6,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
@@ -146,18 +147,15 @@ class FileMigrationHelper
         $this->logger->info(sprintf('Migrating %d files', $totalCount));
 
         // Create a temporary SS3 Legacy File Resolution strategy for migrating SS3 Files
-        /** @var FileIDHelperResolutionStrategy $initialStrategy */
         $initialStrategy = $this->store->getPublicResolutionStrategy();
-        if (!$initialStrategy instanceof FileIDHelperResolutionStrategy) {
+        $ss3Strategy = $this->buildSS3MigrationStrategy($initialStrategy);
+        if (!$ss3Strategy) {
             $this->logger->warning(
                 'Skipping the SS3 file migration because the asset store is using an unsupported public file ' .
-                'resolution startegy'
+                'resolution startegy.'
             );
             return 0;
         }
-        $ss3Strategy = new FileIDHelperResolutionStrategy();
-        $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
-        $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
         $this->store->setPublicResolutionStrategy($ss3Strategy);
 
         // Force stage to draft
@@ -196,6 +194,41 @@ class FileMigrationHelper
         }
 
         return $ss3Count;
+    }
+
+    /**
+     * Construct an temporary SS3 File Resolution Strategy based off the provided initial strategy.
+     * If `$initialStrategy` is not suitable for a migration, we return null.
+     * @param FileResolutionStrategy $initialStrategy
+     * @return int|FileIDHelperResolutionStrategy
+     */
+    private function buildSS3MigrationStrategy(FileResolutionStrategy $initialStrategy)
+    {
+        // If the project is using a custom FileResolutionStrategy, we cna't be confident that our migration won't
+        // break stuff, so let's bail
+        if (!$initialStrategy instanceof FileIDHelperResolutionStrategy) {
+            return null;
+        }
+
+        // Let's make sure the initial startegy contains a LegacyFileIDHelper. If it doesn't, the owner of the project
+        // has explicitely disable Legacy resolution, so there's no SS3 files to migrate
+        $foundLegacyHelper = false;
+        foreach ($initialStrategy->getResolutionFileIDHelpers() as $helper) {
+            if ($helper instanceof LegacyFileIDHelper) {
+                $foundLegacyHelper = true;
+                break;
+            }
+        }
+        if (!$foundLegacyHelper) {
+            return null;
+        }
+
+        // Build the migration strategy
+        $ss3Strategy = new FileIDHelperResolutionStrategy();
+        $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
+        $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
+
+        return $ss3Strategy;
     }
 
     /**

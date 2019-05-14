@@ -5,6 +5,9 @@ namespace SilverStripe\Assets\Tests\Dev\Tasks;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Dev\Tasks\FileMigrationHelper;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
@@ -333,5 +336,26 @@ class FileMigrationHelperTest extends SapphireTest
     {
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
         $this->testMigration();
+    }
+
+    /**
+     * If you're using a public file resolution strategy that doesn't use the LegacyFileMigration, files should not be
+     * migrated.
+     */
+    public function testInvalidAssetStoreStrategy()
+    {
+        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy->setDefaultFileIDHelper(new HashFileIDHelper());
+        $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);
+
+        $store = Injector::inst()->get(AssetStore::class);
+        $store->setPublicResolutionStrategy($strategy);
+
+        // Do migration
+        $helper = new FileMigrationHelper();
+        $result = $helper->run($this->getBasePath());
+
+        // Test the top level results
+        $this->assertEquals(0, $result);
     }
 }

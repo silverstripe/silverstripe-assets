@@ -122,6 +122,15 @@ class FileMigrationHelperTest extends SapphireTest
             ],
             ['"ID"' => $this->idFromFixture(File::class, 'badnameconflict')]
         )->execute();
+
+        SQLUpdate::create(
+            '"File"',
+            [
+                '"Filename"' => 'assets/ParentFolder/SubFolder/multi-dash--file---4.pdf',
+                '"Name"' => 'multi-dash--file---4.pdf',
+            ],
+            ['"ID"' => $this->idFromFixture(File::class, 'multi-dash-file')]
+        )->execute();
     }
 
     public function tearDown()
@@ -154,6 +163,7 @@ class FileMigrationHelperTest extends SapphireTest
             ->exclude('ID', [
                 $this->idFromFixture(File::class, 'goodnameconflict'),
                 $this->idFromFixture(File::class, 'badnameconflict'),
+                $this->idFromFixture(File::class, 'multi-dash-file'),
             ]);
 
         foreach ($files as $file) {
@@ -286,6 +296,11 @@ class FileMigrationHelperTest extends SapphireTest
         $this->assertFileExists(TestAssetStore::base_path() . '/bad_image.gif');
         $this->assertFileExists(TestAssetStore::base_path() . '/bad_image__resizeXYZ.gif');
         $this->assertFileExists(TestAssetStore::base_path() . '/bad_image__resizeXYZ_scaleABC.gif');
+
+        // Test that our multi dash filename that would normally be renamed via the front end is still the same
+        $badname = $this->objFromFixture(File::class, 'multi-dash-file');
+        $this->assertEquals('ParentFolder/SubFolder/multi-dash--file---4.pdf', $badname->getFilename());
+        $this->assertFileExists(TestAssetStore::base_path() . '/ParentFolder/SubFolder/multi-dash--file---4.pdf');
     }
 
     /**

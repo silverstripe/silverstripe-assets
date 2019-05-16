@@ -25,6 +25,9 @@ SilverStripe\Assets\File:
   file3:
     Name: picture.pdf
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  multi-dash-file:
+    Name: multi-dash--file---0.pdf
+    ParentID: =>SilverStripe\Assets\Folder.subfolder
   # SS4 doesn't allow files with double underscores
   badname:
     Name: bad__name.zip

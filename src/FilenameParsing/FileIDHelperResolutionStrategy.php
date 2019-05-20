@@ -4,6 +4,8 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DB;
@@ -255,7 +257,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         // Check if the physical hash of the file starts with our parsed file ID hash
         $actualHash = $this->findHashOf($helper, $parsedFileID, $filesystem);
-        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+        if (!$actualHash) {
+            return false;
+        }
+
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
+        return $hasher->compare($actualHash, $parsedFileID->getHash());
     }
 
     /**
@@ -281,10 +290,9 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
 
         // Get hash from stream
-        $stream = $filesystem->readStream($fileID);
-        $hc = hash_init('sha1');
-        hash_update_stream($hc, $stream);
-        $fullHash = hash_final($hc);
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        $fullHash = $hasher->compute($fileID, $filesystem);
 
         return $fullHash;
     }

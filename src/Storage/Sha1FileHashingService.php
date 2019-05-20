@@ -93,6 +93,7 @@ class Sha1FileHashingService implements FileHashingService
         $fs = $this->normaliseFilesystem($fs);
         $stream = $fs->readStream($fileID);
         $hash = $this->computeStream($stream);
+
         $this->set($fileID, $fs, $hash);
 
         return $hash;
@@ -186,11 +187,7 @@ class Sha1FileHashingService implements FileHashingService
     public function move($fromFileID, $fromFs, $toFileID, $toFs = false)
     {
         $hash = $this->get($fromFileID, $fromFs);
-        if (!$hash) {
-            return;
-        }
-
-        $this->set($toFileID, $toFs ?: $fromFs, $hash);
         $this->invalidate($fromFileID, $fromFs);
+        $this->set($toFileID, $toFs ?: $fromFs, $hash);
     }
 }

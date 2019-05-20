@@ -43,6 +43,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs = new Filesystem(
             new Local($this->tmpFolder)
         );
+        Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
     }
 
     public function tearDown()

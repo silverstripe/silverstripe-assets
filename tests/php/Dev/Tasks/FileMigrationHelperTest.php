@@ -13,6 +13,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
@@ -372,5 +373,16 @@ class FileMigrationHelperTest extends SapphireTest
 
         // Test the top level results
         $this->assertEquals(0, $result);
+    }
+
+    /**
+     * Run the same battery of test but with legacy file name enabled.
+     */
+    public function testCacheFileHashes()
+    {
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        $hasher->enableCache();
+        $this->testMigration();
     }
 }

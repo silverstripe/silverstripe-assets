@@ -12,6 +12,7 @@ use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
+use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -59,6 +60,13 @@ class LegacyThumbnailMigrationHelper
      */
     public function run(FlysystemAssetStore $store)
     {
+        // Check if the File dataobject has a "Filename" field.
+        // If not, cannot migrate
+        /** @skipUpgrade */
+        if (!DB::get_schema()->hasField('File', 'Filename')) {
+            return [];
+        }
+
         // Set max time and memory limit
         Environment::increaseTimeLimitTo();
         Environment::increaseMemoryLimitTo();

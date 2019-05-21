@@ -66,6 +66,12 @@ class LegacyFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
+    public function dirtyFileIDFromDirtyTuple()
+    {
+        // Legacy FileID helper doesn't do any cleaning, so we can reuse dirtyFileIDComponents
+        return $this->dirtyFileIDComponents();
+    }
+
     function dirtyFilenames()
     {
         return [

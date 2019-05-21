@@ -32,6 +32,12 @@ abstract class FileIDHelperTester extends SapphireTest
     abstract public function dirtyFileIDComponents();
 
     /**
+     * Similar to `dirtyFileIDComponents` only the expected output is dirty has well.
+     * @return array
+     */
+    abstract public function dirtyFileIDFromDirtyTuple();
+
+    /**
      * List of potentially dirty filename and their clean equivalent
      * @return array
      */
@@ -63,6 +69,17 @@ abstract class FileIDHelperTester extends SapphireTest
         $help = $this->getHelper();
         $this->assertEquals($expected, $help->buildFileID(...$input));
         $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input)));
+    }
+
+    /**
+     * `buildFileID` accepts an optional `cleanFilename` argument that disables cleaning of filename.
+     * @dataProvider dirtyFileIDFromDirtyTuple
+     * @dataProvider fileIDComponents
+     */
+    public function testDirtyBuildFildID($expected, $input)
+    {
+        $help = $this->getHelper();
+        $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input), null, null, false));
     }
 
 

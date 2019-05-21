@@ -5,6 +5,9 @@ use LogicException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -96,7 +99,7 @@ class FileMigrationHelper
         $this->logger->info('MIGRATING SILVERSTRIPE 3 LEGACY FILES');
         $ss3Count = $this->ss3Migration($base);
 
-        $this->logger->info('NORMALISE SILVERTSTRIPE 4 FILES');
+        $this->logger->info('NORMALISE SILVERSTRIPE 4 FILES');
         $ss4Count = 0;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::LIVE);
@@ -135,29 +138,52 @@ class FileMigrationHelper
             return 0;
         }
 
+        // Check if we have files to migrate
         $totalCount = $this->getFileQuery()->count();
         if (!$totalCount) {
-            $this->logger->warning('No SilverStripe 3 legacy file');
+            $this->logger->warning('No SilverStripe 3 legacy files to migrate');
             return 0;
         }
         $this->logger->info(sprintf('Migrating %d files', $totalCount));
 
-        // Clean up SS3 files
-        $ss3Count = 0;
-        $originalState = null;
+        // Create a temporary SS3 Legacy File Resolution strategy for migrating SS3 Files
+        $initialStrategy = $this->store->getPublicResolutionStrategy();
+        $ss3Strategy = $this->buildSS3MigrationStrategy($initialStrategy);
+        if (!$ss3Strategy) {
+            $this->logger->warning(
+                'Skipping the SS3 file migration because the asset store is using an unsupported public file ' .
+                'resolution strategy.'
+            );
+            return 0;
+        }
+        $this->store->setPublicResolutionStrategy($ss3Strategy);
+
+        // Force stage to draft
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             $originalState = Versioned::get_reading_mode();
             Versioned::set_stage(Versioned::DRAFT);
         }
 
-        foreach ($this->getLegacyFileQuery() as $file) {
-            // Bypass the accessor and the filename from the column
-            $filename = $file->getField('Filename');
+        // Set up things before going into the loop
+        $ss3Count = 0;
+        $originalState = null;
 
-            $success = $this->migrateFile($base, $file, $filename);
-            if ($success) {
-                $ss3Count++;
+        // Loop over the files to migrate
+        try {
+            foreach ($this->getLegacyFileQuery() as $file) {
+                // Bypass the accessor and the filename from the column
+                $filename = $file->getField('Filename');
+                $success = $this->migrateFile($base, $file, $filename);
+                if ($success) {
+                    $ss3Count++;
+                }
             }
+        } finally {
+            // Reset back to our initial state no matter what
+            if (class_exists(Versioned::class)) {
+                Versioned::set_reading_mode($originalState);
+            }
+            $this->store->setPublicResolutionStrategy($initialStrategy);
         }
 
         // Show summary of results
@@ -167,11 +193,42 @@ class FileMigrationHelper
             $this->logger->info(sprintf('No SilverStripe 3 files have been migrated.', $ss3Count));
         }
 
-        if (class_exists(Versioned::class)) {
-            Versioned::set_reading_mode($originalState);
+        return $ss3Count;
+    }
+
+    /**
+     * Construct a temporary SS3 File Resolution Strategy based off the provided initial strategy.
+     * If `$initialStrategy` is not suitable for a migration, we return null.
+     * @param FileResolutionStrategy $initialStrategy
+     * @return int|FileIDHelperResolutionStrategy
+     */
+    private function buildSS3MigrationStrategy(FileResolutionStrategy $initialStrategy)
+    {
+        // If the project is using a custom FileResolutionStrategy, we can't be confident that our migration won't
+        // break stuff, so let's bail
+        if (!$initialStrategy instanceof FileIDHelperResolutionStrategy) {
+            return null;
         }
 
-        return $ss3Count;
+        // Let's make sure the initial strategy contains a LegacyFileIDHelper. If it doesn't, the owner of the project
+        // has explicitly disabled Legacy resolution, so there's no SS3 files to migrate
+        $foundLegacyHelper = false;
+        foreach ($initialStrategy->getResolutionFileIDHelpers() as $helper) {
+            if ($helper instanceof LegacyFileIDHelper) {
+                $foundLegacyHelper = true;
+                break;
+            }
+        }
+        if (!$foundLegacyHelper) {
+            return null;
+        }
+
+        // Build the migration strategy
+        $ss3Strategy = new FileIDHelperResolutionStrategy();
+        $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
+        $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
+
+        return $ss3Strategy;
     }
 
     /**
@@ -240,7 +297,11 @@ class FileMigrationHelper
 
         // Save and publish
         try {
-            $file->write();
+            if (class_exists(Versioned::class)) {
+                $file->writeToStage(Versioned::LIVE);
+            } else {
+                $file->write();
+            }
         } catch (ValidationException $e) {
             if ($this->logger) {
                 $this->logger->error(sprintf(
@@ -251,10 +312,6 @@ class FileMigrationHelper
                 ));
             }
             return false;
-        }
-
-        if (class_exists(Versioned::class)) {
-            $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
         $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
@@ -309,7 +366,7 @@ class FileMigrationHelper
 
         return $count;
     }
-    
+
     /**
      * Check if a file's classname is compatible with it's extension
      *

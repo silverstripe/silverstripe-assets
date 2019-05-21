@@ -58,6 +58,22 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
+    public function dirtyFileIDFromDirtyTuple()
+    {
+        return [
+            // Cases that need clean up
+            ['abcdef7890/sam__double-under-score.jpg', [
+                'sam__double-under-score.jpg', 'abcdef7890'
+            ]],
+            ['abcdef7890/sam__double-under-score__resizeXYZ.jpg', [
+                'sam__double-under-score.jpg', 'abcdef7890', 'resizeXYZ'
+            ]],
+            ['subfolder/abcdef7890/sam__double-under-score__resizeXYZ.jpg', [
+                'subfolder/sam__double-under-score.jpg', 'abcdef7890', 'resizeXYZ'
+            ]],
+        ];
+    }
+
     function dirtyFilenames()
     {
         return [
@@ -66,6 +82,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
             ['sub_folder/sam.jpg', 'sub_folder/sam.jpg'],
             ['sub_folder/double_underscore.jpg', 'sub_folder/double__underscore.jpg'],
             ['sub_folder/single_underscore.jpg', 'sub_folder/single_underscore.jpg'],
+            ['sub_folder/triple_underscore.jpg', 'sub_folder/triple___underscore.jpg'],
         ];
     }
 

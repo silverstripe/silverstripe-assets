@@ -341,6 +341,7 @@ class FileMigrationHelperTest extends SapphireTest
             $bad->File->getHash(),
             "bad_name-v2.doc has the expected hash"
         );
+    }
 
     /**
      * Run the same battery of test but with legacy file name enabled.

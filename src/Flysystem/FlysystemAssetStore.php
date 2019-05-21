@@ -1180,7 +1180,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * Determine if legacy filenames should be used. This no longuer makes any difference with the introduction of
-     * FileResolutionStartegies.
+     * FileResolutionStrategies.
      * @deprecated 1.4.0
      * @return bool
      */
@@ -1576,12 +1576,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
-     * Given a parsed file ID move the matching file and all its variant to the default position as defined by the
-     * provided startegy.
+     * Given a parsed file ID, move the matching file and all its variants to the default position as defined by the
+     * provided strategy.
      * @param ParsedFileID $pfid
      * @param Filesystem $fs
      * @param FileResolutionStrategy $strategy
      * @return array List of new file names with the old name as the key
+     * @throws \League\Flysystem\FileExistsException
+     * @throws \League\Flysystem\FileNotFoundException
      */
     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
     {
@@ -1603,7 +1605,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             }
         }
 
-        // Let's move all the variant
+        // Let's move all the variants
         foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
             $origin = $variantPfid->getFileID();
             $targetVariantFileID = $strategy->buildFileID($variantPfid->setFilename($cleanFilename));
@@ -1618,7 +1620,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             }
         }
 
-        // Our strategy will have clean up the name
+        // Our strategy will have cleaned up the name
         $pfid = $pfid->setFilename($cleanFilename);
 
         return array_merge($pfid->getTuple(), ['Operations' => $ops]);

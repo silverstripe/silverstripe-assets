@@ -20,7 +20,7 @@ class LegacyFileIDHelper implements FileIDHelper
     private $failNewerVariant;
 
     /**
-     * @param bool $failNewFormat Whatever FileID mapping to newer SS4 formats should be parsed.
+     * @param bool $failNewerVariant Whether FileID mapping to newer SS4 formats should be parsed.
      */
     public function __construct($failNewerVariant = true)
     {
@@ -31,7 +31,6 @@ class LegacyFileIDHelper implements FileIDHelper
     public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
     {
         if ($filename instanceof ParsedFileID) {
-            $hash =  $filename->getHash();
             $variant =  $filename->getVariant();
             $filename =  $filename->getFilename();
         }
@@ -76,7 +75,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
     /**
      * @note LegacyFileIDHelper is meant to fail when parsing newer format fileIDs with a variant e.g.:
-     * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without variant, it should return the same
+     * `subfolder/abcdef7890/sam__resizeXYZ.jpg`. When parsing fileIDs without a variant, it should return the same
      * results as natural paths. This behavior can be disabled by setting `failNewerVariant` to false on the
      * constructor.
      */

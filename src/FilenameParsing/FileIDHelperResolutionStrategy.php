@@ -40,13 +40,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      */
     private $versionedStage = Versioned::DRAFT;
 
-    /**
-     * todo: needs documenting
-     *
-     * @param string $fileID
-     * @param Filesystem $filesystem
-     * @return null|ParsedFileID
-     */
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
         $parsedFileID = $this->parseFileID($fileID);
@@ -59,13 +52,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         return null;
     }
 
-    /**
-     * todo: needs documenting
-     *
-     * @param string $fileID
-     * @param Filesystem $filesystem
-     * @return null|ParsedFileID
-     */
     public function softResolveFileID($fileID, Filesystem $filesystem)
     {
         // If File is not versionable, let's bail
@@ -382,14 +368,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         );
     }
 
-    /**
-     * todo: needs documenting
-     *
-     * @param array|ParsedFileID $tuple
-     * @param Filesystem $filesystem
-     * @return \Generator|null|ParsedFileID[]
-     * @throws \League\Flysystem\FileNotFoundException
-     */
     public function findVariants($tuple, Filesystem $filesystem)
     {
         $parsedFileID = $this->preProcessTuple($tuple);
@@ -415,14 +393,15 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 }
             } catch (InvalidArgumentException $ex) {
                 // Our helper couldn't build a FileID with the provided arguments, that means it's not a valid helper
-                // for this tuple.
+                // for this file tuple.
             }
         }
 
         // Loop through the list of possible helpers
         foreach ($resolvableHelpers as $helper) {
-            // Make sure our yield file has a hash
+            // Make sure our yield file has an hash
             $hash = $parsedFileID->getHash() ?: $this->findHashOf($helper, $parsedFileID, $filesystem);
+
 
             // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
@@ -468,12 +447,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         return null;
     }
 
-    /**
-     * todo: needs documenting
-     *
-     * @param ParsedFileID|string $fileID
-     * @return null|ParsedFileID
-     */
     public function stripVariant($fileID)
     {
         $hash = '';

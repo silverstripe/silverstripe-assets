@@ -1605,6 +1605,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
     {
         $ops = [];
+
         /** @var FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
 

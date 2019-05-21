@@ -385,4 +385,5 @@ class FileMigrationHelperTest extends SapphireTest
         $hasher->enableCache();
         $this->testMigration();
     }
+
 }

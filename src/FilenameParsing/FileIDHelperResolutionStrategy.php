@@ -42,10 +42,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
-        $parsedFileID = $this->parseFileID($fileID);
-
-        if ($parsedFileID) {
-            return $this->searchForTuple($parsedFileID, $filesystem, false);
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if ($parsedFileID) {
+                $foundTuple = $this->searchForTuple($parsedFileID, $filesystem, true);
+                if ($foundTuple) {
+                    return $foundTuple;
+                }
+            }
         }
 
         // If we couldn't resolve the file ID, we bail

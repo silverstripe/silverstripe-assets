@@ -99,7 +99,7 @@ class FileMigrationHelper
         $this->logger->info('MIGRATING SILVERSTRIPE 3 LEGACY FILES');
         $ss3Count = $this->ss3Migration($base);
 
-        $this->logger->info('NORMALISE SILVERTSTRIPE 4 FILES');
+        $this->logger->info('NORMALISE SILVERSTRIPE 4 FILES');
         $ss4Count = 0;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::LIVE);
@@ -141,7 +141,7 @@ class FileMigrationHelper
         // Check if we have files to migrate
         $totalCount = $this->getFileQuery()->count();
         if (!$totalCount) {
-            $this->logger->warning('No SilverStripe 3 legacy file');
+            $this->logger->warning('No SilverStripe 3 legacy files to migrate');
             return 0;
         }
         $this->logger->info(sprintf('Migrating %d files', $totalCount));
@@ -152,7 +152,7 @@ class FileMigrationHelper
         if (!$ss3Strategy) {
             $this->logger->warning(
                 'Skipping the SS3 file migration because the asset store is using an unsupported public file ' .
-                'resolution startegy.'
+                'resolution strategy.'
             );
             return 0;
         }
@@ -197,21 +197,21 @@ class FileMigrationHelper
     }
 
     /**
-     * Construct an temporary SS3 File Resolution Strategy based off the provided initial strategy.
+     * Construct a temporary SS3 File Resolution Strategy based off the provided initial strategy.
      * If `$initialStrategy` is not suitable for a migration, we return null.
      * @param FileResolutionStrategy $initialStrategy
      * @return int|FileIDHelperResolutionStrategy
      */
     private function buildSS3MigrationStrategy(FileResolutionStrategy $initialStrategy)
     {
-        // If the project is using a custom FileResolutionStrategy, we cna't be confident that our migration won't
+        // If the project is using a custom FileResolutionStrategy, we can't be confident that our migration won't
         // break stuff, so let's bail
         if (!$initialStrategy instanceof FileIDHelperResolutionStrategy) {
             return null;
         }
 
-        // Let's make sure the initial startegy contains a LegacyFileIDHelper. If it doesn't, the owner of the project
-        // has explicitely disable Legacy resolution, so there's no SS3 files to migrate
+        // Let's make sure the initial strategy contains a LegacyFileIDHelper. If it doesn't, the owner of the project
+        // has explicitly disabled Legacy resolution, so there's no SS3 files to migrate
         $foundLegacyHelper = false;
         foreach ($initialStrategy->getResolutionFileIDHelpers() as $helper) {
             if ($helper instanceof LegacyFileIDHelper) {
@@ -366,7 +366,7 @@ class FileMigrationHelper
 
         return $count;
     }
-    
+
     /**
      * Check if a file's classname is compatible with it's extension
      *

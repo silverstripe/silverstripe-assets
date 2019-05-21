@@ -93,6 +93,9 @@ class HashFileIDHelperTest extends FileIDHelperTester
             ['sam__resizeXYZ.jpg'],
             ['folder//sam.jpg'],
             ['folder/not10characters/sam.jpg'],
+            ['folder/10invachar/sam.jpg'],
+            ['folder/abcdef1234567890/more-than-10-hexadecimal-char.jpg'],
+            ['folder/abcdef/less-than-10-hexadecimal-char.jpg'],
         ];
     }
 

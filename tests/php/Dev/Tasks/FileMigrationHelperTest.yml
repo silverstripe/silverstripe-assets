@@ -4,6 +4,8 @@ SilverStripe\Assets\Folder:
   subfolder:
     Name: SubFolder
     Parent: =>SilverStripe\Assets\Folder.parent
+  uploads-folder:
+    Name: Uploads
 SilverStripe\Assets\Image:
   image1:
     Name: myimage.jpg
@@ -43,4 +45,17 @@ SilverStripe\Assets\File:
     Name: bad_name.doc
   badnameconflict:
     Name: bad__name.doc
-
+  # name with wrong case - these file will be written to disk with a different case fileID
+  wrongcase:
+    Name: wrong-case.txt
+  mismatch-folder-case:
+    Name: good-case-bad-folder.txt
+    ParentID: =>SilverStripe\Assets\Folder.uploads-folder
+  good-match-folder-case:
+    Name: good-case-good-folder.txt
+    ParentID: =>SilverStripe\Assets\Folder.uploads-folder
+  # Case conflict, 2 files with the same name in different case
+  all-uppercase:
+    Name: MIXED-CASE-FILE.TXT
+  all-lowercase:
+    Name: mixed-case-file.txt

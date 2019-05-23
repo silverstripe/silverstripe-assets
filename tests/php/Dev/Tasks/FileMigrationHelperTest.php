@@ -83,6 +83,9 @@ class FileMigrationHelperTest extends SapphireTest
         }
         fclose($fromMain);
         fclose($fromVariant);
+
+        $fs->rename('wrong-case.txt', 'wRoNg-CaSe.tXt');
+        $fs->rename('Uploads/good-case-bad-folder.txt', 'uploads/good-case-bad-folder.txt');
     }
 
     /**
@@ -130,6 +133,15 @@ class FileMigrationHelperTest extends SapphireTest
                 '"Name"' => 'multi-dash--file---4.pdf',
             ],
             ['"ID"' => $this->idFromFixture(File::class, 'multi-dash-file')]
+        )->execute();
+
+        SQLUpdate::create(
+            '"File"',
+            [
+                '"Filename"' => 'assets/mixed-case-file.txt',
+                '"Name"' => 'mixed-case-file.txt',
+            ],
+            ['"ID"' => $this->idFromFixture(File::class, 'all-lowercase')]
         )->execute();
     }
 

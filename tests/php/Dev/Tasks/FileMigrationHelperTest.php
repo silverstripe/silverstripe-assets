@@ -143,6 +143,14 @@ class FileMigrationHelperTest extends SapphireTest
             ],
             ['"ID"' => $this->idFromFixture(File::class, 'all-lowercase')]
         )->execute();
+
+        SQLUpdate::create(
+            '"File"',
+            [
+                '"Filename"' => 'assets/uploads/good-case-bad-folder.txt',
+            ],
+            ['"ID"' => $this->idFromFixture(File::class, 'mismatch-folder-case')]
+        )->execute();
     }
 
     public function tearDown()

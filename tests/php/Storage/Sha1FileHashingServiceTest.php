@@ -63,13 +63,13 @@ class Sha1FileHashingServiceTest extends SapphireTest
         $this->protectedFs->deleteDir('Sha1FileHashingServiceTest');
     }
 
-    public function testComputeStream()
+    public function testComputeFromStream()
     {
         $service = new Sha1FileHashingService();
         $stream = fopen('php://temp', 'r+');
         try {
             fwrite($stream, $this->publicContent);
-            $hash = $service->computeStream($stream);
+            $hash = $service->computeFromStream($stream);
             $this->assertEquals($this->publicHash, $hash);
         } finally {
             if (is_resource($stream)) {
@@ -78,38 +78,38 @@ class Sha1FileHashingServiceTest extends SapphireTest
         }
     }
 
-    public function testCompute()
+    public function testcomputeFromFile()
     {
         $service = new Sha1FileHashingService();
         $service->disableCache();
 
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, $this->publicFs));
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PUBLIC));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, $this->protectedFs));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PROTECTED));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, $this->publicFs));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PUBLIC));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, $this->protectedFs));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PROTECTED));
 
         // Cache is disable so this bit should be ignored
         $service->set($this->fileID, AssetStore::VISIBILITY_PUBLIC, $this->protectedHash);
         $service->set($this->fileID, $this->protectedFs, $this->publicHash);
 
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, $this->publicFs));
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PUBLIC));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, $this->protectedFs));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PROTECTED));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, $this->publicFs));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PUBLIC));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, $this->protectedFs));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PROTECTED));
     }
 
     public function testComputeMissingFile()
     {
         $this->expectException(FileNotFoundException::class);
         $service = new Sha1FileHashingService();
-        $service->compute('missing-file.text', AssetStore::VISIBILITY_PROTECTED);
+        $service->computeFromFile('missing-file.text', AssetStore::VISIBILITY_PROTECTED);
     }
 
     public function testComputeBadFilesystem()
     {
         $this->expectException(InvalidArgumentException::class);
         $service = new Sha1FileHashingService();
-        $service->compute($this->fileID, AssetStore::CONFLICT_OVERWRITE);
+        $service->computeFromFile($this->fileID, AssetStore::CONFLICT_OVERWRITE);
     }
 
     public function testComputeWithCache()
@@ -117,24 +117,24 @@ class Sha1FileHashingServiceTest extends SapphireTest
         $service = new Sha1FileHashingService();
         $service->enableCache();
 
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, $this->publicFs));
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PUBLIC));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, $this->protectedFs));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PROTECTED));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, $this->publicFs));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PUBLIC));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, $this->protectedFs));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PROTECTED));
 
         // Lie to the cache about the value of our hashes
         $service->set($this->fileID, AssetStore::VISIBILITY_PUBLIC, $this->protectedHash);
         $service->set($this->fileID, $this->protectedFs, $this->publicHash);
 
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, $this->publicFs));
-        $this->assertEquals($this->protectedHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PUBLIC));
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, $this->protectedFs));
-        $this->assertEquals($this->publicHash, $service->compute($this->fileID, AssetStore::VISIBILITY_PROTECTED));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, $this->publicFs));
+        $this->assertEquals($this->protectedHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PUBLIC));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, $this->protectedFs));
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, AssetStore::VISIBILITY_PROTECTED));
 
         // Lie about a missing file
         $hash = sha1('missing-file.text');
         $service->set('missing-file.text', AssetStore::VISIBILITY_PUBLIC, $hash);
-        $this->assertEquals($hash, $service->compute('missing-file.text', AssetStore::VISIBILITY_PUBLIC));
+        $this->assertEquals($hash, $service->computeFromFile('missing-file.text', AssetStore::VISIBILITY_PUBLIC));
     }
 
     public function testCompare()

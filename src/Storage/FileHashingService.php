@@ -21,7 +21,7 @@ interface FileHashingService extends Flushable
      * @param resource $stream
      * @return string
      */
-    public function computeStream($stream);
+    public function computeFromStream($stream);
 
     /**
      * Compute the hash of the provided file
@@ -30,7 +30,7 @@ interface FileHashingService extends Flushable
      * @return string
      * @throws FileNotFoundException
      */
-    public function compute($fileID, $fs);
+    public function computeFromFile($fileID, $fs);
 
     /**
      * Compare 2 full or partial hashes.

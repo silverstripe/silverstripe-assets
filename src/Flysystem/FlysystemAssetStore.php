@@ -325,7 +325,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                         continue;
                     }
 
-                    $actualHash = $hasher->compute($mainFileID, $fs);
+                    $actualHash = $hasher->computeFromFile($mainFileID, $fs);
                     if (!$hasher->compare($actualHash, $parsedFileID->getHash())) {
                         continue;
                     }
@@ -557,7 +557,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // When saving original filename, generate hash
         if (!$hash && !$variant) {
-            $hash = $hasher->computeStream($stream);
+            $hash = $hasher->computeFromStream($stream);
         }
 
         // Callback for saving content
@@ -567,8 +567,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // We just let the existing file sit there pretend to have writen it. This avoid a weird edge case where
             // We try to move an existing file to its own location which causes us to override the file with zero bytes
             if ($filesystem->has($fileID)) {
-                $newHash = $hasher->computeStream($stream);
-                $oldHash = $hasher->compute($fileID, $filesystem);
+                $newHash = $hasher->computeFromStream($stream);
+                $oldHash = $hasher->computeFromFile($fileID, $filesystem);
                 if ($newHash === $oldHash) {
                     return true;
                 }
@@ -1032,14 +1032,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param resource $stream
      * @return string str1 hash
-     * @deprecated 4.4.0 Use FileHashingService::computeStream() instead
+     * @deprecated 4.4.0 Use FileHashingService::computeFromStream() instead
      */
     protected function getStreamSHA1($stream)
     {
 
         return Injector::inst()
             ->get(FileHashingService::class)
-            ->computeStream($stream);
+            ->computeFromStream($stream);
     }
 
     /**
@@ -1167,7 +1167,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 // unless we are writing a variant (which has the same hash value as its original file)
                 /** @var FileHashingService $hasher */
                 $hasher = Injector::inst()->get(FileHashingService::class);
-                $hash = $hasher->compute($targetFileID, $fs);
+                $hash = $hasher->computeFromFile($targetFileID, $fs);
                 $parsedFileID = $parsedFileID->setHash($hash);
             }
             return $parsedFileID->getTuple();
@@ -1241,7 +1241,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     if ($fs->has($originalFileID)) {
                         /** @var FileHashingService $hasher */
                         $hasher = Injector::inst()->get(FileHashingService::class);
-                        $actualHash = $hasher->compute($originalFileID, $fs);
+                        $actualHash = $hasher->computeFromFile($originalFileID, $fs);
 
                         // If the hash of the file doesn't match we return false, because we want to keep looking.
                         return $hasher->compare($actualHash, $hash);

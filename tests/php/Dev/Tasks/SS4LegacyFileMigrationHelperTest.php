@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests\Dev\Tasks;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 
@@ -27,6 +28,7 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($naturalHelper);
         $protected->setResolutionFileIDHelpers([$naturalHelper]);
+        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
@@ -34,6 +36,8 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$naturalHelper]);
+        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
+
 
         $store->setPublicResolutionStrategy($public);
     }

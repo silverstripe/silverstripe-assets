@@ -42,7 +42,7 @@ class Sha1FileHashingService implements FileHashingService
      */
     private $cache;
     
-    public function computeStream($stream)
+    public function computeFromStream($stream)
     {
         Util::rewindStream($stream);
         $hc = hash_init($this->algo());
@@ -84,7 +84,7 @@ class Sha1FileHashingService implements FileHashingService
         return $filesystem;
     }
 
-    public function compute($fileID, $fs)
+    public function computeFromFile($fileID, $fs)
     {
         if ($hash = $this->get($fileID, $fs)) {
             return $hash;
@@ -92,7 +92,7 @@ class Sha1FileHashingService implements FileHashingService
 
         $fs = $this->normaliseFilesystem($fs);
         $stream = $fs->readStream($fileID);
-        $hash = $this->computeStream($stream);
+        $hash = $this->computeFromStream($stream);
 
         $this->set($fileID, $fs, $hash);
 

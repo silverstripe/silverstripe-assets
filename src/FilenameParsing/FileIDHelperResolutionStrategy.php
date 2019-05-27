@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\FilenameParsing;
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
@@ -24,6 +25,9 @@ use SilverStripe\ORM\DB;
  */
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {
+    use Configurable;
+
+
     /**
      * The FileID helper that will be use to build FileID for this adapter.
      * @var FileIDHelper
@@ -41,6 +45,19 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * @var string
      */
     private $versionedStage = Versioned::DRAFT;
+
+    /** @var FileHashingService */
+    private $hasher;
+
+    private static $dependencies = [
+        'FileHashingService' => '%$' . FileHashingService::class
+    ];
+
+    public function setFileHashingService($service)
+    {
+        $this->hasher = $service;
+        return $this;
+    }
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
@@ -261,10 +278,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return false;
         }
 
-        /** @var FileHashingService $hasher */
-        $hasher = Injector::inst()->get(FileHashingService::class);
-
-        return $hasher->compare($actualHash, $parsedFileID->getHash());
+        return $this->hasher->compare($actualHash, $parsedFileID->getHash());
     }
 
     /**
@@ -290,10 +304,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return false;
         }
 
-        // Get hash from stream
-        /** @var FileHashingService $hasher */
-        $hasher = Injector::inst()->get(FileHashingService::class);
-        $fullHash = $hasher->compute($fileID, $filesystem);
+        // Get hash from file
+        $fullHash = $this->hasher->computeFromFile($fileID, $filesystem);
 
         return $fullHash;
     }

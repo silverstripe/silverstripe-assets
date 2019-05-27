@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets\Dev\Tasks;
 
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\BuildTask;
 
 /**
@@ -29,6 +31,8 @@ class TagsToShortcodeTask extends BuildTask
      */
     public function run($request)
     {
+        Injector::inst()->get(FileHashingService::class)->enableCache();
+
         $tagsToShortcodeHelper = new TagsToShortcodeHelper(
             $request->getVar('baseClass'),
             isset($request->getVars()['includeBaseClass'])

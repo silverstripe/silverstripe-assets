@@ -15,6 +15,7 @@ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
@@ -196,13 +197,16 @@ class Sha1FileHashingServiceTest extends SapphireTest
     public function testFlush()
     {
         $service = new Sha1FileHashingService();
+        Injector::inst()->registerService($service, FileHashingService::class);
+
+
         $service->enableCache();
 
         // Lie to the cache about the value of our hashes
         $service->set($this->fileID, AssetStore::VISIBILITY_PUBLIC, $this->protectedHash);
         $service->set($this->fileID, $this->protectedFs, $this->publicHash);
 
-        $service->flush();
+        Sha1FileHashingService::flush();
 
         $this->assertFalse($service->get($this->fileID, AssetStore::VISIBILITY_PUBLIC));
         $this->assertFalse($service->get($this->fileID, $this->protectedFs));

@@ -126,7 +126,7 @@ class Sha1FileHashingService implements FileHashingService
     public function disableCache()
     {
         $this->cachable = false;
-        $this->flush();
+        $this->getCache()->clear();
     }
 
     /**
@@ -161,9 +161,11 @@ class Sha1FileHashingService implements FileHashingService
         $this->getCache()->delete($key);
     }
 
-    public function flush()
+    public static function flush()
     {
-        $this->getCache()->clear();
+        /** @var self $self */
+        $self = Injector::inst()->get(FileHashingService::class);
+        $self->getCache()->clear();
     }
 
     public function get($fileID, $fs)

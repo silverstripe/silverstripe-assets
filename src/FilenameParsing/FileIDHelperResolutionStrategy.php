@@ -4,6 +4,9 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DB;
@@ -22,6 +25,9 @@ use SilverStripe\ORM\DB;
  */
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {
+    use Configurable;
+
+
     /**
      * The FileID helper that will be use to build FileID for this adapter.
      * @var FileIDHelper
@@ -39,6 +45,19 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * @var string
      */
     private $versionedStage = Versioned::DRAFT;
+
+    /** @var FileHashingService */
+    private $hasher;
+
+    private static $dependencies = [
+        'FileHashingService' => '%$' . FileHashingService::class
+    ];
+
+    public function setFileHashingService($service)
+    {
+        $this->hasher = $service;
+        return $this;
+    }
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
@@ -255,7 +274,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         // Check if the physical hash of the file starts with our parsed file ID hash
         $actualHash = $this->findHashOf($helper, $parsedFileID, $filesystem);
-        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+        if (!$actualHash) {
+            return false;
+        }
+
+        return $this->hasher->compare($actualHash, $parsedFileID->getHash());
     }
 
     /**
@@ -281,11 +304,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return false;
         }
 
-        // Get hash from stream
-        $stream = $filesystem->readStream($fileID);
-        $hc = hash_init('sha1');
-        hash_update_stream($hc, $stream);
-        $fullHash = hash_final($hc);
+        // Get hash from file
+        $fullHash = $this->hasher->computeFromFile($fileID, $filesystem);
 
         return $fullHash;
     }

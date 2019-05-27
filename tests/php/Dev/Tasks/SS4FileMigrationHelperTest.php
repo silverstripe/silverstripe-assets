@@ -21,6 +21,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
@@ -142,6 +143,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
+        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
@@ -149,6 +151,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($hashHelper);
         $public->setResolutionFileIDHelpers([$hashHelper]);
+        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }
@@ -169,6 +172,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
+        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
@@ -176,6 +180,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
+        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }

@@ -14,3 +14,9 @@ SilverStripe\Core\Injector\Injector:
     factory: SilverStripe\Core\Cache\CacheFactory
     constructor:
       namespace: "ImageShortcodeProvider"
+  Psr\SimpleCache\CacheInterface.Sha1FileHashingService:
+    factory: SilverStripe\Core\Cache\CacheFactory
+    constructor:
+      namespace: "Sha1FileHashingService"
+  SilverStripe\Assets\Storage\FileHashingService:
+    class: SilverStripe\Assets\Storage\Sha1FileHashingService

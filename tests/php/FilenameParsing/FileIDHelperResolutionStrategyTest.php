@@ -14,6 +14,7 @@ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Versioned\Versioned;
@@ -43,6 +44,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs = new Filesystem(
             new Local($this->tmpFolder)
         );
+        Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
     }
 
     public function tearDown()
@@ -311,21 +313,25 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         );
 
         $parsedFileID = $mockHelper->parseFileID($expected);
+        $hashingService = new Sha1FileHashingService();
 
         $defaultResolves = new FileIDHelperResolutionStrategy();
         $defaultResolves->setDefaultFileIDHelper($mockHelper);
         $defaultResolves->setResolutionFileIDHelpers([$brokenHelper]);
         $defaultResolves->setVersionedStage(Versioned::DRAFT);
+        $defaultResolves->setFileHashingService($hashingService);
 
         $secondaryResolves = new FileIDHelperResolutionStrategy();
         $secondaryResolves->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolves->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolves->setVersionedStage(Versioned::DRAFT);
+        $secondaryResolves->setFileHashingService($hashingService);
 
         $secondaryResolvesLive = new FileIDHelperResolutionStrategy();
         $secondaryResolvesLive->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolvesLive->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolvesLive->setVersionedStage(Versioned::LIVE);
+        $secondaryResolvesLive->setFileHashingService($hashingService);
 
         return [
             [$defaultResolves, $parsedFileID, $expected],
@@ -381,6 +387,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $strategy->setDefaultFileIDHelper($hashHelper);
         $strategy->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
+        $strategy->setFileHashingService(new Sha1FileHashingService());
 
         // Set up some dummy file
         $content = "The quick brown fox jumps over the lazy dog.";
@@ -464,21 +471,25 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         );
 
         $parsedFileID = $mockHelper->parseFileID('Folder/FolderFile.pdf');
+        $hashingService = new Sha1FileHashingService();
 
         $defaultResolves = new FileIDHelperResolutionStrategy();
         $defaultResolves->setDefaultFileIDHelper($mockHelper);
         $defaultResolves->setResolutionFileIDHelpers([$brokenHelper]);
         $defaultResolves->setVersionedStage(Versioned::DRAFT);
+        $defaultResolves->setFileHashingService($hashingService);
 
         $secondaryResolves = new FileIDHelperResolutionStrategy();
         $secondaryResolves->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolves->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolves->setVersionedStage(Versioned::DRAFT);
+        $secondaryResolves->setFileHashingService($hashingService);
 
         $secondaryResolvesLive = new FileIDHelperResolutionStrategy();
         $secondaryResolvesLive->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolvesLive->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolvesLive->setVersionedStage(Versioned::LIVE);
+        $secondaryResolvesLive->setFileHashingService($hashingService);
 
         return [
             [$defaultResolves, $parsedFileID],
@@ -525,6 +536,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $strategy = new FileIDHelperResolutionStrategy();
         $strategy->setDefaultFileIDHelper($naturalHelper = new NaturalFileIDHelper());
         $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);
+        $strategy->setFileHashingService(new Sha1FileHashingService());
 
         $expectedHash = sha1('version 1');
 

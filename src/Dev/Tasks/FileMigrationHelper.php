@@ -11,6 +11,7 @@ use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
@@ -199,6 +200,7 @@ class FileMigrationHelper
     /**
      * Construct a temporary SS3 File Resolution Strategy based off the provided initial strategy.
      * If `$initialStrategy` is not suitable for a migration, we return null.
+     * We're overriding the helpers to avoid doing unnecessary checks.
      * @param FileResolutionStrategy $initialStrategy
      * @return int|FileIDHelperResolutionStrategy
      */
@@ -227,6 +229,7 @@ class FileMigrationHelper
         $ss3Strategy = new FileIDHelperResolutionStrategy();
         $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
         $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
+        $ss3Strategy->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         return $ss3Strategy;
     }

@@ -251,13 +251,16 @@ class TagsToShortcodeHelper
         $pattern = sprintf('#^/?(%s/?)?#', ASSETS_DIR);
         $fileID = preg_replace($pattern, '', $src);
 
+        // Our file reference might be using invalid file name that will have been cleaned up by the migration task.
+        $fileID = $defaultFileIDHelper->cleanFilename($fileID);
+
         // Try resolving with public filesystem first
         $filesystem = $this->flysystemAssetStore->getPublicFilesystem();
-        $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+        $parsedFileId = $fileIDHelperResolutionStrategy->resolveFileID($fileID, $filesystem);
         if (!$parsedFileId) {
             // Try resolving with protected filesystem
             $filesystem = $this->flysystemAssetStore->getProtectedFilesystem();
-            $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+            $parsedFileId = $fileIDHelperResolutionStrategy->resolveFileID($fileID, $filesystem);
         }
 
         if (!$parsedFileId) {

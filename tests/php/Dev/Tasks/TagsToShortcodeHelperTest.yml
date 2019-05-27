@@ -6,15 +6,25 @@ SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\PseudoPage:
       <p id="image"><img src="/assets/myimage.jpg"></p>
       <p id="variant"><img src="/assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="64" height="64"></p>
 
+SilverStripe\Assets\Folder:
+  decadefolder:
+    Name: decade80
+
 SilverStripe\Assets\Image:
   image1:
     Name: myimage.jpg
     FileFilename: myimage.jpg
     FileHash: 33be1b95cba0358fe54e8b13532162d52f97421c
-  imageHashPath:
-    Name: hash-path.jpg
-    FileFilename: hash-path.jpg
-    FileHash: ce65335ee6
+  underscoreFile:
+    Name: under_score.jpg
+    FileFilename: decade80/under_score.jpg
+    FileHash: 33be1b95cba0358fe54e8b13532162d52f97421c
+    Parent: =>SilverStripe\Assets\Folder.decadefolder
+  trippleUnderscoreFile:
+    Name: under_score.jpg
+    FileFilename: decade80/under_score-v2.jpg
+    FileHash: 33be1b95cba0358fe54e8b13532162d52f97421c
+    Parent: =>SilverStripe\Assets\Folder.decadefolder
 SilverStripe\Assets\File:
   document:
     Name: document.pdf

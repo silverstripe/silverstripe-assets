@@ -12,12 +12,10 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Logging\PreformattedEchoHandler;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -97,22 +95,21 @@ class FileMigrationHelper
         Environment::increaseTimeLimitTo();
         Environment::increaseMemoryLimitTo();
 
-        $this->logger->info('MIGRATING SILVERSTRIPE 3 LEGACY FILES');
+        $this->logger->notice('Step 1/2: Migrate 3.x legacy files to new format');
         $ss3Count = $this->ss3Migration($base);
 
-        $this->logger->info('NORMALISE SILVERSTRIPE 4 FILES');
+        $this->logger->notice('Step 2/2: Migrate <4.4 files to new format');
+
         $ss4Count = 0;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::LIVE);
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::DRAFT);
 
-            $this->logger->info('Looking at live files');
             $ss4Count += Versioned::withVersionedMode(function () {
                 Versioned::set_stage(Versioned::LIVE);
                 return $this->normaliseAllFiles('on the live stage');
             });
 
-            $this->logger->info('Looking at draft files');
             $ss4Count += Versioned::withVersionedMode(function () {
                 Versioned::set_stage(Versioned::DRAFT);
                 return $this->normaliseAllFiles('on the draft stage', true);
@@ -122,9 +119,9 @@ class FileMigrationHelper
         }
 
         if ($ss4Count > 0) {
-            $this->logger->info(sprintf('%d files were normalised', $ss4Count));
+            $this->logger->info(sprintf('%d <4.4 files were migrated', $ss4Count));
         } else {
-            $this->logger->info('No files needed to be normalised');
+            $this->logger->info('No <4.4 files needed to be migrated');
         }
 
         return $ss3Count + $ss4Count;
@@ -142,17 +139,18 @@ class FileMigrationHelper
         // Check if we have files to migrate
         $totalCount = $this->getFileQuery()->count();
         if (!$totalCount) {
-            $this->logger->warning('No SilverStripe 3 legacy files to migrate');
+            $this->logger->info('No files required migrating');
             return 0;
         }
-        $this->logger->info(sprintf('Migrating %d files', $totalCount));
+
+        $this->logger->debug(sprintf('Migrating %d files', $totalCount));
 
         // Create a temporary SS3 Legacy File Resolution strategy for migrating SS3 Files
         $initialStrategy = $this->store->getPublicResolutionStrategy();
         $ss3Strategy = $this->buildSS3MigrationStrategy($initialStrategy);
         if (!$ss3Strategy) {
             $this->logger->warning(
-                'Skipping the SS3 file migration because the asset store is using an unsupported public file ' .
+                'Skipping this step because the asset store is using an unsupported public file ' .
                 'resolution strategy.'
             );
             return 0;
@@ -189,9 +187,9 @@ class FileMigrationHelper
 
         // Show summary of results
         if ($ss3Count > 0) {
-            $this->logger->info(sprintf('%d legacy files have been migrated.', $ss3Count));
+            $this->logger->info(sprintf('%d 3.x legacy files have been migrated.', $ss3Count));
         } else {
-            $this->logger->info(sprintf('No SilverStripe 3 files have been migrated.', $ss3Count));
+            $this->logger->info(sprintf('No 3.x legacy files required migrating.', $ss3Count));
         }
 
         return $ss3Count;
@@ -280,7 +278,7 @@ class FileMigrationHelper
                 }, $validationResult->getMessages()));
                 $this->logger->warning(
                     sprintf(
-                        "%s was not migrated because the file is not valid. More information: %s",
+                        "  %s was not migrated because the file is not valid. More information: %s",
                         $legacyFilename,
                         $messages
                     )
@@ -317,10 +315,10 @@ class FileMigrationHelper
             return false;
         }
 
-        $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
+        $this->logger->debug($file->getFilename());
         if (!empty($results['Operations'])) {
             foreach ($results['Operations'] as $origin => $destination) {
-                $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
+                $this->logger->debug(sprintf('  related thumbnail %s moved to %s', $origin, $destination));
             }
         }
 
@@ -348,7 +346,7 @@ class FileMigrationHelper
 
             if (!$this->store->exists($file->File->Filename, $file->File->Hash)) {
                 $this->logger->warning(sprintf(
-                    'Can not normalise %s / %s because it does not exists.',
+                    '  Can not migrated %s / %s because it does not exists.',
                     $file->File->Filename,
                     $file->File->Hash
                 ));
@@ -357,11 +355,11 @@ class FileMigrationHelper
 
             $results = $this->store->normalise($file->File->Filename, $file->File->Hash);
             if ($results && !empty($results['Operations'])) {
-                $this->logger->info(
-                    sprintf('* %s has been normalised %s', $file->getFilename(), $stageString)
+                $this->logger->debug(
+                    sprintf('  %s has been migrated %s', $file->getFilename(), $stageString)
                 );
                 foreach ($results['Operations'] as $origin => $destination) {
-                    $this->logger->info(sprintf('  * %s moved to %s', $origin, $destination));
+                    $this->logger->debug(sprintf(' related thumbnail %s moved to %s', $origin, $destination));
                 }
                 $count++;
             }

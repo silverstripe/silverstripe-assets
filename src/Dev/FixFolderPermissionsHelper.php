@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Dev\Tasks;
 
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Injector\Injectable;
@@ -18,6 +20,28 @@ use SilverStripe\Security\InheritedPermissionFlusher;
 class FixFolderPermissionsHelper
 {
     use Injectable;
+
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class,
+    ];
+
+    /** @var LoggerInterface */
+    private $logger;
+
+    public function __construct()
+    {
+        $this->logger = new NullLogger();
+    }
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+
+        return $this;
+    }
 
     /**
      * @return int Returns the number of records updated.

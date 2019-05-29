@@ -14,6 +14,7 @@ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
@@ -32,6 +33,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function setUp()
     {
         parent::setUp();
+        Sha1FileHashingService::flush();
         TestAssetStore::activate('FileIDHelperResolutionStrategyTest');
 
         /** @var FlysystemAssetStore $store */
@@ -332,11 +334,11 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $secondaryResolvesLive->setVersionedStage(Versioned::LIVE);
 
         return [
-            [$defaultResolves, $parsedFileID, $expected],
-            [$secondaryResolves, $parsedFileID, $expected],
-            [$secondaryResolvesLive, $parsedFileID, $expected],
-            [$secondaryResolves, $parsedFileID->getTuple(), $expected],
-            [$secondaryResolvesLive, $parsedFileID->getTuple(), $expected],
+            'Default Helper' => [$defaultResolves, $parsedFileID, $expected],
+            'Resolution Helper' => [$secondaryResolves, $parsedFileID, $expected],
+            'Resolution Helper on Live Stage' => [$secondaryResolvesLive, $parsedFileID, $expected],
+            'Resolution Helper with Tuple' => [$secondaryResolves, $parsedFileID->getTuple(), $expected],
+            'Resolution Helper on Live with Tuple' => [$secondaryResolvesLive, $parsedFileID->getTuple(), $expected],
         ];
     }
 
@@ -344,8 +346,13 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
      * This method checks that FileID resolve when access directly.
      * @dataProvider searchTupleStrategyVariation
      */
-    public function testSearchForTuple($strategy, $tuple, $expected)
+    public function testSearchForTuple(FileIDHelperResolutionStrategy $strategy, $tuple, $expected)
     {
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        $hasher->disableCache();
+        $strategy->setFileHashingService($hasher);
+
         $fileID = $strategy->searchForTuple($tuple, $this->fs, false);
         $this->assertNull($fileID, 'There\'s no file on the adapter yet');
 

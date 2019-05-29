@@ -18,5 +18,7 @@ SilverStripe\Core\Injector\Injector:
     factory: SilverStripe\Core\Cache\CacheFactory
     constructor:
       namespace: "Sha1FileHashingService"
+      disable-container: true
+      defaultLifetime: 3600
   SilverStripe\Assets\Storage\FileHashingService:
     class: SilverStripe\Assets\Storage\Sha1FileHashingService

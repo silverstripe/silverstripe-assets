@@ -9,6 +9,7 @@ use League\Flysystem\Util;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 
@@ -19,7 +20,7 @@ use SilverStripe\Core\Injector\Injector;
  *
  * @internal This interface is not part of the official SilverStripe API and may be altered in minor releases.
  */
-class Sha1FileHashingService implements FileHashingService
+class Sha1FileHashingService implements FileHashingService, Flushable
 {
     use Configurable;
     use Injectable;
@@ -29,7 +30,7 @@ class Sha1FileHashingService implements FileHashingService
      * @var bool
      * @config
      */
-    private static $default_cachable = false;
+    private static $default_cachable = true;
 
     /**
      * Start off unset. Gets set by first call to isCached.
@@ -41,6 +42,9 @@ class Sha1FileHashingService implements FileHashingService
      * @var CacheInterface
      */
     private $cache;
+
+    /** @var Filesystem[] */
+    private $filesystems;
     
     public function computeFromStream($stream)
     {
@@ -68,7 +72,7 @@ class Sha1FileHashingService implements FileHashingService
      * @throws InvalidArgumentException
      * @return Filesystem
      */
-    private function normaliseFilesystem($fs)
+    private function getFilesystem($fs)
     {
         if ($fs instanceof Filesystem) {
             return $fs;
@@ -80,8 +84,31 @@ class Sha1FileHashingService implements FileHashingService
             );
         }
 
-        $filesystem = Injector::inst()->get(sprintf('%s.%s', Filesystem::class, $fs));
-        return $filesystem;
+        if (!isset($this->filesystems[$fs])) {
+            $this->filesystems[$fs] = Injector::inst()->get(sprintf('%s.%s', Filesystem::class, $fs));
+        }
+
+        return $this->filesystems[$fs];
+    }
+
+    /**
+     * Get the matching key for thep provided Filesystem
+     * @param string|Filesystem $keyOrFs
+     * @return string
+     */
+    private function getFilesystemKey($keyOrFs)
+    {
+        if (is_string($keyOrFs)) {
+            return $keyOrFs;
+        }
+
+        foreach ([AssetStore::VISIBILITY_PUBLIC, AssetStore::VISIBILITY_PROTECTED] as $visibility) {
+            if ($keyOrFs === $this->getFilesystem($visibility)) {
+                return $visibility;
+            }
+        }
+
+        return spl_object_hash($keyOrFs);
     }
 
     public function computeFromFile($fileID, $fs)
@@ -90,10 +117,10 @@ class Sha1FileHashingService implements FileHashingService
             return $hash;
         }
 
-        $fs = $this->normaliseFilesystem($fs);
+        $fs = $this->getFilesystem($fs);
         $stream = $fs->readStream($fileID);
         $hash = $this->computeFromStream($stream);
-
+        
         $this->set($fileID, $fs, $hash);
 
         return $hash;
@@ -139,6 +166,7 @@ class Sha1FileHashingService implements FileHashingService
                 sprintf('%s.%s', CacheInterface::class, 'Sha1FileHashingService')
             );
         }
+
         return $this->cache;
     }
 
@@ -150,8 +178,8 @@ class Sha1FileHashingService implements FileHashingService
      */
     private function buildCacheKey($fileID, $fs)
     {
-        $fs = $this->normaliseFilesystem($fs);
-        $fsID = spl_object_hash($fs);
+        $fsID = $this->getFilesystemKey($fs);
+
         return base64_encode(sprintf('%s://%s', $fsID, $fileID));
     }
 

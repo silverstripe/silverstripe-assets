@@ -95,7 +95,8 @@ class FileMigrationHelper
 
         // Set max time and memory limit
         Environment::increaseTimeLimitTo();
-        Environment::increaseMemoryLimitTo();
+        Environment::setMemoryLimitMax(-1);
+        Environment::increaseMemoryLimitTo(-1);
 
         $this->logger->info('MIGRATING SILVERSTRIPE 3 LEGACY FILES');
         $ss3Count = $this->ss3Migration($base);

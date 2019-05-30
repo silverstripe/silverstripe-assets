@@ -44,7 +44,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * Constrain this strategy to the a specific versioned stage.
      * @var string
      */
-    private $versionedStage = Versioned::DRAFT;
+    private $versionedStage = '';
 
     /** @var FileHashingService */
     private $hasher;
@@ -52,6 +52,13 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     private static $dependencies = [
         'FileHashingService' => '%$' . FileHashingService::class
     ];
+
+    public function __construct()
+    {
+        if (class_exists(Versioned::class)) {
+            $this->versionedStage = Versioned::DRAFT;
+        }
+    }
 
     public function setFileHashingService($service)
     {

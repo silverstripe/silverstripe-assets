@@ -114,7 +114,10 @@ class TagsToShortcodeHelper
         foreach ($classes as $class => $tables) {
             /** @var DataObject $singleton */
             $singleton = singleton($class);
-            $hasVersions = $singleton->hasExtension(Versioned::class) && $singleton->hasStages();
+            $hasVersions =
+                class_exists(Versioned::class) &&
+                $singleton->hasExtension(Versioned::class) &&
+                $singleton->hasStages();
 
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
@@ -295,7 +298,7 @@ class TagsToShortcodeHelper
 
         /** @var File $file */
         $file = File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();
-        if (!$file) {
+        if (!$file && class_exists(Versioned::class)) {
             $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
                 Versioned::set_stage(Versioned::LIVE);
                 return File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();

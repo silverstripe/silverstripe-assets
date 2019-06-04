@@ -394,14 +394,17 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             list($fs, $strategy, $visibility) = $set;
 
             if ($fs->has($fileID)) {
-                $response = $callable(
-                    $strategy->resolveFileID($fileID, $fs),
-                    $fs,
-                    $strategy,
-                    $visibility
-                );
-                if ($response !== false) {
-                    return $response;
+                $parsedFileID = $strategy->resolveFileID($fileID, $fs);
+                if ($parsedFileID) {
+                    $response = $callable(
+                        $parsedFileID,
+                        $fs,
+                        $strategy,
+                        $visibility
+                    );
+                    if ($response !== false) {
+                        return $response;
+                    }
                 }
             }
         }

@@ -70,6 +70,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
             ['root-file'],
             ['folder-file'],
             ['subfolder-file'],
+            ['multimedia-file'],
+            ['hashfolder-file'],
         ];
     }
 

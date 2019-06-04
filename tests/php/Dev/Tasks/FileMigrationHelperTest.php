@@ -56,7 +56,6 @@ class FileMigrationHelperTest extends SapphireTest
         TestAssetStore::activate('FileMigrationHelperTest/assets');
         $this->makingBadFilesBadAgain();
 
-
         /** @var \League\Flysystem\Filesystem $fs */
         $fs = Injector::inst()->get(AssetStore::class)->getPublicFilesystem();
 

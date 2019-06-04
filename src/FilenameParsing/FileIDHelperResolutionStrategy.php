@@ -68,10 +68,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
-        $parsedFileID = $this->parseFileID($fileID);
-
-        if ($parsedFileID) {
-            return $this->searchForTuple($parsedFileID, $filesystem, false);
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if ($parsedFileID) {
+                $foundTuple = $this->searchForTuple($parsedFileID, $filesystem, true);
+                if ($foundTuple) {
+                    return $foundTuple;
+                }
+            }
         }
 
         // If we couldn't resolve the file ID, we bail
@@ -420,7 +424,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
                 }
             } catch (InvalidArgumentException $ex) {
                 // Our helper couldn't build a FileID with the provided arguments, that means it's not a valid helper
-                // fo this file tuple.
+                // for this file tuple.
             }
         }
 
@@ -429,7 +433,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             // Make sure our yield file has an hash
             $hash = $parsedFileID->getHash() ?: $this->findHashOf($helper, $parsedFileID, $filesystem);
 
-            // Find the correct folder to searcg for possible variants in
+
+            // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
 

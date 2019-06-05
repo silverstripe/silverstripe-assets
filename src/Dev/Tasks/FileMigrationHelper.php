@@ -13,7 +13,6 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataList;
@@ -90,10 +89,6 @@ class FileMigrationHelper
         if (empty($base)) {
             $base = PUBLIC_PATH;
         }
-
-        // Set max time and memory limit
-        Environment::increaseTimeLimitTo();
-        Environment::increaseMemoryLimitTo();
 
         $this->logger->notice('Step 1/2: Migrate 3.x legacy files to new format');
         $ss3Count = $this->ss3Migration($base);

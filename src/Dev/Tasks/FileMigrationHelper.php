@@ -287,18 +287,25 @@ class FileMigrationHelper
         }
 
         // Copy local file into this filesystem
-        $originalFilename = $file->generateFilename();
-        if ($path === true) {
-            $results = $this->store->normalisePath($originalFilename);
+        $dbFilename = $file->generateFilename();
+        $fsFilename = $path === true ? $this->stripAssetsDir($legacyFilename) : $this->stripAssetsDir($path, $base);
+        if ($path === true && $fsFilename == $dbFilename) {
+            $results = $this->store->normalisePath($dbFilename);
         } else {
-            $results = $this->store->setFromLocalFile($path, $originalFilename);
-            unlink($path);
+            $results = $this->store->setFromLocalFile(
+                $base . DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $fsFilename,
+                $dbFilename,
+                null,
+                null,
+                AssetStore::VISIBILITY_PROTECTED
+            );
+            $this->store->delete($fsFilename, $results['Hash']);
         }
 
         // Move file if the APL changes filename value
         $file->File->Filename = $results['Filename'];
         $file->File->Hash = $results['Hash'];
-
+        $file->setField('Filename', null);
 
         // Save and publish
         try {
@@ -319,13 +326,12 @@ class FileMigrationHelper
             return false;
         }
 
-        if ($originalFilename == $file->getFilename()) {
-
+        if ($dbFilename == $file->getFilename()) {
             $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
         } else {
             $this->logger->warning(sprintf(
                 '* SS3 file %s converted to SS4 format but was renamed to %s',
-                $originalFilename,
+                $dbFilename,
                 $file->getFilename())
             );
         }
@@ -342,10 +348,10 @@ class FileMigrationHelper
     /**
      * Look for a file by `$legacyFilename`. If an exact match is found return true. If no match is found return false.
      * If a match using a different case is found use the path of that file.
-     * @param string $base
+     * @param string $base Location of of the assets folder, usually equals to ASSETS_PATH
      * @param File $file
-     * @param string $legacyFilename
-     * @return bool|string
+     * @param string $legacyFilename SS3 filename prefix with ASSETS_DIR
+     * @return bool|string True if file is found as-is, false if file is missing or string to alternative file
      */
     private function findNativeFile($base, File $file, $legacyFilename)
     {
@@ -354,12 +360,14 @@ class FileMigrationHelper
             return true;
         }
 
+        $strippedLegacyFilename = $this->stripAssetsDir($legacyFilename);
+
         // Try to find an alternative file
         $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function($matches) {
             return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
-        }, $legacyFilename);
+        }, $strippedLegacyFilename);
         
-        $files = glob($base . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
+        $files = glob($base . DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
 
         switch (sizeof($files)) {
             case 0:
@@ -385,17 +393,12 @@ class FileMigrationHelper
         $unmigratedFiles = $this->getFileQuery()
             ->filter('Filename', $legacyFilename)
             ->exclude('ID', $file->ID);
-        $strippedLegacyFilename = preg_replace(sprintf(
-            '#^%s%s%s#',
-            $base,
-            DIRECTORY_SEPARATOR,
-            ASSETS_DIR
-        ), '', $path);
-        $migratedFiles = File::get()->filter('FileFilename', $strippedLegacyFilename)
+        $strippedPath = $this->stripAssetsDir($path, $base);
+        $migratedFiles = File::get()->filter('FileFilename', $strippedPath)
             ->filter('Filename', $legacyFilename)
             ->exclude('ID', $file->ID);
 
-        if ($unmigratedFiles->count() > 0 || $migratedFiles->count()) {
+        if ($unmigratedFiles->count() > 0 || $migratedFiles->count() > 0) {
             $this->logger->error(sprintf(
                 '%s could not be migrated because no matching file was found.', $legacyFilename
             ));
@@ -406,9 +409,29 @@ class FileMigrationHelper
         $this->logger->warning(sprintf(
             '%s could not be found, but a file with an alternative casing was identified. %s will be used instead.',
             $legacyFilename,
-            $strippedLegacyFilename
+            $strippedPath
         ));
         return $path;
+    }
+
+    /**
+     * Given a path, remove the asset dir folder and the optional base path.
+     * @param $path
+     * @param string $base
+     * @return string
+     */
+    private function stripAssetsDir($path, $base='')
+    {
+        return preg_replace(
+            sprintf(
+                '#^%s%s%s?#',
+                $base ? $base . DIRECTORY_SEPARATOR : DIRECTORY_SEPARATOR . '?',
+                ASSETS_DIR,
+                DIRECTORY_SEPARATOR
+            ),
+            '',
+            $path
+        );
     }
 
     /**

@@ -342,9 +342,10 @@ class FileMigrationHelper
 
             if (!$this->store->exists($file->File->Filename, $file->File->Hash)) {
                 $this->logger->warning(sprintf(
-                    '  Can not migrated %s / %s because it does not exists.',
+                    '  Can not migrate %s / %s because it does not exist %s',
                     $file->File->Filename,
-                    $file->File->Hash
+                    $file->File->Hash,
+                    $stageString
                 ));
                 continue;
             }

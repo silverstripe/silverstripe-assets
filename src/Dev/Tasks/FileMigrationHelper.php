@@ -94,30 +94,34 @@ class FileMigrationHelper
         $this->logger->notice('Step 1/2: Migrate 3.x legacy files to new format');
         $ss3Count = $this->ss3Migration($base);
 
-        $this->logger->notice('Step 2/2: Migrate <4.4 files to new format');
+        $this->logger->notice('Step 2/2: Migrate files in <4.4 format to new format');
 
         $ss4Count = 0;
         if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::LIVE);
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::DRAFT);
 
-            $ss4Count += Versioned::withVersionedMode(function () {
-                Versioned::set_stage(Versioned::LIVE);
-                return $this->normaliseAllFiles('on the live stage');
-            });
+            $stages = [Versioned::LIVE => 'live', Versioned::DRAFT => 'draft'];
+            foreach($stages as $stageId => $stageName) {
+                $this->logger->info(sprintf('Migrating files in the "%s" stage', $stageName));
+                $count = Versioned::withVersionedMode(function () use ($stageName) {
+                    Versioned::set_stage(Versioned::LIVE);
+                    return $this->normaliseAllFiles(sprintf('on the "%s" stage', $stageName));
+                });
+                if ($count) {
+                    $this->logger->info(sprintf('Migrated %d files in the "%s" stage', $count, $stageName));
+                } else {
+                    $this->logger->info(sprintf(
+                        'No files required migrating in the "%s" stage',
+                        $stageName
+                    ));
+                }
 
-            $ss4Count += Versioned::withVersionedMode(function () {
-                Versioned::set_stage(Versioned::DRAFT);
-                return $this->normaliseAllFiles('on the draft stage', true);
-            });
+                $ss4Count += $count;
+            }
         } else {
             $ss4Count = $this->normaliseAllFiles('');
-        }
-
-        if ($ss4Count > 0) {
-            $this->logger->info(sprintf('%d <4.4 files were migrated', $ss4Count));
-        } else {
-            $this->logger->info('No <4.4 files needed to be migrated');
+            $this->logger->info(sprintf('Migrated %d files', $ss4Count));
         }
 
         return $ss3Count + $ss4Count;

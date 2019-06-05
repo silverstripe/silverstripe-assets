@@ -242,8 +242,8 @@ class FileMigrationHelper
     protected function migrateFile($base, File $file, $legacyFilename)
     {
         // Make sure this legacy file actually exists
-        $path = $base . '/' . $legacyFilename;
-        if (!file_exists($path)) {
+        $path = $this->findNativeFile($base, $file, $legacyFilename);
+        if ($path === false) {
             return false;
         }
 
@@ -287,8 +287,13 @@ class FileMigrationHelper
         }
 
         // Copy local file into this filesystem
-        $filename = $file->generateFilename();
-        $results = $this->store->normalisePath($filename);
+        $originalFilename = $file->generateFilename();
+        if ($path === true) {
+            $results = $this->store->normalisePath($originalFilename);
+        } else {
+            $results = $this->store->setFromLocalFile($path, $originalFilename);
+            unlink($path);
+        }
 
         // Move file if the APL changes filename value
         $file->File->Filename = $results['Filename'];
@@ -314,7 +319,17 @@ class FileMigrationHelper
             return false;
         }
 
-        $this->logger->debug($file->getFilename());
+        if ($originalFilename == $file->getFilename()) {
+
+            $this->logger->info(sprintf('* SS3 file %s converted to SS4 format', $file->getFilename()));
+        } else {
+            $this->logger->warning(sprintf(
+                '* SS3 file %s converted to SS4 format but was renamed to %s',
+                $originalFilename,
+                $file->getFilename())
+            );
+        }
+
         if (!empty($results['Operations'])) {
             foreach ($results['Operations'] as $origin => $destination) {
                 $this->logger->debug(sprintf('  related thumbnail %s moved to %s', $origin, $destination));
@@ -322,6 +337,78 @@ class FileMigrationHelper
         }
 
         return true;
+    }
+
+    /**
+     * Look for a file by `$legacyFilename`. If an exact match is found return true. If no match is found return false.
+     * If a match using a different case is found use the path of that file.
+     * @param string $base
+     * @param File $file
+     * @param string $legacyFilename
+     * @return bool|string
+     */
+    private function findNativeFile($base, File $file, $legacyFilename)
+    {
+        $path = $base . DIRECTORY_SEPARATOR . $legacyFilename;
+        if (file_exists($path)) {
+            return true;
+        }
+
+        // Try to find an alternative file
+        $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function($matches) {
+            return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
+        }, $legacyFilename);
+        
+        $files = glob($base . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
+
+        switch (sizeof($files)) {
+            case 0:
+                $this->logger->error(sprintf(
+                    '%s could not be migrated because no matching file was found.', $legacyFilename
+                ));
+                return false;
+            case 1:
+                $path = $files[0];
+                break;
+            default:
+                // We found multiple files with same casing, life's just too dam complicated
+                $this->logger->error(sprintf(
+                    '%s could not be migrated because no matching file was found. ' .
+                    'Other files with alternative casing exists: %s',
+                    $legacyFilename,
+                    implode(', ', $files)
+                ));
+                return false;
+        }
+
+        // Make sure we do not have a unmigrated or migrated DB entry for or alternative file.
+        $unmigratedFiles = $this->getFileQuery()
+            ->filter('Filename', $legacyFilename)
+            ->exclude('ID', $file->ID);
+        $strippedLegacyFilename = preg_replace(sprintf(
+            '#^%s%s%s#',
+            $base,
+            DIRECTORY_SEPARATOR,
+            ASSETS_DIR
+        ), '', $path);
+        $migratedFiles = File::get()->filter('FileFilename', $strippedLegacyFilename)
+            ->filter('Filename', $legacyFilename)
+            ->exclude('ID', $file->ID);
+
+        if ($unmigratedFiles->count() > 0 || $migratedFiles->count()) {
+            $this->logger->error(sprintf(
+                '%s could not be migrated because no matching file was found.', $legacyFilename
+            ));
+            return false;
+        }
+
+        // We can use our alternative file
+        $this->logger->warning(sprintf(
+            '%s could not be found, but a file with an alternative casing was identified. %s will be used instead.',
+            $legacyFilename,
+            $strippedLegacyFilename
+        ));
+        return $path;
     }
 
     /**

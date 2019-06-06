@@ -168,7 +168,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $expected = Injector::inst()->get(FileResolutionStrategy::class . '.public');
         $this->assertEquals($expected, $strategy);
 
-        $expected = new FileIDHelperResolutionStrategy();
+        $expected = FileIDHelperResolutionStrategy::create();
         $assetStore->setPublicResolutionStrategy($expected);
         $strategy = $assetStore->getPublicResolutionStrategy();
         $this->assertEquals($expected, $strategy);
@@ -181,7 +181,7 @@ class FlysystemAssetStoreTest extends SapphireTest
         $expected = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
         $this->assertEquals($expected, $strategy);
 
-        $expected = new FileIDHelperResolutionStrategy();
+        $expected = FileIDHelperResolutionStrategy::create();
         $assetStore->setProtectedResolutionStrategy($expected);
         $strategy = $assetStore->getProtectedResolutionStrategy();
         $this->assertEquals($expected, $strategy);

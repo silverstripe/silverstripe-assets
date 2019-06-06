@@ -227,10 +227,9 @@ class FileMigrationHelper
         }
 
         // Build the migration strategy
-        $ss3Strategy = new FileIDHelperResolutionStrategy();
+        $ss3Strategy = FileIDHelperResolutionStrategy::create();
         $ss3Strategy->setDefaultFileIDHelper($initialStrategy->getDefaultFileIDHelper());
         $ss3Strategy->setResolutionFileIDHelpers([new LegacyFileIDHelper(false)]);
-        $ss3Strategy->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         return $ss3Strategy;
     }

@@ -30,19 +30,17 @@ class SS4CrazyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $hashHelper = new HashFileIDHelper();
         $legacyHelper = new LegacyFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
-        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($legacyHelper);
         $public->setResolutionFileIDHelpers([$legacyHelper]);
-        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }
@@ -56,20 +54,17 @@ class SS4CrazyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $naturalPath = new NaturalFileIDHelper();
         $legacyHelper = new LegacyFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
-        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
-
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($hashHelper);
         $public->setResolutionFileIDHelpers([$hashHelper, $naturalPath, $legacyHelper]);
-        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }

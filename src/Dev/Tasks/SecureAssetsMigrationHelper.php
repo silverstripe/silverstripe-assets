@@ -165,7 +165,7 @@ class SecureAssetsMigrationHelper
 
         if ($this->htaccessMatch($content)) {
             $filesystem->delete($htaccessPath);
-            $this->logger->info(sprintf(
+            $this->logger->debug(sprintf(
                 'Removed obsolete secureassets .htaccess at %s',
                 $path
             ));

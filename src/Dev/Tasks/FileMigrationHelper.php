@@ -91,6 +91,15 @@ class FileMigrationHelper
             $base = PUBLIC_PATH;
         }
 
+        // Set max time and memory limit
+        Environment::increaseTimeLimitTo();
+        Environment::setMemoryLimitMax(-1);
+        Environment::increaseMemoryLimitTo(-1);
+        
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        $hasher::flush();
+
         $this->logger->notice('Step 1/2: Migrate 3.x legacy files to new format');
         $ss3Count = $this->ss3Migration($base);
 
@@ -332,8 +341,8 @@ class FileMigrationHelper
             $this->logger->warning(sprintf(
                 '* SS3 file %s converted to SS4 format but was renamed to %s',
                 $dbFilename,
-                $file->getFilename())
-            );
+                $file->getFilename()
+            ));
         }
 
         if (!empty($results['Operations'])) {
@@ -363,7 +372,7 @@ class FileMigrationHelper
         $strippedLegacyFilename = $this->stripAssetsDir($legacyFilename);
 
         // Try to find an alternative file
-        $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function($matches) {
+        $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function ($matches) {
             return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
         }, $strippedLegacyFilename);
         
@@ -372,7 +381,8 @@ class FileMigrationHelper
         switch (sizeof($files)) {
             case 0:
                 $this->logger->error(sprintf(
-                    '%s could not be migrated because no matching file was found.', $legacyFilename
+                    '%s could not be migrated because no matching file was found.',
+                    $legacyFilename
                 ));
                 return false;
             case 1:
@@ -400,7 +410,8 @@ class FileMigrationHelper
 
         if ($unmigratedFiles->count() > 0 || $migratedFiles->count() > 0) {
             $this->logger->error(sprintf(
-                '%s could not be migrated because no matching file was found.', $legacyFilename
+                '%s could not be migrated because no matching file was found.',
+                $legacyFilename
             ));
             return false;
         }
@@ -420,7 +431,7 @@ class FileMigrationHelper
      * @param string $base
      * @return string
      */
-    private function stripAssetsDir($path, $base='')
+    private function stripAssetsDir($path, $base = '')
     {
         return preg_replace(
             sprintf(

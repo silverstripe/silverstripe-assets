@@ -27,9 +27,13 @@ SilverStripe\Assets\File:
   file3:
     Name: picture.pdf
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  # The front end will want to rename this file
   multi-dash-file:
     Name: multi-dash--file---0.pdf
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  # We won't create a physical file for entry. Our process should carry on.
+  missing-file:
+    Name: missing-file.pdf
   # SS4 doesn't allow files with double underscores
   badname:
     Name: bad__name.zip
@@ -54,6 +58,8 @@ SilverStripe\Assets\File:
   good-match-folder-case:
     Name: good-case-good-folder.txt
     ParentID: =>SilverStripe\Assets\Folder.uploads-folder
+  too-many-case:
+    Name: too-many-alternative-case.txt
   # Case conflict, 2 files with the same name in different case
   all-uppercase:
     Name: MIXED-CASE-FILE.TXT

@@ -6,6 +6,7 @@ use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
@@ -26,7 +27,7 @@ use SilverStripe\ORM\DB;
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {
     use Configurable;
-
+    use Injectable;
 
     /**
      * The FileID helper that will be use to build FileID for this adapter.

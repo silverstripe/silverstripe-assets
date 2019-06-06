@@ -359,7 +359,7 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testInvalidAssetStoreStrategy()
     {
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper(new HashFileIDHelper());
         $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);
 

@@ -139,19 +139,17 @@ class SS4FileMigrationHelperTest extends SapphireTest
 
         $hashHelper = new HashFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
-        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($hashHelper);
         $public->setResolutionFileIDHelpers([$hashHelper]);
-        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }
@@ -168,19 +166,17 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $hashHelper = new HashFileIDHelper();
         $naturalHelper = new NaturalFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
-        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
-        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setPublicResolutionStrategy($public);
     }

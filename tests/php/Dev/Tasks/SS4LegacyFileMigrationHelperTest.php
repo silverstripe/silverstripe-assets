@@ -24,20 +24,17 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
 
         $naturalHelper = new NaturalFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($naturalHelper);
         $protected->setResolutionFileIDHelpers([$naturalHelper]);
-        $protected->setFileHashingService(Injector::inst()->get(FileHashingService::class));
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$naturalHelper]);
-        $public->setFileHashingService(Injector::inst()->get(FileHashingService::class));
-
 
         $store->setPublicResolutionStrategy($public);
     }

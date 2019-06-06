@@ -400,12 +400,11 @@ class FileMigrationHelper
         }
 
         // Make sure we do not have a unmigrated or migrated DB entry for or alternative file.
-        $unmigratedFiles = $this->getFileQuery()
-            ->filter('Filename', $legacyFilename)
-            ->exclude('ID', $file->ID);
         $strippedPath = $this->stripAssetsDir($path, $base);
-        $migratedFiles = File::get()->filter('FileFilename', $strippedPath)
-            ->filter('Filename', $legacyFilename)
+        $unmigratedFiles = $this->getFileQuery()
+            ->filter('Filename:case', ASSETS_DIR . '/' . $strippedPath)
+            ->exclude('ID', $file->ID);
+        $migratedFiles = File::get()->filter('FileFilename:case', $strippedPath)
             ->exclude('ID', $file->ID);
 
         if ($unmigratedFiles->count() > 0 || $migratedFiles->count() > 0) {

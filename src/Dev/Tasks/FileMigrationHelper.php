@@ -357,7 +357,7 @@ class FileMigrationHelper
     /**
      * Look for a file by `$legacyFilename`. If an exact match is found return true. If no match is found return false.
      * If a match using a different case is found use the path of that file.
-     * @param string $base Location of of the assets folder, usually equals to ASSETS_PATH
+     * @param string $base Location of the assets folder, usually equals to ASSETS_PATH
      * @param File $file
      * @param string $legacyFilename SS3 filename prefix with ASSETS_DIR
      * @return bool|string True if file is found as-is, false if file is missing or string to alternative file

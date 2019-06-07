@@ -399,7 +399,7 @@ class FileMigrationHelper
                 return false;
         }
 
-        // Make sure we do not have a unmigrated or migrated DB entry for or alternative file.
+        // Make sure we do not have an unmigrated or migrated DB entry for our alternative file.
         $strippedPath = $this->stripAssetsDir($path, $base);
         $unmigratedFiles = $this->getFileQuery()
             ->filter('Filename:case', ASSETS_DIR . '/' . $strippedPath)

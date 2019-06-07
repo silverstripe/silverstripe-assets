@@ -102,10 +102,10 @@ class FileMigrationHelper
             Versioned::prepopulate_versionnumber_cache(File::class, Versioned::DRAFT);
 
             $stages = [Versioned::LIVE => 'live', Versioned::DRAFT => 'draft'];
-            foreach($stages as $stageId => $stageName) {
+            foreach ($stages as $stageId => $stageName) {
                 $this->logger->info(sprintf('Migrating files in the "%s" stage', $stageName));
-                $count = Versioned::withVersionedMode(function () use ($stageName) {
-                    Versioned::set_stage(Versioned::LIVE);
+                $count = Versioned::withVersionedMode(function () use ($stageId, $stageName) {
+                    Versioned::set_stage($stageId);
                     return $this->normaliseAllFiles(sprintf('on the "%s" stage', $stageName));
                 });
                 if ($count) {

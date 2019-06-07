@@ -19,6 +19,7 @@ SilverStripe\Core\Injector\Injector:
     constructor:
       namespace: "Sha1FileHashingService"
       disable-container: true
-      defaultLifetime: 3600
+      defaultLifetime: 0
+      useInMemoryCache: false
   SilverStripe\Assets\Storage\FileHashingService:
     class: SilverStripe\Assets\Storage\Sha1FileHashingService

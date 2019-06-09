@@ -169,13 +169,13 @@ class Sha1FileHashingServiceTest extends SapphireTest
     public function testIsCached()
     {
         $service = new Sha1FileHashingService();
-        $this->assertFalse($service->isCached());
-
-        $service->enableCache();
         $this->assertTrue($service->isCached());
 
         $service->disableCache();
         $this->assertFalse($service->isCached());
+
+        $service->enableCache();
+        $this->assertTrue($service->isCached());
     }
 
     public function testInvalidate()

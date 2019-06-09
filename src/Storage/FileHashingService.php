@@ -4,7 +4,6 @@ namespace SilverStripe\Assets\Storage;
 
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
-use SilverStripe\Core\Flushable;
 
 /**
  * Utility for computing and comparing unique file hash. All `$fs` parameters can either be:
@@ -13,7 +12,7 @@ use SilverStripe\Core\Flushable;
  *
  * @internal This interface is not part of the official SilverStripe API and may be altered in minor releases.
  */
-interface FileHashingService extends Flushable
+interface FileHashingService
 {
 
     /**

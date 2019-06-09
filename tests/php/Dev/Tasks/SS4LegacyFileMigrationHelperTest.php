@@ -43,4 +43,11 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
     {
         // Legacy files names did not allow you to have a restricted file in draft and live simultanously
     }
+
+    public function testMigration()
+    {
+        // We're overriding testMigration just to make SS4LegacyFileMigrationHelperTest is in the exception
+        // stack if/when the test fails
+        parent::testMigration();
+    }
 }

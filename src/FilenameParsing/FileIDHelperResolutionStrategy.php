@@ -118,7 +118,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         /** @var File $file */
         $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
             Versioned::set_stage($this->getVersionedStage());
-            return File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
+            return File::get()->filter(['FileFilename:case' => $parsedFileID->getFilename()])->first();
         });
 
         // Could not find a valid file, let's bail.
@@ -167,7 +167,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         /** @var File $file */
         $file = Versioned::withVersionedMode(function () use ($filename) {
             Versioned::set_stage($this->getVersionedStage());
-            return File::get()->filter(['FileFilename' => $filename])->first();
+            return File::get()->filter(['FileFilename:case' => $filename])->first();
         });
 
         if ($file) {
@@ -226,15 +226,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
                    $hashList = Versioned::withVersionedMode(function () use ($filename) {
                        Versioned::set_stage($this->getVersionedStage());
-                       $vals = File::get()->map('ID', 'FileFilename')->toArray();
                        return File::get()
-                           ->filter(['FileFilename' => $filename, 'FileVariant' => null])
+                           ->filter(['FileFilename:case' => $filename, 'FileVariant' => null])
                            ->limit(1)
                            ->column('FileHash');
                    });
             } else {
                 $hashList = File::get()
-                   ->filter(['FileFilename' => $filename])
+                   ->filter(['FileFilename:case' => $filename])
                    ->limit(1)
                    ->column('FileHash');
             }

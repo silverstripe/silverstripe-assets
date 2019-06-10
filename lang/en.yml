@@ -21,6 +21,7 @@ en:
     MpgType: 'MPEG video file'
     NOFILESIZE: 'Filesize is zero bytes.'
     NOVALIDUPLOAD: 'File is not a valid upload'
+    PARTIALUPLOAD: 'File did not finish uploading, please try again'
     PATH: Path
     PLURALNAME: Files
     PLURALS:

@@ -21,6 +21,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
@@ -138,14 +139,14 @@ class SS4FileMigrationHelperTest extends SapphireTest
 
         $hashHelper = new HashFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($hashHelper);
         $public->setResolutionFileIDHelpers([$hashHelper]);
@@ -165,14 +166,14 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $hashHelper = new HashFileIDHelper();
         $naturalHelper = new NaturalFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$hashHelper, $naturalHelper]);

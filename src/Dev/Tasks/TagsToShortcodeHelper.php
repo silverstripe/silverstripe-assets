@@ -21,6 +21,7 @@ use SilverStripe\ORM\Connect\DatabaseException;
 use SilverStripe\ORM\Connect\Query;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataObjectSchema;
+use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
@@ -107,10 +108,16 @@ class TagsToShortcodeHelper
             'HTMLText',
             'HTMLVarchar'
         ]);
+
+        $tableList = DB::table_list();
+
         foreach ($classes as $class => $tables) {
             /** @var DataObject $singleton */
             $singleton = singleton($class);
-            $hasVersions = $singleton->hasExtension(Versioned::class) && $singleton->hasStages();
+            $hasVersions =
+                class_exists(Versioned::class) &&
+                $singleton->hasExtension(Versioned::class) &&
+                $singleton->hasStages();
 
             foreach ($tables as $table => $fields) {
                 foreach ($fields as $field) {
@@ -123,15 +130,18 @@ class TagsToShortcodeHelper
                         continue;
                     }
 
-                    try {
-                        // Update table
-                        $this->updateTable($table, $field);
+                    if (!isset($tableList[strtolower($table)])) {
+                        // When running unit test some tables won't be created. We'll just skip those.
+                        continue;
+                    }
 
-                        // Update live
-                        if ($hasVersions) {
-                            $this->updateTable($table.'_Live', $field);
-                        }
-                    } catch (DatabaseException $exception) {
+
+                    // Update table
+                    $this->updateTable($table, $field);
+
+                    // Update live
+                    if ($hasVersions) {
+                        $this->updateTable($table.'_Live', $field);
                     }
                 }
             }
@@ -140,10 +150,7 @@ class TagsToShortcodeHelper
 
     private function updateTable($table, $field)
     {
-        $sqlSelect = SQLSelect::create(
-            ['ID', $field],
-            $table
-        );
+        $sqlSelect = SQLSelect::create(['"ID"', "\"$field\""], "\"$table\"");
         $whereAnys = [];
         foreach (array_keys(static::VALID_TAGS) as $tag) {
             $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
@@ -169,7 +176,7 @@ class TagsToShortcodeHelper
                 continue;
             }
 
-            $updateSQL = SQLUpdate::create($updateTable)->addWhere(['"ID"' => $row['ID']]);
+            $updateSQL = SQLUpdate::create("\"$updateTable\"")->addWhere(['"ID"' => $row['ID']]);
             $updateSQL->addAssignments(["\"$field\"" => $newContent]);
             $updateSQL->execute();
             if ($this->logger) {
@@ -235,7 +242,7 @@ class TagsToShortcodeHelper
      */
     private function getParsedFileIDFromSrc($src)
     {
-        $fileIDHelperResolutionStrategy = new FileIDHelperResolutionStrategy();
+        $fileIDHelperResolutionStrategy = FileIDHelperResolutionStrategy::create();
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
             $hashFileIdHelper = new HashFileIDHelper(),
             new LegacyFileIDHelper(),
@@ -247,13 +254,16 @@ class TagsToShortcodeHelper
         $pattern = sprintf('#^/?(%s/?)?#', ASSETS_DIR);
         $fileID = preg_replace($pattern, '', $src);
 
+        // Our file reference might be using invalid file name that will have been cleaned up by the migration task.
+        $fileID = $defaultFileIDHelper->cleanFilename($fileID);
+
         // Try resolving with public filesystem first
         $filesystem = $this->flysystemAssetStore->getPublicFilesystem();
-        $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+        $parsedFileId = $fileIDHelperResolutionStrategy->resolveFileID($fileID, $filesystem);
         if (!$parsedFileId) {
             // Try resolving with protected filesystem
             $filesystem = $this->flysystemAssetStore->getProtectedFilesystem();
-            $parsedFileId = $fileIDHelperResolutionStrategy->softResolveFileID($fileID, $filesystem);
+            $parsedFileId = $fileIDHelperResolutionStrategy->resolveFileID($fileID, $filesystem);
         }
 
         if (!$parsedFileId) {
@@ -288,7 +298,7 @@ class TagsToShortcodeHelper
 
         /** @var File $file */
         $file = File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();
-        if (!$file) {
+        if (!$file && class_exists(Versioned::class)) {
             $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
                 Versioned::set_stage(Versioned::LIVE);
                 return File::get()->filter('FileFilename', $parsedFileID->getFilename())->first();

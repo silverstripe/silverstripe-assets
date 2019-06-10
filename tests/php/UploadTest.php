@@ -249,6 +249,33 @@ class UploadTest extends SapphireTest
             _t('SilverStripe\\Assets\\File.NOVALIDUPLOAD', 'File is not a valid upload'),
             $upload->getErrors()
         );
+
+        // Test no tmp dir
+        $upload->clearErrors();
+        $tmpFile['error'] = UPLOAD_ERR_NO_TMP_DIR;
+        $this->assertFalse($upload->validate($tmpFile));
+        $this->assertContains(
+            _t('SilverStripe\\Assets\\File.NOVALIDUPLOAD', 'File is not a valid upload'),
+            $upload->getErrors()
+        );
+
+        // Test can't write error
+        $upload->clearErrors();
+        $tmpFile['error'] = UPLOAD_ERR_CANT_WRITE;
+        $this->assertFalse($upload->validate($tmpFile));
+        $this->assertContains(
+            _t('SilverStripe\\Assets\\File.NOVALIDUPLOAD', 'File is not a valid upload'),
+            $upload->getErrors()
+        );
+
+        // Test partial file upload
+        $upload->clearErrors();
+        $tmpFile['error'] = UPLOAD_ERR_PARTIAL;
+        $this->assertFalse($upload->validate($tmpFile));
+        $this->assertContains(
+            _t('SilverStripe\\Assets\\File.PARTIALUPLOAD', 'File did not finish uploading, please try again'),
+            $upload->getErrors()
+        );
     }
 
     public function testGetAllowedMaxFileSize()

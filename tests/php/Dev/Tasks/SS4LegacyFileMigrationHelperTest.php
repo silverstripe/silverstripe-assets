@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests\Dev\Tasks;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 
@@ -23,14 +24,14 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
 
         $naturalHelper = new NaturalFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($naturalHelper);
         $protected->setResolutionFileIDHelpers([$naturalHelper]);
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($naturalHelper);
         $public->setResolutionFileIDHelpers([$naturalHelper]);
@@ -41,5 +42,12 @@ class SS4LegacyFileMigrationHelperTest extends SS4FileMigrationHelperTest
     protected function lookAtRestrictedFile($restrictedFileID)
     {
         // Legacy files names did not allow you to have a restricted file in draft and live simultanously
+    }
+
+    public function testMigration()
+    {
+        // We're overriding testMigration just to make SS4LegacyFileMigrationHelperTest is in the exception
+        // stack if/when the test fails
+        parent::testMigration();
     }
 }

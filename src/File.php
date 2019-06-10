@@ -366,6 +366,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return $result;
         }
 
+        if (Permission::checkMember($member, 'ADMIN')) {
+            return true;
+        }
+
         // Check inherited permissions
         return static::getPermissionChecker()
             ->canView($this->ID, $member);

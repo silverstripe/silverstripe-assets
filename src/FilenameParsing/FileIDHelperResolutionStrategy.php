@@ -4,6 +4,10 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DB;
@@ -13,7 +17,7 @@ use SilverStripe\ORM\DB;
  * * `DefaultFileIDHelper` is the default helper use to generate new file ID.
  * * `ResolutionFileIDHelpers` can contain a list of helpers that will be used to try to find existing file.
  *
- * This file resolution strategy can be helpfull when the approach to resolving files has changed over time and you need
+ * This file resolution strategy can be helpful when the approach to resolving files has changed over time and you need
  * older file format to resolve.
  *
  * You may also provide a `VersionedStage` to only look at files that were published.
@@ -22,6 +26,9 @@ use SilverStripe\ORM\DB;
  */
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {
+    use Configurable;
+    use Injectable;
+
     /**
      * The FileID helper that will be use to build FileID for this adapter.
      * @var FileIDHelper
@@ -38,14 +45,38 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * Constrain this strategy to the a specific versioned stage.
      * @var string
      */
-    private $versionedStage = Versioned::DRAFT;
+    private $versionedStage = '';
+
+    /** @var FileHashingService */
+    private $hasher;
+
+    private static $dependencies = [
+        'FileHashingService' => '%$' . FileHashingService::class
+    ];
+
+    public function __construct()
+    {
+        if (class_exists(Versioned::class)) {
+            $this->versionedStage = Versioned::DRAFT;
+        }
+    }
+
+    public function setFileHashingService($service)
+    {
+        $this->hasher = $service;
+        return $this;
+    }
 
     public function resolveFileID($fileID, Filesystem $filesystem)
     {
-        $parsedFileID = $this->parseFileID($fileID);
-
-        if ($parsedFileID) {
-            return $this->searchForTuple($parsedFileID, $filesystem, false);
+        foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
+            $parsedFileID = $fileIDHelper->parseFileID($fileID);
+            if ($parsedFileID) {
+                $foundTuple = $this->searchForTuple($parsedFileID, $filesystem, true);
+                if ($foundTuple) {
+                    return $foundTuple;
+                }
+            }
         }
 
         // If we couldn't resolve the file ID, we bail
@@ -87,7 +118,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         /** @var File $file */
         $file = Versioned::withVersionedMode(function () use ($parsedFileID) {
             Versioned::set_stage($this->getVersionedStage());
-            return File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
+            return File::get()->filter(['FileFilename:case' => $parsedFileID->getFilename()])->first();
         });
 
         // Could not find a valid file, let's bail.
@@ -136,7 +167,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         /** @var File $file */
         $file = Versioned::withVersionedMode(function () use ($filename) {
             Versioned::set_stage($this->getVersionedStage());
-            return File::get()->filter(['FileFilename' => $filename])->first();
+            return File::get()->filter(['FileFilename:case' => $filename])->first();
         });
 
         if ($file) {
@@ -177,7 +208,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $parsedFileID = $this->preProcessTuple($tuple);
         $helpers = $this->getResolutionFileIDHelpers();
-        array_unshift($helpers, $this->getDefaultFileIDHelper());
+
+        // Add default helper to list of resolvable helpers
+        $defaultHelper = $this->getDefaultFileIDHelper();
+        $defaultHelperIndex = array_search($defaultHelper, $helpers);
+        if ($defaultHelperIndex !== false) {
+            unset($helpers[$defaultHelperIndex]);
+        }
+        array_unshift($helpers, $defaultHelper);
 
         $enforceHash = $strict && $parsedFileID->getHash();
 
@@ -188,15 +226,14 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             if (class_exists(Versioned::class) && File::has_extension(Versioned::class)) {
                    $hashList = Versioned::withVersionedMode(function () use ($filename) {
                        Versioned::set_stage($this->getVersionedStage());
-                       $vals = File::get()->map('ID', 'FileFilename')->toArray();
                        return File::get()
-                           ->filter(['FileFilename' => $filename, 'FileVariant' => null])
+                           ->filter(['FileFilename:case' => $filename, 'FileVariant' => null])
                            ->limit(1)
                            ->column('FileHash');
                    });
             } else {
                 $hashList = File::get()
-                   ->filter(['FileFilename' => $filename])
+                   ->filter(['FileFilename:case' => $filename])
                    ->limit(1)
                    ->column('FileHash');
             }
@@ -210,11 +247,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         foreach ($helpers as $helper) {
             try {
-                $fileID = $helper->buildFileID(
-                    $parsedFileID->getFilename(),
-                    $parsedFileID->getHash(),
-                    $parsedFileID->getVariant()
-                );
+                $fileID = $helper->buildFileID($parsedFileID, null, null, false);
             } catch (InvalidArgumentException $ex) {
                 // Some file ID helper will throw an exception if you ask them to build a file ID wihtout an hash
                 continue;
@@ -252,7 +285,11 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         // Check if the physical hash of the file starts with our parsed file ID hash
         $actualHash = $this->findHashOf($helper, $parsedFileID, $filesystem);
-        return strpos($actualHash, $parsedFileID->getHash()) === 0;
+        if (!$actualHash) {
+            return false;
+        }
+
+        return $this->hasher->compare($actualHash, $parsedFileID->getHash());
     }
 
     /**
@@ -261,13 +298,16 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * @param ParsedFileID $parsedFileID
      * @param Filesystem $filesystem
      * @return bool|string
+     * @throws \League\Flysystem\FileNotFoundException
      */
     private function findHashOf(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $filesystem)
     {
         // Re build the file ID but without the variant
         $fileID = $helper->buildFileID(
             $parsedFileID->getFilename(),
-            $parsedFileID->getHash()
+            $parsedFileID->getHash(),
+            '',
+            false
         );
 
         // Couldn't find the original file, let's bail.
@@ -275,11 +315,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             return false;
         }
 
-        // Get hash from stream
-        $stream = $filesystem->readStream($fileID);
-        $hc = hash_init('sha1');
-        hash_update_stream($hc, $stream);
-        $fullHash = hash_final($hc);
+        // Get hash from file
+        $fullHash = $this->hasher->computeFromFile($fileID, $filesystem);
 
         return $fullHash;
     }
@@ -352,7 +389,6 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         $this->versionedStage = $versionedStage;
     }
 
-
     public function buildFileID($tuple)
     {
         $parsedFileID = $this->preProcessTuple($tuple);
@@ -367,40 +403,69 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     {
         $parsedFileID = $this->preProcessTuple($tuple);
 
+        // Build a list of possible helperss to try
         $helpers = $this->getResolutionFileIDHelpers();
-        array_unshift($helpers, $this->getDefaultFileIDHelper());
+        $defaultHelper = $this->getDefaultFileIDHelper();
+        if (!in_array($defaultHelper, $helpers)) {
+            // If the default helper is not already in our list of resolution helpers, add it to the list
+            array_unshift($helpers, $defaultHelper);
+        }
 
         /** @var FileIDHelper[] $resolvableHelpers */
         $resolvableHelpers = [];
 
         // Search for a helper that will allow us to find a file
         foreach ($helpers as $helper) {
-            $fileID = $helper->buildFileID(
-                $parsedFileID->getFilename(),
-                $parsedFileID->getHash()
-            );
+            try {
+                $fileID = $helper->buildFileID($parsedFileID->getFilename(), $parsedFileID->getHash());
 
-            if ($filesystem->has($fileID) && $this->validateHash($helper, $parsedFileID, $filesystem)) {
-                $resolvableHelpers[] = $helper;
+                if ($filesystem->has($fileID) && $this->validateHash($helper, $parsedFileID, $filesystem)) {
+                    $resolvableHelpers[] = $helper;
+                }
+            } catch (InvalidArgumentException $ex) {
+                // Our helper couldn't build a FileID with the provided arguments, that means it's not a valid helper
+                // for this file tuple.
             }
         }
 
+        // Loop through the list of possible helpers
         foreach ($resolvableHelpers as $helper) {
+            // Make sure our yield file has an hash
+            $hash = $parsedFileID->getHash() ?: $this->findHashOf($helper, $parsedFileID, $filesystem);
+
+
+            // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
             $possibleVariants = $filesystem->listContents($folder, true);
+
+            // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
+            $possibleVariants = array_filter($possibleVariants, function ($possibleVariant) {
+                return $possibleVariant['type'] !== 'dir';
+            });
+            $possibleVariants = array_map(function ($possibleVariant) {
+                return $possibleVariant['path'];
+            }, $possibleVariants);
+
+            // Let's explicitely add the main variant to the list if need be
+            $mainVariant = $this->stripVariantFromParsedFileID($parsedFileID, $helper)->getFileID();
+            if (!in_array($mainVariant, $possibleVariants) && $filesystem->has($mainVariant)) {
+                $possibleVariants[] = $mainVariant;
+            }
+
+            // Loop through the possible variants and yield the ones that are actual variant.
             foreach ($possibleVariants as $possibleVariant) {
-                if ($possibleVariant['type'] !== 'dir' && $helper->isVariantOf($possibleVariant['path'], $parsedFileID)) {
-                    yield $helper->parseFileID($possibleVariant['path'])->setHash($parsedFileID->getHash());
+                if ($helper->isVariantOf($possibleVariant, $parsedFileID)) {
+                    yield $helper->parseFileID($possibleVariant)->setHash($hash);
                 }
             }
         }
     }
-    
+
     public function cleanFilename($filename)
     {
         return $this->getDefaultFileIDHelper()->cleanFilename($filename);
     }
-    
+
     public function parseFileID($fileID)
     {
         foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
@@ -448,6 +513,8 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
     }
 
     /**
+     * Convert the provided ParsedFileID to a its variantless equivalent.
+     *
      * @param ParsedFileID $parsedFileID
      * @param FileIDHelper $helper
      * @return ParsedFileID

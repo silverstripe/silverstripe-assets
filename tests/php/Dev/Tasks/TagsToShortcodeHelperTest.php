@@ -10,6 +10,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\HtmlObject;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\NoStage;
+use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\PseudoPage;
 use SilverStripe\Assets\Tests\Dev\Tasks\Shortcode\SubHtmlObject;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
@@ -28,7 +29,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
     protected static $extra_dataobjects = [
         HtmlObject::class,
         SubHtmlObject::class,
-        NoStage::class
+        NoStage::class,
+        PseudoPage::class,
     ];
 
     /**
@@ -52,10 +54,6 @@ class TagsToShortcodeHelperTest extends SapphireTest
     {
         // Set backend root to /TagsToShortcodeHelperTest/assets
         TestAssetStore::activate('TagsToShortcodeHelperTest/assets');
-
-        // Ensure that each file has a local record file in this new assets base
-
-        $destinations = [];
 
         /** @var File $file */
         foreach (File::get()->filter('ClassName', File::class) as $file) {
@@ -81,8 +79,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
-        /** @var SiteTree $newPage */
-        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        /** @var PseudoPage $newPage */
+        $newPage = $this->objFromFixture(PseudoPage::class, 'page1');
         $documentID = $this->idFromFixture(File::class, 'document');
         $imageID = $this->idFromFixture(Image::class, 'image1');
 
@@ -118,8 +116,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testLivePageRewrite()
     {
-        /** @var SiteTree $newPage */
-        $newPage = $this->objFromFixture(SiteTree::class, 'page1');
+        /** @var PseudoPage $newPage */
+        $newPage = $this->objFromFixture(PseudoPage::class, 'page1');
         $newPage->publishSingle();
 
         $newPage->Content = '<p>Draft content</p>';
@@ -128,11 +126,11 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
-        /** @var SiteTree $newPage */
+        /** @var PseudoPage $newPage */
         $newPageID = $newPage->ID;
         $newPage = Versioned::withVersionedMode(function () use ($newPageID) {
             Versioned::set_stage(Versioned::LIVE);
-            return SiteTree::get()->byID($newPageID);
+            return PseudoPage::get()->byID($newPageID);
         });
 
 
@@ -231,6 +229,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
      * @dataProvider newContentNoChangeDataProvider
      * @dataProvider newContentNoDataDegradationDataProvider
      * @dataProvider newContentEasyFixDataProvider
+     * @dataProvider newContentUnderscoreDataProvider
      * @param string $input
      * @param string|false $ouput If false, assume the input should be unchanged
      */
@@ -246,8 +245,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function newContentConvertDataProvider()
     {
-        $image1ID = 1;
-        $documentID = 3;
+        $image1ID = 2;
+        $documentID = 5;
+        $underscoreFile = 4;
 
         return [
             'link to file with starting slash' => [
@@ -314,13 +314,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'image variant' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
-                '[image src="/assets/33be1b95cb/myimage.jpg" id="1"]'],
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)],
             'image variant with size' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
-                '[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="1"]'],
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="%d"]', $image1ID)],
             'image variant that has not been generated yet' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="200" height="266">',
-                '[image src="/assets/33be1b95cb/myimage.jpg" width="200" height="266" id="1"]'],
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" width="200" height="266" id="%d"]', $image1ID)],
             'xhtml image' => [
                 '<img src="assets/myimage.jpg" />',
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
@@ -345,6 +345,45 @@ class TagsToShortcodeHelperTest extends SapphireTest
                     $documentID,
                     $image1ID
                 )
+            ],
+
+            'link to file with underscore' => [
+                '<a href="assets/decade1980/under_score.jpg" title="">link to file</a>',
+                sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $underscoreFile)
+            ],
+            'image with underscore' => [
+                '<img src="assets/decade1980/under_score.jpg">',
+                sprintf('[image src="/assets/decade1980/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile)
+            ],
+        ];
+    }
+
+    /**
+     * List of HTML string that should be converted to short code
+     */
+    public function newContentUnderscoreDataProvider()
+    {
+        $image1ID = 2;
+        $documentID = 5;
+        $underscoreFile = 3;
+        $trippleUnderscore = 4;
+
+        return [
+            'link to file with underscore' => [
+                '<a href="assets/decade80/under_score.jpg" title="">link to file</a>',
+                sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $underscoreFile)
+            ],
+            'image with underscore' => [
+                '<img src="assets/decade80/under_score.jpg">',
+                sprintf('[image src="/assets/decade80/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile)
+            ],
+            'link to file with double underscore' => [
+                '<a href="assets/decade80/under__score.jpg" title="">link to file</a>',
+                sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $underscoreFile)
+            ],
+            'image with double underscore' => [
+                '<img src="assets/decade80/under__score.jpg">',
+                sprintf('[image src="/assets/decade80/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile)
             ]
         ];
     }
@@ -354,7 +393,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function newContentNoChangeDataProvider()
     {
-        $documentID = 3;
+        $documentID = 5;
 
         return [
             'external anchor' => ['<a href="https://silverstripe.org/assets/document.pdf">External link</a>'],
@@ -378,7 +417,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function newContentNoDataDegradationDataProvider()
     {
-        $image1ID = 1;
+        $image1ID = 2;
 
         return [
             'link tag broken over several line' => ["<a \nhref=\"assets/document.pdf\" \n>\nlink to file \r\n \t</a>"],
@@ -397,8 +436,8 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function newContentEasyFixDataProvider()
     {
-        $image1ID = 1;
-        $documentID = 3;
+        $image1ID = 2;
+        $documentID = 5;
 
         return [
             // Just make the regex case insensitive
@@ -425,5 +464,45 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
             ],
         ];
+    }
+
+    /**
+     * Illustrate how newContent cannot resolve files that have been renamed because of conflictual name.
+     * `decade80/under___score.jpg` should have been renamed to `decade80/under_score.jpg`, however that file already
+     * exists, so it got renamed to `decade80/under_score-v2.jpg` instead. However `TagsToShortcodeHelper` can not
+     * understand that.
+     */
+    public function testAmbigiousCleanedName()
+    {
+        $underscoreFile = 3;
+        $trippleUnderscore = 4;
+
+        $tagsToShortcodeHelper = new TagsToShortcodeHelper();
+
+        $actual = $tagsToShortcodeHelper->getNewContent(
+            '<a href="assets/decade80/under___score.jpg" title="">link to file</a>'
+        );
+        $this->assertEquals(
+            sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $underscoreFile),
+            $actual
+        );
+//        In perfect world, this assertion would be true
+//        $this->assertEquals(
+//            sprintf('<a href="[file_link,id=%d]" title="">link to file</a>', $trippleUnderscore),
+//            $actual
+//        );
+
+        $actual = $tagsToShortcodeHelper->getNewContent(
+            '<img src="assets/decade80/under___score.jpg">'
+        );
+        $this->assertEquals(
+            sprintf('[image src="/assets/decade80/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile),
+            $actual
+        );
+//        In perfect world, this assertion would be true
+//        $this->assertEquals(
+//            sprintf('[image src="/assets/decade80/33be1b95cb/under_score-v2.jpg" id="%d"]', $trippleUnderscore),
+//            $actual
+//        );
     }
 }

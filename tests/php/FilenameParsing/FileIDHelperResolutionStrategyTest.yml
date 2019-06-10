@@ -4,6 +4,10 @@ SilverStripe\Assets\Folder:
   sub-folder:
     Name: SubFolder
     ParentID: =>SilverStripe\Assets\Folder.folder
+  multimedia:
+    Name: Multimedia
+  hashfolder:
+    Name: abcdef01234
 SilverStripe\Assets\File:
   root-file:
     FileFilename: RootFile.txt
@@ -19,6 +23,16 @@ SilverStripe\Assets\File:
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: SubFolderFile.txt
     ParentID: =>SilverStripe\Assets\Folder.sub-folder
+  multimedia-file:
+    FileFilename: Multimedia/file-in-folder-with-10-char.pdf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: file-in-folder-with-10-char.pdf
+    ParentID: =>SilverStripe\Assets\Folder.multimedia
+  hashfolder-file:
+    FileFilename: abcdef01234/file-in-folder-with-10-hexa-decimal-char.pdf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: file-in-folder-with-10-char.pdf
+    ParentID: =>SilverStripe\Assets\Folder.hashfolder
 
 SilverStripe\Assets\Image:
   root-file:

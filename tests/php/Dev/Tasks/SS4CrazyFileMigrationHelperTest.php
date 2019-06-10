@@ -7,6 +7,7 @@ use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 
@@ -29,14 +30,14 @@ class SS4CrazyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $hashHelper = new HashFileIDHelper();
         $legacyHelper = new LegacyFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($legacyHelper);
         $public->setResolutionFileIDHelpers([$legacyHelper]);
@@ -53,14 +54,14 @@ class SS4CrazyFileMigrationHelperTest extends SS4FileMigrationHelperTest
         $naturalPath = new NaturalFileIDHelper();
         $legacyHelper = new LegacyFileIDHelper();
 
-        $protected = new FileIDHelperResolutionStrategy();
+        $protected = FileIDHelperResolutionStrategy::create();
         $protected->setVersionedStage(Versioned::DRAFT);
         $protected->setDefaultFileIDHelper($hashHelper);
         $protected->setResolutionFileIDHelpers([$hashHelper]);
 
         $store->setProtectedResolutionStrategy($protected);
 
-        $public = new FileIDHelperResolutionStrategy();
+        $public = FileIDHelperResolutionStrategy::create();
         $public->setVersionedStage(Versioned::LIVE);
         $public->setDefaultFileIDHelper($hashHelper);
         $public->setResolutionFileIDHelpers([$hashHelper, $naturalPath, $legacyHelper]);

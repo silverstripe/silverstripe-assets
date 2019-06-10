@@ -14,6 +14,8 @@ use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\FileHashingService;
+use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Versioned\Versioned;
@@ -31,6 +33,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function setUp()
     {
         parent::setUp();
+        Sha1FileHashingService::flush();
         TestAssetStore::activate('FileIDHelperResolutionStrategyTest');
 
         /** @var FlysystemAssetStore $store */
@@ -43,6 +46,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs = new Filesystem(
             new Local($this->tmpFolder)
         );
+        Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
     }
 
     public function tearDown()
@@ -68,6 +72,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
             ['root-file'],
             ['folder-file'],
             ['subfolder-file'],
+            ['multimedia-file'],
+            ['hashfolder-file'],
         ];
     }
 
@@ -96,7 +102,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = sha1('version 1');
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($helper);
         $strategy->setResolutionFileIDHelpers([$helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -123,7 +129,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = sha1('version 1');
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($mockHelper);
         $strategy->setResolutionFileIDHelpers([$mockHelper, $helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -148,7 +154,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = sha1('broken content that does not mtach the expected content');
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($mockHelper);
         $strategy->setResolutionFileIDHelpers([$mockHelper, $helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -173,7 +179,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = sha1('version 1');
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($helper);
         $strategy->setResolutionFileIDHelpers([$helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -215,7 +221,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = $newerHash;
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($helper);
         $strategy->setResolutionFileIDHelpers([$helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -249,7 +255,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $fileDO->FileHash = sha1('version 1');
         $fileDO->write();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($mockHelper);
         $strategy->setResolutionFileIDHelpers([$mockHelper, $helper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -282,7 +288,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $fileDO->publishSingle();
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper($brokenHelper);
         $strategy->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $strategy->setVersionedStage(Versioned::DRAFT);
@@ -312,27 +318,32 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $parsedFileID = $mockHelper->parseFileID($expected);
 
+        $hasher = new Sha1FileHashingService();
+
         $defaultResolves = new FileIDHelperResolutionStrategy();
         $defaultResolves->setDefaultFileIDHelper($mockHelper);
         $defaultResolves->setResolutionFileIDHelpers([$brokenHelper]);
         $defaultResolves->setVersionedStage(Versioned::DRAFT);
+        $defaultResolves->setFileHashingService($hasher);
 
         $secondaryResolves = new FileIDHelperResolutionStrategy();
         $secondaryResolves->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolves->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolves->setVersionedStage(Versioned::DRAFT);
+        $secondaryResolves->setFileHashingService($hasher);
 
         $secondaryResolvesLive = new FileIDHelperResolutionStrategy();
         $secondaryResolvesLive->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolvesLive->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolvesLive->setVersionedStage(Versioned::LIVE);
+        $secondaryResolvesLive->setFileHashingService($hasher);
 
         return [
-            [$defaultResolves, $parsedFileID, $expected],
-            [$secondaryResolves, $parsedFileID, $expected],
-            [$secondaryResolvesLive, $parsedFileID, $expected],
-            [$secondaryResolves, $parsedFileID->getTuple(), $expected],
-            [$secondaryResolvesLive, $parsedFileID->getTuple(), $expected],
+            'Default Helper' => [$defaultResolves, $parsedFileID, $expected],
+            'Resolution Helper' => [$secondaryResolves, $parsedFileID, $expected],
+            'Resolution Helper on Live Stage' => [$secondaryResolvesLive, $parsedFileID, $expected],
+            'Resolution Helper with Tuple' => [$secondaryResolves, $parsedFileID->getTuple(), $expected],
+            'Resolution Helper on Live with Tuple' => [$secondaryResolvesLive, $parsedFileID->getTuple(), $expected],
         ];
     }
 
@@ -340,8 +351,13 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
      * This method checks that FileID resolve when access directly.
      * @dataProvider searchTupleStrategyVariation
      */
-    public function testSearchForTuple($strategy, $tuple, $expected)
+    public function testSearchForTuple(FileIDHelperResolutionStrategy $strategy, $tuple, $expected)
     {
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+        $hasher->disableCache();
+        $strategy->setFileHashingService($hasher);
+
         $fileID = $strategy->searchForTuple($tuple, $this->fs, false);
         $this->assertNull($fileID, 'There\'s no file on the adapter yet');
 
@@ -375,7 +391,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function testHashlessSearchForTuple()
     {
         // Set up strategy
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
         $hashHelper = new HashFileIDHelper();
         $naturalHelper = new NaturalFileIDHelper();
         $strategy->setDefaultFileIDHelper($hashHelper);
@@ -465,20 +481,25 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $parsedFileID = $mockHelper->parseFileID('Folder/FolderFile.pdf');
 
+        $hasher = new Sha1FileHashingService();
+
         $defaultResolves = new FileIDHelperResolutionStrategy();
         $defaultResolves->setDefaultFileIDHelper($mockHelper);
         $defaultResolves->setResolutionFileIDHelpers([$brokenHelper]);
         $defaultResolves->setVersionedStage(Versioned::DRAFT);
+        $defaultResolves->setFileHashingService($hasher);
 
         $secondaryResolves = new FileIDHelperResolutionStrategy();
         $secondaryResolves->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolves->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolves->setVersionedStage(Versioned::DRAFT);
+        $secondaryResolves->setFileHashingService($hasher);
 
         $secondaryResolvesLive = new FileIDHelperResolutionStrategy();
         $secondaryResolvesLive->setDefaultFileIDHelper($brokenHelper);
         $secondaryResolvesLive->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);
         $secondaryResolvesLive->setVersionedStage(Versioned::LIVE);
+        $secondaryResolvesLive->setFileHashingService($hasher);
 
         return [
             [$defaultResolves, $parsedFileID],
@@ -508,6 +529,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         ];
 
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
+
         /** @var ParsedFileID $parsedFileID */
         foreach ($variantGenerator as $parsedFileID) {
             $this->assertNotEmpty($expectedPaths);
@@ -517,6 +539,41 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         }
 
         $this->assertEmpty($expectedPaths);
+    }
+
+    public function testFindHashlessVariant()
+    {
+        $strategy = FileIDHelperResolutionStrategy::create();
+        $strategy->setDefaultFileIDHelper($naturalHelper = new NaturalFileIDHelper());
+        $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);
+
+        $expectedHash = sha1('version 1');
+
+        $this->fs->write('Folder/FolderFile.pdf', 'version 1');
+        $this->fs->write(
+            sprintf('Folder/%s/FolderFile.pdf', substr($expectedHash, 0, 10)),
+            'version 1'
+        );
+        $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
+
+        $expectedPaths = [
+            ['Folder/FolderFile.pdf', ''],
+            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
+            // The hash path won't be match, because we're not providing a hash
+        ];
+
+        $variantGenerator = $strategy->findVariants(new ParsedFileID('Folder/FolderFile.pdf'), $this->fs);
+
+        /** @var ParsedFileID $parsedFileID */
+        foreach ($variantGenerator as $parsedFileID) {
+            $this->assertNotEmpty($expectedPaths, 'More files were returned than expected');
+            $expectedPath = array_shift($expectedPaths);
+            $this->assertEquals($expectedPath[0], $parsedFileID->getFileID());
+            $this->assertEquals($expectedPath[1], $parsedFileID->getVariant());
+            $this->assertEquals($expectedHash, $parsedFileID->getHash());
+        }
+
+        $this->assertEmpty($expectedPaths, "Not all expected files were returned");
     }
 
     public function testParseFileID()
@@ -531,7 +588,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
             'Folder'
         );
 
-        $strategy = new FileIDHelperResolutionStrategy();
+        $strategy = FileIDHelperResolutionStrategy::create();
 
         // Test that file ID gets resolved properly if a functional helper is provided
         $strategy->setResolutionFileIDHelpers([$brokenHelper, $mockHelper]);

@@ -25,7 +25,7 @@ class HashFileIDHelper implements FileIDHelper
      */
     const HASH_TRUNCATE_LENGTH = 10;
 
-    public function buildFileID($filename, $hash = null, $variant = null)
+    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
     {
         if ($filename instanceof ParsedFileID) {
             $hash =  $filename->getHash();
@@ -38,7 +38,9 @@ class HashFileIDHelper implements FileIDHelper
         }
 
         // Since we use double underscore to delimit variants, eradicate them from filename
-        $filename = $this->cleanFilename($filename);
+        if ($cleanfilename) {
+            $filename = $this->cleanFilename($filename);
+        }
         $name = basename($filename);
 
         // Split extension
@@ -77,7 +79,7 @@ class HashFileIDHelper implements FileIDHelper
 
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-zA-Z0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-f0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {

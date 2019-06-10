@@ -17,6 +17,7 @@ use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
+use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
@@ -300,6 +301,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             self::VISIBILITY_PROTECTED
         ];
 
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
         /** @var Filesystem $fs */
         /** @var FileResolutionStrategy $strategy */
         /** @var string $visibility */
@@ -321,8 +325,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                         continue;
                     }
 
-                    $stream = $fs->readStream($mainFileID);
-                    if (!$this->validateStreamHash($stream, $parsedFileID->getHash())) {
+                    $actualHash = $hasher->computeFromFile($mainFileID, $fs);
+                    if (!$hasher->compare($actualHash, $parsedFileID->getHash())) {
                         continue;
                     }
                 }
@@ -390,14 +394,17 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             list($fs, $strategy, $visibility) = $set;
 
             if ($fs->has($fileID)) {
-                $response = $callable(
-                    $strategy->resolveFileID($fileID, $fs),
-                    $fs,
-                    $strategy,
-                    $visibility
-                );
-                if ($response !== false) {
-                    return $response;
+                $parsedFileID = $strategy->resolveFileID($fileID, $fs);
+                if ($parsedFileID) {
+                    $response = $callable(
+                        $parsedFileID,
+                        $fs,
+                        $strategy,
+                        $visibility
+                    );
+                    if ($response !== false) {
+                        return $response;
+                    }
                 }
             }
         }
@@ -548,26 +555,37 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             return $result;
         }
 
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
+        // When saving original filename, generate hash
+        if (!$hash && !$variant) {
+            $hash = $hasher->computeFromStream($stream);
+        }
+
         // Callback for saving content
-        $callback = function (Filesystem $filesystem, $fileID) use ($stream) {
+        $callback = function (Filesystem $filesystem, $fileID) use ($stream, $hasher, $hash, $variant) {
+
             // If there's already a file where we want to write and that file has the same sha1 hash as our source file
             // We just let the existing file sit there pretend to have writen it. This avoid a weird edge case where
             // We try to move an existing file to its own location which causes us to override the file with zero bytes
             if ($filesystem->has($fileID)) {
-                $newHash = $this->getStreamSHA1($stream);
-                $oldHash = $this->getStreamSHA1($filesystem->readStream($fileID));
+                $newHash = $hasher->computeFromStream($stream);
+                $oldHash = $hasher->computeFromFile($fileID, $filesystem);
                 if ($newHash === $oldHash) {
                     return true;
                 }
             }
 
-            return $filesystem->putStream($fileID, $stream);
-        };
+            $result = $filesystem->putStream($fileID, $stream);
 
-        // When saving original filename, generate hash
-        if (!$hash && !$variant) {
-            $hash = $this->getStreamSHA1($stream);
-        }
+            // If we have an hash for a main file, let's pre-warm our file hashing cache.
+            if ($hash || !$variant) {
+                $hasher->set($fileID, $filesystem, $hash);
+            }
+
+            return $result;
+        };
 
         // Submit to conflict check
         return $this->writeWithCallback($callback, $filename, $hash, $variant, $config);
@@ -609,11 +627,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                         $destParsedFileID->setVariant($originParsedFileID->getVariant())
                     );
 
+                    /** @var FileHashingService $hasher */
+                    $hasher = Injector::inst()->get(FileHashingService::class);
+
                     if ($origin !== $destination) {
                         if ($fs->has($destination)) {
                             $fs->delete($origin);
+                            // Invalidate hash of delete file
+                            $hasher->invalidate($origin, $fs);
                         } else {
                             $fs->rename($origin, $destination);
+                            // Move cached hash value to new location
+                            $hasher->move($origin, $fs, $destination);
                         }
                         $this->truncateDirectory(dirname($origin), $fs);
                     }
@@ -649,6 +674,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     if ($fromFileID !== $toFileID) {
                         if (!$fs->has($toFileID)) {
                             $fs->copy($fromFileID, $toFileID);
+
+                            // Set hash value for new file
+                            /** @var FileHashingService $hasher */
+                            $hasher = Injector::inst()->get(FileHashingService::class);
+                            if ($hash = $hasher->get($fromFileID, $fs)) {
+                                $hasher->set($toFileID, $fs, $hash);
+                            }
                         }
                     }
                 }
@@ -677,8 +709,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $deleted = true;
         }
 
-
-
         return $deleted;
     }
 
@@ -692,11 +722,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function deleteFromFileStore(ParsedFileID $parsedFileID, Filesystem $fs, FileResolutionStrategy $strategy)
     {
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
         $deleted = false;
         /** @var ParsedFileID $parsedFileIDToDel */
         foreach ($strategy->findVariants($parsedFileID, $fs) as $parsedFileIDToDel) {
             $fs->delete($parsedFileIDToDel->getFileID());
             $deleted = true;
+            $hasher->invalidate($parsedFileIDToDel->getFileID(), $fs);
         }
 
         // Truncate empty dirs
@@ -778,6 +812,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // The file is already publish
             return;
         }
+        
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
 
         $parsedFileID = new ParsedFileID($filename, $hash);
         $from = $this->getProtectedFilesystem();
@@ -807,6 +844,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
                 // Blast existing variants from the destination
                 $to->delete($toFileID);
+                $hasher->move($toFileID, $to, '.swap/' . $fromFileID, $from);
                 $this->truncateDirectory(dirname($toFileID), $to);
             }
         }
@@ -827,12 +865,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
             // Remove the origin file and keep the file ID
             $from->delete($fromFileID);
+            $hasher->move($fromFileID, $from, $toFileID, $to);
             $this->truncateDirectory(dirname($fromFileID), $from);
         }
 
         foreach ($swapFiles as $variantParsedFileID) {
             $fileID = $variantParsedFileID->getFileID();
             $from->rename('.swap/' . $fileID, $fileID);
+            $hasher->move('.swap/' . $fileID, $from, $fileID);
         }
         $from->deleteDir('.swap');
     }
@@ -899,6 +939,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         FileResolutionStrategy $toStrategy,
         $swap = false
     ) {
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
         // Let's find all the variants on the origin store ... those need to be moved to the destination
         /** @var ParsedFileID $variantParsedFileID */
         foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
@@ -915,6 +958,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Remove the origin file and keep the file ID
             $idsToDelete[] = $fromFileID;
             $from->delete($fromFileID);
+
+            $hasher->move($fromFileID, $from, $toFileID, $to);
             $this->truncateDirectory(dirname($fromFileID), $from);
         }
     }
@@ -990,43 +1035,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param resource $stream
      * @return string str1 hash
+     * @deprecated 4.4.0 Use FileHashingService::computeFromStream() instead
      */
     protected function getStreamSHA1($stream)
     {
-        Util::rewindStream($stream);
-        $context = hash_init('sha1');
-        hash_update_stream($context, $stream);
-        return hash_final($context);
-    }
 
-    /**
-     * Validate that a resource stream start with the provided partial hash
-     * @param resource $stream
-     * @param string $partialHash
-     * @return bool
-     */
-    private function validateStreamHash($stream, $partialHash)
-    {
-        $fullHash = $this->getStreamSHA1($stream);
-        return $this->validateHash($fullHash, $partialHash);
-    }
-
-    /**
-     * Validate that the provided hashes are equivalent. Partial hashes can be provided.
-     * @param string $firstHash
-     * @param string $secondHash
-     * @return bool
-     */
-    private function validateHash($firstHash, $secondHash)
-    {
-        // Empty hash will always return false, because they are no validatable
-        if (empty($firstHash) || empty($secondHash)) {
-            throw new InvalidArgumentException('FlysystemAssetStore::validateHash can not validate empty hashes');
-        }
-        // Return true if $firstHash start with $secondHash or if $secondHash starts with $firstHash
-        return
-            strpos($firstHash, $secondHash) === 0 ||
-            strpos($secondHash, $firstHash) === 0;
+        return Injector::inst()
+            ->get(FileHashingService::class)
+            ->computeFromStream($stream);
     }
 
     /**
@@ -1152,7 +1168,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             if (empty($variant)) {
                 // If deferring to the existing file, return the sha of the existing file,
                 // unless we are writing a variant (which has the same hash value as its original file)
-                $hash = $this->getStreamSHA1($fs->readStream($targetFileID));
+                /** @var FileHashingService $hasher */
+                $hasher = Injector::inst()->get(FileHashingService::class);
+                $hash = $hasher->computeFromFile($targetFileID, $fs);
                 $parsedFileID = $parsedFileID->setHash($hash);
             }
             return $parsedFileID->getTuple();
@@ -1180,7 +1198,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     /**
      * Determine if legacy filenames should be used. This no longuer makes any difference with the introduction of
-     * FileResolutionStartegies.
+     * FileResolutionStrategies.
      * @deprecated 1.4.0
      * @return bool
      */
@@ -1224,10 +1242,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
                 if ($parsedFileID && $originalFileID = $parsedFileID->getFileID()) {
                     if ($fs->has($originalFileID)) {
-                        $stream = $fs->readStream($originalFileID);
+                        /** @var FileHashingService $hasher */
+                        $hasher = Injector::inst()->get(FileHashingService::class);
+                        $actualHash = $hasher->computeFromFile($originalFileID, $fs);
 
                         // If the hash of the file doesn't match we return false, because we want to keep looking.
-                        return $this->validateStreamHash($stream, $hash) ? true : false;
+                        return $hasher->compare($actualHash, $hash);
                     }
                 }
 
@@ -1576,29 +1596,58 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
-     * Given a parsed file ID move the matching file and all its variant to the default position as defined by the
-     * provided startegy.
+     * Given a parsed file ID, move the matching file and all its variants to the default position as defined by the
+     * provided strategy.
      * @param ParsedFileID $pfid
      * @param Filesystem $fs
      * @param FileResolutionStrategy $strategy
      * @return array List of new file names with the old name as the key
+     * @throws \League\Flysystem\FileExistsException
+     * @throws \League\Flysystem\FileNotFoundException
      */
     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
     {
         $ops = [];
+
+        /** @var FileHashingService $hasher */
+        $hasher = Injector::inst()->get(FileHashingService::class);
+
+        // Let's make sure we are using a valid file name
+        $cleanFilename = $strategy->cleanFilename($pfid->getFilename());
+        // Check if our cleaned filename is different from the original filename
+        if ($cleanFilename !== $pfid->getFilename()) {
+            // We need to build a new filename that doesn't conflict with any existing file
+            $fileID = $strategy->buildFileID($pfid->setVariant('')->setFilename($cleanFilename));
+            if ($fs->has($fileID)) {
+                foreach ($this->fileGeneratorFor($fileID) as $candidate) {
+                    if (!$fs->has($candidate)) {
+                        $cleanFilename = $strategy->parseFileID($candidate)->getFilename();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Let's move all the variants
         foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
             $origin = $variantPfid->getFileID();
-            $targetVariantFileID = $strategy->buildFileID($variantPfid);
+            $targetVariantFileID = $strategy->buildFileID($variantPfid->setFilename($cleanFilename));
             if ($targetVariantFileID !== $origin) {
                 if ($fs->has($targetVariantFileID)) {
                     $fs->delete($origin);
+                    $hasher->invalidate($origin, $fs);
                 } else {
                     $fs->rename($origin, $targetVariantFileID);
+                    $hasher->move($origin, $fs, $targetVariantFileID);
                     $ops[$origin] = $targetVariantFileID;
                 }
                 $this->truncateDirectory(dirname($origin), $fs);
             }
         }
+
+        // Our strategy will have cleaned up the name
+        $pfid = $pfid->setFilename($cleanFilename);
+
         return array_merge($pfid->getTuple(), ['Operations' => $ops]);
     }
 }

@@ -1066,6 +1066,40 @@ class AssetStoreTest extends SapphireTest
                 [$filename, $vNatural],
                 [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
             ],
+
+            // Test files with a parent folder that could be confused for an hash folder
+            'natural path in public store with 10-char folder' => [
+                $public,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                ['multimedia/video.mp4'],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in protected store with 10-char folder' => [
+                $protected,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                [$hashHelper->buildFileID('multimedia/video.mp4', $hash)],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in public store with 10-hexadecimal-char folder' => [
+                $public,
+                ['0123456789/video.mp4' => $content],
+                '0123456789/video.mp4',
+                ['0123456789/video.mp4'],
+                [],
+                '0123456789/video.mp4'
+            ],
+            'natural path in protected store with 10-hexadecimal-char folder' => [
+                $protected,
+                ['abcdef7890/video.mp4' => $content],
+                'abcdef7890/video.mp4',
+                [$hashHelper->buildFileID('abcdef7890/video.mp4', $hash)],
+                [],
+                'abcdef7890/video.mp4'
+            ],
         ];
     }
 
@@ -1077,13 +1111,19 @@ class AssetStoreTest extends SapphireTest
      * @param array $expected
      * @param array $notExpected
      */
-    public function testNormalisePath($fsName, array $contents, $fileID, array $expected, array $notExpected = [])
-    {
+    public function testNormalisePath(
+        $fsName,
+        array $contents,
+        $fileID,
+        array $expected,
+        array $notExpected = [],
+        $expectedFilename = 'folder/file.txt'
+    ) {
         $this->writeDummyFiles($fsName, $contents);
 
         $results = $this->getBackend()->normalisePath($fileID);
 
-        $this->assertEquals('folder/file.txt', $results['Filename']);
+        $this->assertEquals($expectedFilename, $results['Filename']);
         $this->assertTrue(
             strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash']) === 0
         );

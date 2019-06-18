@@ -1,0 +1,11 @@
+---
+Name: file-migration
+---
+# Remove the HTTPOutputHandler from the logger on the file migration.
+# It logs a lot of >= NOTICE errors that pollute the output with backtrace.
+SilverStripe\Core\Injector\Injector:
+  Psr\Log\LoggerInterface.quiet:
+    type: singleton
+    class: Monolog\Logger
+    constructor:
+      - "file-migration"

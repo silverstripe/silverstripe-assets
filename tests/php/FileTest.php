@@ -82,6 +82,8 @@ class FileTest extends SapphireTest
         fclose($fh);
 
         $file = new File();
+
+        $file->File->Hash = sha1_file($testfilePath);
         $file->setFromLocalFile($testfilePath);
         $file->ParentID = $folder->ID;
         $file->write();
@@ -346,15 +348,30 @@ class FileTest extends SapphireTest
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
-        $this->assertEquals('/assets/FileTest/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        $rootfile->publishSingle();
+        $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
     }
 
     public function testGetAbsoluteURL()
     {
         /** @var File $rootfile */
         $rootfile = $this->objFromFixture(File::class, 'asdf');
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals(
-            Director::absoluteBaseURL() . 'assets/FileTest/55b443b601/FileTest.txt',
+            Director::absoluteBaseURL() . 'assets/55b443b601/FileTest.txt',
+            $rootfile->getAbsoluteURL()
+        );
+
+        $rootfile->publishSingle();
+        $this->assertEquals(
+            Director::absoluteBaseURL() . 'assets/FileTest/FileTest.txt',
             $rootfile->getAbsoluteURL()
         );
     }
@@ -635,6 +652,44 @@ class FileTest extends SapphireTest
         $admin = $this->objFromFixture(Member::class, 'admin');
         $this->assertTrue($file->canEdit($admin), "Admins can edit files");
         $this->assertTrue($secureFile->canEdit($admin), 'Admins can edit any files');
+    }
+
+    public function testCanView()
+    {
+        $file = $this->objFromFixture(Image::class, 'gif');
+        $secureFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+
+        // Test anonymous permissions
+        $this->logOut();
+        $this->assertFalse($file->canView(), "Anonymous users cannot view draft files");
+        $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $this->assertTrue($file->canView(), "Anonymous users can view public files");
+        $this->assertFalse($secureFile->canView(), "Anonymous users cannot view files with specific permissions");
+        
+        // Test permissionless user
+        $frontendUser = $this->objFromFixture(Member::class, 'frontend');
+        $this->assertTrue($file->canView($frontendUser), "Permissionless users can view files");
+        $this->assertFalse($secureFile->canView($frontendUser), "Permissionless users cannot view secure files");
+
+        // Test global CMS section users
+        $cmsUser = $this->objFromFixture(Member::class, 'cms');
+        $this->assertTrue($file->canView($cmsUser), "CMS users can view public files");
+        $this->assertFalse($secureFile->canView($cmsUser), "CMS users cannot view a file that is not assigned to them");
+
+        // Test cms access users without file access
+        $securityUser = $this->objFromFixture(Member::class, 'security');
+        $this->assertTrue($file->canView($securityUser), "Security CMS users can view public files");
+        $this->assertFalse($secureFile->canView($securityUser), "Security CMS users cannot view a file that is not assigned to them.");
+
+        // Asset-admin user can edit files their group is granted to
+        $assetAdminUser = $this->objFromFixture(Member::class, 'assetadmin');
+        $this->assertTrue($file->canView($assetAdminUser), "Asset admin users can view public files");
+        $this->assertTrue($secureFile->canView($assetAdminUser), "Asset admin can view files that are assigned to them");
+
+        // Test admin
+        $admin = $this->objFromFixture(Member::class, 'admin');
+        $this->assertTrue($file->canView($admin), "Admins can view files");
+        $this->assertTrue($secureFile->canView($admin), 'Admins can view files that are not necessarily assigned to them');
     }
 
     public function testCanCreate()

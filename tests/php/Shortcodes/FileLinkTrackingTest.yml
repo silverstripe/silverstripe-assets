@@ -2,10 +2,12 @@
 SilverStripe\Assets\File:
   file1:
     FileFilename: testscript-test-file.txt
+#    FileHash: 5a5ee24e44e9cd8f5f87d82904b801406f224e44
     Name: testscript-test-file.txt
 SilverStripe\Assets\Image:
   image1:
     FileFilename: testscript-test-file.jpg
+#    FileHash: 5a5ee24e44e9cd8f5f87d82904b801406f224e44
     Name: testscript-test-file.jpg
 
 SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest\EditableObject:

@@ -1,0 +1,51 @@
+SilverStripe\Assets\Folder:
+  folder:
+    Name: Folder
+  sub-folder:
+    Name: SubFolder
+    ParentID: =>SilverStripe\Assets\Folder.folder
+  multimedia:
+    Name: Multimedia
+  hashfolder:
+    Name: abcdef01234
+SilverStripe\Assets\File:
+  root-file:
+    FileFilename: RootFile.txt
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: RootFile.txt
+  folder-file:
+    FileFilename: Folder/FolderFile.pdf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: FolderFile.pdf
+    ParentID: =>SilverStripe\Assets\Folder.folder
+  subfolder-file:
+    FileFilename: Folder/SubFolder/SubFolderFile.txt
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: SubFolderFile.txt
+    ParentID: =>SilverStripe\Assets\Folder.sub-folder
+  multimedia-file:
+    FileFilename: Multimedia/file-in-folder-with-10-char.pdf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: file-in-folder-with-10-char.pdf
+    ParentID: =>SilverStripe\Assets\Folder.multimedia
+  hashfolder-file:
+    FileFilename: abcdef01234/file-in-folder-with-10-hexa-decimal-char.pdf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: file-in-folder-with-10-char.pdf
+    ParentID: =>SilverStripe\Assets\Folder.hashfolder
+
+SilverStripe\Assets\Image:
+  root-file:
+    FileFilename: RootImage.jpg
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: RootImage.jpg
+  folder-image:
+    FileFilename: Folder/FolderImage.jpg
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: FolderImage.jpg
+    ParentID: =>SilverStripe\Assets\Folder.folder
+  subfolder-image:
+    FileFilename: Folder/SubFolder/SubFolderImage.jpg
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: SubFolderImage.jpg
+    ParentID: =>SilverStripe\Assets\Folder.sub-folder

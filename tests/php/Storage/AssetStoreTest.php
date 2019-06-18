@@ -3,7 +3,15 @@
 namespace SilverStripe\Assets\Tests\Storage;
 
 use Exception;
+use InvalidArgumentException;
+use League\Flysystem\Filesystem;
 use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
@@ -108,25 +116,23 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish1Tuple
         );
+
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/a870de278b/lovely-fish.jpg',
-            $backend->getAsURL($fish1Tuple['Filename'], $fish1Tuple['Hash'])
+            '/assets/directory/a870de278b/lovely-fish.jpg',
+            $backend->getAsURL($fish1Tuple['Filename'], $fish1Tuple['Hash']),
+            'Files should default to being written to the protected store'
         );
 
         // Write a different file with same name. Should not detect duplicates since sha are different
         $fish2 = realpath(__DIR__ . '/../ImageTest/test-image-low-quality.jpg');
-        try {
-            $fish2Tuple = $backend->setFromLocalFile(
-                $fish2,
-                'directory/lovely-fish.jpg',
-                null,
-                null,
-                array('conflict' => AssetStore::CONFLICT_EXCEPTION)
-            );
-        } catch (Exception $ex) {
-            $this->fail('Writing file with different sha to same location failed with exception');
-            return;
-        }
+        $fish2Tuple = $backend->setFromLocalFile(
+            $fish2,
+            'directory/lovely-fish.jpg',
+            '',
+            null,
+            array('conflict' => AssetStore::CONFLICT_EXCEPTION)
+        );
+
         $this->assertEquals(
             array(
                 'Hash' => '33be1b95cba0358fe54e8b13532162d52f97421c',
@@ -136,7 +142,7 @@ class AssetStoreTest extends SapphireTest
             $fish2Tuple
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/33be1b95cb/lovely-fish.jpg',
+            '/assets/directory/33be1b95cb/lovely-fish.jpg',
             $backend->getAsURL($fish2Tuple['Filename'], $fish2Tuple['Hash'])
         );
 
@@ -158,14 +164,14 @@ class AssetStoreTest extends SapphireTest
             $fish3Tuple
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/a870de278b/lovely-fish-v2.jpg',
+            '/assets/directory/a870de278b/lovely-fish-v2.jpg',
             $backend->getAsURL($fish3Tuple['Filename'], $fish3Tuple['Hash'])
         );
 
         // Write another file should increment to -v3
         $fish4Tuple = $backend->setFromLocalFile(
             $fish1,
-            'directory/lovely-fish-v2.jpg',
+            'directory/lovely-fish.jpg',
             null,
             null,
             array('conflict' => AssetStore::CONFLICT_RENAME)
@@ -179,7 +185,7 @@ class AssetStoreTest extends SapphireTest
             $fish4Tuple
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/a870de278b/lovely-fish-v3.jpg',
+            '/assets/directory/a870de278b/lovely-fish-v3.jpg',
             $backend->getAsURL($fish4Tuple['Filename'], $fish4Tuple['Hash'])
         );
 
@@ -200,7 +206,7 @@ class AssetStoreTest extends SapphireTest
             $fish5Tuple
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/a870de278b/lovely-fish.jpg',
+            '/assets/directory/a870de278b/lovely-fish.jpg',
             $backend->getAsURL($fish5Tuple['Filename'], $fish5Tuple['Hash'])
         );
 
@@ -221,7 +227,7 @@ class AssetStoreTest extends SapphireTest
             $fish6Tuple
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/a870de278b/lovely-fish.jpg',
+            '/assets/directory/a870de278b/lovely-fish.jpg',
             $backend->getAsURL($fish6Tuple['Filename'], $fish6Tuple['Hash'])
         );
     }
@@ -353,11 +359,11 @@ class AssetStoreTest extends SapphireTest
     /**
      * Data provider for non-file IDs
      */
-    public function dataProviderInvalidFileIDs()
+    public function dataProviderHashlessFileIDs()
     {
         return [
-            [ 'some/folder/file.jpg', null ],
-            [ 'file.jpg', null ]
+            [ 'some/folder/file.jpg', ['Filename' => 'some/folder/file.jpg', 'Hash' => '', 'Variant' => '' ] ],
+            [ 'file.jpg', ['Filename' => 'file.jpg', 'Hash' => '', 'Variant' => '' ] ]
         ];
     }
 
@@ -371,7 +377,8 @@ class AssetStoreTest extends SapphireTest
      */
     public function testGetFileID($fileID, $tuple)
     {
-        $store = new TestAssetStore();
+        /** @var TestAssetStore $store */
+        $store = Injector::inst()->get(AssetStore::class);
         $this->assertEquals(
             $fileID,
             $store->getFileID($tuple['Filename'], $tuple['Hash'], $tuple['Variant'])
@@ -382,7 +389,7 @@ class AssetStoreTest extends SapphireTest
      * Test reversing of FileIDs
      *
      * @dataProvider dataProviderFileIDs
-     * @dataProvider dataProviderInvalidFileIDs
+     * @dataProvider dataProviderHashlessFileIDs
      * @param string $fileID File ID to parse
      * @param array|null $tuple expected parsed tuple, or null if invalid
      */
@@ -429,7 +436,8 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * Test that legacy filenames work as expected
+     * Test that legacy filenames work as expected. This test is somewhate reduntant now because legacy filename
+     * should be ignored.
      */
     public function testLegacyFilenames()
     {
@@ -449,8 +457,9 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish1Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/a870de278b/lovely-fish.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish.jpg',
+            '/assets/directory/a870de278b/lovely-fish.jpg',
             $backend->getAsURL($fish1Tuple['Filename'], $fish1Tuple['Hash'])
         );
 
@@ -487,18 +496,20 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish3Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/33be1b95cb/lovely-fish-v2.jpg');
         $this->assertEquals(
-            '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
+            '/assets/directory/33be1b95cb/lovely-fish-v2.jpg',
             $backend->getAsURL($fish3Tuple['Filename'], $fish3Tuple['Hash'])
         );
 
         // Write back original file, but with CONFLICT_EXISTING. The file should not change
+        $backend->publish('directory/lovely-fish-v2.jpg', '33be1b95cba0358fe54e8b13532162d52f97421c');
         $fish4Tuple = $backend->setFromLocalFile(
             $fish1,
             'directory/lovely-fish-v2.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
+            ['conflict' => AssetStore::CONFLICT_USE_EXISTING, 'visibility' => AssetStore::VISIBILITY_PUBLIC]
         );
         $this->assertEquals(
             array(
@@ -508,6 +519,7 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish4Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
             '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish4Tuple['Filename'], $fish4Tuple['Hash'])
@@ -519,7 +531,7 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish-v2.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE)
+            array('conflict' => AssetStore::CONFLICT_OVERWRITE, 'visibility' => AssetStore::VISIBILITY_PUBLIC)
         );
         $this->assertEquals(
             array(
@@ -529,6 +541,7 @@ class AssetStoreTest extends SapphireTest
             ),
             $fish5Tuple
         );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');
         $this->assertEquals(
             '/assets/AssetStoreTest/directory/lovely-fish-v2.jpg',
             $backend->getAsURL($fish5Tuple['Filename'], $fish5Tuple['Hash'])
@@ -547,9 +560,9 @@ class AssetStoreTest extends SapphireTest
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution(null));
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution('somevariant'));
 
-        // Enable legacy filenames
+        // Enable legacy filenames -- legacy filename used to have different conflict resolution prior to 1.4.0
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
-        $this->assertEquals(AssetStore::CONFLICT_RENAME, $store->getDefaultConflictResolution(null));
+        $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution(null));
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution('somevariant'));
     }
 
@@ -560,22 +573,28 @@ class AssetStoreTest extends SapphireTest
     {
         $backend = $this->getBackend();
         $fish = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
-        $fishTuple = $backend->setFromLocalFile($fish, 'parent/lovely-fish.jpg');
+        $fishTuple = $backend->setFromLocalFile(
+            $fish,
+            'parent/lovely-fish.jpg',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
         $fishVariantTuple = $backend->setFromLocalFile($fish, $fishTuple['Filename'], $fishTuple['Hash'], 'copy');
 
         // Test public file storage
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertEquals(
             AssetStore::VISIBILITY_PUBLIC,
             $backend->getVisibility($fishTuple['Filename'], $fishTuple['Hash'])
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/parent/a870de278b/lovely-fish.jpg',
+            '/assets/AssetStoreTest/parent/lovely-fish.jpg',
             $backend->getAsURL($fishTuple['Filename'], $fishTuple['Hash'])
         );
         $this->assertEquals(
-            '/assets/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg',
+            '/assets/AssetStoreTest/parent/lovely-fish__copy.jpg',
             $backend->getAsURL($fishVariantTuple['Filename'], $fishVariantTuple['Hash'], $fishVariantTuple['Variant'])
         );
 
@@ -585,8 +604,8 @@ class AssetStoreTest extends SapphireTest
 
         // Test protected file storage
         $backend->protect($fishTuple['Filename'], $fishTuple['Hash']);
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
@@ -612,13 +631,23 @@ class AssetStoreTest extends SapphireTest
 
         // Publish reverts visibility
         $backend->publish($fishTuple['Filename'], $fishTuple['Hash']);
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
         $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
             AssetStore::VISIBILITY_PUBLIC,
             $backend->getVisibility($fishTuple['Filename'], $fishTuple['Hash'])
+        );
+
+        // Protected urls should go through asset routing mechanism
+        $this->assertEquals(
+            '/' . ASSETS_DIR . '/AssetStoreTest/parent/lovely-fish.jpg',
+            $backend->getAsURL($fishTuple['Filename'], $fishTuple['Hash'])
+        );
+        $this->assertEquals(
+            '/' . ASSETS_DIR . '/AssetStoreTest/parent/lovely-fish__copy.jpg',
+            $backend->getAsURL($fishVariantTuple['Filename'], $fishVariantTuple['Hash'], $fishVariantTuple['Variant'])
         );
     }
 
@@ -684,5 +713,454 @@ class AssetStoreTest extends SapphireTest
         $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash']));
         $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'somevariant'));
         $this->assertTrue($backend->exists($newFilename, $fish1Tuple['Hash'], 'anothervariant'));
+    }
+
+    public function testStoreLocationWritingLogic()
+    {
+        $backend = $this->getBackend();
+
+        // Test defaults
+        $tuple = $backend->setFromString('defaultsToProtectedStore', 'defaultsToProtectedStore.txt');
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PROTECTED,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        // Test protected
+        $tuple = $backend->setFromString(
+            'explicitely Protected Store',
+            'explicitelyProtectedStore.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PROTECTED]
+        );
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PROTECTED,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        $tuple = $backend->setFromString(
+            'variant Protected Store',
+            'explicitelyProtectedStore.txt',
+            $tuple['Hash'],
+            'variant'
+        );
+        $hash = substr($tuple['Hash'], 0, 10);
+        $this->assertFileExists(
+            ASSETS_PATH .
+            "/AssetStoreTest/.protected/$hash/explicitelyProtectedStore__variant.txt"
+        );
+
+        // Test public
+        $tuple = $backend->setFromString(
+            'explicitely public Store',
+            'explicitelyPublicStore.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            AssetStore::VISIBILITY_PUBLIC,
+            $backend->getVisibility($tuple['Filename'], $tuple['Hash'])
+        );
+
+        $tuple = $backend->setFromString(
+            'variant public Store',
+            'explicitelyPublicStore.txt',
+            $tuple['Hash'],
+            'variant'
+        );
+        $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/explicitelyPublicStore__variant.txt');
+    }
+
+    public function testGetFilesystemFor()
+    {
+        $store = $this->getBackend();
+
+        $publicFs = $store->getPublicFilesystem();
+        $protectedFs = $store->getProtectedFilesystem();
+
+        $hash = sha1('hello');
+        $hashPath = substr($hash, 0, 10) . '/hello.txt';
+        $naturalPath = 'hello.txt';
+
+        $file = new File();
+        $file->File->Filename = $naturalPath;
+        $file->File->Hash = $hash;
+        $file->write();
+        $file->publishRecursive();
+
+        // Protected only
+        $protectedFs->write($hashPath, 'hello');
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' is protected and does not exist on public store'
+        );
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' should be rewritten to its hash path which exists on the protected'
+        );
+
+        // Public and protected
+        $publicFs->write($naturalPath, 'hello');
+        $store->setFromString(
+            'hello',
+            'hello.txt',
+            null,
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            $protectedFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' exists on protected store and even if it has a resolvable public equivalent'
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' exists on public store even it has a protected resovlable equivalent'
+        );
+
+        // Public only
+        $protectedFs->delete($hashPath);
+        $store->setFromString(
+            'hello',
+            'hello.txt',
+            'abcdef7890',
+            null,
+            ['visibility' => AssetStore::VISIBILITY_PUBLIC]
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($hashPath),
+            $hashPath . ' should be rewritten to its natural path which exists on the public store'
+        );
+        $this->assertEquals(
+            $publicFs,
+            $store->getFilesystemFor($naturalPath),
+            $naturalPath . ' exists on public store'
+        );
+    }
+
+    public function listOfVariantsToWrite()
+    {
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $variant = 'uppercase';
+        $parsedFiledID = new ParsedFileID($filename, $hash);
+        $variantParsedFiledID = $parsedFiledID->setVariant($variant);
+
+        $hashHelper = new HashFileIDHelper();
+        $hashPath = $hashHelper->buildFileID($parsedFiledID);
+        $variantHashPath = $hashHelper->buildFileID($variantParsedFiledID);
+        $naturalHelper = new NaturalFileIDHelper();
+        $naturalPath = $naturalHelper->buildFileID($parsedFiledID);
+        $variantNaturalPath = $naturalHelper->buildFileID($variantParsedFiledID);
+
+        return [
+            ['Public', $hashPath, $content, $variantParsedFiledID, $variantHashPath],
+            ['Public', $variantNaturalPath, $content, $variantParsedFiledID, $variantNaturalPath],
+            ['Protected', $hashPath, $content, $variantParsedFiledID, $variantHashPath],
+            ['Protected', $variantNaturalPath, $content, $variantParsedFiledID, $variantNaturalPath],
+        ];
+    }
+
+    /**
+     * Make sure that variants are written next to their parent file
+     * @dataProvider listOfVariantsToWrite
+     */
+    public function testVariantWriteNextToFile(
+        $fsName,
+        $mainFilePath,
+        $content,
+        ParsedFileID $variantParsedFileID,
+        $expectedVariantPath
+    ) {
+        $fsMethod = "get{$fsName}Filesystem";
+
+        /** @var Filesystem $fs */
+        $fs = $this->getBackend()->$fsMethod();
+        $fs->write($mainFilePath, $content);
+        $this->getBackend()->setFromString(
+            'variant content',
+            $variantParsedFileID->getFilename(),
+            $variantParsedFileID->getHash(),
+            $variantParsedFileID->getVariant()
+        );
+
+        $this->assertTrue($fs->has($expectedVariantPath));
+    }
+
+    public function listOfFilesToNormalise()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+        $legacyHelper = new LegacyFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+        $legacyPath = $legacyHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content);
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+        $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$hashPath => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
+            [$protected, [$filename => $content], $filename, $hash, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $filename, $hash, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+
+            // SS3 variants ... the protected store doesn't resolve SS3 paths
+            [
+                $public,
+                [$legacyPath => $content, $vLegacy => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFilesToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $filename
+     * @param string $hash
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
+    {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $results = $this->getBackend()->normalise($filename, $hash);
+
+        $this->assertEquals($filename, $results['Filename']);
+        $this->assertEquals($hash, $results['Hash']);
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    public function listOfFileIDsToNormalise()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+        $legacyHelper = new LegacyFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content);
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+        $legacyPath = $legacyHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content);
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+        $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$hashPath => $content], $hashPath, [$filename], [$hashPath, dirname($hashPath)]],
+            [$protected, [$filename => $content], $filename, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $hashPath, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath)]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+
+            // SS3 variants ... the protected store doesn't resolve SS3 paths
+            [
+                $public,
+                [$legacyPath => $content, $vLegacy => $vContent],
+                $legacyPath,
+                [$filename, $vNatural],
+                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+            ],
+
+            // Test files with a parent folder that could be confused for an hash folder
+            'natural path in public store with 10-char folder' => [
+                $public,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                ['multimedia/video.mp4'],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in protected store with 10-char folder' => [
+                $protected,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                [$hashHelper->buildFileID('multimedia/video.mp4', $hash)],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in public store with 10-hexadecimal-char folder' => [
+                $public,
+                ['0123456789/video.mp4' => $content],
+                '0123456789/video.mp4',
+                ['0123456789/video.mp4'],
+                [],
+                '0123456789/video.mp4'
+            ],
+            'natural path in protected store with 10-hexadecimal-char folder' => [
+                $protected,
+                ['abcdef7890/video.mp4' => $content],
+                'abcdef7890/video.mp4',
+                [$hashHelper->buildFileID('abcdef7890/video.mp4', $hash)],
+                [],
+                'abcdef7890/video.mp4'
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFileIDsToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $fileID
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalisePath(
+        $fsName,
+        array $contents,
+        $fileID,
+        array $expected,
+        array $notExpected = [],
+        $expectedFilename = 'folder/file.txt'
+    ) {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $results = $this->getBackend()->normalisePath($fileID);
+
+        $this->assertEquals($expectedFilename, $results['Filename']);
+        $this->assertTrue(
+            strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash']) === 0
+        );
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    /**
+     * @param $fs
+     * @return Filesystem
+     */
+    private function getFilesystem($fs)
+    {
+        switch (strtolower($fs)) {
+            case AssetStore::VISIBILITY_PUBLIC:
+                return $this->getBackend()->getPublicFilesystem();
+            case AssetStore::VISIBILITY_PROTECTED:
+                return $this->getBackend()->getProtectedFilesystem();
+            default:
+                new InvalidArgumentException('getFilesystem(): $fs must be an equal to a know visibility.');
+        }
+    }
+
+    private function writeDummyFiles($fsName, array $contents)
+    {
+        $fs = $this->getFilesystem($fsName);
+        foreach ($contents as $path => $content) {
+            $fs->write($path, $content);
+        }
     }
 }

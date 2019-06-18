@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Dev;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\AdapterInterface;
 use League\Flysystem\Filesystem;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Filesystem as SSFilesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
@@ -76,6 +77,8 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         $backend = new TestAssetStore();
         $backend->setPublicFilesystem($publicFilesystem);
         $backend->setProtectedFilesystem($protectedFilesystem);
+        $backend->setPublicResolutionStrategy(Injector::inst()->get(FileResolutionStrategy::class . '.public'));
+        $backend->setProtectedResolutionStrategy(Injector::inst()->get(FileResolutionStrategy::class . '.protected'));
         Injector::inst()->registerService($backend, AssetStore::class);
         Injector::inst()->registerService($backend, AssetStoreRouter::class);
 
@@ -129,10 +132,12 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     /**
      * Helper method to get local filesystem path for this file
      *
-     * @param  AssetContainer $asset
+     * @param AssetContainer $asset
+     * @param boolean $forceProtected
+     * @param boolean $relative Return path relative to asset store root.
      * @return string
      */
-    public static function getLocalPath(AssetContainer $asset, $forceProtected = false)
+    public static function getLocalPath(AssetContainer $asset, $forceProtected = false, $relative = false)
     {
         if ($asset instanceof Folder) {
             return self::base_path() . '/' . $asset->getFilename();
@@ -151,7 +156,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         }
         /** @var Local $adapter */
         $adapter = $filesystem->getAdapter();
-        return $adapter->applyPathPrefix($fileID);
+        return $relative ? $fileID : $adapter->applyPathPrefix($fileID);
     }
 
     public function cleanFilename($filename)
@@ -174,6 +179,11 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         return parent::getOriginalFilename($fileID);
     }
 
+    public function getFilesystemFor($fileID)
+    {
+        return parent::getFilesystemFor($fileID);
+    }
+
     public function removeVariant($fileID)
     {
         return parent::removeVariant($fileID);
@@ -187,6 +197,8 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     protected function isSeekableStream($stream)
     {
         if (isset(self::$seekable_override)) {
+            // Unset the override so we don't get stuck in an infinite loop
+            self::$seekable_override = null;
             return self::$seekable_override;
         }
         return parent::isSeekableStream($stream);

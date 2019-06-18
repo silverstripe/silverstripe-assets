@@ -39,6 +39,7 @@ abstract class ImageTest extends SapphireTest
         foreach ($files as $image) {
             $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
             $image->setFromLocalFile($sourcePath, $image->Filename);
+            $image->publishSingle();
         }
 
         // Set default config
@@ -60,7 +61,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $expected = '<img src="/assets/ImageTest/folder/444065542b/test-image.png" alt="This is a image Title" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -88,7 +89,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $expected = '<img src="/assets/ImageTest/folder/444065542b/test-image.png" alt="test image" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="test image" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -99,7 +100,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
-        $expected = '<img src="/assets/ImageTest/folder/46affab704/test.image.with.dots.png" alt="test.image.with.dots" />';
+        $expected = '<img src="/assets/ImageTest/folder/test.image.with.dots.png" alt="test.image.with.dots" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -348,6 +349,14 @@ abstract class ImageTest extends SapphireTest
         $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 
+    public function testGenerateImageInSameFolderAsOriginal()
+    {
+        // All fixtures are in a subfolder
+        $original = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $generated = $original->Pad(200, 200, 'CCCCCC', 0);
+        $this->assertEquals($original->Parent()->getFilename(), $generated->Parent()->getFilename());
+    }
+
     /**
      * Ensure dimensions are cached
      */
@@ -378,6 +387,31 @@ abstract class ImageTest extends SapphireTest
         );
         $customKey = $this->getDimensionCacheKey(sha1('anything'), 'custom-variant');
         $this->assertTrue($cache->has($customKey));
+    }
+
+    public function testVariantParts()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $format = 'Pad';
+        $args = [331, 313, '222222', 0];
+        $name = $image->variantName($format, $args);
+        $this->assertEquals(
+            array_merge([$format], $args),
+            $image->variantParts($name)
+        );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     */
+    public function testVariantPartsThrowsOnInvalidName()
+    {
+        /** @var Image $image */
+        $image = singleton(Image::class);
+        $args = ['foo'];
+        $name = $image->variantName('Invalid', $args);
+        $image->variantParts($name);
     }
 
     protected function getDimensionCacheKey($hash, $variant)

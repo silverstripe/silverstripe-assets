@@ -13,7 +13,7 @@ use SilverStripe\Dev\BuildTask;
  */
 class TagsToShortcodeTask extends BuildTask
 {
-    private static $segment = 'TagsToShortcode';
+    private static $segment = 'TagsToShortcodeTask';
 
     protected $title = 'Rewrite tags to shortcodes';
 

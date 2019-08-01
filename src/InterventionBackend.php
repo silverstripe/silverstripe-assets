@@ -65,6 +65,11 @@ class InterventionBackend implements Image_Backend, Flushable
     const FAILED_UNKNOWN = 'unknown';
 
     /**
+     * @config - used to set where cached intervention files will be stored
+     */
+    private static $local_temp_path = TEMP_PATH;
+
+    /**
      * @var AssetContainer
      */
     private $container;
@@ -240,7 +245,8 @@ class InterventionBackend implements Image_Backend, Flushable
         try {
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
-            $path = tempnam(TEMP_PATH, 'interventionimage_');
+            $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
+            $path = tempnam($tempPath, 'interventionimage_');
             if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
                 //tmpnam creates a file, we should clean it up if we are changing the path name
                 unlink($path);

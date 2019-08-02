@@ -3,14 +3,12 @@
 namespace SilverStripe\Assets\Tests;
 
 use SilverStripe\Assets\FileNameFilter;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\Transliterator;
 
 class FileNameFilterTest extends SapphireTest
 {
-
-    public function setUp()
+    protected function setUp()
     {
         parent::setUp();
 

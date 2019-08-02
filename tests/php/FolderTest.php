@@ -4,9 +4,8 @@ namespace SilverStripe\Assets\Tests;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\FileNameFilter;
-use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Folder;
+use SilverStripe\Assets\FolderNameFilter;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
@@ -35,16 +34,17 @@ class FolderTest extends SapphireTest
         TestAssetStore::activate('FolderTest');
 
         // Set the File Name Filter replacements so files have the expected names
-        Config::modify()->merge(
-            FileNameFilter::class,
+        Config::modify()->set(
+            FolderNameFilter::class,
             'default_replacements',
-            array(
-            '/\s/' => '-', // remove whitespace
-            '/_/' => '-', // underscores to dashes
-            '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
-            '/[\-]{2,}/' => '-', // remove duplicate dashes
-            '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores
-            )
+            [
+                '/\s/' => '-', // remove whitespace
+                '/_/' => '-', // underscores to dashes
+                '/[^A-Za-z0-9+.\-]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash and dot
+                '/[\-]{2,}/' => '-', // remove duplicate dashes
+                '/^[\.\-_]+/' => '', // Remove all leading dots, dashes or underscores,
+                '/\./' => '-', // replace dots with dashes
+            ]
         );
 
         // Create a test files for each of the fixture references
@@ -178,12 +178,10 @@ class FolderTest extends SapphireTest
         // set ParentID. This should cause updateFilesystem to be called on all children
         $folder1->ParentID = $folder2->ID;
         $folder1->write();
-//        die();
 
         // Check if the file in the folder moved along
         /** @var File $file1Draft */
         $file1Draft = Versioned::get_by_stage(File::class, Versioned::DRAFT)->byID($file1->ID);
-//        var_dump(ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt');
         $this->assertFileExists(ASSETS_PATH . '/FolderTest/.protected/FileTest-folder2/FileTest-folder1/58a74a7aa4/File1.txt');
 
         $this->assertEquals(
@@ -212,6 +210,21 @@ class FolderTest extends SapphireTest
             ASSETS_PATH . '/FolderTest/FileTest-folder2/FileTest-folder1/File1.txt',
             TestAssetStore::getLocalPath($file1Draft)
         );
+    }
+
+    public function testFindOrMakeDisallowsDotsInFolderNames()
+    {
+        $folder = Folder::find_or_make('my.folder');
+        $this->assertSame('my-folder', $folder->Name);
+    }
+
+    public function testSetNameDisallowsDotsInFolderNames()
+    {
+        $folder = new Folder();
+        $folder->Name = 'another.one';
+        $folder->write();
+
+        $this->assertSame('another-one', $folder->Name);
     }
 
     /**

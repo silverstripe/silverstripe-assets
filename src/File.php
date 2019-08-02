@@ -1376,7 +1376,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Pass name through standand FileNameFilter
+     * Pass name through standard FileNameFilter
      *
      * @param string $name
      * @return string
@@ -1384,7 +1384,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     protected function filterFilename($name)
     {
         // Fix illegal characters
-        $filter = FileNameFilter::create();
+        $filter = $this->getFilter();
         $parts = array_filter(preg_split("#[/\\\\]+#", $name));
         return implode('/', array_map(function ($part) use ($filter) {
             return $filter->filter($part);
@@ -1408,5 +1408,13 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         if ($permissions instanceof InheritedPermissions) {
             $permissions->clearCache();
         }
+    }
+
+    /**
+     * @return FileNameFilter
+     */
+    protected function getFilter()
+    {
+        return FileNameFilter::create();
     }
 }

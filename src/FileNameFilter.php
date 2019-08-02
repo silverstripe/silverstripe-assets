@@ -8,10 +8,12 @@ use SilverStripe\View\Parsers\Transliterator;
 
 /**
  * Filter certain characters from file name, for nicer (more SEO-friendly) URLs
- * as well as better filesystem compatibility. Can be used for files and folders.
+ * as well as better filesystem compatibility.
  *
  * Caution: Does not take care of full filename sanitization in regards to directory traversal etc.,
  * please use PHP's built-in basename() for this purpose.
+ *
+ * For file name filtering see {@link FileNameFilter}.
  *
  * The default sanitizer is quite conservative regarding non-ASCII characters,
  * in order to achieve maximum filesystem compatibility.
@@ -91,11 +93,11 @@ class FileNameFilter
      * Take care not to add replacements which might invalidate the file structure,
      * e.g. removing dots will remove file extension information.
      *
-     * @param array $r Map of find/replace used for preg_replace().
+     * @param array $replacements Map of find/replace used for preg_replace().
      */
-    public function setReplacements($r)
+    public function setReplacements($replacements)
     {
-        $this->replacements = $r;
+        $this->replacements = $replacements;
     }
 
     /**
@@ -103,7 +105,7 @@ class FileNameFilter
      */
     public function getReplacements()
     {
-        return ($this->replacements) ? $this->replacements : (array)$this->config()->default_replacements;
+        return $this->replacements ?: (array)$this->config()->get('default_replacements');
     }
 
     /**
@@ -126,15 +128,15 @@ class FileNameFilter
     }
 
     /**
-     * @param Transliterator|false $t
+     * @param Transliterator|false $transliterator
      */
-    public function setTransliterator($t)
+    public function setTransliterator($transliterator)
     {
-        $this->transliterator = $t;
+        $this->transliterator = $transliterator;
     }
 
     /**
-     * @return String File name without extension
+     * @return string File name without extension
      */
     public function getDefaultName()
     {

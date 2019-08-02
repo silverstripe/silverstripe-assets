@@ -53,7 +53,7 @@ class Folder extends File
 
         $parentID = 0;
         $item = null;
-        $filter = FileNameFilter::create();
+        $filter = FolderNameFilter::create();
         foreach ($parts as $part) {
             if (!$part) {
                 continue; // happens for paths with a trailing slash
@@ -295,5 +295,13 @@ class Folder extends File
         $result = ValidationResult::create();
         $this->extend('validate', $result);
         return $result;
+    }
+
+    /**
+     * @return FolderNameFilter
+     */
+    protected function getFilter()
+    {
+        return FolderNameFilter::create();
     }
 }

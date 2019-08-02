@@ -65,7 +65,10 @@ class InterventionBackend implements Image_Backend, Flushable
     const FAILED_UNKNOWN = 'unknown';
 
     /**
-     * @config - used to set where cached intervention files will be stored
+     * Configure where cached intervention files will be stored
+     *
+     * @config
+     * @var string
      */
     private static $local_temp_path = TEMP_PATH;
 

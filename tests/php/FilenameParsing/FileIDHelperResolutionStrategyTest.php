@@ -646,6 +646,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function listVariantParsedFiledID()
     {
         $pfid = new ParsedFileID('folder/file.txt', 'abcdef7890');
+        $ambigious = new ParsedFileID('decade1980/file.txt', 'abcdef7890');
         return [
             'Variantless Natural path' =>
                 [$pfid->setFileID('folder/file.txt')->setHash(''), 'folder/file.txt'],
@@ -669,6 +670,14 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
                     $pfid->setFileID('folder/abcdef7890/file.txt'),
                     $pfid->setFileID('folder/abcdef7890/file__variant.txt')
                 ],
+            'File in folder that could be an hash' => [
+                $ambigious->setFileID('decade1980/file.txt'),
+                $ambigious->setFileID('decade1980/file.txt'),
+            ],
+            'File variant in folder that could be an hash' => [
+                $ambigious->setFileID('decade1980/file.txt'),
+                $ambigious->setFileID('decade1980/file__variant.txt')->setVariant('variant'),
+            ]
         ];
     }
 

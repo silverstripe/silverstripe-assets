@@ -1163,4 +1163,36 @@ class AssetStoreTest extends SapphireTest
             $fs->write($path, $content);
         }
     }
+
+    public function testExist()
+    {
+        // "decade1980" could be confused for an hash because it's 10 hexa-decimal characters
+        $filename = 'decade1980/pangram.txt';
+        $content = 'The quick brown fox jumps over a lazy dog';
+        $hash = sha1($content);
+        $store = $this->getBackend();
+
+        // File haven't been created yet
+        $this->assertFalse($store->exists($filename, $hash));
+        $this->assertFalse($store->exists($filename, $hash, 'variant'));
+
+        // Create main file on protected store
+        $store->setFromString($content, $filename);
+        $this->assertTrue($store->exists($filename, $hash));
+        $this->assertFalse($store->exists($filename, $hash, 'variant'));
+
+        // Create variant on protected store
+        $store->setFromString(strtoupper($content), $filename, $hash, 'variant');
+        $this->assertTrue($store->exists($filename, $hash, 'variant'));
+
+        // Publish file to public store
+        $store->publish($filename, $hash);
+        $this->assertTrue($store->exists($filename, $hash));
+        $this->assertTrue($store->exists($filename, $hash, 'variant'));
+
+        // Files should be gone
+        $store->delete($filename, $hash);
+        $this->assertFalse($store->exists($filename, $hash));
+        $this->assertFalse($store->exists($filename, $hash, 'variant'));
+    }
 }

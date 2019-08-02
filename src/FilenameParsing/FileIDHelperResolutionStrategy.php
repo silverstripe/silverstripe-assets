@@ -502,6 +502,12 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         foreach ($this->resolutionFileIDHelpers as $fileIDHelper) {
             $parsedFileID = $fileIDHelper->parseFileID($fileID);
             if ($parsedFileID) {
+                if ($hash && $parsedFileID->getHash() && !$this->hasher->compare($parsedFileID->getHash(), $hash)) {
+                    // Our file ID came bundled with an Hash, we got an hash from our helper, but that hash didn't
+                    // match what we were expecting.
+                    continue;
+                }
+
                 if ($hash) {
                     $parsedFileID = $parsedFileID->setHash($hash);
                 }

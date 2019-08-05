@@ -65,6 +65,14 @@ class InterventionBackend implements Image_Backend, Flushable
     const FAILED_UNKNOWN = 'unknown';
 
     /**
+     * Configure where cached intervention files will be stored
+     *
+     * @config
+     * @var string
+     */
+    private static $local_temp_path = TEMP_PATH;
+
+    /**
      * @var AssetContainer
      */
     private $container;
@@ -240,7 +248,8 @@ class InterventionBackend implements Image_Backend, Flushable
         try {
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
-            $path = tempnam(TEMP_PATH, 'interventionimage_');
+            $tempPath = $this->getTempPathConfig();
+            $path = tempnam($tempPath, 'interventionimage_');
             if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
                 //tmpnam creates a file, we should clean it up if we are changing the path name
                 unlink($path);
@@ -834,5 +843,15 @@ class InterventionBackend implements Image_Backend, Flushable
         // Ensure stream is readable
         $meta = stream_get_meta_data($stream);
         return isset($meta['mode']) && (strstr($meta['mode'], 'r') || strstr($meta['mode'], '+'));
+    }
+
+    /**
+     * This gets the temp path config usually set through local_temp_path
+     *
+     * @return string
+     */
+    public function getTempPathConfig(): string
+    {
+        return $this->config()->get('local_temp_path') ?? TEMP_PATH;
     }
 }

@@ -251,13 +251,19 @@ class FileMigrationHelper
      */
     protected function migrateFile($base, File $file, $legacyFilename)
     {
+        $this->logger &&
+            $this->logger->debug('**** Trying to migrate SS3 file ' . $legacyFilename . ' with ID ' . $file->ID);
+
         // Make sure this legacy file actually exists
+        $this->logger && $this->logger->debug('Trying to find native');
         $path = $this->findNativeFile($base, $file, $legacyFilename);
         if ($path === false) {
+            $this->logger && $this->logger->debug('Could not find native file');
             return false;
         }
 
         // Fix file classname if it has a classname that's incompatible with its extention
+        $this->logger && $this->logger->debug('Trying to find native');
         $extension = $file->getExtension();
         if (!$this->validateFileClassname($file, $extension)) {
             // We disable validation (if it is enabled) so that we are able to write a corrected
@@ -276,6 +282,7 @@ class FileMigrationHelper
         }
 
         // Remove invalid files
+        $this->logger && $this->logger->debug('validating file');
         $validationResult = $file->validate();
         if (!$validationResult->isValid()) {
             if ($this->config()->get('delete_invalid_files')) {
@@ -297,6 +304,7 @@ class FileMigrationHelper
         }
 
         // Copy local file into this filesystem
+        $this->logger && $this->logger->debug('Copy local file into this filesystem');
         $dbFilename = $file->generateFilename();
         $fsFilename = $path === true ? $this->stripAssetsDir($legacyFilename) : $this->stripAssetsDir($path, $base);
         if ($path === true && $fsFilename == $dbFilename) {
@@ -313,11 +321,13 @@ class FileMigrationHelper
         }
 
         // Move file if the APL changes filename value
+        $this->logger && $this->logger->debug('Move file if the APL changes filename value');
         $file->File->Filename = $results['Filename'];
         $file->File->Hash = $results['Hash'];
         $file->setField('Filename', null);
 
         // Save and publish
+        $this->logger && $this->logger->debug('Save and publish');
         try {
             if (class_exists(Versioned::class)) {
                 $file->writeToStage(Versioned::LIVE);

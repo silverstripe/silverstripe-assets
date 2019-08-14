@@ -6,6 +6,7 @@ use Exception;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config as FlysystemConfig;
 use SilverStripe\Assets\File;
+use SilverStripe\Core\Extensible;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
@@ -19,6 +20,7 @@ use SilverStripe\View\SSViewer;
 class AssetAdapter extends Local
 {
     use Configurable;
+    use Extensible;
 
     /**
      * Server specific configuration necessary to block http traffic to a local folder
@@ -182,6 +184,8 @@ class AssetAdapter extends Local
                 ]));
             }
         }
+
+        $this->extend('updateAllowedExtensions', $allowedExtensions);
 
         Config::nest();
         Config::modify()->set(SSViewer::class, 'source_file_comments', false);

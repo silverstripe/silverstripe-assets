@@ -145,9 +145,18 @@ class LegacyThumbnailMigrationHelper
 
             $oldResampledPath = $fileInfo['path'];
 
-            // Get "variant folders" inside _resampled folder.
-            $variantFolders = preg_replace('#.*_resampled/(.*)#', '$1', $fileInfo['dirname']);
-            $encodedVariants = explode(DIRECTORY_SEPARATOR, $variantFolders);
+            $variantParts = $this->getVariantParts330($fileInfo);
+
+            // Fall back to <3.3.0 style
+            if(!$variantParts) {
+                $variantParts = $this->getVariantParts300($fileInfo);
+            }
+
+            if (!$variantParts) {
+                throw new \LogicException(
+                    'Could not find valid variants in ' . $fileInfo['path']
+                );
+            }
 
             // Replicate new variant format.
             // We're always placing these files in the public filesystem, *without* a content hash path.
@@ -159,10 +168,10 @@ class LegacyThumbnailMigrationHelper
             // so we need to drop down to path based filesystem renames.
             $newResampledPath = implode('', [
                 $folderPath,
-                $fileInfo['filename'],
+                $variantParts['filename'],
                 '__',
-                implode('_', $encodedVariants),
-                '.' . $fileInfo['extension']
+                implode('_', $variantParts['variants']),
+                '.' . $variantParts['extension']
             ]);
 
             // Don't overwrite existing files in the new location,
@@ -186,6 +195,56 @@ class LegacyThumbnailMigrationHelper
         $filesystem->deleteDir($resampledFolderPath);
 
         return $moved;
+    }
+
+    /**
+     * @param array $fileInfo
+     * @return array
+     */
+    protected function getVariantParts300($fileInfo)
+    {
+        // Extracted and adapted from Image->getFilenamePatterns() in <3.3.0
+        // Doesn't work with any custom Image Extension manipulation methods.
+        $pattern = '/^(fit|fill|pad|scalewidth|scaleheight|setratiosize|setwidth|setheight|setsize|cmsthumbnail|assetlibrarypreview|assetlibrarythumbnail|stripthumbnail|paddedimage|formattedimage|resizedimage|croppedimage)[^\-]*$/i';
+
+        $filename = '';
+        $variants = [];
+        foreach (explode('-', $fileInfo['filename']) as $part) {
+            if (preg_match($pattern, $part, $matches)) {
+                $variants[] = $matches[1];
+            } else {
+                $filename = $part;
+                break;
+            }
+        }
+
+        return [
+            'filename' => $filename,
+            'variants' => $variants,
+            'extension' => $fileInfo['extension']
+        ];
+    }
+
+    /**
+     * Get "variant folders" inside _resampled folder.
+     *
+     * @param array $fileInfo
+     * @return array|null
+     */
+    protected function getVariantParts330($fileInfo)
+    {
+        $variantFolders = preg_replace('#.*_resampled/?(.*)?#', '$1', $fileInfo['dirname']);
+
+        // No variant folders means the thumbnail has been created prior to 3.3.0
+        if (!$variantFolders) {
+            return null;
+        }
+
+        return [
+            'variants' => explode(DIRECTORY_SEPARATOR, $variantFolders),
+            'filename' => $fileInfo['filename'],
+            'extension' => $fileInfo['extension']
+        ];
     }
 
     /**

@@ -7,6 +7,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
@@ -26,6 +27,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
 {
     use Extensible;
     use Injectable;
+    use Configurable;
 
     /**
      * Assume canView() = true for all files provided via shortcodes.
@@ -36,6 +38,17 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      * @var bool
      */
     private static $shortcodes_inherit_canview = true;
+
+    /**
+     * Set to true if shortcodes should apply a session grant on their calls to `getAsURL`.
+     * While this is useful for allowing users to view draft files in shortcodes, it produces
+     * an inherent security risk by exposing direct access to the file for the duration of
+     * the session.
+     *
+     * @config
+     * @var bool
+     */
+    private static $allow_session_grant = false;
 
     /**
      * Gets the list of shortcodes provided by this handler
@@ -69,7 +82,8 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
             /** @var AssetStore $store */
             $store = Injector::inst()->get(AssetStore::class);
             if (!empty($item['filename'])) {
-                $store->getAsURL($item['filename'], $item['hash']);
+                $grant = static::config()->allow_session_grant;
+                $store->getAsURL($item['filename'], $item['hash'], null, $grant);
             }
             return $item['markup'];
         }

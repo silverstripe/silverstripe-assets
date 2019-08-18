@@ -28,6 +28,9 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
             ['subfolder/under_score/sam_single-underscore__resizeXYZ.jpg', [
                 'subfolder/under_score/sam_single-underscore.jpg', '', 'resizeXYZ'
             ]],
+            ['subfolder/under_score/sam_single-underscore__resizeXYZ_scaleheightABC.jpg', [
+                'subfolder/under_score/sam_single-underscore.jpg', '', 'resizeXYZ_scaleheightABC'
+            ]],
             ['subfolder/under_score/sam_double_dots.tar.gz', [
                 'subfolder/under_score/sam_double_dots.tar.gz', ''
             ]],
@@ -58,6 +61,9 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
             ['subfolder/sam_double-under-score__resizeXYZ.jpg', [
                 'subfolder/sam__double-under-score.jpg', '', 'resizeXYZ'
             ]],
+            ['subfolder/sam_double-under-score__resizeXYZ_scaleheightABC.jpg', [
+                'subfolder/sam__double-under-score.jpg', '', 'resizeXYZ_scaleheightABC'
+            ]],
             ['sam_double-under-score__resizeXYZ.jpg', [
                 'sam__double-under-score.jpg', 'abcdef7890', 'resizeXYZ'
             ]],
@@ -84,6 +90,9 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
             ]],
             ['subfolder/sam__double-under-score__resizeXYZ.jpg', [
                 'subfolder/sam__double-under-score.jpg', 'abcdef7890', 'resizeXYZ'
+            ]],
+            ['subfolder/sam__double-under-score__resizeXYZ_scaleheightABC.jpg', [
+                'subfolder/sam__double-under-score.jpg', 'abcdef7890', 'resizeXYZ_scaleheightABC'
             ]],
         ];
     }

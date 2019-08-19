@@ -291,7 +291,7 @@ class FileMigrationHelperTest extends SapphireTest
         $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_scaleABC.$2', $variantFilename);
         $this->assertFileExists($dir . '/' . $variantFilename);
 
-        // Test that pre SS3.3 variants have been migrated
+        // Test that pre SS3.0 variants have been migrated
         $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__ScaleWidthWzEwMF0.$2', $baseFilename);
         $this->assertFileExists($dir . '/' . $variantFilename);
         $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_FitWzEwMCwxMDBd.$2', $variantFilename);

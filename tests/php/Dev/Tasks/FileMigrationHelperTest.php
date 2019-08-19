@@ -84,6 +84,10 @@ class FileMigrationHelperTest extends SapphireTest
             $fs->write($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
             rewind($fromVariant);
             $fs->write($dir . '/_resampled/resizeXYZ/scaleABC/' . $basename, $fromVariant);
+            rewind($fromVariant);
+            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-' . $basename, $fromVariant);
+            rewind($fromVariant);
+            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-FitWzEwMCwxMDBd-' . $basename, $fromVariant);
         }
         fclose($fromMain);
         fclose($fromVariant);
@@ -275,17 +279,23 @@ class FileMigrationHelperTest extends SapphireTest
     private function individualImage(Image $file)
     {
         // Test that our image variant got moved correctly
-        $filename = TestAssetStore::base_path() . '/' . $file->getFilename();
-        $dir = dirname($filename);
-        $filename = basename($filename);
+        $fullFilename = TestAssetStore::base_path() . '/' . $file->getFilename();
+        $dir = dirname($fullFilename);
+        $baseFilename = basename($fullFilename);
         $this->assertFileNotExists($dir . '/_resampled');
-        $this->assertFileExists($dir . '/' . $filename);
+        $this->assertFileExists($dir . '/' . $baseFilename);
 
-        $filename = preg_replace('#^(.*)\.(.*)$#', '$1__resizeXYZ.$2', $filename);
-        $this->assertFileExists($dir . '/' . $filename);
+        // Test that SS3.3 variants have been migrated
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__resizeXYZ.$2', $baseFilename);
+        $this->assertFileExists($dir . '/' . $variantFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_scaleABC.$2', $variantFilename);
+        $this->assertFileExists($dir . '/' . $variantFilename);
 
-        $filename = preg_replace('#^(.*)\.(.*)$#', '$1_scaleABC.$2', $filename);
-        $this->assertFileExists($dir . '/' . $filename);
+        // Test that pre SS3.3 variants have been migrated
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__ScaleWidthWzEwMF0.$2', $baseFilename);
+        $this->assertFileExists($dir . '/' . $variantFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_FitWzEwMCwxMDBd.$2', $variantFilename);
+        $this->assertFileExists($dir . '/' . $variantFilename);
     }
 
     /**

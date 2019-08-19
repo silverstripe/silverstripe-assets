@@ -41,7 +41,8 @@ class LegacyFileIDHelper implements FileIDHelper
         'paddedimage',
         'formattedimage',
         'resizedimage',
-        'croppedimage'
+        'croppedimage',
+        'cropheight',
     ];
 
     /** @var bool */

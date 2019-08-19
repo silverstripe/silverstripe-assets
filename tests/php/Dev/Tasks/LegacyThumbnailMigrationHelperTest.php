@@ -146,7 +146,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     /**
      * @dataProvider dataProvider
      */
-    public function testMigrate($fixtureId, $formats)
+    public function testMigrate($fixtureId, $formats, $coreVersion)
     {
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
@@ -158,7 +158,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         // Important to do this *before* creating the legacy file,
         // because the LegacyFileIDHelper will pick it up as the "new" location otherwise
         $expectedNewPath = $this->getNewResampledPath($image, $formats);
-        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats);
+        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats, $coreVersion);
 
         $helper = new LegacyThumbnailMigrationHelper();
         $moved = $helper->run($store);
@@ -232,7 +232,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     {
         return [
             '3.0.0' => [self::CORE_VERSION_3_0_0],
-//            '3.3.0' => [self::CORE_VERSION_3_3_0]
+            '3.3.0' => [self::CORE_VERSION_3_3_0]
         ];
     }
 
@@ -247,7 +247,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     {
         if ($coreVersion == self::CORE_VERSION_3_0_0) {
             $resampledRelativePath = $this->legacyCacheFilenameVersion300($baseImage, $formats);
-        } elseif($coreVersion == self::CORE_VERSION_3_3_0) {
+        } elseif ($coreVersion == self::CORE_VERSION_3_3_0) {
             $resampledRelativePath = $this->legacyCacheFilenameVersion330($baseImage, $formats);
         } else {
             throw new \Exception('Invalid $coreVersion');

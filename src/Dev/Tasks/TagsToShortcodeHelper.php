@@ -363,6 +363,9 @@ class TagsToShortcodeHelper
     private function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
     {
         $mapping = [];
+        // Tracker to ensure that each table appears once
+        $tableTracker = [];
+
         // Normalise $fieldNames to a string array
         if (is_string($fieldNames)) {
             $fieldNames = [$fieldNames];
@@ -385,14 +388,19 @@ class TagsToShortcodeHelper
                 $type = preg_replace('/\(.*\)$/', '', $type);
                 if (in_array($type, $fieldNames)) {
                     $table = $schema->tableForField($class, $field);
-                    if (!isset($mapping[$class])) {
-                        $mapping[$class] = [];
-                    }
-                    if (!isset($mapping[$class][$table])) {
-                        $mapping[$class][$table] = [];
-                    }
-                    if (!in_array($field, $mapping[$class][$table])) {
-                        $mapping[$class][$table][] = $field;
+
+                    if (!isset($tableTracker[$table])) {
+                        $tableTracker[$table] = true;
+
+                        if (!isset($mapping[$class])) {
+                            $mapping[$class] = [];
+                        }
+                        if (!isset($mapping[$class][$table])) {
+                            $mapping[$class][$table] = [];
+                        }
+                        if (!in_array($field, $mapping[$class][$table])) {
+                            $mapping[$class][$table][] = $field;
+                        }
                     }
                 }
             }

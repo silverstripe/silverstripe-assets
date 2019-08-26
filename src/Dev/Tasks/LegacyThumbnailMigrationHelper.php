@@ -143,7 +143,7 @@ class LegacyThumbnailMigrationHelper
         $legacyFileIDParser = new LegacyFileIDHelper($failNewerVariant);
         $naturalFileIDParser = new NaturalFileIDHelper();
 
-
+        $foundError = false;
         // Recurse through folder
         foreach ($filesystem->listContents($resampledFolderPath, true) as $fileInfo) {
             if ($fileInfo['type'] !== 'file') {
@@ -154,10 +154,11 @@ class LegacyThumbnailMigrationHelper
 
             $parsedFileID = $legacyFileIDParser->parseFileID($oldResampledPath);
 
+            // If we can't parse the fileID, let's bail on this file and print out an error
             if (!$parsedFileID) {
-                throw new \LogicException(
-                    'Could not find valid variants in ' . $oldResampledPath
-                );
+                $foundError = true;
+                $this->logger->error('Could not find valid variants in ' . $oldResampledPath);
+                continue;
             }
 
             // Replicate new variant format.
@@ -184,11 +185,11 @@ class LegacyThumbnailMigrationHelper
             $moved[$oldResampledPath] = $newResampledPath;
         }
 
-        // Remove folder and any subfolders.
-        // Assumes all files have been handled in the loop above,
-        // and either deleted (if new location already exists),
-        // or moved out of the folder (if new location didn't exist).
-        $filesystem->deleteDir($resampledFolderPath);
+        // Remove folder and any subfolders. If one or more thumbnail didn't
+        // get migrated leave the folder where it is.
+        if (!$foundError) {
+            $filesystem->deleteDir($resampledFolderPath);
+        }
 
         return $moved;
     }

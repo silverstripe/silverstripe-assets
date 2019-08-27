@@ -852,6 +852,6 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getTempPathConfig(): string
     {
-        return $this->config()->get('local_temp_path') ?? TEMP_PATH;
+        return (string) $this->config()->get('local_temp_path') ?? TEMP_PATH;
     }
 }

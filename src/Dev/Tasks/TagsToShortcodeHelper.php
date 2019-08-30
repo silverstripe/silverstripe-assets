@@ -380,7 +380,8 @@ class TagsToShortcodeHelper
             /** @var DataObjectSchema $schema */
             $schema = singleton($class)->getSchema();
             /** @var DataObject $fields */
-            $fields = $schema->fieldSpecs($class);
+            $fields = $schema->fieldSpecs($class, DataObjectSchema::DB_ONLY|DataObjectSchema::UNINHERITED);
+
             foreach ($fields as $field => $type) {
                 $type = preg_replace('/\(.*\)$/', '', $type);
                 if (in_array($type, $fieldNames)) {

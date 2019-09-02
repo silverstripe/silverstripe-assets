@@ -327,7 +327,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" title="" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',
@@ -354,6 +354,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
             'image with underscore' => [
                 '<img src="assets/decade1980/under_score.jpg">',
                 sprintf('[image src="/assets/decade1980/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile)
+            ],
+            'image inside a tag without href' => [
+                '<p><a><img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" class="leftAlone" title="" alt="" width="600" height="400"></a></p>',
+                sprintf(
+                    '<p><a>[image src="/assets/33be1b95cb/myimage.jpg" class="leftAlone" title="" alt="" width="600" height="400" id="%d"]</a></p>',
+                    $image1ID
+                )
             ],
         ];
     }

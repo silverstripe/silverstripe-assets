@@ -210,7 +210,8 @@ class TagsToShortcodeHelper
     {
         $resultTags = [];
 
-        preg_match_all('/<('.$this->validTagsPattern.').*?('.$this->validAttributesPattern.')\s*=.*?>/i', $content, $matches, PREG_SET_ORDER);
+        $regex = '/<('.$this->validTagsPattern.')\s[^>]*?('.$this->validAttributesPattern.')\s*=.*?>/i';
+        preg_match_all($regex, $content, $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -313,7 +314,6 @@ class TagsToShortcodeHelper
                     '/href\s*=\s*(?:"|\').*?(?:"|\')/i',
                     '/id\s*=\s*(?:"|\').*?(?:"|\')/i',
                     '/\s*(\/?>|\])/',
-                    '/\s?\S+=("")|(\'\')/'
                 ];
                 $replace = [
                     '[image',
@@ -321,12 +321,11 @@ class TagsToShortcodeHelper
                     "href=\"/".ASSETS_DIR."/{$parsedFileID->getFileID()}\"",
                     "",
                     " id=\"{$file->ID}\"]",
-                    "",
                 ];
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
-                $find= "/$attribute\s*=\s*(?:\"|').*?(?:\"|')/i";
+                $find = "/$attribute\s*=\s*(?:\"|').*?(?:\"|')/i";
                 $replace = "$attribute=\"[file_link,id={$file->ID}]\"";
                 $shortcode = preg_replace($find, $replace, $tag);
             } else {

@@ -138,10 +138,10 @@ class AssetControlExtension extends DataExtension
             // Archived assets are kept protected
             $this->protectAll($deletedAssets);
         } else {
+            // Remove old version
+            $this->deleteAll($deletedAssets);
             // Publish assets
             $this->publishAll($manipulations->getPublicAssets());
-            // Otherwise remove all assets
-            $this->deleteAll($deletedAssets);
         }
 
         // Protect assets

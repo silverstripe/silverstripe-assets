@@ -185,7 +185,7 @@ class LegacyThumbnailMigrationHelper
             $moved[$oldResampledPath] = $newResampledPath;
         }
 
-        // Remove folder and any subfolders. If one or more thumbnail didn't
+        // Remove folder and any subfolders. If one or more thumbnails didn't
         // get migrated leave the folder where it is.
         if (!$foundError) {
             $filesystem->deleteDir($resampledFolderPath);

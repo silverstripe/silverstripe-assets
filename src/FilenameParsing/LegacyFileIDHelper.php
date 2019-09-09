@@ -137,7 +137,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
     /**
      * Try to parse a FileID as a pre-SS33 variant. From SS3.0 to SS3.2 the variants were prefixed in the file name,
-     * rather than ecoded into folders.
+     * rather than encoded into folders.
      * @param string $fileID Variant file ID. Variantless FileID should have been parsed by `parseFileID`.
      * @return ParsedFileID|null
      */
@@ -157,7 +157,7 @@ class LegacyFileIDHelper implements FileIDHelper
             return null;
         }
 
-        // Our SS3 variant can be confused with regular filename, let's minise the risk of this by making
+        // Our SS3 variant can be confused with regular filenames, let's minimise the risk of this by making
         // sure all our variants use a valid SS3 variant expression
         $variant = trim($matches['variant'], '-');
         $possibleVariants = explode('-', $variant);
@@ -169,8 +169,8 @@ class LegacyFileIDHelper implements FileIDHelper
             // Find the base64 encoded argument attached to the image method
             if (preg_match($validVariantRegex, $possible, $variantMatches)) {
                 try {
-                    // Our base 64 encoded string always decodes to an string representation of php array
-                    // So we're assuming it always start with a `[` and ends with a `]`
+                    // Our base 64 encoded string always decodes to a string representation of php array
+                    // So we're assuming it always starts with a `[` and ends with a `]`
                     $base64Str = $variantMatches['base64'];
                     $argumentString = base64_decode($base64Str);
                     if ($argumentString && preg_match('/^\[.*\]$/', $argumentString)) {

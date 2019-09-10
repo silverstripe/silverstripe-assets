@@ -2,9 +2,12 @@
 
 namespace SilverStripe\Assets\Dev\Tasks;
 
+use League\Flysystem\Filesystem;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Config\Configurable;
@@ -130,13 +133,18 @@ class LegacyThumbnailMigrationHelper
         $resampledFolderPath = $folderPath . '_resampled';
 
         // Legacy thumbnails couldn't have been stored in a protected filesystem
-        /** @var \League\Flysystem\Filesystem $filesystem */
+        /** @var Filesystem $filesystem */
         $filesystem = $store->getPublicFilesystem();
 
         if (!$filesystem->has($resampledFolderPath)) {
             return $moved;
         }
 
+        $failNewerVariant = false;
+        $legacyFileIDParser = new LegacyFileIDHelper($failNewerVariant);
+        $naturalFileIDParser = new NaturalFileIDHelper();
+
+        $foundError = false;
         // Recurse through folder
         foreach ($filesystem->listContents($resampledFolderPath, true) as $fileInfo) {
             if ($fileInfo['type'] !== 'file') {
@@ -145,9 +153,14 @@ class LegacyThumbnailMigrationHelper
 
             $oldResampledPath = $fileInfo['path'];
 
-            // Get "variant folders" inside _resampled folder.
-            $variantFolders = preg_replace('#.*_resampled/(.*)#', '$1', $fileInfo['dirname']);
-            $encodedVariants = explode(DIRECTORY_SEPARATOR, $variantFolders);
+            $parsedFileID = $legacyFileIDParser->parseFileID($oldResampledPath);
+
+            // If we can't parse the fileID, let's bail on this file and print out an error
+            if (!$parsedFileID) {
+                $foundError = true;
+                $this->logger->error('Could not find valid variants in ' . $oldResampledPath);
+                continue;
+            }
 
             // Replicate new variant format.
             // We're always placing these files in the public filesystem, *without* a content hash path.
@@ -157,13 +170,7 @@ class LegacyThumbnailMigrationHelper
             // and assumes the manipulation is run on an existing original file, so we can't use it here.
             // Any AssetStore-level filesystem operations (like move()) suffer from the same limitation,
             // so we need to drop down to path based filesystem renames.
-            $newResampledPath = implode('', [
-                $folderPath,
-                $fileInfo['filename'],
-                '__',
-                implode('_', $encodedVariants),
-                '.' . $fileInfo['extension']
-            ]);
+            $newResampledPath = $naturalFileIDParser->buildFileID($parsedFileID);
 
             // Don't overwrite existing files in the new location,
             // they might have been generated based on newer file contents
@@ -179,11 +186,26 @@ class LegacyThumbnailMigrationHelper
             $moved[$oldResampledPath] = $newResampledPath;
         }
 
-        // Remove folder and any subfolders.
-        // Assumes all files have been handled in the loop above,
-        // and either deleted (if new location already exists),
-        // or moved out of the folder (if new location didn't exist).
-        $filesystem->deleteDir($resampledFolderPath);
+        // Remove folder and any subfolders. If one or more thumbnails didn't
+        // get migrated leave the folder where it is.
+        if (!$foundError) {
+            $files = array_filter(
+                $filesystem->listContents($resampledFolderPath, true),
+                function ($file) {
+                    return $file['type'] === 'file';
+                }
+            );
+            if (empty($files)) {
+                $filesystem->deleteDir($resampledFolderPath);
+            } else {
+                // This should not be possible. If it is, then there's probably a bug.
+                $this->logger->error(sprintf(
+                    'Could not remove folder %s because it still contains files. Please submit a bug report at %s.',
+                    $oldResampledPath,
+                    'https://github.com/silverstripe/silverstripe-assets/issues/new'
+                ));
+            }
+        }
 
         return $moved;
     }

@@ -286,13 +286,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">link to file</a>',
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
             ],
+             'link to image SS3.0 variant' => [
+                '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ-myimage.jpg">link to file</a>',
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
+             ],
             'link to hash url' => [
                 '<a href="assets/0ba2141b89/document.pdf">link to file</a>',
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
-            ],
-            'link to hash url variant' => [
-                '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">link to file</a>',
-                sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
             ],
             'link without closing tag' => [
                 '<a href="assets/document.pdf">Link to file',
@@ -314,6 +314,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'image variant' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)],
+            'image SS3.0 variant' => [
+                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ-myimage.jpg">',
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)],
             'image variant with size' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',

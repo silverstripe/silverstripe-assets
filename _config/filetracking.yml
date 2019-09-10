@@ -4,3 +4,7 @@ Name: assetslinktracking
 SilverStripe\ORM\DataObject:
   extensions:
     - SilverStripe\Assets\Shortcodes\FileLinkTracking
+
+SilverStripe\Admin\Forms\UsedOnTable:
+  extensions:
+  - SilverStripe\Assets\UsedOnTableExtension

@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Dev\Tasks;
 
+use League\Flysystem\Filesystem;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
@@ -132,7 +133,7 @@ class LegacyThumbnailMigrationHelper
         $resampledFolderPath = $folderPath . '_resampled';
 
         // Legacy thumbnails couldn't have been stored in a protected filesystem
-        /** @var \League\Flysystem\Filesystem $filesystem */
+        /** @var Filesystem $filesystem */
         $filesystem = $store->getPublicFilesystem();
 
         if (!$filesystem->has($resampledFolderPath)) {
@@ -188,7 +189,22 @@ class LegacyThumbnailMigrationHelper
         // Remove folder and any subfolders. If one or more thumbnails didn't
         // get migrated leave the folder where it is.
         if (!$foundError) {
-            $filesystem->deleteDir($resampledFolderPath);
+            $files = array_filter(
+                $filesystem->listContents($resampledFolderPath, true),
+                function ($file) {
+                    return $file['type'] === 'file';
+                }
+            );
+            if (empty($files)) {
+                $filesystem->deleteDir($resampledFolderPath);
+            } else {
+                // This should not be possible. If it is, then there's probably a bug.
+                $this->logger->error(sprintf(
+                    'Could not remove folder %s because it still contains files. Please submit a bug report at %s.',
+                    $oldResampledPath,
+                    'https://github.com/silverstripe/silverstripe-assets/issues/new'
+                ));
+            }
         }
 
         return $moved;

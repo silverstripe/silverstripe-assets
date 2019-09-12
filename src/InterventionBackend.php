@@ -70,7 +70,7 @@ class InterventionBackend implements Image_Backend, Flushable
      * @config
      * @var string
      */
-    private static $local_temp_path = TEMP_PATH;
+    private static $local_temp_path;
 
     /**
      * @var AssetContainer

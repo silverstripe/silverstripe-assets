@@ -947,7 +947,7 @@ trait ImageManipulation
                 $tuple = $result;
                 Deprecation::notice(
                     '5.0',
-                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array 
+                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array
                         containing a tuple and an image backend, i.e. [$tuple, $result]',
                     Deprecation::SCOPE_GLOBAL
                 );
@@ -971,10 +971,11 @@ trait ImageManipulation
         /** @var DBFile $file */
         $file = DBField::create_field('DBFile', $tuple);
 
-        // Pass the manipulated image backend down to the resampled image - this allows chained manipulations
-        // without having to re-load the image resource from the manipulated file written to disk
-        if ($manipulationResult instanceof Image_Backend) {
-            $file->setImageBackend($manipulationResult);
+        // Preserve the current image quality setting, so chained manipulations like
+        // $Quality(1).SetWidth(500) work as expected
+        $currentBackend = $this->getImageBackend();
+        if (method_exists($currentBackend, 'getQuality')) {
+            $file->getImageBackend()->setQuality($currentBackend->getQuality());
         }
 
         return $file->setOriginal($this);

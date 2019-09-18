@@ -114,16 +114,30 @@ abstract class ImageTest extends SapphireTest
 
         $imageFirst = $image->ScaleWidth(200);
         $this->assertNotNull($imageFirst);
-        $expected = 200;
-        $actual = $imageFirst->getWidth();
-
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals(200, $imageFirst->getWidth());
 
         $imageSecond = $imageFirst->ScaleHeight(100);
         $this->assertNotNull($imageSecond);
-        $expected = 100;
-        $actual = $imageSecond->getHeight();
-        $this->assertEquals($expected, $actual);
+        $this->assertEquals(100, $imageSecond->getHeight());
+
+        // Manipulate a pre-manipulated image twice...
+        // ... this tests that one manipulation on a pre-manipulated image
+        // doesn't affect subsequent manipulations from the same source image
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $squareImage = $image->Fill(500, 500);
+        $this->assertNotNull($squareImage);
+        $this->assertEquals(500, $squareImage->getWidth());
+        $this->assertEquals(500, $squareImage->getHeight());
+
+        $smallSquareImage = $squareImage->ScaleMaxWidth(200);
+        $this->assertNotNull($smallSquareImage);
+        $this->assertEquals(200, $smallSquareImage->getWidth());
+        $this->assertEquals(200, $smallSquareImage->getHeight());
+
+        $extraSmallSquareImage = $squareImage->ScaleMaxWidth(50);
+        $this->assertNotNull($extraSmallSquareImage);
+        $this->assertEquals(50, $extraSmallSquareImage->getWidth());
+        $this->assertEquals(50, $extraSmallSquareImage->getHeight());
     }
 
     /**

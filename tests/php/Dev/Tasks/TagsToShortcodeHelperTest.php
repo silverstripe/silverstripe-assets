@@ -286,13 +286,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
                 '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">link to file</a>',
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
             ],
+             'link to image SS3.0 variant' => [
+                '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ-myimage.jpg">link to file</a>',
+                sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
+             ],
             'link to hash url' => [
                 '<a href="assets/0ba2141b89/document.pdf">link to file</a>',
                 sprintf('<a href="[file_link,id=%d]">link to file</a>', $documentID)
-            ],
-            'link to hash url variant' => [
-                '<a href="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">link to file</a>',
-                sprintf('<a href="[file_link,id=%d]">link to file</a>', $image1ID)
             ],
             'link without closing tag' => [
                 '<a href="assets/document.pdf">Link to file',
@@ -315,6 +315,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
             'image variant' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg">',
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)],
+            'image SS3.0 variant' => [
+                '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ-myimage.jpg">',
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)],
             'image variant with size' => [
                 '<img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" width="100" height="133">',
                 sprintf('[image src="/assets/33be1b95cb/myimage.jpg" width="100" height="133" id="%d"]', $image1ID)],
@@ -327,7 +330,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
             ],
             'empty attribute image' => [
                 '<img src="assets/myimage.jpg" title="">',
-                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]', $image1ID)
+                sprintf('[image src="/assets/33be1b95cb/myimage.jpg" title="" id="%d"]', $image1ID)
             ],
             'image caption' => [
                 '<div class="captionImage leftAlone" style="width: 100px;"><img class="leftAlone" src="assets/myimage.jpg" alt="sam" width="100" height="133"><p class="caption leftAlone">My caption</p></div>',
@@ -354,6 +357,13 @@ class TagsToShortcodeHelperTest extends SapphireTest
             'image with underscore' => [
                 '<img src="assets/decade1980/under_score.jpg">',
                 sprintf('[image src="/assets/decade1980/33be1b95cb/under_score.jpg" id="%d"]', $underscoreFile)
+            ],
+            'image inside a tag without href' => [
+                '<p><a><img src="assets/_resampled/ResizedImageWzY0LDY0XQ/myimage.jpg" class="leftAlone" title="" alt="" width="600" height="400"></a></p>',
+                sprintf(
+                    '<p><a>[image src="/assets/33be1b95cb/myimage.jpg" class="leftAlone" title="" alt="" width="600" height="400" id="%d"]</a></p>',
+                    $image1ID
+                )
             ],
         ];
     }

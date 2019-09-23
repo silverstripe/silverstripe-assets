@@ -15,6 +15,10 @@ use SilverStripe\Dev\SapphireTest;
 
 class LegacyThumbnailMigrationHelperTest extends SapphireTest
 {
+    const CORE_VERSION_3_0_0 = '300';
+
+    const CORE_VERSION_3_3_0 = '330';
+
     protected $usesTransactions = false;
 
     protected static $fixture_file = 'LegacyThumbnailMigrationHelperTest.yml';
@@ -64,7 +68,10 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         parent::tearDown();
     }
 
-    public function testMigratesWithExistingThumbnailInNewLocation()
+    /**
+     * @dataProvider coreVersionsProvider
+     */
+    public function testMigratesWithExistingThumbnailInNewLocation($coreVersion)
     {
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
@@ -74,7 +81,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
         $formats = ['ResizedImage' => [60,60]];
         $expectedNewPath = $this->getNewResampledPath($image, $formats, $keep = true);
-        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats);
+        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats, $coreVersion);
 
         $helper = new LegacyThumbnailMigrationHelper();
         $moved = $helper->run($store);
@@ -93,7 +100,10 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         );
     }
 
-    public function testMigratesMultipleFilesInSameFolder()
+    /**
+     * @dataProvider coreVersionsProvider
+     */
+    public function testMigratesMultipleFilesInSameFolder($coreVersion)
     {
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
@@ -109,7 +119,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         $formats = ['ResizedImage' => [60,60]];
         foreach ($images as $image) {
             $expectedNewPath = $this->getNewResampledPath($image, $formats);
-            $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats);
+            $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats, $coreVersion);
             $expected[$expectedLegacyPath] = $expectedNewPath;
         }
 
@@ -136,7 +146,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     /**
      * @dataProvider dataProvider
      */
-    public function testMigrate($fixtureId, $formats)
+    public function testMigrate($fixtureId, $formats, $coreVersion)
     {
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
@@ -148,7 +158,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         // Important to do this *before* creating the legacy file,
         // because the LegacyFileIDHelper will pick it up as the "new" location otherwise
         $expectedNewPath = $this->getNewResampledPath($image, $formats);
-        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats);
+        $expectedLegacyPath = $this->createLegacyResampledImageFixture($store, $image, $formats, $coreVersion);
 
         $helper = new LegacyThumbnailMigrationHelper();
         $moved = $helper->run($store);
@@ -185,29 +195,63 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     public function dataProvider()
     {
         return [
-            'Single variant toplevel' => [
+            'Single variant toplevel 3.0.0' => [
                 'toplevel',
-                ['ResizedImage' => [60,60]]
+                ['ResizedImage' => [60,60]],
+                self::CORE_VERSION_3_0_0
             ],
-            'Multi variant toplevel' => [
+            'Single variant toplevel >=3.3.0' => [
                 'toplevel',
-                ['ResizedImage' => [60,60], 'CropHeight' => [30]]
+                ['ResizedImage' => [60,60]],
+                self::CORE_VERSION_3_3_0
             ],
-            'Multi variant nested' => [
+            'Multi variant toplevel 3.0.0' => [
+                'toplevel',
+                ['ResizedImage' => [60,60], 'CropHeight' => [30]],
+                self::CORE_VERSION_3_0_0
+            ],
+            'Multi variant toplevel >=3.3.0' => [
+                'toplevel',
+                ['ResizedImage' => [60,60], 'CropHeight' => [30]],
+                self::CORE_VERSION_3_3_0
+            ],
+            'Multi variant nested 3.0.0' => [
                 'nested',
-                ['ResizedImage' => [60,60], 'CropHeight' => [30]]
+                ['ResizedImage' => [60,60], 'CropHeight' => [30]],
+                self::CORE_VERSION_3_0_0
+            ],
+            'Multi variant nested >=3.3.0' => [
+                'nested',
+                ['ResizedImage' => [60,60], 'CropHeight' => [30]],
+                self::CORE_VERSION_3_3_0
             ]
         ];
     }
 
+    public function coreVersionsProvider()
+    {
+        return [
+            '3.0.0' => [self::CORE_VERSION_3_0_0],
+            '3.3.0' => [self::CORE_VERSION_3_3_0]
+        ];
+    }
+
     /**
+     * @param AssetStore $store
      * @param Image $baseImage
-     * @param array
+     * @param array $formats
+     * @param string $coreVersion
      * @return string Path relative to the asset store root.
      */
-    protected function createLegacyResampledImageFixture(AssetStore $store, Image $baseImage, $formats)
+    protected function createLegacyResampledImageFixture(AssetStore $store, Image $baseImage, $formats, $coreVersion)
     {
-        $resampledRelativePath = $this->legacyCacheFilename($baseImage, $formats);
+        if ($coreVersion == self::CORE_VERSION_3_0_0) {
+            $resampledRelativePath = $this->legacyCacheFilenameVersion300($baseImage, $formats);
+        } elseif ($coreVersion == self::CORE_VERSION_3_3_0) {
+            $resampledRelativePath = $this->legacyCacheFilenameVersion330($baseImage, $formats);
+        } else {
+            throw new \Exception('Invalid $coreVersion');
+        }
 
         // Using raw copy operation since File->copyFile() messes with the _resampled path nane,
         // and anything on asset abstraction unhelpfully copies
@@ -227,13 +271,18 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     }
 
     /**
-     * Replicates the logic of creating 3.x style formatted images,
+     * Replicates the logic of creating >=3.3 style formatted images,
      * based on Image->cacheFilename() and Image->generateFormattedImage().
      * Will create folder structures required for this.
+     * This naming placed files with their original name
+     * into a subfolder named after the manipulation.
+     *
+     * Format: <base-folder>/_resampled/<format1>/<format2>/<filename>
+     * Example: my-folder/_resampled/ResizedImageWzYwMCwyMDld/ScaleHeightWyIxMDAiXQ/image.jpg
      *
      * @return string Path relative to the asset store root.
      */
-    protected function legacyCacheFilename($image, $formats)
+    protected function legacyCacheFilenameVersion330($image, $formats)
     {
         $cacheFilename = '';
 
@@ -253,6 +302,40 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         $cacheFilename = $this->joinPaths(
             $cacheFilename,
             basename($image->generateFilename())
+        );
+
+        return $cacheFilename;
+    }
+
+    /**
+     * Replicates the logic of creating <3.3 style formatted images,
+     * based on Image->cacheFilename() and Image->generateFormattedImage().
+     * Will create folder structures required for this.
+     * This naming used composite filenames with their formats.
+     *
+     * Format: <base-folder>/_resampled/<format1>-<format2>-<filename>
+     * Example: my-folder/_resampled/ResizedImageWzYwMCwyMDld-ScaleHeightWyIxMDAiXQ-image.jpg
+     *
+     * @return string Path relative to the asset store root.
+     */
+    protected function legacyCacheFilenameVersion300($image, $formats)
+    {
+        $cacheFilename = '';
+
+        if ($image->Parent()->exists()) {
+            $cacheFilename = $image->Parent()->Filename;
+        }
+
+        $cacheFilename = $this->joinPaths($cacheFilename, '_resampled');
+
+        $formatPrefix = '';
+        foreach ($formats as $format => $args) {
+            $formatPrefix .= $format . Convert::base64url_encode($args) . '-';
+        }
+
+        $cacheFilename = $this->joinPaths(
+            $cacheFilename,
+            $formatPrefix . basename($image->generateFilename())
         );
 
         return $cacheFilename;

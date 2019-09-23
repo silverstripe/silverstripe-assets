@@ -3,7 +3,9 @@
 namespace SilverStripe\Assets\Tests;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject;
@@ -220,6 +222,95 @@ class AssetControlExtensionTest extends SapphireTest
         // And after publish, all files are public
         $this->assertEquals(AssetStore::VISIBILITY_PUBLIC, $object1->Header->getVisibility());
         $this->assertEquals(AssetStore::VISIBILITY_PUBLIC, $object3->Header->getVisibility());
+    }
+
+    
+    public function testReplaceWithVariant()
+    {
+        $store = $this->getAssetStore();
+        $object1 = AssetControlExtensionTest\VersionedObject::get()->filter('Title', 'My object')->first();
+        /** @var DBFile $download */
+        $download = $object1->Download;
+        Versioned::set_stage(Versioned::DRAFT);
+        $v2Content = 'Documents/File.txt v2';
+        $v3Content = 'Documents/File.txt v3';
+
+        $v1 = new ParsedFileID($download->getFilename(), $download->getHash());
+        $v2 = $v1->setHash(sha1($v2Content));
+        $v3 = $v1->setHash(sha1($v3Content));
+
+        // Start by creating a pre-existing variant
+        $download->setFromString(
+            'Variant of Documents/File.txt',
+            $v1->getFilename(),
+            $v1->getHash(),
+            'boom'
+        );
+        $this->assertTrue(
+            $store->exists($v1->getFilename(), $v1->getHash(), 'boom'),
+            sprintf('A variant of %s has been created', $v1->getFilename())
+        );
+        
+        // Let's replace the content of the main file and publish it
+        $download->setFromString($v2Content, $v2->getFilename());
+        $object1->write();
+        $object1->publishSingle();
+        $this->assertFalse(
+            $store->exists($v1->getFilename(), $v1->getHash()),
+            'Original file has been deleted'
+        );
+        $this->assertFalse(
+            $store->exists($v1->getFilename(), $v1->getHash(), 'boom'),
+            'Variant of original file has been deleted'
+        );
+        $this->assertFalse(
+            $store->exists($v2->getFilename(), $v2->getHash(), 'boom'),
+            'Variant of original file does not get confused for a variant of the replaced file'
+        );
+        $this->assertTrue(
+            $store->exists($v2->getFilename(), $v2->getHash()),
+            'The replaced file exists'
+        );
+
+        // Let's create a variant for version 2
+        $download->setFromString(
+            'Variant of Documents/File.txt v2',
+            $v2->getFilename(),
+            $v2->getHash(),
+            'boom'
+        );
+
+        // Let's create a third version with a variant
+        $download->setFromString($v3Content, $v3->getFilename());
+        $download->setFromString(
+            'Variant of Documents/File.txt v3',
+            $v3->getFilename(),
+            $v3->getHash(),
+            'boom'
+        );
+        $object1->write();
+        $object1->publishSingle();
+        $this->assertFalse(
+            $store->exists($v2->getFilename(), $v2->getHash()),
+            'Version 2 has been deleted'
+        );
+        $this->assertFalse(
+            $store->exists($v2->getFilename(), $v2->getHash(), 'boom'),
+            'Variant of version 2 has been deleted'
+        );
+        $this->assertTrue(
+            $store->exists($v3->getFilename(), $v3->getHash(), 'boom'),
+            'Variant of version 3 exists'
+        );
+        $this->assertEquals(
+            'Variant of Documents/File.txt v3',
+            $store->getAsString($v3->getFilename(), $v3->getHash(), 'boom'),
+            'Variant of version 3 has the expected content'
+        );
+        $this->assertTrue(
+            $store->exists($v3->getFilename(), $v3->getHash()),
+            sprintf('Version 3 of %s exists', $v3->getFilename())
+        );
     }
 
     /**

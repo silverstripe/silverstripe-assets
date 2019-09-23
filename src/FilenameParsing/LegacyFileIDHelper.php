@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
+use Exception;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 
 /**
@@ -15,6 +17,33 @@ use SilverStripe\Core\Injector\Injectable;
 class LegacyFileIDHelper implements FileIDHelper
 {
     use Injectable;
+    use Configurable;
+
+    /**
+     * List of SilverStripe 3 image method names that can appear in variants. Prior to SilverStripe 3.3, variants were
+     * incoded in the filename with dashes. e.g.: `_resampled/FitW10-sam.jpg` rather than `_resampled/FitW10/sam.jpg`.
+     * @config
+     */
+    private static $ss3_image_variant_methods = [
+        'fit',
+        'fill',
+        'pad',
+        'scalewidth',
+        'scaleheight',
+        'setratiosize',
+        'setwidth',
+        'setheight',
+        'setsize',
+        'cmsthumbnail',
+        'assetlibrarypreview',
+        'assetlibrarythumbnail',
+        'stripthumbnail',
+        'paddedimage',
+        'formattedimage',
+        'resizedimage',
+        'croppedimage',
+        'cropheight',
+    ];
 
     /** @var bool */
     private $failNewerVariant;
@@ -82,15 +111,19 @@ class LegacyFileIDHelper implements FileIDHelper
     public function parseFileID($fileID)
     {
         if ($this->failNewerVariant) {
-            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#';
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#i';
         } else {
-            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>([^/.])+))(?<extension>(\..+)*)$#';
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>([^.]+))/)?((?<basename>([^/.])+))(?<extension>(\..+)*)$#i';
         }
-
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {
             return null;
+        }
+
+        // Can't have a resampled folder without a variant
+        if (empty($matches['variant']) && strpos($fileID, '_resampled') !== false) {
+            return $this->parseSilverStripe30VariantFileID($fileID);
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
@@ -100,6 +133,90 @@ class LegacyFileIDHelper implements FileIDHelper
             isset($matches['variant']) ? str_replace('/', '_', $matches['variant']) : '',
             $fileID
         );
+    }
+
+    /**
+     * Try to parse a FileID as a pre-SS33 variant. From SS3.0 to SS3.2 the variants were prefixed in the file name,
+     * rather than encoded into folders.
+     * @param string $fileID Variant file ID. Variantless FileID should have been parsed by `parseFileID`.
+     * @return ParsedFileID|null
+     */
+    private function parseSilverStripe30VariantFileID($fileID)
+    {
+        $ss3Methods = $this->getImageVariantMethods();
+        $variantPartialRegex = implode('|', $ss3Methods);
+
+        if ($this->failNewerVariant) {
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>((((' . $variantPartialRegex . ')[^.-]+))-)+))?((?<basename>((?<!__)[^/.])+))(?<extension>(\..+)*)$#i';
+        } else {
+            $pattern = '#^(?<folder>([^/]+/)*?)(_resampled/(?<variant>((((' . $variantPartialRegex . ')[^.-]+))-)+))?((?<basename>([^/.])+))(?<extension>(\..+)*)$#i';
+        }
+
+        // not a valid file (or not a part of the filesystem)
+        if (!preg_match($pattern, $fileID, $matches)) {
+            return null;
+        }
+
+        // Our SS3 variant can be confused with regular filenames, let's minimise the risk of this by making
+        // sure all our variants use a valid SS3 variant expression
+        $variant = trim($matches['variant'], '-');
+        $possibleVariants = explode('-', $variant);
+        $validVariants = [];
+        $validVariantRegex = '#^(' . $variantPartialRegex . ')(?<base64>(.+))$#i';
+
+        // Loop through the possible variants until we find an invalid one
+        while ($possible = array_shift($possibleVariants)) {
+            // Find the base64 encoded argument attached to the image method
+            if (preg_match($validVariantRegex, $possible, $variantMatches)) {
+                try {
+                    // Our base 64 encoded string always decodes to a string representation of php array
+                    // So we're assuming it always starts with a `[` and ends with a `]`
+                    $base64Str = $variantMatches['base64'];
+                    $argumentString = base64_decode($base64Str);
+                    if ($argumentString && preg_match('/^\[.*\]$/', $argumentString)) {
+                        $validVariants[] = $possible;
+                        continue;
+                    }
+                } catch (Exception $ex) {
+                    // If we get an error in the regex or in the base64 decode, assume our possible variant is invalid.
+                }
+            }
+            array_unshift($possibleVariants, $possible);
+            break;
+        }
+
+
+        // Can't have a resampled folder without a variant
+        if (empty($validVariants)) {
+            return null;
+        }
+
+        // Reconcatenate our variants
+        $variant = implode('_', $validVariants);
+
+        // Our invalid variants are part of the filename
+        $invalidVariant = $possibleVariants ? implode('-', $possibleVariants) . '-' : '';
+        $filename = $matches['folder'] . $invalidVariant . $matches['basename'] . $matches['extension'];
+
+        return new ParsedFileID($filename, '', $variant, $fileID);
+    }
+
+
+    /**
+     * Get a list of possible variant methods.
+     * @return string[]
+     */
+    private function getImageVariantMethods()
+    {
+        $variantMethods = self::config()->get('ss3_image_variant_methods');
+        // Sort the variant methods by descending order of string length.
+        // This is important because the regex will match the string in order of appearance.
+        // e.g. `paddedimageW10` could be confused for `pad` with a base64 string of `dedimageW10`
+        usort($variantMethods, function ($a, $b) {
+            return strlen($b) - strlen($a);
+        });
+
+        return $variantMethods;
     }
 
     public function isVariantOf($fileID, ParsedFileID $original)

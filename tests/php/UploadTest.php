@@ -4,12 +4,15 @@ namespace SilverStripe\Assets\Tests;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DefaultAssetNameGenerator;
 use SilverStripe\Assets\Upload;
 use SilverStripe\Assets\Upload_Validator;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -413,33 +416,168 @@ class UploadTest extends SapphireTest
 
     public function testUploadAcceptsAllowedExtension()
     {
-        // create tmp file
-        $tmpFileName = 'UploadTest-testUpload.txt';
-        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
-        $tmpFileContent = $this->getTemporaryFileContent();
-        file_put_contents($this->tmpFilePath, $tmpFileContent);
+        $textFile = $this->createMockTextFile();
+        $upload = $this->getUpload(['txt']);
 
-        // emulates the $_FILES array
-        $tmpFile = array(
-            'name' => $tmpFileName,
-            'type' => 'text/plain',
-            'size' => filesize($this->tmpFilePath),
-            'tmp_name' => $this->tmpFilePath,
-            'extension' => 'txt',
-            'error' => UPLOAD_ERR_OK,
+        // Test upload into default folder
+        $upload->loadIntoFile($textFile);
+        $file = $upload->getFile();
+        $this->assertFileExists(TestAssetStore::getLocalPath($file), 'File upload to custom directory in /assets');
+    }
+
+    public function testUploadIntoFileStoresProtectedFilesInsideProtectedFolderWhenCanViewIsInherit()
+    {
+        if (!class_exists(Versioned::class)) {
+            $this->markTestSkipped('This test requires silverstripe/versioned to be installed');
+        }
+        // Imitate the frontend site
+        $this->logOut();
+        Versioned::set_stage(Versioned::LIVE);
+
+        // Get some admin user and group info to use for fixtures
+        $adminUserID = $this->logInWithPermission('ADMIN');
+        $adminUser = Member::get()->byID($adminUserID);
+        $adminGroup = $adminUser->Groups()->first();
+
+        // Create a protected folder
+        $folder = new Folder([
+            'Name' => 'my-secret-folder',
+            'Title' => 'my-secret-folder',
+            'CanViewType' => 'OnlyTheseUsers',
+            'CanEditType' => 'OnlyTheseUsers',
+        ]);
+        $folder->ViewerGroups()->add($adminGroup);
+        $folder->EditorGroups()->add($adminGroup);
+        $folder->write();
+
+        $textFile = $this->createMockTextFile();
+        $upload = $this->getUpload(['txt']);
+
+        // Push the file into a protected folder
+        $file = new File();
+        $file->CanViewType = 'Inherit';
+        $upload->loadIntoFile($textFile, $file, 'my-secret-folder');
+
+        // Ensure that the file has been written to a protected folder
+        $filePath = TestAssetStore::getLocalPath($file);
+        $this->assertFileExists($filePath, 'Test file should be uploaded');
+        $this->assertContains('.protected', $filePath, 'Test file path should be protected');
+        $this->assertContains('my-secret-folder', $filePath, 'Test file should be stored under secret folder');
+        $this->assertSame(
+            AssetStore::VISIBILITY_PROTECTED,
+            $file->getVisibility(),
+            'Test should be protected since its folder is protected'
         );
+    }
 
-        $v = new Upload_Validator();
-        $v->setAllowedExtensions(array('txt'));
+    public function testUploadIntoFileStoresPublicFilesInsidePublicFolderWhenCanViewIsInherit()
+    {
+        if (!class_exists(Versioned::class)) {
+            $this->markTestSkipped('This test requires silverstripe/versioned to be installed');
+        }
+        // Imitate the frontend site
+        $this->logOut();
+        Versioned::set_stage(Versioned::LIVE);
 
-        // test upload into default folder
-        $u = new Upload();
-        $u->setValidator($v);
-        $u->loadIntoFile($tmpFile);
-        $file = $u->getFile();
-        $this->assertFileExists(
-            TestAssetStore::getLocalPath($file),
-            'File upload to custom directory in /assets'
+        // Create a public folder
+        $folder = new Folder([
+            'Name' => 'my-public-folder',
+            'Title' => 'my-public-folder',
+            'CanViewType' => 'Anyone',
+        ]);
+        $folder->write();
+
+        $textFile = $this->createMockTextFile();
+        $upload = $this->getUpload(['txt']);
+
+        // Push the file into a protected folder
+        $file = new File();
+        $file->CanViewType = 'Inherit';
+        $upload->loadIntoFile($textFile, $file, 'my-public-folder');
+
+        // Ensure that the file has been written to a protected folder
+        $filePath = TestAssetStore::getLocalPath($file);
+        $this->assertFileExists($filePath, 'Test file should be uploaded');
+        $this->assertNotContains('.protected', $filePath, 'Test file path should be public');
+        $this->assertContains('my-public-folder', $filePath, 'Test file should be stored under public folder');
+        $this->assertSame(
+            AssetStore::VISIBILITY_PUBLIC,
+            $file->getVisibility(),
+            'Test should be public since its folder is public'
+        );
+    }
+
+    public function testUploadIntoFileStoresProtectedFilesInsidePublicFolderWhenCanViewIsLoggedInUsers()
+    {
+        if (!class_exists(Versioned::class)) {
+            $this->markTestSkipped('This test requires silverstripe/versioned to be installed');
+        }
+        // Imitate the frontend site
+        $this->logOut();
+        Versioned::set_stage(Versioned::LIVE);
+
+        // Create a public folder
+        $folder = new Folder([
+            'Name' => 'my-public-folder',
+            'Title' => 'my-public-folder',
+            'CanViewType' => 'Anyone',
+        ]);
+        $folder->write();
+
+        $textFile = $this->createMockTextFile();
+        $upload = $this->getUpload(['txt']);
+
+        // Push a protected file into a public folder
+        $file = new File();
+        $file->CanViewType = 'LoggedInUsers';
+        $upload->loadIntoFile($textFile, $file, 'my-public-folder');
+
+        // Ensure that the file has been written to a protected folder
+        $filePath = TestAssetStore::getLocalPath($file);
+        $this->assertFileExists($filePath, 'Test file should be uploaded');
+        $this->assertContains('.protected', $filePath, 'Test file path should be protected');
+        $this->assertContains('my-public-folder', $filePath, 'Test file should be stored under public folder');
+        $this->assertSame(
+            AssetStore::VISIBILITY_PROTECTED,
+            $file->getVisibility(),
+            'Test should be protected since it has CanView = LoggedInUsers'
+        );
+    }
+
+    public function testUploadIntoFileStoresPublicFilesInsideProtectedFolderWhenCanViewIsAnyone()
+    {
+        if (!class_exists(Versioned::class)) {
+            $this->markTestSkipped('This test requires silverstripe/versioned to be installed');
+        }
+        // Imitate the frontend site
+        $this->logOut();
+        Versioned::set_stage(Versioned::LIVE);
+
+        // Create a protected folder
+        $folder = new Folder([
+            'Name' => 'my-protected-folder',
+            'Title' => 'my-protected-folder',
+            'CanViewType' => 'Anyone',
+        ]);
+        $folder->write();
+
+        $textFile = $this->createMockTextFile();
+        $upload = $this->getUpload(['txt']);
+
+        // Push a public file into a protected folder
+        $file = new File();
+        $file->CanViewType = 'Anyone';
+        $upload->loadIntoFile($textFile, $file, 'my-protected-folder');
+
+        // Ensure that the file has been written to a protected folder
+        $filePath = TestAssetStore::getLocalPath($file);
+        $this->assertFileExists($filePath, 'Test file should be uploaded');
+        $this->assertNotContains('.protected', $filePath, 'Test file path should be public');
+        $this->assertContains('my-protected-folder', $filePath, 'Test file should be stored under protected folder');
+        $this->assertSame(
+            AssetStore::VISIBILITY_PUBLIC,
+            $file->getVisibility(),
+            'Test should be public since it has CanView = Anyone'
         );
     }
 
@@ -897,5 +1035,46 @@ class UploadTest extends SapphireTest
     protected function getTemporaryFileContent($reps = 10000)
     {
         return str_repeat('0', $reps);
+    }
+
+    /**
+     * Generates a mock text file and returns an array representing a `$_FILES` entry from a form upload
+     *
+     * @return array
+     */
+    protected function createMockTextFile()
+    {
+        // Create temporary file
+        $tmpFileName = 'UploadTest-testUpload.txt';
+        $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
+        $tmpFileContent = $this->getTemporaryFileContent();
+        file_put_contents($this->tmpFilePath, $tmpFileContent);
+
+        // emulates the $_FILES array
+        return [
+            'name' => $tmpFileName,
+            'type' => 'text/plain',
+            'size' => filesize($this->tmpFilePath),
+            'tmp_name' => $this->tmpFilePath,
+            'extension' => 'txt',
+            'error' => UPLOAD_ERR_OK,
+        ];
+    }
+
+    /**
+     * Returns an Upload class with a validator attached that accepts the provided extensions
+     *
+     * @param array $allowedExtensions
+     * @return Upload
+     */
+    protected function getUpload(array $allowedExtensions = [])
+    {
+        $validator = new Upload_Validator();
+        $validator->setAllowedExtensions($allowedExtensions);
+
+        $upload = new Upload();
+        $upload->setValidator($validator);
+
+        return $upload;
     }
 }

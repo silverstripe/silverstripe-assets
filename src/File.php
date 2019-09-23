@@ -366,9 +366,30 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return $result;
         }
 
-        // Check inherited permissions
-        return static::getPermissionChecker()
-            ->canView($this->ID, $member);
+        if (Permission::checkMember($member, 'ADMIN')) {
+            return true;
+        }
+
+        // Check inherited permissions from the parent folder
+        if ($this->CanViewType === InheritedPermissions::INHERIT && $this->ParentID) {
+            return $this->getPermissionChecker()->canView($this->ParentID, $member);
+        }
+
+        // Any logged in user can view this file
+        if ($this->CanViewType === InheritedPermissions::LOGGED_IN_USERS && !$member) {
+            return false;
+        }
+
+        // Specific user groups can view this file
+        if ($this->CanViewType === InheritedPermissions::ONLY_THESE_USERS) {
+            if (!$member) {
+                return false;
+            }
+            return $member->inGroups($this->ViewerGroups());
+        }
+
+        // Check default root level permissions
+        return $this->getPermissionChecker()->canView($this->ID, $member);
     }
 
     /**
@@ -392,9 +413,13 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return true;
         }
 
+        // Delegate to parent if inheriting permissions
+        if ($this->CanEditType === 'Inherit' && $this->ParentID) {
+            return $this->getPermissionChecker()->canEdit($this->ParentID, $member);
+        }
+
         // Check inherited permissions
-        return static::getPermissionChecker()
-            ->canEdit($this->ID, $member);
+        return $this->getPermissionChecker()->canEdit($this->ID, $member);
     }
 
     /**

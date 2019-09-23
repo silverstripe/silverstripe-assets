@@ -362,7 +362,12 @@ class FolderTest extends SapphireTest
 
         // Folder can be made public
         $restrictedFolderDraft->CanViewType = InheritedPermissions::ANYONE;
-        $restrictedFolderDraft->write(); // Should trigger publish
+        $restrictedFolderDraft->write();
+        $this->assertFalse($restrictedFolderLive->canView());
+        $this->assertTrue($restrictedFileLive->canView());
+        $restrictedFolderDraft->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $restrictedFolderLive = Versioned::get_by_stage(Folder::class, Versioned::LIVE)
+            ->byID($restrictedFolderDraft->ID);
         $this->assertTrue($restrictedFolderLive->canView());
         $this->assertTrue($restrictedFileLive->canView());
 
@@ -386,7 +391,7 @@ class FolderTest extends SapphireTest
 
         // Folder can be made protected
         $publicFolderDraft->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
-        $publicFolderDraft->write(); // should trigger publish
+        $publicFolderDraft->write();
         $this->assertFalse($publicFileLive->canView());
         $this->assertFalse($publicFolderLive->canView());
         $this->logInAs($member);

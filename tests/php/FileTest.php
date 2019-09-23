@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use PHPUnit_Framework_MockObject_MockObject;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
@@ -16,6 +17,7 @@ use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
+use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -637,6 +639,44 @@ class FileTest extends SapphireTest
         $this->assertTrue($secureFile->canEdit($admin), 'Admins can edit any files');
     }
 
+    public function testCanView()
+    {
+        $file = $this->objFromFixture(Image::class, 'gif');
+        $secureFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+
+        // Test anonymous permissions
+        $this->logOut();
+        $this->assertFalse($file->canView(), "Anonymous users cannot view draft files");
+        $file->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+        $this->assertTrue($file->canView(), "Anonymous users can view public files");
+        $this->assertFalse($secureFile->canView(), "Anonymous users cannot view files with specific permissions");
+
+        // Test permissionless user
+        $frontendUser = $this->objFromFixture(Member::class, 'frontend');
+        $this->assertTrue($file->canView($frontendUser), "Permissionless users can view files");
+        $this->assertFalse($secureFile->canView($frontendUser), "Permissionless users cannot view secure files");
+
+        // Test global CMS section users
+        $cmsUser = $this->objFromFixture(Member::class, 'cms');
+        $this->assertTrue($file->canView($cmsUser), "CMS users can view public files");
+        $this->assertFalse($secureFile->canView($cmsUser), "CMS users cannot view a file that is not assigned to them");
+
+        // Test cms access users without file access
+        $securityUser = $this->objFromFixture(Member::class, 'security');
+        $this->assertTrue($file->canView($securityUser), "Security CMS users can view public files");
+        $this->assertFalse($secureFile->canView($securityUser), "Security CMS users cannot view a file that is not assigned to them.");
+
+        // Asset-admin user can edit files their group is granted to
+        $assetAdminUser = $this->objFromFixture(Member::class, 'assetadmin');
+        $this->assertTrue($file->canView($assetAdminUser), "Asset admin users can view public files");
+        $this->assertTrue($secureFile->canView($assetAdminUser), "Asset admin can view files that are assigned to them");
+
+        // Test admin
+        $admin = $this->objFromFixture(Member::class, 'admin');
+        $this->assertTrue($file->canView($admin), "Admins can view files");
+        $this->assertTrue($secureFile->canView($admin), 'Admins can view files that are not necessarily assigned to them');
+    }
+
     public function testCanCreate()
     {
         $normalFolder = $this->objFromFixture(Folder::class, 'folder1');
@@ -771,5 +811,176 @@ class FileTest extends SapphireTest
                 ['foo', 'gif', 'bmp'],
             ]
         ];
+    }
+
+    public function testCanViewReturnsExtendedResult()
+    {
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(true);
+        $this->assertTrue($file->canView());
+    }
+
+    public function testCanViewDelegatesToParentWhenInheritingPermissions()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        $permissionChecker = $this->createMock(PermissionChecker::class);
+        $permissionChecker->expects($this->once())->method('canView')->with(123)->willReturn(false);
+        Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
+
+        $file->CanViewType = 'Inherit';
+        $file->ParentID = 123;
+        $this->assertFalse($file->canView());
+    }
+
+    public function testCanViewInheritsRecursively()
+    {
+        $this->logOut();
+        $folderA = Folder::create([
+            'Name' => 'Grandparent',
+            'CanViewType' => 'LoggedInUsers',
+        ]);
+        $folderA->write();
+
+        $folderB = Folder::create([
+            'Name' => 'Parent',
+            'ParentID' => $folderA->ID,
+            'CanViewtype' => 'Inherit',
+        ]);
+        $folderB->write();
+        $file = File::create([
+            'Name' => 'File',
+            'ParentID' => $folderB->ID,
+            'CanViewType' => 'Inherit',
+        ]);
+        $file->write();
+        $file->publishRecursive();
+
+        $this->assertFalse($file->canView());
+
+        $this->logInWithPermission('ADMIN');
+        $this->assertTrue($file->canView());
+
+        $folderA->CanViewType = 'Anyone';
+        $folderA->write();
+
+        $this->logOut();
+        $this->assertTrue($file->canView());
+    }
+
+    public function testCanViewReturnsFalseForAnonymousUsersWithCanViewTypeLoggedInUsers()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        $file->CanViewType = 'LoggedInUsers';
+        $this->assertFalse($file->canView());
+    }
+
+    public function testCanViewReturnsFalseForAnonymousUsersWithCanViewTypeOnlyTheseUsers()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        $file->CanViewType = 'OnlyTheseUsers';
+        $this->assertFalse($file->canView());
+    }
+
+    public function testCanViewReturnsTrueForUserInGroupWithCanViewTypeOnlyTheseUsers()
+    {
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        /** @var Member&PHPUnit_Framework_MockObject_MockObject $member */
+        $member = $this->createMock(Member::class);
+        $member->expects($this->once())->method('inGroups')->willReturn(true);
+
+        $file->CanViewType = 'OnlyTheseUsers';
+        $this->assertTrue($file->canView($member));
+    }
+
+    public function testCanViewFallsBackToCheckingDefaultFilePermissions()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        $permissionChecker = $this->createMock(PermissionChecker::class);
+        $permissionChecker->expects($this->once())->method('canView')->with(234)->willReturn(true);
+        Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
+
+        $file->CanViewType = 'Anyone';
+        $file->ID = 234;
+        $this->assertTrue($file->canView());
+    }
+
+    public function testCanEditReturnsExtendedResult()
+    {
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(true);
+        $this->assertTrue($file->canEdit());
+    }
+
+    public function testCanEditReturnsTrueForUserWithEditAllPermissions()
+    {
+        $this->logInWithPermission();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+        $this->assertTrue($file->canEdit());
+    }
+
+    public function testCanEditDelegatesToParentWhenInheritingPermissions()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        $permissionChecker = $this->createMock(PermissionChecker::class);
+        $permissionChecker->expects($this->once())->method('canEdit')->with(123)->willReturn(false);
+        Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
+
+        $file->CanEditType = 'Inherit';
+        $file->ParentID = 123;
+        $this->assertFalse($file->canEdit());
+    }
+
+    public function testCanEditFallsBackToCheckingDefaultFilePermissions()
+    {
+        $this->logOut();
+
+        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file->expects($this->once())->method('extendedCan')->willReturn(null);
+
+        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        $permissionChecker = $this->createMock(PermissionChecker::class);
+        $permissionChecker->expects($this->once())->method('canEdit')->with(234)->willReturn(false);
+        Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
+
+        $file->CanEditType = 'Anyone';
+        $file->ID = 234;
+        $this->assertFalse($file->canEdit());
     }
 }

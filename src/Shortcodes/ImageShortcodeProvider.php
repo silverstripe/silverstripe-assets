@@ -84,18 +84,18 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
         // Build the HTML tag
         $attrs = array_merge(
-            // Set overrideable defaults
-            ['src' => '', 'alt' => $record->Title],
+            // Set overrideable defaults ('alt' must be present regardless of contents)
+            ['src' => '', 'alt' => ''],
             // Use all other shortcode arguments
             $args,
             // But enforce some values
             ['id' => '', 'src' => $src]
         );
 
-        // Clean out any empty attributes
-        $attrs = array_filter($attrs, function ($v) {
-            return (bool)$v;
-        });
+        // Clean out any empty attributes (aside from alt)
+        $attrs = array_filter($attrs, function ($k, $v) {
+            return (bool)$v || $k === 'alt';
+        }, ARRAY_FILTER_USE_BOTH);
 
         $markup = HTML::createTag('img', $attrs);
 

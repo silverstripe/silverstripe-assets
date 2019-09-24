@@ -43,7 +43,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         parent::tearDown();
     }
 
-    public function testShortcodeHandlerFallsBackToFileProperties()
+    public function testShortcodeHandlerDoesNotFallBackToFileProperties()
     {
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $parser = new ShortcodeParser();
@@ -51,7 +51,7 @@ class ImageShortcodeProviderTest extends SapphireTest
 
         $this->assertEquals(
             sprintf(
-                '<img src="%s" alt="This is a image Title">',
+                '<img src="%s" alt="">',
                 $image->Link()
             ),
             $parser->parse(sprintf('[image id=%d]', $image->ID))
@@ -84,7 +84,7 @@ class ImageShortcodeProviderTest extends SapphireTest
 
         $this->assertEquals(
             sprintf(
-                '<img src="%s" alt="test image">',
+                '<img src="%s" alt="">',
                 $image->Link()
             ),
             $parser->parse(sprintf(
@@ -104,7 +104,7 @@ class ImageShortcodeProviderTest extends SapphireTest
             $nonExistentImageID++;
         }
         $this->assertEquals(
-            '<img alt="Image not found">',
+            '<img alt="">',
             $parser->parse(sprintf(
                 '[image id="%d"]',
                 $nonExistentImageID

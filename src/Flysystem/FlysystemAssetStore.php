@@ -21,6 +21,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DB;
+use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -519,7 +520,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $originalID = $this->removeVariant($fileID);
         $session = Controller::curr()->getRequest()->getSession();
         $granted = $session->get(self::GRANTS_SESSION) ?: array();
-        return !empty($granted[$originalID]);
+        if (!empty($granted[$originalID])) {
+            return true;
+        }
+        if ($member = Security::getCurrentUser()) {
+            $file = File::get()->byID($fileID);
+            if ($file) {
+                return (bool) $file->canView($member);
+            }
+        }
+        return false;
     }
 
     /**

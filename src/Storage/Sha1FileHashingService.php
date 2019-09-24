@@ -2,16 +2,16 @@
 
 namespace SilverStripe\Assets\Storage;
 
+use Exception;
 use InvalidArgumentException;
-use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use Psr\SimpleCache\CacheInterface;
-use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\FieldType\DBDatetime;
 
 /**
  * Utility for computing and comparing unique file hash. All `$fs` parameters can either be:
@@ -182,12 +182,14 @@ class Sha1FileHashingService implements FileHashingService, Flushable
 
         $fsID = $this->getFilesystemKey($fs);
 
+        // If we can't get a timestamp for the file then we'll use the current timestamp so it
+        // invalidates quickly
         try {
             $timestamp = $filesystem->has($fileID) ?
                 $filesystem->getTimestamp($fileID) :
-                null;
-        } catch (FileNotFoundException $e) {
-            $timestamp = null;
+                DBDatetime::now()->getTimestamp();
+        } catch (Exception $e) {
+            $timestamp = DBDatetime::now()->getTimestamp();
         }
 
         return base64_encode(sprintf('%s://%s://%s', $fsID, $fileID, $timestamp));

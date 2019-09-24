@@ -45,7 +45,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
 
     /** @var Filesystem[] */
     private $filesystems;
-    
+
     public function computeFromStream($stream)
     {
         Util::rewindStream($stream);
@@ -120,7 +120,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
         $fs = $this->getFilesystem($fs);
         $stream = $fs->readStream($fileID);
         $hash = $this->computeFromStream($stream);
-        
+
         $this->set($fileID, $fs, $hash);
 
         return $hash;
@@ -178,9 +178,12 @@ class Sha1FileHashingService implements FileHashingService, Flushable
      */
     private function buildCacheKey($fileID, $fs)
     {
-        $fsID = $this->getFilesystemKey($fs);
+        $filesystem = $this->getFilesystem($fs);
 
-        return base64_encode(sprintf('%s://%s', $fsID, $fileID));
+        $fsID = $this->getFilesystemKey($fs);
+        $timestamp = $filesystem->getTimestamp($fileID);
+
+        return base64_encode(sprintf('%s://%s://%s', $fsID, $fileID, $timestamp));
     }
 
     public function invalidate($fileID, $fs)

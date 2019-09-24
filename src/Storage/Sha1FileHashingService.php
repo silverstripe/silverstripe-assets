@@ -182,9 +182,13 @@ class Sha1FileHashingService implements FileHashingService, Flushable
 
         $fsID = $this->getFilesystemKey($fs);
 
-        $timestamp = $filesystem->has($fileID) ?
-            $filesystem->getTimestamp($fileID) :
-            null;
+        try {
+            $timestamp = $filesystem->has($fileID) ?
+                $filesystem->getTimestamp($fileID) :
+                null;
+        } catch (FileNotFoundException $e) {
+            $timestamp = null;
+        }
 
         return base64_encode(sprintf('%s://%s://%s', $fsID, $fileID, $timestamp));
     }

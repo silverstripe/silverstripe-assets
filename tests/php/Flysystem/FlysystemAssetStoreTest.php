@@ -50,7 +50,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream'])
+            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
             ->setConstructorArgs([$this->publicAdapter])
             ->getMock();
 
@@ -59,7 +59,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream'])
+            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
             ->setConstructorArgs([$this->protectedAdapter])
             ->getMock();
 

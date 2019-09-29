@@ -54,6 +54,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
         $this->publicFs->write($this->fileID, $this->publicContent);
         $this->protectedFs->write($this->fileID, $this->protectedContent);
+        Sha1FileHashingService::flush();
     }
 
     public function tearDown()

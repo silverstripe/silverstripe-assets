@@ -3,15 +3,14 @@
 namespace SilverStripe\Assets\Storage;
 
 use InvalidArgumentException;
-use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
 use Psr\SimpleCache\CacheInterface;
-use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ORM\FieldType\DBDatetime;
 
 /**
  * Utility for computing and comparing unique file hash. All `$fs` parameters can either be:
@@ -45,7 +44,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
 
     /** @var Filesystem[] */
     private $filesystems;
-    
+
     public function computeFromStream($stream)
     {
         Util::rewindStream($stream);
@@ -120,7 +119,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
         $fs = $this->getFilesystem($fs);
         $stream = $fs->readStream($fileID);
         $hash = $this->computeFromStream($stream);
-        
+
         $this->set($fileID, $fs, $hash);
 
         return $hash;
@@ -179,8 +178,21 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     private function buildCacheKey($fileID, $fs)
     {
         $fsID = $this->getFilesystemKey($fs);
-
         return base64_encode(sprintf('%s://%s', $fsID, $fileID));
+    }
+
+    /**
+     * Return the current timestamp for the provided file or the current time if the file doesn't exists.
+     * @param string $fileID
+     * @param string|Filesystem $fs
+     * @return string
+     */
+    private function getTimestamp($fileID, $fs)
+    {
+        $filesystem = $this->getFilesystem($fs);
+        return $filesystem->has($fileID) ?
+            $filesystem->getTimestamp($fileID) :
+            DBDatetime::now()->getTimestamp();
     }
 
     public function invalidate($fileID, $fs)
@@ -200,7 +212,14 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     {
         if ($this->isCached()) {
             $key = $this->buildCacheKey($fileID, $fs);
-            return $this->getCache()->get($key, false);
+            $value = $this->getCache()->get($key, false);
+            if ($value) {
+                list($timestamp, $hash) = $value;
+                if ($timestamp === $this->getTimestamp($fileID, $fs)) {
+                    // Only return the cached hash if the cached timestamp matches the timestamp of the physical file
+                    return $hash;
+                }
+            }
         }
         return false;
     }
@@ -210,7 +229,13 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     {
         if ($this->isCached()) {
             $key = $this->buildCacheKey($fileID, $fs);
-            $this->getCache()->set($key, $hash);
+            // We store the file's timestamp in the cache so we can compare, that way we can know if some outside
+            // process has touched the file
+            $value = [
+                $this->getTimestamp($fileID, $fs),
+                $hash
+            ];
+            $this->getCache()->set($key, $value);
         }
     }
 

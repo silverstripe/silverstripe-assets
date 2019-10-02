@@ -304,6 +304,12 @@ class UploadTest extends SapphireTest
             'Max file size check on default values failed (config extension set check)'
         );
 
+        $this->assertEquals(
+            1024,
+            $v->getLargestAllowedMaxFileSize(),
+            'Unexpected largest max allowed filesize '
+        );
+
         // Check instance values for max file size
         $maxFileSizes = array(
             '[document]' => 2000,
@@ -339,6 +345,12 @@ class UploadTest extends SapphireTest
             'Max file size check on instance values failed (instance extension set check)'
         );
 
+        $this->assertEquals(
+            4096,
+            $v->getLargestAllowedMaxFileSize(),
+            'Unexpected largest max allowed filesize '
+        );
+
         // Check a wildcard max file size against a file with an extension
         $v = new Upload_Validator();
         $v->setAllowedMaxFileSize(2000);
@@ -350,7 +362,16 @@ class UploadTest extends SapphireTest
             'Max file size check on instance values failed (wildcard max file size)'
         );
 
+        $this->assertEquals(
+            2000,
+            $v->getLargestAllowedMaxFileSize(),
+            'Unexpected largest max allowed filesize '
+        );
+
         Config::unnest();
+
+        $v = new Upload_Validator();
+        $this->assertNull($v->getLargestAllowedMaxFileSize());
     }
 
     public function testAllowedSizeOnFileWithNoExtension()

@@ -44,6 +44,10 @@ SilverStripe\Assets\File:
   invalid:
     Name: myfile.exe
     ParentID: =>SilverStripe\Assets\Folder.subfolder
+  # Files with no extension are not allowed
+  no-extension:
+    Name: myfile
+    ParentID: =>SilverStripe\Assets\Folder.subfolder
   # badnameconflict will want to override goodnameconflict
   goodnameconflict:
     Name: bad_name.doc

@@ -25,6 +25,7 @@ use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\Security;
 
 /**
  * Asset store based on flysystem Filesystem as a backend
@@ -812,7 +813,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // The file is already publish
             return;
         }
-        
+
         /** @var FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
 
@@ -1023,7 +1024,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($parsedFileID && $originalID = $parsedFileID->getFileID()) {
             $session = Controller::curr()->getRequest()->getSession();
             $granted = $session->get(self::GRANTS_SESSION) ?: array();
-            return !empty($granted[$originalID]);
+            if (!empty($granted[$originalID])) {
+                return true;
+            }
+            if ($member = Security::getCurrentUser()) {
+                $file = File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
+                if ($file) {
+                    return (bool) $file->canView($member);
+                }
+            }
+            return false;
         }
 
         // Our file ID didn't make sense

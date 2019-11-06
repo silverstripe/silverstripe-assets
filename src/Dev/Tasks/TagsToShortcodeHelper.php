@@ -25,6 +25,7 @@ use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\ORM\Queries\SQLUpdate;
+use SilverStripe\Subsites\Model\Subsite;
 use SilverStripe\Versioned\Versioned;
 
 /**
@@ -102,6 +103,10 @@ class TagsToShortcodeHelper
      */
     public function run()
     {
+        if (class_exists(Subsite::class)) {
+            $originalFilterSetting = Subsite::$disable_subsite_filter;
+            Subsite::$disable_subsite_filter = true;
+        }
         Environment::increaseTimeLimitTo();
 
         $classes = $this->getFieldMap($this->baseClass, $this->includeBaseClass, [
@@ -145,6 +150,9 @@ class TagsToShortcodeHelper
                     }
                 }
             }
+        }
+        if (class_exists(Subsite::class)) {
+            Subsite::$disable_subsite_filter = $originalFilterSetting;
         }
     }
 

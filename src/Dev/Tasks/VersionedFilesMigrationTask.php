@@ -29,5 +29,4 @@ class VersionedFilesMigrationTask extends BuildTask
         $migrator = VersionedFilesMigrator::create($strategy, ASSETS_PATH, true);
         $migrator->migrate();
     }
-
 }

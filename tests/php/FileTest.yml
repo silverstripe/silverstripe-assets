@@ -89,12 +89,12 @@ SilverStripe\Assets\File:
     Name: File1.txt
     ParentID: =>SilverStripe\Assets\Folder.folder1
   restrictedFolder-file3:
-    FileFilename: restrictedFolder/File3.txt
+    FileFilename: FileTest-restricted-folder/File3.txt
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: File1.txt
     ParentID: =>SilverStripe\Assets\Folder.restrictedFolder
   restrictedViewFolder-file4:
-    FileFilename: restrictedViewFolder/File4.txt
+    FileFilename: FileTest-restricted-view-folder/File4.txt
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: File4.txt
     ParentID: =>SilverStripe\Assets\Folder.restrictedViewFolder

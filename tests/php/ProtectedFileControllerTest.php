@@ -35,12 +35,19 @@ class ProtectedFileControllerTest extends FunctionalTest
 
         // Create a test files for each of the fixture references
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
+            $file->publishSingle();
+
             /** @var File $file */
             $path = TestAssetStore::getLocalPath($file);
             Filesystem::makeFolder(dirname($path));
-            $fh = fopen($path, "w+");
-            fwrite($fh, str_repeat('x', 1000000));
-            fclose($fh);
+
+            // Create main file
+            $this->getAssetStore()->setFromString(
+                str_repeat('x', 1000000),
+                $file->Filename,
+                $file->Hash,
+                null
+            );
 
             // Create variant for each file
             $this->getAssetStore()->setFromString(
@@ -50,6 +57,10 @@ class ProtectedFileControllerTest extends FunctionalTest
                 'variant'
             );
         }
+
+        /** @var File $protectedFile */
+        $protectedFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+        $protectedFile->protectFile();
     }
 
     public function tearDown()
@@ -181,6 +192,28 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(404, null, $result);
         $result = $this->get('assets/55b443b601/FileTest__variant.txt');
         $this->assertResponseEquals(404, null, $result);
+    }
+
+    public function testAccessWithCanViewAccess()
+    {
+        $fileID = 'assets/FileTest-restricted-view-folder/55b443b601/File4.txt';
+        $fileVariantID = 'assets/FileTest-restricted-view-folder/55b443b601/File4__variant.txt';
+        $expectedContent = str_repeat('x', 1000000);
+        $variantContent = str_repeat('y', 100);
+
+        $this->logOut();
+
+        $result = $this->get($fileID);
+        $this->assertResponseEquals(403, null, $result);
+        $result = $this->get($fileVariantID);
+        $this->assertResponseEquals(403, null, $result);
+
+        $this->logInAs('assetadmin');
+
+        $result = $this->get($fileID);
+        $this->assertResponseEquals(200, $expectedContent, $result);
+        $result = $this->get($fileVariantID);
+        $this->assertResponseEquals(200, $variantContent, $result);
     }
 
     /**

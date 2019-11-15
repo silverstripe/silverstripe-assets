@@ -524,9 +524,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             return true;
         }
         if ($member = Security::getCurrentUser()) {
-            $file = File::get()->byID($fileID);
-            if ($file) {
-                return (bool) $file->canView($member);
+            $tuple = $this->parseFileID($fileID);
+            if ($tuple && $tuple['Filename']) {
+                $file = File::get()->filter('FileFilename', $tuple['Filename'])->first();
+                if ($file) {
+                    return (bool) $file->canView($member);
+                }
             }
         }
         return false;

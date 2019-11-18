@@ -89,8 +89,10 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         // Find appropriate record, with fallback for error handlers
+        $fileFound = true;
         $record = static::find_shortcode_record($arguments, $errorCode);
         if ($errorCode) {
+            $fileFound = false;
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -114,11 +116,13 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         // cache it for future reference
-        $cache->set($cacheKey, [
-            'markup' => $markup,
-            'filename' => $record instanceof File ? $record->getFilename() : null,
-            'hash' => $record instanceof File ? $record->getHash() : null,
-        ]);
+        if ($fileFound) {
+            $cache->set($cacheKey, [
+                'markup' => $markup,
+                'filename' => $record instanceof File ? $record->getFilename() : null,
+                'hash' => $record instanceof File ? $record->getHash() : null,
+            ]);
+        }
 
         return $markup;
     }

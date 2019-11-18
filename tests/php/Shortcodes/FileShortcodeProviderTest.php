@@ -103,4 +103,37 @@ class FileShortcodeProviderTest extends SapphireTest
             $this->assertEquals('', $parser->parse($fileEnclosed));
         }
     }
+
+    public function testMissingFileDoesNotCache()
+    {
+        $parser = new ShortcodeParser();
+        $parser->register('file_link', [FileShortcodeProvider::class, 'handle_shortcode']);
+
+        $nonExistentFileID = $this->getNonExistentFileID();
+        $shortcode = '[file_link id="' . $nonExistentFileID . '"]';
+
+        // make sure cache is not populated from a previous test
+        $cache = FileShortcodeProvider::getCache();
+        $cache->clear();
+
+        $args = ['id' => (string) $nonExistentFileID];
+        $cacheKey = FileShortcodeProvider::getCacheKey($args, "");
+
+        // assert that cache is empty before parsing shortcode
+        $this->assertTrue(is_null($cache->get($cacheKey)));
+
+        $parser->parse($shortcode);
+
+        // assert that cache is still empty after parsing shortcode
+        $this->assertTrue(is_null($cache->get($cacheKey)));
+    }
+
+    private function getNonExistentFileID()
+    {
+        $nonExistentFileID = 9999;
+        while (Image::get()->byID($nonExistentFileID)) {
+            $nonExistentFileID++;
+        }
+        return $nonExistentFileID;
+    }
 }

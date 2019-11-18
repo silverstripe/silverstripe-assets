@@ -144,5 +144,4 @@ class ImageShortcodeProviderTest extends SapphireTest
         }
         return $nonExistentImageID;
     }
-
 }

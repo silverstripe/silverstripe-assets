@@ -275,6 +275,9 @@ class InterventionBackend implements Image_Backend, Flushable
             $this->markSuccess($hash, $variant);
             $this->warmCache($hash, $variant);
             $error = null;
+            if (file_exists($path)) {
+                unlink($path);
+            }
             return $resource;
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
@@ -283,6 +286,9 @@ class InterventionBackend implements Image_Backend, Flushable
         } finally {
             if ($error) {
                 $this->markFailed($hash, $variant, $error);
+            }
+            if (file_exists($path)) {
+                unlink($path);
             }
         }
         return null;

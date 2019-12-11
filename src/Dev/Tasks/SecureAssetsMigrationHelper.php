@@ -99,8 +99,13 @@ class SecureAssetsMigrationHelper
 
         foreach ($securedFolders->execute()->map() as $id => $path) {
             /** @var Folder $folder */
-            $folder = Folder::get()->byID($id);
+            if (!$folder = Folder::get()->byID($id)) {
+                $this->logger->warning(sprintf('No Folder record found for ID %d. Skipping', $id));
+                continue;
+            }
+
             $migratedPath = $this->migrateFolder($filesystem, $folder->getFilename());
+
             if ($migratedPath) {
                 $migrated[] = $migratedPath;
             }

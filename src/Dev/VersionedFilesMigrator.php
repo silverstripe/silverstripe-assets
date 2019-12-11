@@ -191,5 +191,4 @@ class VersionedFilesMigrator
     {
         return $this->log;
     }
-
 }

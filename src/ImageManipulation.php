@@ -658,7 +658,7 @@ trait ImageManipulation
     }
 
     /**
-     * Thubnail generation for all file types.
+     * Thumbnail generation for all file types.
      *
      * Resizes images, but returns an icon `<img />` tag if this is not a resizable image
      *

@@ -93,7 +93,7 @@ class VersionedFilesMigrator
         foreach ($this->getVersionDirectories() as $path) {
             $htaccessPath = Path::join($path, '.htaccess');
             if (!file_exists($htaccessPath)) {
-                $content = "Order deny,allow\nDeny from all";
+                $content = "Require all denied";
                 @file_put_contents($htaccessPath, $content);
                 if (file_exists($htaccessPath)) {
                     $this->output("Added .htaccess file to $htaccessPath");

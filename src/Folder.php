@@ -68,6 +68,12 @@ class Folder extends File
                 'Name' => array($partSafe, $part)
             ))->first();
 
+            // In archived mode we would expect for folders to sometimes not exist and therefore shouldn't create them
+            if (class_exists(Versioned::class)
+                && strpos(Versioned::get_reading_mode(), 'Archive.') !== false) {
+                return null;
+            }
+
             if (!$item) {
                 $item = new Folder();
                 $item->ParentID = $parentID;

@@ -99,7 +99,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
-        $nonExistentImageID = $this->getNonExistentImageID();
+        $nonExistentImageID = File::get()->max('ID') + 1;
         $expected = '<img alt="Image not found">';
         $shortcodes = [
             '[image id="' . $nonExistentImageID . '"]',
@@ -117,7 +117,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
-        $nonExistentImageID = $this->getNonExistentImageID();
+        $nonExistentImageID = File::get()->max('ID') + 1;;
         $shortcode = '[image id="' . $nonExistentImageID . '"]';
 
         // make sure cache is not populated from a previous test
@@ -128,20 +128,11 @@ class ImageShortcodeProviderTest extends SapphireTest
         $cacheKey = ImageShortcodeProvider::getCacheKey($args);
 
         // assert that cache is empty before parsing shortcode
-        $this->assertTrue(is_null($cache->get($cacheKey)));
+        $this->assertNull($cache->get($cacheKey));
 
         $parser->parse($shortcode);
 
         // assert that cache is still empty after parsing shortcode
-        $this->assertTrue(is_null($cache->get($cacheKey)));
-    }
-
-    private function getNonExistentImageID()
-    {
-        $nonExistentImageID = 9999;
-        while (Image::get()->byID($nonExistentImageID)) {
-            $nonExistentImageID++;
-        }
-        return $nonExistentImageID;
+        $this->assertNull($cache->get($cacheKey));
     }
 }

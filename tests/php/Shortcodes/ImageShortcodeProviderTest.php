@@ -3,13 +3,8 @@
 namespace SilverStripe\Assets\Tests\Shortcodes;
 
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\Folder;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ErrorPage\ErrorPage;
-use SilverStripe\ORM\DataObject;
-use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
@@ -118,7 +113,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
-        $nonExistentImageID = File::get()->max('ID') + 1;;
+        $nonExistentImageID = File::get()->max('ID') + 1;
         $shortcode = '[image id="' . $nonExistentImageID . '"]';
 
         // make sure cache is not populated from a previous test

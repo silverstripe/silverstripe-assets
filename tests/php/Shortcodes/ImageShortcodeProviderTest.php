@@ -19,6 +19,7 @@ use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
  */
 class ImageShortcodeProviderTest extends SapphireTest
 {
+
     protected static $fixture_file = '../ImageTest.yml';
 
     public function setUp()
@@ -124,7 +125,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         $cache = ImageShortcodeProvider::getCache();
         $cache->clear();
 
-        $args = ['id' => (string) $nonExistentImageID];
+        $args = ['id' => (string)$nonExistentImageID];
         $cacheKey = ImageShortcodeProvider::getCacheKey($args);
 
         // assert that cache is empty before parsing shortcode

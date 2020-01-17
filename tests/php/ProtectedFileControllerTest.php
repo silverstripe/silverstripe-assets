@@ -40,6 +40,10 @@ class ProtectedFileControllerTest extends FunctionalTest
             $file->write();
             $file->publishRecursive();
         }
+
+        /** @var File $protectedFile */
+        $protectedFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+        $protectedFile->protectFile();
     }
 
     public function tearDown()
@@ -178,6 +182,28 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(404, null, $result);
         $result = $this->get('assets/FileTest__variant.txt');
         $this->assertResponseEquals(404, null, $result);
+    }
+
+    public function testAccessWithCanViewAccess()
+    {
+        $fileID = 'assets/restricted-view-folder/55b443b601/File4.txt';
+        $fileVariantID = 'assets/restricted-view-folder/55b443b601/File4__variant.txt';
+        $expectedContent = str_repeat('x', 1000000);
+        $variantContent = str_repeat('y', 100);
+
+        $this->logOut();
+
+        $result = $this->get($fileID);
+        $this->assertResponseEquals(403, null, $result);
+        $result = $this->get($fileVariantID);
+        $this->assertResponseEquals(403, null, $result);
+
+        $this->logInAs('assetadmin');
+
+        $result = $this->get($fileID);
+        $this->assertResponseEquals(200, $expectedContent, $result);
+        $result = $this->get($fileVariantID);
+        $this->assertResponseEquals(200, $variantContent, $result);
     }
 
     /**

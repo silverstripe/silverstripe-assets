@@ -186,8 +186,8 @@ class ProtectedFileControllerTest extends FunctionalTest
 
     public function testAccessWithCanViewAccess()
     {
-        $fileID = 'assets/FileTest-restricted-view-folder/55b443b601/File4.txt';
-        $fileVariantID = 'assets/FileTest-restricted-view-folder/55b443b601/File4__variant.txt';
+        $fileID = 'assets/restricted-view-folder/55b443b601/File4.txt';
+        $fileVariantID = 'assets/restricted-view-folder/55b443b601/File4__variant.txt';
         $expectedContent = str_repeat('x', 1000000);
         $variantContent = str_repeat('y', 100);
 

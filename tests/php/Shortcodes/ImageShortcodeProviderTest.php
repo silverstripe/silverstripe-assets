@@ -3,13 +3,8 @@
 namespace SilverStripe\Assets\Tests\Shortcodes;
 
 use SilverStripe\Assets\File;
-use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\Folder;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ErrorPage\ErrorPage;
-use SilverStripe\ORM\DataObject;
-use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
@@ -19,6 +14,7 @@ use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
  */
 class ImageShortcodeProviderTest extends SapphireTest
 {
+
     protected static $fixture_file = '../ImageTest.yml';
 
     public function setUp()
@@ -99,16 +95,40 @@ class ImageShortcodeProviderTest extends SapphireTest
         $parser = new ShortcodeParser();
         $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
 
-        $nonExistentImageID = 9999;
-        while (Image::get()->byID($nonExistentImageID)) {
-            $nonExistentImageID++;
+        $nonExistentImageID = File::get()->max('ID') + 1;
+        $expected = '<img alt="Image not found">';
+        $shortcodes = [
+            '[image id="' . $nonExistentImageID . '"]',
+            '[image id="' . $nonExistentImageID . '" alt="my-alt-attr"]',
+        ];
+        foreach ($shortcodes as $shortcode) {
+            $actual = $parser->parse($shortcode);
+            $this->assertEquals($expected, $actual);
         }
-        $this->assertEquals(
-            '<img alt="">',
-            $parser->parse(sprintf(
-                '[image id="%d"]',
-                $nonExistentImageID
-            ))
-        );
+    }
+
+    public function testMissingImageDoesNotCache()
+    {
+
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+
+        $nonExistentImageID = File::get()->max('ID') + 1;
+        $shortcode = '[image id="' . $nonExistentImageID . '"]';
+
+        // make sure cache is not populated from a previous test
+        $cache = ImageShortcodeProvider::getCache();
+        $cache->clear();
+
+        $args = ['id' => (string)$nonExistentImageID];
+        $cacheKey = ImageShortcodeProvider::getCacheKey($args);
+
+        // assert that cache is empty before parsing shortcode
+        $this->assertNull($cache->get($cacheKey));
+
+        $parser->parse($shortcode);
+
+        // assert that cache is still empty after parsing shortcode
+        $this->assertNull($cache->get($cacheKey));
     }
 }

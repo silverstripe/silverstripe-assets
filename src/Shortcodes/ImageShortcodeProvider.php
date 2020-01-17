@@ -59,8 +59,10 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Find appropriate record, with fallback for error handlers
+        $fileFound = true;
         $record = static::find_shortcode_record($args, $errorCode);
         if ($errorCode) {
+            $fileFound = false;
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -92,6 +94,11 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             ['id' => '', 'src' => $src]
         );
 
+        // If file was not found then use the Title value from static::find_error_record() for the alt attr
+        if (!$fileFound) {
+            $attrs['alt'] = $record->Title;
+        }
+
         // Clean out any empty attributes
         $attrs = array_filter($attrs, function ($v) {
             return (bool)$v;
@@ -100,11 +107,13 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         $markup = HTML::createTag('img', $attrs);
 
         // cache it for future reference
-        $cache->set($cacheKey, [
-            'markup' => $markup,
-            'filename' => $record instanceof File ? $record->getFilename() : null,
-            'hash' => $record instanceof File ? $record->getHash() : null,
-        ]);
+        if ($fileFound) {
+            $cache->set($cacheKey, [
+                'markup' => $markup,
+                'filename' => $record instanceof File ? $record->getFilename() : null,
+                'hash' => $record instanceof File ? $record->getHash() : null,
+            ]);
+        }
 
         return $markup;
     }

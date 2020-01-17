@@ -89,6 +89,21 @@ class Upload_Validator
         $this->tmpFile = $tmpFile;
     }
 
+
+    /**
+     * Returns the largest maximum filesize allowed across all extensions
+     *
+     * @return null|int Filesize in bytes
+     */
+    public function getLargestAllowedMaxFileSize()
+    {
+        if (!count($this->allowedMaxFileSize)) {
+            return null;
+        }
+
+        return max(array_values($this->allowedMaxFileSize));
+    }
+
     /**
      * Get maximum file size for all or specified file extension.
      *

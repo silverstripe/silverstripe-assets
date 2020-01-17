@@ -54,6 +54,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
         $this->publicFs->write($this->fileID, $this->publicContent);
         $this->protectedFs->write($this->fileID, $this->protectedContent);
+        Sha1FileHashingService::flush();
     }
 
     public function tearDown()
@@ -78,7 +79,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
         }
     }
 
-    public function testcomputeFromFile()
+    public function testComputeFromFile()
     {
         $service = new Sha1FileHashingService();
         $service->disableCache();
@@ -135,6 +136,25 @@ class Sha1FileHashingServiceTest extends SapphireTest
         $hash = sha1('missing-file.text');
         $service->set('missing-file.text', AssetStore::VISIBILITY_PUBLIC, $hash);
         $this->assertEquals($hash, $service->computeFromFile('missing-file.text', AssetStore::VISIBILITY_PUBLIC));
+    }
+
+    public function testComputeTouchFile()
+    {
+        $service = new Sha1FileHashingService();
+        $service->enableCache();
+
+        $this->assertEquals($this->publicHash, $service->computeFromFile($this->fileID, $this->publicFs));
+
+        // Our timestamp is accruate to the second, we need to wait a bit to make sure our new timestamp won't be in
+        // the same second as the old one.
+        sleep(2);
+        $this->publicFs->update($this->fileID, $this->protectedContent);
+
+        $this->assertEquals(
+            $this->protectedHash,
+            $service->computeFromFile($this->fileID, $this->publicFs),
+            'When a file is touched by an outside process, existing value for that file are invalidated'
+        );
     }
 
     public function testCompare()

@@ -59,8 +59,10 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Find appropriate record, with fallback for error handlers
+        $fileFound = true;
         $record = static::find_shortcode_record($args, $errorCode);
         if ($errorCode) {
+            $fileFound = false;
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -84,27 +86,34 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
         // Build the HTML tag
         $attrs = array_merge(
-            // Set overrideable defaults
-            ['src' => '', 'alt' => $record->Title],
+            // Set overrideable defaults ('alt' must be present regardless of contents)
+            ['src' => '', 'alt' => ''],
             // Use all other shortcode arguments
             $args,
             // But enforce some values
             ['id' => '', 'src' => $src]
         );
 
-        // Clean out any empty attributes
-        $attrs = array_filter($attrs, function ($v) {
-            return (bool)$v;
-        });
+        // If file was not found then use the Title value from static::find_error_record() for the alt attr
+        if (!$fileFound) {
+            $attrs['alt'] = $record->Title;
+        }
+
+        // Clean out any empty attributes (aside from alt)
+        $attrs = array_filter($attrs, function ($k, $v) {
+            return strlen(trim($v)) || $k === 'alt';
+        }, ARRAY_FILTER_USE_BOTH);
 
         $markup = HTML::createTag('img', $attrs);
 
         // cache it for future reference
-        $cache->set($cacheKey, [
-            'markup' => $markup,
-            'filename' => $record instanceof File ? $record->getFilename() : null,
-            'hash' => $record instanceof File ? $record->getHash() : null,
-        ]);
+        if ($fileFound) {
+            $cache->set($cacheKey, [
+                'markup' => $markup,
+                'filename' => $record instanceof File ? $record->getFilename() : null,
+                'hash' => $record instanceof File ? $record->getHash() : null,
+            ]);
+        }
 
         return $markup;
     }

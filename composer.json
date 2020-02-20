@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "silverstripe/framework": "^4.1",
+        "silverstripe/framework": "^4.5",
         "silverstripe/vendor-plugin": "^1.0",
         "intervention/image": "^2.3"
     },

@@ -25,6 +25,7 @@
     },
     "require-dev": {
         "silverstripe/versioned": "^1@dev",
+        "sminnee/phpunit-mock-objects": "^3.4.5",
         "phpunit/phpunit": "^5.7"
     },
     "suggest": {

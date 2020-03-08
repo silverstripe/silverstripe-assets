@@ -19,6 +19,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Config\Config;
 
 class InterventionBackend implements Image_Backend, Flushable
 {
@@ -33,6 +34,14 @@ class InterventionBackend implements Image_Backend, Flushable
      * Cache prefix for dimensions
      */
     const CACHE_DIMENSIONS = 'DIMENSIONS_';
+
+    /**
+     * Is cache flushing enabled?
+     *
+     * @config
+     * @var boolean
+     */
+    private static $flush_enabled = true;
 
     /**
      * How long to cache each error type
@@ -815,9 +824,11 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public static function flush()
     {
-        /** @var CacheInterface $cache */
-        $cache = Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
-        $cache->clear();
+        if (Config::inst()->get(static::class, 'flush_enabled')) {
+            /** @var CacheInterface $cache */
+            $cache = Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations');
+            $cache->clear();
+        }
     }
 
     /**

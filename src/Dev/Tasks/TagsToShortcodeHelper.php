@@ -167,7 +167,7 @@ class TagsToShortcodeHelper
      * @param string $updateTable
      * @param string $field
      */
-    private function rewriteFieldForRecords(Query $records, $updateTable, $field)
+    protected function rewriteFieldForRecords(Query $records, $updateTable, $field)
     {
         foreach ($records as $row) {
             $content = $row[$field];
@@ -359,7 +359,7 @@ class TagsToShortcodeHelper
      * @return array An array of fields that derivec from $baseClass.
      * @throws \ReflectionException
      */
-    private function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
+    protected function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
     {
         $mapping = [];
         // Normalise $fieldNames to a string array

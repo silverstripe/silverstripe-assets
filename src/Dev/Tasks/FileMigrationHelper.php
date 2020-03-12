@@ -535,7 +535,7 @@ class FileMigrationHelper
      * @param DataList $query
      * @return Generator
      */
-    private function chunk(DataList $query)
+    protected function chunk(DataList $query)
     {
         $chunkSize = 100;
         $greaterThanID = 0;

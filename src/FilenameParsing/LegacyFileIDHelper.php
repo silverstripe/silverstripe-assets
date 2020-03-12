@@ -121,7 +121,13 @@ class LegacyFileIDHelper implements FileIDHelper
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {
-            return null;
+            return $this->parseLegacyFormat(
+                $fileID,
+                $matches['variant'],
+                $matches['folder'],
+                $matches['basename'],
+                $matches['extension']
+            );
         }
 
         // Can't have a resampled folder without a variant
@@ -157,7 +163,13 @@ class LegacyFileIDHelper implements FileIDHelper
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern, $fileID, $matches)) {
-            return null;
+            return $this->parseLegacyFormat(
+                $fileID,
+                $matches['variant'],
+                $matches['folder'],
+                $matches['basename'],
+                $matches['extension']
+            );
         }
 
         // Our SS3 variant can be confused with regular filenames, let's minimise the risk of this by making
@@ -220,6 +232,24 @@ class LegacyFileIDHelper implements FileIDHelper
         });
 
         return $variantMethods;
+    }
+
+    /**
+     * This function allows you to implement custom handling of legacy formats
+     * note at this point you are unlikely able to recover the original variant as it's no longer valid or recognized
+     * you may still be able to recover the original file and preserve asset references in HTML fields
+     *
+     * @param string $fileID
+     * @param string $variant
+     * @param string $folder
+     * @param string $filename
+     * @param string $extension
+     * @return ParsedFileID|null
+     */
+    protected function parseLegacyFormat($fileID, $variant, $folder, $filename, $extension)
+    {
+        // No OP
+        return null;
     }
 
     public function isVariantOf($fileID, ParsedFileID $original)

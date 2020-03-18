@@ -80,6 +80,7 @@ class MigrationLegacyFileIDHelperTest extends FileIDHelperTester
             ['sub_folder/sam.jpg', 'sub_folder/sam.jpg'],
             ['sub_folder/double__underscore.jpg', 'sub_folder/double__underscore.jpg'],
             ['sub_folder/single_underscore.jpg', 'sub_folder/single_underscore.jpg'],
+            ['Folder/With/Backslash/file.jpg', 'Folder\With\Backslash\file.jpg'],
         ];
     }
 

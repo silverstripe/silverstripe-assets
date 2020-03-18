@@ -73,6 +73,9 @@ class HashFileIDHelper implements FileIDHelper
 
     public function cleanFilename($filename)
     {
+        // Swap backslash for forward slash
+        $filename = str_replace('\\', '/', $filename);
+
         // Since we use double underscore to delimit variants, eradicate them from filename
         return preg_replace('/_{2,}/', '_', $filename);
     }

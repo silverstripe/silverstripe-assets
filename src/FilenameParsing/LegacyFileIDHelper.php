@@ -97,6 +97,9 @@ class LegacyFileIDHelper implements FileIDHelper
 
     public function cleanFilename($filename)
     {
+        // Swap backslash for forward slash
+        $filename = str_replace('\\', '/', $filename);
+
         // There's not really any relevant cleaning rule for legacy. It's not important any way because we won't be
         // generating legacy URLs, aside from maybe for testing.
         return $filename;

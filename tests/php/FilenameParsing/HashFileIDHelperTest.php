@@ -83,6 +83,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
             ['sub_folder/double_underscore.jpg', 'sub_folder/double__underscore.jpg'],
             ['sub_folder/single_underscore.jpg', 'sub_folder/single_underscore.jpg'],
             ['sub_folder/triple_underscore.jpg', 'sub_folder/triple___underscore.jpg'],
+            ['Folder/With/Backslash/file.jpg', 'Folder\With\Backslash\file.jpg'],
         ];
     }
 

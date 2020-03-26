@@ -21,7 +21,7 @@ class DBFileTest extends SapphireTest
 
     protected $usesDatabase = true;
 
-    public function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -30,7 +30,7 @@ class DBFileTest extends SapphireTest
         Director::config()->update('alternate_base_url', '/mysite/');
     }
 
-    public function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
         parent::tearDown();

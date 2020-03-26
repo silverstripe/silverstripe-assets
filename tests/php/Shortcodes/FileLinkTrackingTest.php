@@ -19,7 +19,7 @@ class FileLinkTrackingTest extends SapphireTest
 
     protected static $fixture_file = "FileLinkTrackingTest.yml";
 
-    public function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -59,7 +59,7 @@ class FileLinkTrackingTest extends SapphireTest
         $page->write();
     }
 
-    public function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
         parent::tearDown();

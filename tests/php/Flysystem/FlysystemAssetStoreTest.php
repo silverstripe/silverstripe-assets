@@ -41,7 +41,7 @@ class FlysystemAssetStoreTest extends SapphireTest
     /** @var FileResolutionStrategy */
     protected $protectedStrategy;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 

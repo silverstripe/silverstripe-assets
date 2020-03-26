@@ -30,7 +30,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     /** @var Filesystem */
     private $fs;
 
-    public function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         Sha1FileHashingService::flush();
@@ -49,7 +49,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
     }
 
-    public function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
 

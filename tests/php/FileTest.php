@@ -33,7 +33,7 @@ class FileTest extends SapphireTest
         MyCustomFile::class
     );
 
-    public function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
         $this->logInWithPermission('ADMIN');
@@ -66,7 +66,7 @@ class FileTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
         parent::tearDown();

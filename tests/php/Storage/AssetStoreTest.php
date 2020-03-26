@@ -24,7 +24,7 @@ class AssetStoreTest extends SapphireTest
     /**
      * @skipUpgrade
      */
-    public function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -32,7 +32,7 @@ class AssetStoreTest extends SapphireTest
         TestAssetStore::activate('AssetStoreTest');
     }
 
-    public function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
         parent::tearDown();

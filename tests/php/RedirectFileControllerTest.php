@@ -24,7 +24,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
     protected $autoFollowRedirection = false;
 
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 
@@ -56,7 +56,7 @@ class RedirectFileControllerTest extends FunctionalTest
         }
     }
 
-    protected function tearDown()
+    protected function tearDown() : void
     {
         TestAssetStore::reset();
         parent::tearDown();

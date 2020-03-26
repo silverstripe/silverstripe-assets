@@ -8,7 +8,7 @@ use SilverStripe\View\Parsers\Transliterator;
 
 class FolderNameFilterTest extends SapphireTest
 {
-    protected function setUp()
+    protected function setUp() : void
     {
         parent::setUp();
 

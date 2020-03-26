@@ -22,7 +22,7 @@
         "silverstripe/framework": "^5",
         "silverstripe/vendor-plugin": "^1",
         "intervention/image": "^2.3",
-        "php": ">=7.1.0"
+        "php": "^7.2"
     },
     "require-dev": {
         "silverstripe/versioned": "^2",

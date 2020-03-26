@@ -642,7 +642,7 @@ class UploadTest extends SapphireTest
     {
         // create tmp file
         $tmpFileName = 'UploadTest-testUpload.tar.gz';
-        $this->tmpFilePath = implode([__DIR__, 'UploadTest', $tmpFileName], DIRECTORY_SEPARATOR);
+        $this->tmpFilePath = implode(DIRECTORY_SEPARATOR, [__DIR__, 'UploadTest', $tmpFileName]);
 
         // emulates the $_FILES array
         $tmpFile = array(

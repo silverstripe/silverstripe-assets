@@ -329,11 +329,9 @@ abstract class ImageTest extends SapphireTest
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testGenerateImageWithInvalidParameters()
     {
+        $this->expectException(InvalidArgumentException::class);
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
         $image->ScaleHeight('String');
         $image->Pad(600, 600, 'XXXXXX');
@@ -346,7 +344,7 @@ abstract class ImageTest extends SapphireTest
         $imageFilename = $imageFirst->getURL();
             // Encoding of the arguments is duplicated from cacheFilename
         $neededPart = 'Pad' . Convert::base64url_encode(array(200,200,'CCCCCC', 0));
-        $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
+        $this->assertStringContainsString($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 
     public function testGenerateImageInSameFolderAsOriginal()
@@ -402,11 +400,9 @@ abstract class ImageTest extends SapphireTest
         );
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testVariantPartsThrowsOnInvalidName()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @var Image $image */
         $image = singleton(Image::class);
         $args = ['foo'];

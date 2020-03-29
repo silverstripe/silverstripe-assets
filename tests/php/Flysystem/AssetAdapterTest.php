@@ -61,14 +61,14 @@ class AssetAdapterTest extends SapphireTest
         $htaccess = $adapter->read('.htaccess');
         $content = $htaccess['contents'];
         // Allowed extensions set
-        $this->assertContains('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
+        $this->assertStringContainsString('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
         foreach (File::getAllowedExtensions() as $extension) {
             $this->assertRegExp('/\b'.preg_quote($extension).'\b/', $content);
         }
 
         // Rewrite rules
-        $this->assertContains('RewriteRule .* ../index.php [QSA]', $content);
-        $this->assertContains('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
+        $this->assertStringContainsString('RewriteRule .* ../index.php [QSA]', $content);
+        $this->assertStringContainsString('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
 
         // Test flush restores invalid content
         file_put_contents($this->rootDir . '/.htaccess', '# broken content');

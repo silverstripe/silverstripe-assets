@@ -168,11 +168,9 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testHashlessBuildFileID()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->getHelper()->buildFileID('Filename.txt', '');
     }
 }

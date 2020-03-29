@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets\Tests;
 
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Storage\AssetStore;
 
 /**
  * We rerun all the same test in `RedirectFileControllerTest` but with keep_archived_assets on

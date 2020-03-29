@@ -35,11 +35,9 @@ class FileFinderTest extends SapphireTest
         );
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testInvalidOptionThrowsException()
     {
+        $this->expectException(InvalidArgumentException::class);
         $finder = new FileFinder();
         $finder->setOption('this_doesnt_exist', 'ok');
     }

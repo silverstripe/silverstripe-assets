@@ -84,17 +84,17 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $documentID = $this->idFromFixture(File::class, 'document');
         $imageID = $this->idFromFixture(Image::class, 'image1');
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
             $newPage->Content
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p id="image">[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]</p>', $imageID),
             $newPage->Content
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf(
                 '<p id="variant">[image src="/assets/33be1b95cb/myimage.jpg" width="64" height="64" id="%d"]</p>',
                 $imageID
@@ -137,17 +137,17 @@ class TagsToShortcodeHelperTest extends SapphireTest
         $documentID = $this->idFromFixture(File::class, 'document');
         $imageID = $this->idFromFixture(Image::class, 'image1');
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p id="filelink">file link <a href="[file_link,id=%d]">link to file</a></p>', $documentID),
             $newPage->Content
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p id="image">[image src="/assets/33be1b95cb/myimage.jpg" id="%d"]</p>', $imageID),
             $newPage->Content
         );
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf(
                 '<p id="variant">[image src="/assets/33be1b95cb/myimage.jpg" width="64" height="64" id="%d"]</p>',
                 $imageID

@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
+use League\Flysystem\FileExistsException;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Dev\Tasks\FileMigrationHelper;

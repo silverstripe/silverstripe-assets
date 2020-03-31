@@ -135,17 +135,17 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         // Build a version filter
         $versionFilters = [
-            ['"FileHash" like ?' => DB::get_conn()->escapeString($parsedFileID->getHash()) . '%'],
-            ['not "FileHash" like ?' => DB::get_conn()->escapeString($file->getHash())],
+            'FileHash:StartsWith' => $parsedFileID->getHash(),
+            'FileHash:not' => $file->getHash(),
         ];
         if ($this->getVersionedStage() == Versioned::LIVE) {
             // If we a limited to the Live stage, let's only look at files that have bee published
-            $versionFilters['"WasPublished"'] = true;
+            $versionFilters['WasPublished'] = true;
         }
 
-        $oldVersionCount = $file->allVersions($versionFilters, "", 1)->count();
+        $hasOldVersions = $file->Versions()->filter($versionFilters)->exists();
         // Our hash was published at some other stage
-        if ($oldVersionCount > 0) {
+        if ($hasOldVersions) {
             return new ParsedFileID($file->getFilename(), $file->getHash(), $parsedFileID->getVariant());
         }
 

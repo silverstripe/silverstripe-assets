@@ -143,7 +143,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $versionFilters['"WasPublished"'] = true;
         }
 
-        $oldVersionCount = $file->allVersions($versionFilters, "", 1)->count();
+        $oldVersionCount = $file->Versions($versionFilters, "", 1)->count();
         // Our hash was published at some other stage
         if ($oldVersionCount > 0) {
             return new ParsedFileID($file->getFilename(), $file->getHash(), $parsedFileID->getVariant());

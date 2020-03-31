@@ -482,8 +482,8 @@ class UploadTest extends SapphireTest
         // Ensure that the file has been written to a protected folder
         $filePath = TestAssetStore::getLocalPath($file);
         $this->assertFileExists($filePath, 'Test file should be uploaded');
-        $this->assertContains('.protected', $filePath, 'Test file path should be protected');
-        $this->assertContains('my-secret-folder', $filePath, 'Test file should be stored under secret folder');
+        $this->assertStringContainsString('.protected', $filePath, 'Test file path should be protected');
+        $this->assertStringContainsString('my-secret-folder', $filePath, 'Test file should be stored under secret folder');
         $this->assertSame(
             AssetStore::VISIBILITY_PROTECTED,
             $file->getVisibility(),
@@ -519,8 +519,8 @@ class UploadTest extends SapphireTest
         // Ensure that the file has been written to a protected folder
         $filePath = TestAssetStore::getLocalPath($file);
         $this->assertFileExists($filePath, 'Test file should be uploaded');
-        $this->assertNotContains('.protected', $filePath, 'Test file path should be public');
-        $this->assertContains('my-public-folder', $filePath, 'Test file should be stored under public folder');
+        $this->assertStringNotContainsString('.protected', $filePath, 'Test file path should be public');
+        $this->assertStringContainsString('my-public-folder', $filePath, 'Test file should be stored under public folder');
         $this->assertSame(
             AssetStore::VISIBILITY_PUBLIC,
             $file->getVisibility(),
@@ -556,8 +556,8 @@ class UploadTest extends SapphireTest
         // Ensure that the file has been written to a protected folder
         $filePath = TestAssetStore::getLocalPath($file);
         $this->assertFileExists($filePath, 'Test file should be uploaded');
-        $this->assertContains('.protected', $filePath, 'Test file path should be protected');
-        $this->assertContains('my-public-folder', $filePath, 'Test file should be stored under public folder');
+        $this->assertStringContainsString('.protected', $filePath, 'Test file path should be protected');
+        $this->assertStringContainsString('my-public-folder', $filePath, 'Test file should be stored under public folder');
         $this->assertSame(
             AssetStore::VISIBILITY_PROTECTED,
             $file->getVisibility(),
@@ -593,8 +593,8 @@ class UploadTest extends SapphireTest
         // Ensure that the file has been written to a protected folder
         $filePath = TestAssetStore::getLocalPath($file);
         $this->assertFileExists($filePath, 'Test file should be uploaded');
-        $this->assertNotContains('.protected', $filePath, 'Test file path should be public');
-        $this->assertContains('my-protected-folder', $filePath, 'Test file should be stored under protected folder');
+        $this->assertStringNotContainsString('.protected', $filePath, 'Test file path should be public');
+        $this->assertStringContainsString('my-protected-folder', $filePath, 'Test file should be stored under protected folder');
         $this->assertSame(
             AssetStore::VISIBILITY_PUBLIC,
             $file->getVisibility(),

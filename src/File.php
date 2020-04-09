@@ -486,6 +486,16 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
+     * Check if the File is viewable to a public user i.e. someone who is not logged in to the CMS
+     */
+    public function canViewAnonymous(): bool
+    {
+        return Member::actAs(null, function(): bool {
+            return $this->canView();
+        });
+    }
+
+    /**
      * List of basic content editable file fields.
      *
      * Note: These fields no longer affect the edit form in asset-admin. To add fields to the file

@@ -499,7 +499,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * Whether the file was originally uploaded in a userform submissin on a FileFiled
      */
-    public function isUserFormUpload(): bool
+    public function isUserDefinedFormUpload(): bool
     {
         if (!class_exists('SilverStripe\\UserForms\\Model\\Submission\\SubmittedFileField')) {
             return false;

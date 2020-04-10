@@ -33,6 +33,7 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
+use SilverStripe\UserForms\Model\Submission\SubmittedFileField;
 use SilverStripe\Versioned\RecursivePublishable;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\HTML;
@@ -493,6 +494,17 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return Member::actAs(null, function(): bool {
             return $this->canView();
         });
+    }
+
+    /**
+     * Whether the file was originally uploaded in a userform submissin on a FileFiled
+     */
+    public function isFromUserFormSubmission(): bool
+    {
+        if (!class_exists('SilverStripe\\UserForms\\Model\\Submission\\SubmittedFileField')) {
+            return false;
+        }
+        return SubmittedFileField::get()->find('UploadedFileID', $this->ID) ? true : false;
     }
 
     /**

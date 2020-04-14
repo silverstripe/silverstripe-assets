@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\ORM\DataList;
@@ -314,14 +315,16 @@ class Folder extends File
      */
     public function hasChildUserDefinedFormUploads(): bool
     {
-        if (!class_exists('SilverStripe\UserForms\Model\Submission\SubmittedFileField')) {
+        $class = 'SilverStripe\UserForms\Model\Submission\SubmittedFileField';
+        if (!class_exists($class)) {
             return false;
         }
+        $table = Config::inst()->get($class, 'table_name', Config::UNINHERITED);
         return SQLSelect::create()
             ->addSelect(["ID"])
             ->addFrom(['"File"'])
             ->addWhere(['"ParentID" = ?' => $this->ID])
-            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "SubmittedFileField" )'])
+            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . $table . '" )'])
             ->execute()
             ->first() ? true : false;
     }

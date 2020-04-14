@@ -324,7 +324,7 @@ class Folder extends File
             ->addSelect(["ID"])
             ->addFrom(['"File"'])
             ->addWhere(['"ParentID" = ?' => $this->ID])
-            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . $table . '" )'])
+            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . addslashes($table) . '" )'])
             ->execute()
             ->first() ? true : false;
     }

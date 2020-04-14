@@ -11,6 +11,7 @@ use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleLoader;
@@ -25,6 +26,8 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
+use SilverStripe\ORM\Queries\SQLSelect;
+use SilverStripe\ORM\Tests\MySQLDatabaseTest\Data;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\InheritedPermissionsExtension;
@@ -505,6 +508,35 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return false;
         }
         return SubmittedFileField::get()->find('UploadedFileID', $this->ID) ? true : false;
+    }
+
+    /**
+     * Whether this Folder has child File's that where uploaded via a UserDefinedForm FileField
+     * This only checks for direct children, it will not check for:
+     * - Grandchild Files
+     * - Child Folders that themselves have child Files that are uploads
+     *
+     * This function is File.php instead of Folder.php as the asset-admin graphql fileFragments.js
+     * seems to treats Folder as a 'FileInterface' i.e the top-level class, instead of as a subclass of File
+     * instead, File is treated as a sub-class of FileInterace
+     */
+    public function hasChildUserDefinedFormUploads(): bool
+    {
+        if (!($this instanceof Folder)) {
+            return false;
+        }
+        $class = 'SilverStripe\UserForms\Model\Submission\SubmittedFileField';
+        if (!class_exists($class)) {
+            return false;
+        }
+        $table = Config::inst()->get($class, 'table_name', Config::UNINHERITED);
+        return SQLSelect::create()
+            ->addSelect(["ID"])
+            ->addFrom(['"File"'])
+            ->addWhere(['"ParentID" = ?' => $this->ID])
+            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . addslashes($table) . '" )'])
+            ->execute()
+            ->first() ? true : false;
     }
 
     /**

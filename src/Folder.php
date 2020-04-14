@@ -2,7 +2,6 @@
 
 namespace SilverStripe\Assets;
 
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\ORM\DataList;
@@ -305,27 +304,5 @@ class Folder extends File
     protected function getFilter()
     {
         return FolderNameFilter::create();
-    }
-
-    /**
-     * Whether this Folder has child File's that where uploaded via a UserDefinedForm FileField
-     * This only checks for direct children, it will not check for:
-     * - Grandchild Files
-     * - Child Folders that themselves have child Files that are uploads
-     */
-    public function hasChildUserDefinedFormUploads(): bool
-    {
-        $class = 'SilverStripe\UserForms\Model\Submission\SubmittedFileField';
-        if (!class_exists($class)) {
-            return false;
-        }
-        $table = Config::inst()->get($class, 'table_name', Config::UNINHERITED);
-        return SQLSelect::create()
-            ->addSelect(["ID"])
-            ->addFrom(['"File"'])
-            ->addWhere(['"ParentID" = ?' => $this->ID])
-            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . addslashes($table) . '" )'])
-            ->execute()
-            ->first() ? true : false;
     }
 }

@@ -314,6 +314,9 @@ class Folder extends File
      */
     public function hasChildUserDefinedFormUploads(): bool
     {
+        if (!class_exists('SilverStripe\UserForms\Model\Submission\SubmittedFileField')) {
+            return false;
+        }
         return SQLSelect::create()
             ->addSelect(["ID"])
             ->addFrom(['"File"'])

@@ -504,7 +504,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function isUserDefinedFormUpload(): bool
     {
-        if (!class_exists('SilverStripe\UserForms\Model\Submission\SubmittedFileField')) {
+        if (!class_exists(SubmittedFileField::class)) {
             return false;
         }
         return SubmittedFileField::get()->find('UploadedFileID', $this->ID) ? true : false;

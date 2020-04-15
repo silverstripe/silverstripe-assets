@@ -321,7 +321,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 if ($parsedFileID->getHash()) {
                     $mainFileID = $strategy->buildFileID($strategy->stripVariant($parsedFileID));
 
-                    if (!$fs->has($mainFileID)) {
+                    if ($mainFileID !== $fileID && !$fs->has($mainFileID)) {
                         // The main file doesn't exists ... this is kind of weird.
                         continue;
                     }

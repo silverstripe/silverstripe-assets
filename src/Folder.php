@@ -237,7 +237,7 @@ class Folder extends File
         parent::onAfterWrite();
 
         // No publishing UX for folders, so just cascade changes live
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
@@ -250,7 +250,7 @@ class Folder extends File
         parent::onAfterDelete();
 
         // Cascade deletions to live
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->deleteFromStage(Versioned::LIVE);
         }
     }
@@ -274,7 +274,7 @@ class Folder extends File
     public function updateChildFilesystem()
     {
         // Don't synchronise on live (rely on publishing instead)
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 

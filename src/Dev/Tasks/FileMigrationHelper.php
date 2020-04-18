@@ -514,7 +514,7 @@ class FileMigrationHelper
         /** @skipUpgrade */
         return File::get()
             ->exclude('ClassName', [Folder::class, 'Folder'])
-            ->filter('FileFilename', array('', null))
+            ->filter('FileFilename', ['', null])
             ->where(sprintf(
                 '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
                 $table,

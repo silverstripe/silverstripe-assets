@@ -13,7 +13,7 @@ class TestObject extends DataObject implements TestOnly
 {
     private static $table_name = 'DBFileTest_TestObject';
 
-    private static $db = array(
+    private static $db = [
         "MyFile" => "DBFile"
-    );
+    ];
 }

@@ -67,24 +67,24 @@ class ProtectedFileControllerTest extends FunctionalTest
 
     public function getFilenames()
     {
-        return array(
+        return [
             // Valid names
-            array('name.jpg', true),
-            array('parent/name.jpg', true),
-            array('parent/name', true),
-            array('parent\name.jpg', true),
-            array('parent\name', true),
-            array('name', true),
+            ['name.jpg', true],
+            ['parent/name.jpg', true],
+            ['parent/name', true],
+            ['parent\name.jpg', true],
+            ['parent\name', true],
+            ['name', true],
 
             // Invalid names
-            array('.invalid/name.jpg', false),
-            array('.invalid\name.jpg', false),
-            array('.htaccess', false),
-            array('test/.htaccess.jpg', false),
-            array('name/.jpg', false),
-            array('test\.htaccess.jpg', false),
-            array('name\.jpg', false)
-        );
+            ['.invalid/name.jpg', false],
+            ['.invalid\name.jpg', false],
+            ['.htaccess', false],
+            ['test/.htaccess.jpg', false],
+            ['name/.jpg', false],
+            ['test\.htaccess.jpg', false],
+            ['name\.jpg', false]
+        ];
     }
 
     /**

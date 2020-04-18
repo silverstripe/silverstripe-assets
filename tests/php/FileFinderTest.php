@@ -24,14 +24,14 @@ class FileFinderTest extends SapphireTest
     {
         $this->assertFinderFinds(
             new FileFinder(),
-            array(
+            [
                 'file1.txt',
                 'file2.txt',
                 'dir1/dir1file1.txt',
                 'dir1/dir1file2.txt',
                 'dir1/dir2/dir2file1.txt',
                 'dir1/dir2/dir3/dir3file1.txt'
-            )
+            ]
         );
     }
 
@@ -51,9 +51,9 @@ class FileFinderTest extends SapphireTest
 
         $this->assertFinderFinds(
             $finder,
-            array(
+            [
                 'file2.txt',
-                'dir1/dir1file2.txt'),
+                'dir1/dir1file2.txt'],
             'The finder only returns files matching the name regex.'
         );
     }
@@ -61,14 +61,14 @@ class FileFinderTest extends SapphireTest
     public function testIgnoreFiles()
     {
         $finder = new FileFinder();
-        $finder->setOption('ignore_files', array('file1.txt', 'dir1file1.txt', 'dir2file1.txt'));
+        $finder->setOption('ignore_files', ['file1.txt', 'dir1file1.txt', 'dir2file1.txt']);
 
         $this->assertFinderFinds(
             $finder,
-            array(
+            [
                 'file2.txt',
                 'dir1/dir1file2.txt',
-                'dir1/dir2/dir3/dir3file1.txt'),
+                'dir1/dir2/dir3/dir3file1.txt'],
             'The finder ignores files with the basename in the ignore_files setting.'
         );
     }
@@ -76,15 +76,15 @@ class FileFinderTest extends SapphireTest
     public function testIgnoreDirs()
     {
         $finder = new FileFinder();
-        $finder->setOption('ignore_dirs', array('dir2'));
+        $finder->setOption('ignore_dirs', ['dir2']);
 
         $this->assertFinderFinds(
             $finder,
-            array(
+            [
                 'file1.txt',
                 'file2.txt',
                 'dir1/dir1file1.txt',
-                'dir1/dir1file2.txt'),
+                'dir1/dir1file2.txt'],
             'The finder ignores directories in ignore_dirs.'
         );
     }
@@ -96,10 +96,10 @@ class FileFinderTest extends SapphireTest
 
         $this->assertFinderFinds(
             $finder,
-            array(
+            [
                 'dir1/dir2/dir2file1.txt',
                 'dir1/dir2/dir3/dir3file1.txt'
-            ),
+            ],
             'The finder respects the min depth setting.'
         );
     }
@@ -111,11 +111,11 @@ class FileFinderTest extends SapphireTest
 
         $this->assertFinderFinds(
             $finder,
-            array(
+            [
                 'file1.txt',
                 'file2.txt',
                 'dir1/dir1file1.txt',
-                'dir1/dir1file2.txt'),
+                'dir1/dir1file2.txt'],
             'The finder respects the max depth setting.'
         );
     }

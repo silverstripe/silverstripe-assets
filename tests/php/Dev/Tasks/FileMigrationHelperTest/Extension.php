@@ -14,9 +14,9 @@ class Extension extends DataExtension implements TestOnly
     /**
      * Ensure that File dataobject has the legacy "Filename" field
      */
-    private static $db = array(
+    private static $db = [
         "Filename" => "Text",
-    );
+    ];
 
     public function onBeforeWrite()
     {

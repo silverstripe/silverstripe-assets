@@ -29,9 +29,9 @@ class FileTest extends SapphireTest
 
     protected static $fixture_file = 'FileTest.yml';
 
-    protected static $extra_dataobjects = array(
+    protected static $extra_dataobjects = [
         MyCustomFile::class
-    );
+    ];
 
     public function setUp()
     {
@@ -56,10 +56,10 @@ class FileTest extends SapphireTest
         // Conditional fixture creation in case the 'cms' module is installed
         if (class_exists(ErrorPage::class)) {
             $page = new ErrorPage(
-                array(
+                [
                 'Title' => 'Page not Found',
                 'ErrorCode' => 404
-                )
+                ]
             );
             $page->write();
             $page->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
@@ -134,7 +134,7 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
+        Config::modify()->set(File::class, 'allowed_extensions', ['txt']);
 
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');
@@ -206,18 +206,18 @@ class FileTest extends SapphireTest
     public function testGetCategoryExtensions()
     {
         // Test specific categories
-        $images = array(
+        $images = [
             'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff'
-        );
+        ];
         $this->assertEquals($images, File::get_category_extensions('image'));
         $this->assertEquals(
-            array('bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'),
+            ['bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'],
             File::get_category_extensions('image/supported')
         );
-        $this->assertEquals($images, File::get_category_extensions(array('image', 'image/supported')));
+        $this->assertEquals($images, File::get_category_extensions(['image', 'image/supported']));
         $this->assertEquals(
-            array('bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'),
-            File::get_category_extensions(array('flash', 'image/supported'))
+            ['bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'],
+            File::get_category_extensions(['flash', 'image/supported'])
         );
 
         // Test other categories have at least one item
@@ -338,7 +338,7 @@ class FileTest extends SapphireTest
     public function testSetNameWithInvalidExtensionDoesntChangeFilesystem()
     {
         $this->expectException(ValidationException::class);
-        Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
+        Config::modify()->set(File::class, 'allowed_extensions', ['txt']);
 
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');

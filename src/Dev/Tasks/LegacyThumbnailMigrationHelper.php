@@ -222,7 +222,7 @@ class LegacyThumbnailMigrationHelper
         /** @skipUpgrade */
         return File::get()
             ->filter('ClassName', [Folder::class, 'Folder'])
-            ->filter('FileFilename', array('', null))
+            ->filter('FileFilename', ['', null])
             ->alterDataQuery(function (DataQuery $query) use ($table) {
                 return $query->addSelectFromTable($table, ['Filename']);
             });

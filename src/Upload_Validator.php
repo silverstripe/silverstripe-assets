@@ -19,7 +19,7 @@ class Upload_Validator
      * @config
      * @var array
      */
-    private static $default_max_file_size = array();
+    private static $default_max_file_size = [];
 
     /**
      * Set to false to assume is_uploaded_file() is true,
@@ -39,7 +39,7 @@ class Upload_Validator
      */
     protected $tmpFile;
 
-    protected $errors = array();
+    protected $errors = [];
 
     /**
      * Restrict filesize for either all filetypes
@@ -48,7 +48,7 @@ class Upload_Validator
      *
      * @var array
      */
-    public $allowedMaxFileSize = array();
+    public $allowedMaxFileSize = [];
 
     /**
      * @var array Collection of extensions.
@@ -59,7 +59,7 @@ class Upload_Validator
      *    array("jpg","GIF")
      * </code>
      */
-    public $allowedExtensions = array();
+    public $allowedExtensions = [];
 
     /**
      * Return all errors that occurred while validating
@@ -77,7 +77,7 @@ class Upload_Validator
      */
     public function clearErrors()
     {
-        $this->errors = array();
+        $this->errors = [];
     }
 
     /**
@@ -159,7 +159,7 @@ class Upload_Validator
         if (is_array($rules) && count($rules)) {
             // make sure all extensions are lowercase
             $rules = array_change_key_case($rules, CASE_LOWER);
-            $finalRules = array();
+            $finalRules = [];
 
             foreach ($rules as $rule => $value) {
                 if (is_numeric($value)) {
@@ -312,7 +312,7 @@ class Upload_Validator
                 'SilverStripe\\Assets\\File.TOOLARGE',
                 'Filesize is too large, maximum {size} allowed',
                 'Argument 1: Filesize (e.g. 1MB)',
-                array('size' => $arg)
+                ['size' => $arg]
             );
             return false;
         }

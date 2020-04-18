@@ -23,11 +23,11 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
     protected static $fixture_file = 'LegacyThumbnailMigrationHelperTest.yml';
 
-    protected static $required_extensions = array(
-        File::class => array(
+    protected static $required_extensions = [
+        File::class => [
             Extension::class,
-        )
-    );
+        ]
+    ];
 
     /**
      * get the BASE_PATH for this test
@@ -381,7 +381,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
      */
     protected function joinPaths()
     {
-        $paths = array();
+        $paths = [];
 
         foreach (func_get_args() as $arg) {
             if ($arg !== '') {

@@ -16,10 +16,10 @@ use SilverStripe\Versioned\Versioned;
  */
 class TestObject extends DataObject implements TestOnly
 {
-    private static $db = array(
+    private static $db = [
         'Title' => 'Varchar(255)',
         'Image' => "DBFile('image/supported')"
-    );
+    ];
 
     private static $table_name = 'AssetControlExtensionTest_TestObject';
 

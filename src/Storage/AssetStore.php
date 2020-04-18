@@ -96,7 +96,7 @@ interface AssetStore
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the given data.
      */
-    public function setFromString($data, $filename, $hash = null, $variant = null, $config = array());
+    public function setFromString($data, $filename, $hash = null, $variant = null, $config = []);
 
     /**
      * Assign a local file to the backend.
@@ -110,7 +110,7 @@ interface AssetStore
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the local file content.
      */
-    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array());
+    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = []);
 
     /**
      * Assign a stream to the backend
@@ -123,7 +123,7 @@ interface AssetStore
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the raw stream.
      */
-    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array());
+    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = []);
 
     /**
      * Get contents of a given file

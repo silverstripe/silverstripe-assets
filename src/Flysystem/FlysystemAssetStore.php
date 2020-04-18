@@ -134,9 +134,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @config
      * @var array
      */
-    private static $file_response_headers = array(
+    private static $file_response_headers = [
         'Cache-Control' => 'private'
-    );
+    ];
 
     /**
      * Assign new flysystem backend
@@ -429,18 +429,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getCapabilities()
     {
-        return array(
-            'visibility' => array(
+        return [
+            'visibility' => [
                 self::VISIBILITY_PUBLIC,
                 self::VISIBILITY_PROTECTED
-            ),
-            'conflict' => array(
+            ],
+            'conflict' => [
                 self::CONFLICT_EXCEPTION,
                 self::CONFLICT_OVERWRITE,
                 self::CONFLICT_RENAME,
                 self::CONFLICT_USE_EXISTING
-            )
-        );
+            ]
+        ];
     }
 
     public function getVisibility($filename, $hash)
@@ -502,7 +502,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         return $publicAdapter->getPublicUrl($fileID);
     }
 
-    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array())
+    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = [])
     {
         // Validate this file exists
         if (!file_exists($path)) {
@@ -528,7 +528,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
     }
 
-    public function setFromString($data, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromString($data, $filename, $hash = null, $variant = null, $config = [])
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $data);
@@ -542,7 +542,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
     }
 
-    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = [])
     {
         if (empty($filename)) {
             throw new InvalidArgumentException('$filename can not be empty');
@@ -971,7 +971,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $fileID = $this->getFileID($filename, $hash);
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: array();
+        $granted = $session->get(self::GRANTS_SESSION) ?: [];
         $granted[$fileID] = true;
         $session->set(self::GRANTS_SESSION, $granted);
     }
@@ -984,7 +984,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: array();
+        $granted = $session->get(self::GRANTS_SESSION) ?: [];
         unset($granted[$fileID]);
         if ($granted) {
             $session->set(self::GRANTS_SESSION, $granted);
@@ -1023,7 +1023,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Make sure our File ID got understood
         if ($parsedFileID && $originalID = $parsedFileID->getFileID()) {
             $session = Controller::curr()->getRequest()->getSession();
-            $granted = $session->get(self::GRANTS_SESSION) ?: array();
+            $granted = $session->get(self::GRANTS_SESSION) ?: [];
             if (!empty($granted[$originalID])) {
                 return true;
             }
@@ -1104,7 +1104,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @return array Tuple associative array (Filename, Hash, Variant)
      * @throws FlysystemException
      */
-    protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = array())
+    protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = [])
     {
         // Set default conflict resolution
         $conflictResolution = empty($config['conflict'])
@@ -1327,7 +1327,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function fileGeneratorFor($fileID)
     {
-        return Injector::inst()->createWithArgs(AssetNameGenerator::class, array($fileID));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, [$fileID]);
     }
 
     /**

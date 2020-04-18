@@ -84,7 +84,7 @@ interface Image_Backend
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the given data.
      */
-    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array());
+    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = []);
 
     /**
      * Write the backend to a local path

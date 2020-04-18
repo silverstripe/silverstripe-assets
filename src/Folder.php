@@ -63,10 +63,10 @@ class Folder extends File
             // err in favour of matching existing folders if $folderPath
             // includes illegal characters itself.
             $partSafe = $filter->filter($part);
-            $item = Folder::get()->filter(array(
+            $item = Folder::get()->filter([
                 'ParentID' => $parentID,
-                'Name' => array($partSafe, $part)
-            ))->first();
+                'Name' => [$partSafe, $part]
+            ])->first();
 
             if (!$item) {
                 $item = new Folder();

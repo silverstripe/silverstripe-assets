@@ -38,13 +38,13 @@ class ProtectedFileController extends Controller
         return $this;
     }
 
-    private static $url_handlers = array(
+    private static $url_handlers = [
         '$Filename' => "handleFile"
-    );
+    ];
 
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         'handleFile'
-    );
+    ];
 
     /**
      * Provide a response for the given file request

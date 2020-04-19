@@ -32,11 +32,11 @@ class FileMigrationHelperTest extends SapphireTest
 
     private $expectedContent = [];
 
-    protected static $required_extensions = array(
-        File::class => array(
+    protected static $required_extensions = [
+        File::class => [
             Extension::class,
-        )
-    );
+        ]
+    ];
 
     /**
      * get the BASE_PATH for this test

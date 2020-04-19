@@ -737,7 +737,7 @@ trait ImageManipulation
 
         // Pass to backend service factory
         try {
-            return $this->imageBackend = Injector::inst()->createWithArgs(Image_Backend::class, array($this));
+            return $this->imageBackend = Injector::inst()->createWithArgs(Image_Backend::class, [$this]);
         } catch (InjectorNotFoundException $ex) {
             // Handle file-not-found errors
             return null;
@@ -886,7 +886,7 @@ trait ImageManipulation
                             $filename,
                             $hash,
                             $variant,
-                            array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
+                            ['conflict' => AssetStore::CONFLICT_USE_EXISTING]
                         );
 
                         return [$tuple, $result];
@@ -959,11 +959,11 @@ trait ImageManipulation
                 list($tuple, $manipulationResult) = $result;
             }
         } else {
-            $tuple = array(
+            $tuple = [
                 'Filename' => $filename,
                 'Hash' => $hash,
                 'Variant' => $variant
-            );
+            ];
         }
 
         // Callback may fail to perform this manipulation (e.g. resize on text file)

@@ -13,7 +13,7 @@ class ImageOnly extends DataObject implements TestOnly
 {
     private static $table_name = 'DBFileTest_ImageOnly';
 
-    private static $db = array(
+    private static $db = [
         "MyFile" => "DBFile('image/supported')"
-    );
+    ];
 }

@@ -71,7 +71,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      *
      * @return string Result of the handled shortcode
      */
-    public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = array())
+    public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
         /** @var CacheInterface $cache */
         $cache = static::getCache();

@@ -20,10 +20,10 @@ use SilverStripe\Versioned\Versioned;
 class AssetControlExtensionTest extends SapphireTest
 {
 
-    protected static $extra_dataobjects = array(
+    protected static $extra_dataobjects = [
         VersionedObject::class,
         TestObject::class
-    );
+    ];
 
     public function setUp()
     {
@@ -98,12 +98,12 @@ class AssetControlExtensionTest extends SapphireTest
         $object1Live = Versioned::get_one_by_stage(
             VersionedObject::class,
             'Live',
-            array('"ID"' => $object1->ID)
+            ['"ID"' => $object1->ID]
         );
         $object3Live = Versioned::get_one_by_stage(
             ArchivedObject::class,
             'Live',
-            array('"ID"' => $object3->ID)
+            ['"ID"' => $object3->ID]
         );
         $this->assertTrue($object1Live->Download->exists());
         $this->assertTrue($object1Live->Header->exists());

@@ -137,9 +137,9 @@ class FolderTest extends SapphireTest
 
         $parentFolder = DataObject::get_one(
             Folder::class,
-            array(
+            [
             '"File"."Name"' => 'parent'
-            )
+            ]
         );
         $this->assertNotNull($parentFolder);
         $this->assertEquals($parentFolder->ID, $folder->ParentID);
@@ -235,9 +235,9 @@ class FolderTest extends SapphireTest
         // ID is prefixed in case Folder is subclassed by project/other module.
         $folder1 = DataObject::get_one(
             Folder::class,
-            array(
+            [
             '"File"."ID"' => $this->idFromFixture(Folder::class, 'folder1')
-            )
+            ]
         );
 
         $folder1->Name = 'FileTest-folder1-changed';

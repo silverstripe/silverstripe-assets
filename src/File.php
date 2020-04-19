@@ -126,18 +126,18 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     private static $non_live_permissions = ['CMS_ACCESS', 'VIEW_DRAFT_CONTENT'];
 
-    private static $db = array(
+    private static $db = [
         "Name" => "Varchar(255)",
         "Title" => "Varchar(255)",
         "File" => "DBFile",
         // Only applies to files, doesn't inherit for folder
         'ShowInSearch' => 'Boolean(1)',
-    );
+    ];
 
-    private static $has_one = array(
+    private static $has_one = [
         "Parent" => File::class,
         "Owner" => Member::class,
-    );
+    ];
 
     private static $has_many = [
         'BackLinks' => FileLink::class . '.Linked',
@@ -147,25 +147,25 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'BackLinks',
     ];
 
-    private static $indexes = array(
+    private static $indexes = [
         'FileHash' => true
-    );
+    ];
 
-    private static $defaults = array(
+    private static $defaults = [
         "ShowInSearch" => 1,
-    );
+    ];
 
-    private static $extensions = array(
+    private static $extensions = [
         Hierarchy::class,
         InheritedPermissionsExtension::class,
-    );
+    ];
 
-    private static $casting = array (
+    private static $casting = [
         'TreeTitle' => 'HTMLFragment',
         'getTreeTitle' => 'HTMLFragment',
         'Tag' => 'HTMLFragment',
         'getTag' => 'HTMLFragment',
-    );
+    ];
 
     private static $table_name = 'File';
 
@@ -190,46 +190,46 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      *
      * Instructions for the change you need to make are included in a comment in the config file.
      */
-    private static $allowed_extensions = array(
+    private static $allowed_extensions = [
         '', 'ace', 'arc', 'arj', 'asf', 'au', 'avi', 'bmp', 'bz2', 'cab', 'cda', 'csv', 'dmg', 'doc',
         'docx', 'dotx', 'flv', 'gif', 'gpx', 'gz', 'hqx', 'ico', 'jpeg', 'jpg', 'kml',
         'm4a', 'm4v', 'mid', 'midi', 'mkv', 'mov', 'mp3', 'mp4', 'mpa', 'mpeg', 'mpg', 'ogg', 'ogv', 'pages',
         'pcx', 'pdf', 'png', 'pps', 'ppt', 'pptx', 'potx', 'ra', 'ram', 'rm', 'rtf', 'sit', 'sitx',
         'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'webm', 'wma', 'wmv', 'xls', 'xlsx', 'xltx', 'zip',
         'zipx',
-    );
+    ];
 
     /**
      * @config
      * @var array Category identifiers mapped to commonly used extensions.
      */
-    private static $app_categories = array(
-        'archive' => array(
+    private static $app_categories = [
+        'archive' => [
             'ace', 'arc', 'arj', 'bz', 'bz2', 'cab', 'dmg', 'gz', 'hqx', 'jar', 'rar', 'sit', 'sitx', 'tar', 'tgz',
             'zip', 'zipx',
-        ),
-        'audio' => array(
+        ],
+        'audio' => [
             'aif', 'aifc', 'aiff', 'apl', 'au', 'avr', 'cda', 'm4a', 'mid', 'midi', 'mp3', 'ogg', 'ra',
             'ram', 'rm', 'snd', 'wav', 'wma',
-        ),
-        'document' => array(
+        ],
+        'document' => [
             'css', 'csv', 'doc', 'docx', 'dotm', 'dotx', 'htm', 'html', 'gpx', 'js', 'kml', 'pages', 'pdf',
             'potm', 'potx', 'pps', 'ppt', 'pptx', 'rtf', 'txt', 'xhtml', 'xls', 'xlsx', 'xltm', 'xltx', 'xml',
-        ),
-        'image' => array(
+        ],
+        'image' => [
             'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff',
-        ),
-        'image/supported' => array(
+        ],
+        'image/supported' => [
             'gif', 'jpeg', 'jpg', 'png', 'bmp', 'ico',
-        ),
-        'flash' => array(
+        ],
+        'flash' => [
             'fla', 'swf'
-        ),
-        'video' => array(
+        ],
+        'video' => [
             'asf', 'avi', 'flv', 'ifo', 'm1v', 'm2v', 'm4v', 'mkv', 'mov', 'mp2', 'mp4', 'mpa', 'mpe', 'mpeg',
             'mpg', 'ogv', 'qt', 'vob', 'webm', 'wmv',
-        ),
-    );
+        ],
+    ];
 
     /**
      * Map of file extensions to class type
@@ -237,7 +237,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @config
      * @var
      */
-    private static $class_for_file_extension = array(
+    private static $class_for_file_extension = [
         '*' => File::class,
         'jpg' => Image::class,
         'jpeg' => Image::class,
@@ -245,7 +245,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'gif' => Image::class,
         'bmp' => Image::class,
         'ico' => Image::class,
-    );
+    ];
 
     /**
      * @config
@@ -301,10 +301,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         /** @var File $item */
         $item = null;
         foreach ($parts as $part) {
-            $item = File::get()->filter(array(
+            $item = File::get()->filter([
                 'Name' => $part,
                 'ParentID' => $parentID
-            ))->first();
+            ])->first();
             if (!$item) {
                 break;
             }
@@ -429,7 +429,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @param array $context
      * @return boolean
      */
-    public function canCreate($member = null, $context = array())
+    public function canCreate($member = null, $context = [])
     {
         if (!$member) {
             $member = Security::getCurrentUser();
@@ -558,12 +558,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function get_category_extensions($categories)
     {
         if (empty($categories)) {
-            return array();
+            return [];
         }
 
         // Fix arguments into a single array
         if (!is_array($categories)) {
-            $categories = array($categories);
+            $categories = [$categories];
         } elseif (count($categories) === 1 && is_array(reset($categories))) {
             $categories = reset($categories);
         }
@@ -572,7 +572,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $appCategories = static::config()->get('app_categories');
 
         // Merge all categories into list of extensions
-        $extensions = array();
+        $extensions = [];
         foreach (array_filter($categories) as $category) {
             if (isset($appCategories[$category])) {
                 $extensions = array_merge($extensions, $appCategories[$category]);
@@ -637,12 +637,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
                 // TODO Add read lock to avoid other processes creating files with the same name
                 // before this process has a chance to persist in the database.
-                $existingFile = File::get()->filter(array(
+                $existingFile = File::get()->filter([
                     'Name' => $newName,
                     'ParentID' => (int) $this->ParentID
-                ))->exclude(array(
+                ])->exclude([
                     'ID' => $this->ID
-                ))->first();
+                ])->first();
                 if (!$existingFile) {
                     $name = $newName;
                     break;
@@ -659,7 +659,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             // and any file extensions removed.
             $this->setField(
                 'Title',
-                str_replace(array('-','_'), ' ', preg_replace('/\.[^.]+$/', '', $name))
+                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name))
             );
         }
 
@@ -1102,7 +1102,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function set_class_for_file_extension($exts, $class)
     {
         if (!is_array($exts)) {
-            $exts = array($exts);
+            $exts = [$exts];
         }
         foreach ($exts as $ext) {
             if (!is_subclass_of($class, File::class)) {
@@ -1146,7 +1146,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $this->File->getString();
     }
 
-    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array())
+    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = [])
     {
         $result = $this->File->setFromLocalFile($path, $filename, $hash, $variant, $config);
 
@@ -1157,7 +1157,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $result;
     }
 
-    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = [])
     {
         $result = $this->File->setFromStream($stream, $filename, $hash, $variant, $config);
 
@@ -1168,7 +1168,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $result;
     }
 
-    public function setFromString($data, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromString($data, $filename, $hash = null, $variant = null, $config = [])
     {
         $result = $this->File->setFromString($data, $filename, $hash, $variant, $config);
 
@@ -1269,7 +1269,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             $args = $args[0];
         }
 
-        $parts = array();
+        $parts = [];
         foreach ($args as $arg) {
             $part = trim($arg, ' \\/');
             if ($part) {

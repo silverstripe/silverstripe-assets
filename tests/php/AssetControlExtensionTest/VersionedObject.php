@@ -19,15 +19,15 @@ use SilverStripe\Security\Member;
  */
 class VersionedObject extends DataObject implements TestOnly
 {
-    private static $extensions = array(
+    private static $extensions = [
         Versioned::class
-    );
+    ];
 
-    private static $db = array(
+    private static $db = [
         'Title' => 'Varchar(255)',
         'Header' => "DBFile('image/supported')",
         'Download' => 'DBFile'
-    );
+    ];
 
     private static $table_name = 'AssetControlExtensionTest_VersionedObject';
 

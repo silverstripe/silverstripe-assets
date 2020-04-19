@@ -26,7 +26,7 @@ class FileLinkTrackingParser
      */
     public function process(HTMLValue $htmlValue)
     {
-        $results = array();
+        $results = [];
         $links = $htmlValue->getElementsByTagName('a');
         if (!$links) {
             return $results;
@@ -46,24 +46,24 @@ class FileLinkTrackingParser
             // Link to a file on this site.
             if (preg_match('/\[file_link([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $href, $matches)) {
                 $id = (int)$matches['id'];
-                $results[] = array(
+                $results[] = [
                     'Type' => 'file',
                     'Target' => $id,
                     'DOMReference' => $link,
                     'Broken' => (int)File::get()->filter('ID', $id)->count() === 0
-                );
+                ];
             }
         }
 
         // Find all [image ] shortcodes (will be inline, not inside attributes)
         if (preg_match_all('/\[image([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $htmlValue->getContent(), $matches)) {
             foreach ($matches['id'] as $id) {
-                $results[] = array(
+                $results[] = [
                     'Type' => 'image',
                     'Target' => (int)$id,
                     'DOMReference' => null,
                     'Broken' => (int)Image::get()->filter('ID', (int)$id)->count() === 0
-                );
+                ];
             }
         }
 

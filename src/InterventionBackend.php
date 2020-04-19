@@ -355,7 +355,7 @@ class InterventionBackend implements Image_Backend, Flushable
      * will be calculated from the given data.
      * @throws BadMethodCallException If image isn't valid
      */
-    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = array())
+    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = [])
     {
         try {
             $resource = $this->getImageResource();

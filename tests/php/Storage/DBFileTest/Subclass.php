@@ -13,7 +13,7 @@ class Subclass extends TestObject implements TestOnly
 {
     private static $table_name = 'DBFileTest_Subclass';
 
-    private static $db = array(
+    private static $db = [
         "AnotherFile" => "DBFile"
-    );
+    ];
 }

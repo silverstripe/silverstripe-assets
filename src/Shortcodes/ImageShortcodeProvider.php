@@ -28,7 +28,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function get_shortcodes()
     {
-        return array('image');
+        return ['image'];
     }
 
     /**
@@ -42,7 +42,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($args);
@@ -128,7 +128,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
         // Check if there is a suitable record
         $record = static::find_shortcode_record($args);
@@ -137,7 +137,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Rebuild shortcode
-        $parts = array();
+        $parts = [];
         foreach ($args as $name => $value) {
             $htmlValue = Convert::raw2att($value ?: $name);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);

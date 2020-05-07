@@ -490,53 +490,49 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Check if the File is viewable to a public user i.e. someone who is not logged in to the CMS
+     * Check if the File has a CanViewType set or inherited at "LoggedInUsers or above"
+     *
+     * @return bool
      */
-    public function canViewAnonymous(): bool
+    public function hasRestrictedAccess(): bool
     {
-        return Member::actAs(null, function(): bool {
-            return $this->canView();
-        });
+        return $this->hasRestrictedPermissions($this);
     }
 
     /**
-     * Whether the file was originally uploaded in a userform submissin on a FileFiled
+     * @param File $file
+     * @return bool
+     */
+    private function hasRestrictedPermissions(File $file): bool
+    {
+        $canViewType = $file->CanViewType;
+        if (in_array($canViewType, [InheritedPermissions::LOGGED_IN_USERS, InheritedPermissions::ONLY_THESE_USERS])) {
+            return true;
+        } elseif ($canViewType == InheritedPermissions::INHERIT) {
+            if ($file->ParentID != 0) {
+                $parent = $file->Parent();
+                if ($parent->exists()) {
+                    return $this->hasRestrictedPermissions($parent);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Whether the file was originally uploaded in a userform submission on a FileFiled
+     * Note: this method needs to be here rather than as a DataExtension in the userdefinedforms module
+     * as several other method within core reference this method
      */
     public function isUserDefinedFormUpload(): bool
     {
+        // TODO: add bool column "UdfUpload"
+        // TODO: updated userdefined form module to update the column on upload
+        // TODO: check in this functions
         if (!class_exists(SubmittedFileField::class)) {
             return false;
         }
         return SubmittedFileField::get()->find('UploadedFileID', $this->ID) ? true : false;
-    }
-
-    /**
-     * Whether this Folder has child File's that where uploaded via a UserDefinedForm FileField
-     * This only checks for direct children, it will not check for:
-     * - Grandchild Files
-     * - Child Folders that themselves have child Files that are uploads
-     *
-     * This function is File.php instead of Folder.php as the asset-admin graphql fileFragments.js
-     * seems to treats Folder as a 'FileInterface' i.e the top-level class, instead of as a subclass of File
-     * instead, File is treated as a sub-class of FileInterace
-     */
-    public function hasChildUserDefinedFormUploads(): bool
-    {
-        if (!($this instanceof Folder)) {
-            return false;
-        }
-        $class = 'SilverStripe\UserForms\Model\Submission\SubmittedFileField';
-        if (!class_exists($class)) {
-            return false;
-        }
-        $table = Config::inst()->get($class, 'table_name', Config::UNINHERITED);
-        return SQLSelect::create()
-            ->addSelect(["ID"])
-            ->addFrom(['"File"'])
-            ->addWhere(['"ParentID" = ?' => $this->ID])
-            ->addWhere(['"ID" IN ( SELECT "UploadedFileID" FROM "' . addslashes($table) . '" )'])
-            ->execute()
-            ->first() ? true : false;
     }
 
     /**

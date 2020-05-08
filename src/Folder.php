@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ValidationResult;
@@ -68,10 +69,14 @@ class Folder extends File
                 'Name' => array($partSafe, $part)
             ))->first();
 
-            // In archived mode we would expect for folders to sometimes not exist and therefore shouldn't create them
-            if (class_exists(Versioned::class)
-                && strpos(Versioned::get_reading_mode(), 'Archive.') !== false) {
-                return null;
+            // When in archived mode, find or make should not find folders that don't exist
+            // We check explicitly for Versioned and if it exists then we'll confirm the reading mode isn't archived
+            $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
+            if ($versioned
+                && strpos($versioned::get_reading_mode(), 'Archive.') !== false) {
+                // We return the searched for folder, it will either be null if it doesn't exist
+                // or the folder if it does exist (at the archived date and time)
+                return $item;
             }
 
             if (!$item) {

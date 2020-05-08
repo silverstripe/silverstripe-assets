@@ -428,4 +428,29 @@ class FolderTest extends SapphireTest
         $this->assertTrue($folder1->isPublished());
         $this->assertTrue($folder2->isPublished());
     }
+
+    /**
+     * When in archived mode, find or make should not find folders that don't exist
+     */
+    public function testFindOrMakeVersioned()
+    {
+        // Create a folder
+        Folder::find_or_make('Folder-that-does-exist');
+
+        Versioned::withVersionedMode(function () {
+            Versioned::set_reading_mode('Archive.2000-01-01 12:00:00.Live');
+            $folder = Folder::find_or_make('Folder-that-does-not-exist');
+            // Since this folder doesn't exist we would expect the result to be null
+            $this->assertEmpty($folder);
+
+            // Since this folder doesn't  exist at that date and time we would expect the result to be null
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertEmpty($folder);
+
+            // Hopefully in 3000 years we've found a better date setting
+            Versioned::set_reading_mode('Archive.3000-01-01 12:00:00.Live');
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertNotNull($folder);
+        });
+    }
 }

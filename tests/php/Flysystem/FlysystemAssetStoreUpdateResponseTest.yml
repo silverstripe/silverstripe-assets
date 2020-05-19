@@ -1,0 +1,10 @@
+SilverStripe\Assets\File:
+  public:
+    FileFilename: public.txt
+    FileHash: aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+    Name: public.txt
+  protected:
+    FileFilename: protected.txt
+    Name: protected.txt
+    FileHash: aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+    CanViewType: LoggedInUsers

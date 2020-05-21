@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Generator;
 use PHPUnit_Framework_MockObject_MockObject;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -998,5 +999,37 @@ class FileTest extends SapphireTest
         $file->CanEditType = 'Anyone';
         $file->ID = 234;
         $this->assertFalse($file->canEdit());
+    }
+
+    /**
+     * @return Generator
+     * @see testHasRestrictedAccess
+     */
+    public function restrictedAccessDataProvider()
+    {
+        yield ['restricted-test-r', false];
+        yield ['restricted-test-r1', false];
+        yield ['restricted-test-r11', false];
+        yield ['restricted-test-r111', false];
+        yield ['restricted-test-r12', true];
+        yield ['restricted-test-r121', true];
+        yield ['restricted-test-r2', true];
+        yield ['restricted-test-r21', true];
+        yield ['restricted-test-r211', true];
+        yield ['restricted-test-r22', true];
+        yield ['restricted-test-r221', false];
+    }
+
+    /**
+     * @dataProvider restrictedAccessDataProvider
+     *
+     * @param string $fixtureName
+     * @param bool $expected
+     */
+    public function testHasRestrictedAccess(string $fixtureName, bool $expected)
+    {
+        /** @var Folder $folder */
+        $folder = $this->objFromFixture(Folder::class, $fixtureName);
+        $this->assertSame($expected, $folder->hasRestrictedAccess());
     }
 }

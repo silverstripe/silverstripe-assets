@@ -64,6 +64,50 @@ SilverStripe\Assets\Folder:
   deep-folder:
     Name: super_deep_folder_with_underscores
     ParentID: =>SilverStripe\Assets\Folder.folder1-subfolder1
+  restricted-test-r:
+    Name: 'restricted-test-r'
+    CanViewType: Anyone
+  restricted-test-r1:
+    Name: 'restricted-test-r1'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r
+    CanViewType: Inherit
+  restricted-test-r11:
+    Name: 'restricted-test-r11'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r1
+    CanViewType: Inherit
+  restricted-test-r111:
+    Name: 'restricted-test-r111'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r11
+    CanViewType: Inherit
+  restricted-test-r12:
+    Name: 'restricted-test-r12'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r1
+    CanViewType: LoggedInUsers
+  restricted-test-r121:
+    Name: 'restricted-test-r121'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r12
+    CanViewType: Inherit
+  restricted-test-r2:
+    Name: 'restricted-test-r2'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r
+    CanViewType: LoggedInUsers
+  restricted-test-r21:
+    Name: 'restricted-test-r21'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r2
+    CanViewType: Inherit
+  restricted-test-r211:
+    Name: 'restricted-test-r211'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r21
+    CanViewType: Inherit
+  restricted-test-r22:
+    Name: 'restricted-test-r22'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r2
+    CanViewType: Inherit
+  restricted-test-r221:
+    Name: 'restricted-test-r221'
+    ParentID: =>SilverStripe\Assets\Folder.restricted-test-r22
+    CanViewType: Anyone
+
 SilverStripe\Assets\File:
   asdf:
     FileFilename: FileTest.txt

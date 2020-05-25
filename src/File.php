@@ -22,7 +22,6 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\DB;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
 use SilverStripe\ORM\ValidationResult;
@@ -269,6 +268,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     private static $file_types = [];
 
+    /**
+     * @internal
+     * @see hasRestrictedPermissions
+     */
+    private static $has_restricted_permissions_cache = [];
+
     public static function get_shortcodes()
     {
         return 'file_link';
@@ -483,6 +488,61 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Check inherited permissions
         return static::getPermissionChecker()
             ->canDelete($this->ID, $member);
+    }
+
+    /**
+     * Check if the File has a CanViewType set or inherited at "LoggedInUsers or above"
+     *
+     * This is a bit different from a canView() check in that it doesn't check anything against a member.
+     * Instead it is a member-less permission check
+     *
+     * @return bool
+     */
+    public function hasRestrictedAccess(): bool
+    {
+        return $this->hasRestrictedPermissions($this);
+    }
+
+    /**
+     * Recursively determine whether a File has, or inherits, restricted permissions.
+     *
+     * @param File $file
+     * @return bool
+     */
+    private function hasRestrictedPermissions(File $file): bool
+    {
+        $id = $file->ID;
+        $parentID = $file->ParentID;
+        $canViewType = $file->CanViewType;
+        if (in_array($canViewType, [InheritedPermissions::LOGGED_IN_USERS, InheritedPermissions::ONLY_THESE_USERS])) {
+            self::$has_restricted_permissions_cache[$id] = true;
+            return true;
+        }
+        if ($canViewType == InheritedPermissions::INHERIT && $parentID != 0) {
+            if (isset(self::$has_restricted_permissions_cache[$parentID])) {
+                return self::$has_restricted_permissions_cache[$parentID];
+            }
+            $parent = $file->Parent();
+            if ($parent->exists()) {
+                $value = $this->hasRestrictedPermissions($parent);
+                self::$has_restricted_permissions_cache[$parentID] = $value;
+                return $value;
+            }
+        }
+        self::$has_restricted_permissions_cache[$id] = false;
+        return false;
+    }
+
+    /**
+     * If the file was uploaded via a form and tracked in the database
+     *
+     * @return bool
+     */
+    public function isTrackedFormUpload(): bool
+    {
+        $value = false;
+        $this->extend('updateTrackedFormUpload', $value);
+        return (bool) $value;
     }
 
     /**

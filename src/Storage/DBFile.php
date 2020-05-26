@@ -289,6 +289,16 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     }
 
     /**
+     * Return absolute URL for this image. Alias for getAbsoluteURL()
+     *
+     * @return string
+     */
+    public function AbsoluteLink()
+    {
+        return $this->getAbsoluteURL();
+    }
+
+    /**
      * Get URL, but without resampling.
      * Note that this will return the url even if the file does not exist.
      *

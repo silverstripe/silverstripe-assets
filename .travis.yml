@@ -9,7 +9,6 @@ services:
 env:
   global:
     - COMPOSER_ROOT_VERSION=1.x-dev
-    - CORE_RELEASE=master
 
 matrix:
   fast_finish: true

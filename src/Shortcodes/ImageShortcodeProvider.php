@@ -44,6 +44,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
+        $allowSessionGrant = static::config()->allow_session_grant;
+
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($args);
 
@@ -52,9 +54,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             /** @var AssetStore $store */
             $store = Injector::inst()->get(AssetStore::class);
             if (!empty($item['filename'])) {
-                $grant = static::config()->allow_session_grant;
                 // Initiate a protected asset grant if necessary
-                $store->getAsURL($item['filename'], $item['hash'], null, $grant);
+                $store->getAsURL($item['filename'], $item['hash'], null, $allowSessionGrant);
             }
             return $item['markup'];
         }
@@ -71,7 +72,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Check if a resize is required
-        $src = $record->Link();
+        $src = $record->getURL($allowSessionGrant);
         if ($record instanceof Image) {
             $width = isset($args['width']) ? $args['width'] : null;
             $height = isset($args['height']) ? $args['height'] : null;
@@ -80,7 +81,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
                 $resized = $record->ResizedImage($width, $height);
                 // Make sure that the resized image actually returns an image
                 if ($resized) {
-                    $src = $resized->getURL();
+                    $src = $resized->getURL($allowSessionGrant);
                 }
             }
         }

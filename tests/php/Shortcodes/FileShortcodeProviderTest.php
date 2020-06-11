@@ -6,8 +6,10 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
 use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
@@ -126,5 +128,25 @@ class FileShortcodeProviderTest extends SapphireTest
 
         // assert that cache is still empty after parsing shortcode
         $this->assertNull($cache->get($cacheKey));
+    }
+
+    public function testOnlyGrantsAccessWhenConfiguredTo()
+    {
+        /** @var AssetStore $assetStore */
+        $assetStore = Injector::inst()->get(AssetStore::class);
+
+        /** @var File $testFile */
+        $testFile = $this->objFromFixture(File::class, 'asdf');
+
+        $parser = new ShortcodeParser();
+        $parser->register('file_link', [FileShortcodeProvider::class, 'handle_shortcode']);
+
+        $parser->parse(sprintf('[file_link,id=%d]', $testFile->ID));
+        $this->assertFalse($assetStore->isGranted($testFile));
+
+        FileShortcodeProvider::config()->set('allow_session_grant', true);
+
+        $parser->parse(sprintf('[file_link,id=%d]', $testFile->ID));
+        $this->assertFalse($assetStore->isGranted($testFile));
     }
 }

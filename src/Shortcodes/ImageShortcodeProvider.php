@@ -52,8 +52,9 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             /** @var AssetStore $store */
             $store = Injector::inst()->get(AssetStore::class);
             if (!empty($item['filename'])) {
+                $grant = static::config()->allow_session_grant;
                 // Initiate a protected asset grant if necessary
-                $store->getAsURL($item['filename'], $item['hash']);
+                $store->getAsURL($item['filename'], $item['hash'], null, $grant);
             }
             return $item['markup'];
         }

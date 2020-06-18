@@ -18,9 +18,11 @@ use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\GeneratedAssetHandler;
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\TestOnly;
+use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
 
 /**
@@ -192,6 +194,17 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     public function getDefaultConflictResolution($variant)
     {
         return parent::getDefaultConflictResolution($variant);
+    }
+
+    /**
+     * Allows testing of grant status
+     *
+     * @param string $filename
+     * @param string $hash
+     */
+    public function isGranted($fileID)
+    {
+        return parent::isGranted($fileID);
     }
 
     protected function isSeekableStream($stream)

@@ -258,13 +258,22 @@ class InterventionBackend implements Image_Backend, Flushable
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
             $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
-            $path = tempnam($tempPath, 'interventionimage_');
-            if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
-                //tmpnam creates a file, we should clean it up if we are changing the path name
-                unlink($path);
-                $path .= "." . $extension;
+            
+            // If not using the default local filesystem save the image to a temp file
+            $store = Injector::inst()->get(AssetStore::class);
+            if (!is_a($store->getPublicFilesystem()->getAdapter(), PublicAssetAdapter::class)
+            || !is_a($store->getProtectedFilesystem()->getAdapter(), ProtectedAssetAdapter::class) ) {
+                $path = tempnam($tempPath, 'interventionimage_');
+                if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
+                    //tmpnam creates a file, we should clean it up if we are changing the path name
+                    unlink($path);
+                    $path .= "." . $extension;
+                }
+                $bytesWritten = file_put_contents($path, $stream);
+            } else {
+                $bytesWritten = false;
             }
-            $bytesWritten = file_put_contents($path, $stream);
+
             // if we fail to write, then load from stream
             if ($bytesWritten === false) {
                 $resource = $this->getImageManager()->make($stream);

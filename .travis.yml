@@ -1,6 +1,17 @@
 language: php
 
-dist: trusty
+dist: xenial
+
+services:
+  - mysql
+  - postgresql
+  - xvfb
+
+apt:
+  packages:
+    - tidy
+    - chromium-chromedriver
+    - chromium-browser
 
 env:
   global:

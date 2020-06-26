@@ -25,7 +25,7 @@ class Image extends File
      */
     private static $plural_name = "Images";
 
-    public function __construct($record = null, $isSingleton = false, $queryParams = array())
+    public function __construct($record = null, $isSingleton = false, $queryParams = [])
     {
         parent::__construct($record, $isSingleton, $queryParams);
         $this->File->setAllowedCategories('image/supported');

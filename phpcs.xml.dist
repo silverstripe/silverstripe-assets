@@ -19,6 +19,9 @@
 		<exclude name="PEAR.Functions.ValidDefaultValue.NotAtEnd" />
 	</rule>
 
+	<!-- use short array syntax -->
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
+
 	<!-- PHP-PEG generated file not intended for human consumption -->
 	<exclude-pattern>*/SSTemplateParser.php$</exclude-pattern>
     <exclude-pattern>*/_fakewebroot/*</exclude-pattern>

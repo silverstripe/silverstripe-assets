@@ -5,16 +5,26 @@ dist: xenial
 services:
   - mysql
   - postgresql
+  - xvfb
+
+apt:
+  packages:
+    - tidy
+    - chromium-chromedriver
+    - chromium-browser
 
 env:
   global:
     - COMPOSER_ROOT_VERSION=2.x-dev
-    - CORE_RELEASE=master
 
 matrix:
   fast_finish: true
   include:
     - php: 7.2
+      env: DB=MYSQL PHPUNIT_TEST=1
+    - php: 7.3
+      env: DB=MYSQL PHPUNIT_TEST=1
+    - php: 7.4
       env: DB=MYSQL PHPUNIT_TEST=1
     - php: 7.2
       env: DB=MYSQL PHPUNIT_COVERAGE_TEST=1 PHPCS_TEST=1
@@ -22,10 +32,6 @@ matrix:
       env: DB=MYSQL PHPUNIT_TEST=1 PDO=1
     - php: 7.3
       env: DB=PGSQL PHPUNIT_TEST=1
-    - php: 7.3
-      env: DB=MYSQL PHPUNIT_TEST=1
-    - php: 7.4
-      env: DB=MYSQL PHPUNIT_TEST=1
 
 before_script:
 # Init PHP

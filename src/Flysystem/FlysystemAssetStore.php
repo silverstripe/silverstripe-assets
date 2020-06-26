@@ -23,6 +23,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPStreamResponse;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Security;
@@ -33,6 +34,7 @@ use SilverStripe\Security\Security;
 class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 {
     use Configurable;
+    use Extensible;
 
     /**
      * Session key to use for user grants
@@ -134,9 +136,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @config
      * @var array
      */
-    private static $file_response_headers = array(
+    private static $file_response_headers = [
         'Cache-Control' => 'private'
-    );
+    ];
 
     /**
      * Assign new flysystem backend
@@ -429,18 +431,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getCapabilities()
     {
-        return array(
-            'visibility' => array(
+        return [
+            'visibility' => [
                 self::VISIBILITY_PUBLIC,
                 self::VISIBILITY_PROTECTED
-            ),
-            'conflict' => array(
+            ],
+            'conflict' => [
                 self::CONFLICT_EXCEPTION,
                 self::CONFLICT_OVERWRITE,
                 self::CONFLICT_RENAME,
                 self::CONFLICT_USE_EXISTING
-            )
-        );
+            ]
+        ];
     }
 
     public function getVisibility($filename, $hash)
@@ -502,7 +504,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         return $publicAdapter->getPublicUrl($fileID);
     }
 
-    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array())
+    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = [])
     {
         // Validate this file exists
         if (!file_exists($path)) {
@@ -528,7 +530,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
     }
 
-    public function setFromString($data, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromString($data, $filename, $hash = null, $variant = null, $config = [])
     {
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $data);
@@ -542,7 +544,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
     }
 
-    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = [])
     {
         if (empty($filename)) {
             throw new InvalidArgumentException('$filename can not be empty');
@@ -971,7 +973,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $fileID = $this->getFileID($filename, $hash);
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: array();
+        $granted = $session->get(self::GRANTS_SESSION) ?: [];
         $granted[$fileID] = true;
         $session->set(self::GRANTS_SESSION, $granted);
     }
@@ -984,7 +986,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: array();
+        $granted = $session->get(self::GRANTS_SESSION) ?: [];
         unset($granted[$fileID]);
         if ($granted) {
             $session->set(self::GRANTS_SESSION, $granted);
@@ -1023,7 +1025,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Make sure our File ID got understood
         if ($parsedFileID && $originalID = $parsedFileID->getFileID()) {
             $session = Controller::curr()->getRequest()->getSession();
-            $granted = $session->get(self::GRANTS_SESSION) ?: array();
+            $granted = $session->get(self::GRANTS_SESSION) ?: [];
             if (!empty($granted[$originalID])) {
                 return true;
             }
@@ -1104,7 +1106,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @return array Tuple associative array (Filename, Hash, Variant)
      * @throws FlysystemException
      */
-    protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = array())
+    protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = [])
     {
         // Set default conflict resolution
         $conflictResolution = empty($config['conflict'])
@@ -1327,7 +1329,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function fileGeneratorFor($fileID)
     {
-        return Injector::inst()->createWithArgs(AssetNameGenerator::class, array($fileID));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, [$fileID]);
     }
 
     /**
@@ -1460,6 +1462,23 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getResponseFor($asset)
     {
+        /** @var HTTPResponse $response */
+        /** @var array $context */
+        [$response, $context] = $this->generateResponseFor($asset);
+
+        // Give a chance to extensions to tweak the response
+        $this->extend('updateResponse', $response, $asset, $context);
+
+        return $response;
+    }
+
+    /**
+     * Build a response for getResponseFor along with some context information for the `updateResponse` hook.
+     * @param string $asset
+     * @return array HTTPResponse and some surronding context
+     */
+    private function generateResponseFor(string $asset): array
+    {
         $public = $this->getPublicFilesystem();
         $protected = $this->getProtectedFilesystem();
         $publicStrategy = $this->getPublicResolutionStrategy();
@@ -1467,14 +1486,20 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // If the file exists on the public store, we just straight return it.
         if ($public->has($asset)) {
-            return $this->createResponseFor($public, $asset);
+            return [
+                $this->createResponseFor($public, $asset),
+                ['visibility' => self::VISIBILITY_PUBLIC]
+            ];
         }
 
         // If the file exists in the protected store and the user has been explicitely granted access to it
         if ($protected->has($asset) && $this->isGranted($asset)) {
             $parsedFileID = $protectedStrategy->resolveFileID($asset, $protected);
             if ($this->canView($parsedFileID->getFilename(), $parsedFileID->getHash())) {
-                return $this->createResponseFor($protected, $asset);
+                return [
+                    $this->createResponseFor($protected, $asset),
+                    ['visibility' => self::VISIBILITY_PROTECTED, 'parsedFileID' => $parsedFileID]
+                ];
             }
             // Let's not deny if the file is in the protected store, but is not granted.
             // We might be able to redirect to a live version.
@@ -1488,17 +1513,25 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $code = $redirectFileID === $permanentFileID ?
                 $this->config()->get('permanent_redirect_response_code') :
                 $this->config()->get('redirect_response_code');
-            return $this->createRedirectResponse($redirectFileID, $code);
+
+            return [
+                $this->createRedirectResponse($redirectFileID, $code),
+                ['visibility' => self::VISIBILITY_PUBLIC, 'parsedFileID' => $parsedFileID]
+            ];
         }
 
         // Deny if file is protected and denied
         if ($protected->has($asset)) {
-            return $this->createDeniedResponse();
+            return [
+                $this->createDeniedResponse(),
+                ['visibility' => self::VISIBILITY_PROTECTED]
+            ];
         }
 
         // We've looked everywhere and couldn't find a file
-        return $this->createMissingResponse();
+        return [$this->createMissingResponse(), []];
     }
+
 
     /**
      * Generate an {@see HTTPResponse} for the given file from the source filesystem

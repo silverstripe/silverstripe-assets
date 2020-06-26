@@ -348,7 +348,7 @@ class FileMigrationHelper
 
         if (!empty($results['Operations'])) {
             foreach ($results['Operations'] as $origin => $destination) {
-                $this->logger->debug(sprintf('  related thumbnail %s moved to %s', $origin, $destination));
+                $this->logger->debug(sprintf('  related file %s moved to %s', $origin, $destination));
             }
         }
 
@@ -480,7 +480,7 @@ class FileMigrationHelper
                     sprintf('  %s has been migrated %s', $file->getFilename(), $stageString)
                 );
                 foreach ($results['Operations'] as $origin => $destination) {
-                    $this->logger->debug(sprintf(' related thumbnail %s moved to %s', $origin, $destination));
+                    $this->logger->debug(sprintf(' related file %s moved to %s', $origin, $destination));
                 }
                 $count++;
             }
@@ -514,7 +514,7 @@ class FileMigrationHelper
         /** @skipUpgrade */
         return File::get()
             ->exclude('ClassName', [Folder::class, 'Folder'])
-            ->filter('FileFilename', array('', null))
+            ->filter('FileFilename', ['', null])
             ->where(sprintf(
                 '"%s"."Filename" IS NOT NULL AND "%s"."Filename" != \'\'',
                 $table,

@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use SilverStripe\Core\Convert;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\ValidationResult;
@@ -63,10 +64,20 @@ class Folder extends File
             // err in favour of matching existing folders if $folderPath
             // includes illegal characters itself.
             $partSafe = $filter->filter($part);
-            $item = Folder::get()->filter(array(
+            $item = Folder::get()->filter([
                 'ParentID' => $parentID,
-                'Name' => array($partSafe, $part)
-            ))->first();
+                'Name' => [$partSafe, $part]
+            ])->first();
+
+            // When in archived mode, find or make should not find folders that don't exist
+            // We check explicitly for Versioned and if it exists then we'll confirm the reading mode isn't archived
+            $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
+            if ($versioned
+                && strpos($versioned::get_reading_mode(), 'Archive.') !== false) {
+                // We return the searched for folder, it will either be null if it doesn't exist
+                // or the folder if it does exist (at the archived date and time)
+                return $item;
+            }
 
             if (!$item) {
                 $item = new Folder();
@@ -237,7 +248,7 @@ class Folder extends File
         parent::onAfterWrite();
 
         // No publishing UX for folders, so just cascade changes live
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         }
 
@@ -250,7 +261,7 @@ class Folder extends File
         parent::onAfterDelete();
 
         // Cascade deletions to live
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::DRAFT) {
             $this->deleteFromStage(Versioned::LIVE);
         }
     }
@@ -274,7 +285,7 @@ class Folder extends File
     public function updateChildFilesystem()
     {
         // Don't synchronise on live (rely on publishing instead)
-        if (class_exists(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
+        if (class_exists(Versioned::class) && $this->hasExtension(Versioned::class) && Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 

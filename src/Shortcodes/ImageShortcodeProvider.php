@@ -28,7 +28,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function get_shortcodes()
     {
-        return array('image');
+        return ['image'];
     }
 
     /**
@@ -42,19 +42,20 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
+        $allowSessionGrant = static::config()->allow_session_grant;
+
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($args);
 
         $item = $cache->get($cacheKey);
         if ($item) {
-            /** @var AssetStore $store */
-            $store = Injector::inst()->get(AssetStore::class);
-            if (!empty($item['filename'])) {
-                // Initiate a protected asset grant if necessary
-                $store->getAsURL($item['filename'], $item['hash']);
+            // Initiate a protected asset grant if necessary
+            if (!empty($item['filename']) && $allowSessionGrant) {
+                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
             }
+
             return $item['markup'];
         }
 
@@ -70,7 +71,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Check if a resize is required
-        $src = $record->Link();
+        $src = $record->getURL($allowSessionGrant);
         if ($record instanceof Image) {
             $width = isset($args['width']) ? $args['width'] : null;
             $height = isset($args['height']) ? $args['height'] : null;
@@ -79,7 +80,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
                 $resized = $record->ResizedImage($width, $height);
                 // Make sure that the resized image actually returns an image
                 if ($resized) {
-                    $src = $resized->getURL();
+                    $src = $resized->getURL($allowSessionGrant);
                 }
             }
         }
@@ -128,7 +129,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      * @param array $extra Extra arguments
      * @return string Result of the handled shortcode
      */
-    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = array())
+    public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
         // Check if there is a suitable record
         $record = static::find_shortcode_record($args);
@@ -137,7 +138,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Rebuild shortcode
-        $parts = array();
+        $parts = [];
         foreach ($args as $name => $value) {
             $htmlValue = Convert::raw2att($value ?: $name);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);

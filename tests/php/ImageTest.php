@@ -343,7 +343,7 @@ abstract class ImageTest extends SapphireTest
         $imageFirst = $image->Pad(200, 200, 'CCCCCC', 0);
         $imageFilename = $imageFirst->getURL();
             // Encoding of the arguments is duplicated from cacheFilename
-        $neededPart = 'Pad' . Convert::base64url_encode(array(200,200,'CCCCCC', 0));
+        $neededPart = 'Pad' . Convert::base64url_encode([200,200,'CCCCCC', 0]);
         $this->assertStringContainsString($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 

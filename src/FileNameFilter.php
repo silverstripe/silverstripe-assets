@@ -57,7 +57,7 @@ class FileNameFilter
     /**
      * @var array See {@link setReplacements()}
      */
-    public $replacements = array();
+    public $replacements = [];
 
     /**
      * Depending on the applied replacement rules, this method

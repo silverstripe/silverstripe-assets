@@ -164,9 +164,9 @@ class AssetControlExtension extends DataExtension
         // Unauthenticated member to use for checking visibility
         $baseClass = $this->owner->baseClass();
         $baseTable = $this->owner->baseTable();
-        $filter = array(
+        $filter = [
             Convert::symbol2sql("{$baseTable}.ID") => $this->owner->ID,
-        );
+        ];
         $stages = $this->owner->getVersionedStages(); // {@see Versioned::getVersionedStages}
         foreach ($stages as $stage) {
             // Skip current stage; These should be handled explicitly
@@ -219,7 +219,7 @@ class AssetControlExtension extends DataExtension
     protected function findAssets(DataObject $record)
     {
         // Search for dbfile instances
-        $files = array();
+        $files = [];
         $fields = DataObject::getSchema()->fieldSpecs($record);
         foreach ($fields as $field => $db) {
             $fieldObj = $record->$field;

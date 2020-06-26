@@ -57,11 +57,11 @@ class AssetStoreTest extends SapphireTest
         $puppies1 = 'puppies';
         $puppies1Tuple = $backend->setFromString($puppies1, 'pets/my-puppy.txt');
         $this->assertEquals(
-            array(
+            [
                 'Hash' => '2a17a9cb4be918774e73ba83bd1c1e7d000fdd53',
                 'Filename' => 'pets/my-puppy.txt',
                 'Variant' => '',
-            ),
+            ],
             $puppies1Tuple
         );
 
@@ -71,11 +71,11 @@ class AssetStoreTest extends SapphireTest
         $fish1Tuple = $backend->setFromStream($fish1Stream, 'parent/awesome-fish.jpg');
         fclose($fish1Stream);
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'parent/awesome-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish1Tuple
         );
 
@@ -87,11 +87,11 @@ class AssetStoreTest extends SapphireTest
         fclose($fish2Stream);
 
         $this->assertEquals(
-            array(
+            [
                 'Hash' => '33be1b95cba0358fe54e8b13532162d52f97421c',
                 'Filename' => 'parent/mediocre-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish2Tuple
         );
         TestAssetStore::$seekable_override = null;
@@ -109,11 +109,11 @@ class AssetStoreTest extends SapphireTest
         $this->assertFileExists($fish1);
         $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish1Tuple
         );
 
@@ -130,15 +130,15 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             '',
             null,
-            array('conflict' => AssetStore::CONFLICT_EXCEPTION)
+            ['conflict' => AssetStore::CONFLICT_EXCEPTION]
         );
 
         $this->assertEquals(
-            array(
+            [
                 'Hash' => '33be1b95cba0358fe54e8b13532162d52f97421c',
                 'Filename' => 'directory/lovely-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish2Tuple
         );
         $this->assertEquals(
@@ -153,14 +153,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_RENAME)
+            ['conflict' => AssetStore::CONFLICT_RENAME]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish-v2.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish3Tuple
         );
         $this->assertEquals(
@@ -174,14 +174,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_RENAME)
+            ['conflict' => AssetStore::CONFLICT_RENAME]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish-v3.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish4Tuple
         );
         $this->assertEquals(
@@ -195,14 +195,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_USE_EXISTING)
+            ['conflict' => AssetStore::CONFLICT_USE_EXISTING]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish5Tuple
         );
         $this->assertEquals(
@@ -216,14 +216,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE)
+            ['conflict' => AssetStore::CONFLICT_OVERWRITE]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish6Tuple
         );
         $this->assertEquals(
@@ -450,11 +450,11 @@ class AssetStoreTest extends SapphireTest
         $this->assertFileExists($fish1);
         $fish1Tuple = $backend->setFromLocalFile($fish1, 'directory/lovely-fish.jpg');
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish1Tuple
         );
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/a870de278b/lovely-fish.jpg');
@@ -472,7 +472,7 @@ class AssetStoreTest extends SapphireTest
                 'directory/lovely-fish.jpg',
                 null,
                 null,
-                array('conflict' => AssetStore::CONFLICT_EXCEPTION)
+                ['conflict' => AssetStore::CONFLICT_EXCEPTION]
             );
             $this->fail('Writing file with different sha to same location should throw exception');
             return;
@@ -486,14 +486,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_RENAME)
+            ['conflict' => AssetStore::CONFLICT_RENAME]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => '33be1b95cba0358fe54e8b13532162d52f97421c',
                 'Filename' => 'directory/lovely-fish-v2.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish3Tuple
         );
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/directory/33be1b95cb/lovely-fish-v2.jpg');
@@ -512,11 +512,11 @@ class AssetStoreTest extends SapphireTest
             ['conflict' => AssetStore::CONFLICT_USE_EXISTING, 'visibility' => AssetStore::VISIBILITY_PUBLIC]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => '33be1b95cba0358fe54e8b13532162d52f97421c',
                 'Filename' => 'directory/lovely-fish-v2.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish4Tuple
         );
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');
@@ -531,14 +531,14 @@ class AssetStoreTest extends SapphireTest
             'directory/lovely-fish-v2.jpg',
             null,
             null,
-            array('conflict' => AssetStore::CONFLICT_OVERWRITE, 'visibility' => AssetStore::VISIBILITY_PUBLIC)
+            ['conflict' => AssetStore::CONFLICT_OVERWRITE, 'visibility' => AssetStore::VISIBILITY_PUBLIC]
         );
         $this->assertEquals(
-            array(
+            [
                 'Hash' => 'a870de278b475cb75f5d9f451439b2d378e13af1',
                 'Filename' => 'directory/lovely-fish-v2.jpg',
                 'Variant' => '',
-            ),
+            ],
             $fish5Tuple
         );
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/directory/lovely-fish-v2.jpg');

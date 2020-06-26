@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Generator;
 use PHPUnit_Framework_MockObject_MockObject;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -29,9 +30,9 @@ class FileTest extends SapphireTest
 
     protected static $fixture_file = 'FileTest.yml';
 
-    protected static $extra_dataobjects = array(
+    protected static $extra_dataobjects = [
         MyCustomFile::class
-    );
+    ];
 
     protected function setUp() : void
     {
@@ -56,10 +57,10 @@ class FileTest extends SapphireTest
         // Conditional fixture creation in case the 'cms' module is installed
         if (class_exists(ErrorPage::class)) {
             $page = new ErrorPage(
-                array(
+                [
                 'Title' => 'Page not Found',
                 'ErrorCode' => 404
-                )
+                ]
             );
             $page->write();
             $page->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
@@ -134,7 +135,7 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
+        Config::modify()->set(File::class, 'allowed_extensions', ['txt']);
 
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');
@@ -206,18 +207,18 @@ class FileTest extends SapphireTest
     public function testGetCategoryExtensions()
     {
         // Test specific categories
-        $images = array(
+        $images = [
             'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff'
-        );
+        ];
         $this->assertEquals($images, File::get_category_extensions('image'));
         $this->assertEquals(
-            array('bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'),
+            ['bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'],
             File::get_category_extensions('image/supported')
         );
-        $this->assertEquals($images, File::get_category_extensions(array('image', 'image/supported')));
+        $this->assertEquals($images, File::get_category_extensions(['image', 'image/supported']));
         $this->assertEquals(
-            array('bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'),
-            File::get_category_extensions(array('flash', 'image/supported'))
+            ['bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'],
+            File::get_category_extensions(['flash', 'image/supported'])
         );
 
         // Test other categories have at least one item
@@ -338,7 +339,7 @@ class FileTest extends SapphireTest
     public function testSetNameWithInvalidExtensionDoesntChangeFilesystem()
     {
         $this->expectException(ValidationException::class);
-        Config::modify()->set(File::class, 'allowed_extensions', array('txt'));
+        Config::modify()->set(File::class, 'allowed_extensions', ['txt']);
 
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'asdf');
@@ -998,5 +999,37 @@ class FileTest extends SapphireTest
         $file->CanEditType = 'Anyone';
         $file->ID = 234;
         $this->assertFalse($file->canEdit());
+    }
+
+    /**
+     * @return Generator
+     * @see testHasRestrictedAccess
+     */
+    public function restrictedAccessDataProvider()
+    {
+        yield ['restricted-test-r', false];
+        yield ['restricted-test-r1', false];
+        yield ['restricted-test-r11', false];
+        yield ['restricted-test-r111', false];
+        yield ['restricted-test-r12', true];
+        yield ['restricted-test-r121', true];
+        yield ['restricted-test-r2', true];
+        yield ['restricted-test-r21', true];
+        yield ['restricted-test-r211', true];
+        yield ['restricted-test-r22', true];
+        yield ['restricted-test-r221', false];
+    }
+
+    /**
+     * @dataProvider restrictedAccessDataProvider
+     *
+     * @param string $fixtureName
+     * @param bool $expected
+     */
+    public function testHasRestrictedAccess(string $fixtureName, bool $expected)
+    {
+        /** @var Folder $folder */
+        $folder = $this->objFromFixture(Folder::class, $fixtureName);
+        $this->assertSame($expected, $folder->hasRestrictedAccess());
     }
 }

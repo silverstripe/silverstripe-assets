@@ -14,10 +14,10 @@ use SilverStripe\ORM\ValidationException;
 class DBFileTest extends SapphireTest
 {
 
-    protected static $extra_dataobjects = array(
+    protected static $extra_dataobjects = [
         DBFileTest\TestObject::class,
         DBFileTest\Subclass::class,
-    );
+    ];
 
     protected $usesDatabase = true;
 
@@ -86,9 +86,9 @@ class DBFileTest extends SapphireTest
             'private/awesome-fish.jpg',
             null,
             null,
-            array(
+            [
             'visibility' => AssetStore::VISIBILITY_PROTECTED
-            )
+            ]
         );
 
         // Test various file permissions work on DBFile

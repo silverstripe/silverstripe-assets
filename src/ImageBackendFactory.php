@@ -35,7 +35,7 @@ class ImageBackendFactory implements Factory
      * @param array $params The constructor parameters.
      * @return object The created service instances.
      */
-    public function create($service, array $params = array())
+    public function create($service, array $params = [])
     {
         /** @var AssetContainer */
         $store = reset($params);

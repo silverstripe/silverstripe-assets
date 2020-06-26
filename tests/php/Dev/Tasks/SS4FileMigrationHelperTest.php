@@ -39,11 +39,11 @@ class SS4FileMigrationHelperTest extends SapphireTest
 
     protected static $fixture_file = '../../FileTest.yml';
 
-    protected static $required_extensions = array(
-        File::class => array(
+    protected static $required_extensions = [
+        File::class => [
             Extension::class,
-        )
-    );
+        ]
+    ];
 
     protected function setUp() : void
     {

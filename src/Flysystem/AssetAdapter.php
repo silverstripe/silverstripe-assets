@@ -26,7 +26,7 @@ class AssetAdapter extends Local
      * @config
      * @var array Mapping of server configurations to configuration files necessary
      */
-    private static $server_configuration = array();
+    private static $server_configuration = [];
 
     /**
      * Default server configuration to use if the server type defined by the environment is not found
@@ -42,7 +42,7 @@ class AssetAdapter extends Local
      * @config
      * @var array
      */
-    private static $file_permissions = array(
+    private static $file_permissions = [
         'file' => [
             'public' => 0664,
             'private' => 0600,
@@ -51,7 +51,7 @@ class AssetAdapter extends Local
             'public' => 0775,
             'private' => 0700,
         ]
-    );
+    ];
 
     public function __construct($root = null, $writeFlags = LOCK_EX, $linkHandling = self::DISALLOW_LINKS)
     {

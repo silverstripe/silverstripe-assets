@@ -29,21 +29,21 @@ class AssetManipulationList
      *
      * @var array
      */
-    protected $public = array();
+    protected $public = [];
 
     /**
      * List of protected assets
      *
      * @var array
      */
-    protected $protected = array();
+    protected $protected = [];
 
     /**
      * List of deleted assets
      *
      * @var array
      */
-    protected $deleted = array();
+    protected $deleted = [];
 
     /**
      * Get an identifying key for a given filename and hash

@@ -36,9 +36,9 @@ class FileFinder
     /**
      * @var array
      */
-    protected static $vcs_dirs = array(
+    protected static $vcs_dirs = [
         '.git', '.svn', '.hg', '.bzr', 'node_modules',
-    );
+    ];
 
     /**
      * The default options that are set on a new finder instance. Options not
@@ -49,7 +49,7 @@ class FileFinder
      *
      * @var array
      */
-    protected static $default_options = array(
+    protected static $default_options = [
         'name_regex'           => null,
         'dir_regex'            => null,
         'accept_callback'      => null,
@@ -62,7 +62,7 @@ class FileFinder
         'ignore_vcs'           => true,
         'min_depth'            => null,
         'max_depth'            => null
-    );
+    ];
 
     /**
      * @var array
@@ -140,8 +140,8 @@ class FileFinder
             $base = '/';
         }
 
-        $paths = array(array($base, 0));
-        $found = array();
+        $paths = [[$base, 0]];
+        $found = [];
 
         $fileCallback = $this->getOption('file_callback');
         $dirCallback  = $this->getOption('dir_callback');
@@ -168,7 +168,7 @@ class FileFinder
                         );
                     }
 
-                    $paths[] = array("$path/$basename", $depth + 1);
+                    $paths[] = ["$path/$basename", $depth + 1];
                 } else {
                     if (!$this->acceptFile($basename, "$path/$basename", $depth)) {
                         continue;

@@ -71,20 +71,21 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      *
      * @return string Result of the handled shortcode
      */
-    public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = array())
+    public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
+        $allowSessionGrant = static::config()->allow_session_grant;
+
         /** @var CacheInterface $cache */
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($arguments, $content);
 
         $item = $cache->get($cacheKey);
         if ($item) {
-            /** @var AssetStore $store */
-            $store = Injector::inst()->get(AssetStore::class);
-            if (!empty($item['filename'])) {
-                $grant = static::config()->allow_session_grant;
-                $store->getAsURL($item['filename'], $item['hash'], null, $grant);
+            // Initiate a protected asset grant if necessary
+            if (!empty($item['filename']) && $allowSessionGrant) {
+                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
             }
+
             return $item['markup'];
         }
 
@@ -99,10 +100,13 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
             return null; // There were no suitable matches at all.
         }
 
+        // Retrieve the file URL (ensuring session grant config is respected)
+        $url = $record->getURL($allowSessionGrant);
+
         // build the HTML tag
         if ($content) {
             // build some useful meta-data (file type and size) as data attributes
-            $attrs = [ 'href' => $record->Link() ];
+            $attrs = [ 'href' => $url ];
             if ($record instanceof File) {
                 $attrs = array_merge($attrs, [
                      'class' => 'file',
@@ -112,7 +116,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
             }
             $markup = HTML::createTag('a', $attrs, $parser->parse($content));
         } else {
-            $markup = $record->Link();
+            $markup = $url;
         }
 
         // cache it for future reference

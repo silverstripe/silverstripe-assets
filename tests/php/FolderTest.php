@@ -10,6 +10,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
@@ -137,9 +138,9 @@ class FolderTest extends SapphireTest
 
         $parentFolder = DataObject::get_one(
             Folder::class,
-            array(
+            [
             '"File"."Name"' => 'parent'
-            )
+            ]
         );
         $this->assertNotNull($parentFolder);
         $this->assertEquals($parentFolder->ID, $folder->ParentID);
@@ -235,9 +236,9 @@ class FolderTest extends SapphireTest
         // ID is prefixed in case Folder is subclassed by project/other module.
         $folder1 = DataObject::get_one(
             Folder::class,
-            array(
+            [
             '"File"."ID"' => $this->idFromFixture(Folder::class, 'folder1')
-            )
+            ]
         );
 
         $folder1->Name = 'FileTest-folder1-changed';
@@ -427,5 +428,67 @@ class FolderTest extends SapphireTest
         $this->assertTrue($file->isPublished());
         $this->assertTrue($folder1->isPublished());
         $this->assertTrue($folder2->isPublished());
+    }
+
+    /**
+     * When in archived mode, find or make should not find folders that don't exist
+     */
+    public function testFindOrMakeVersioned()
+    {
+        // Create a folder
+        Folder::find_or_make('Folder-that-does-exist');
+        // Set the time to when the Antwerp diamond heist took place
+        DBDatetime::set_mock_now('2003-02-15 12:00:00');
+        $archived = Folder::find_or_make('Folder-that-has-been-archived');
+        // Set the date forward a day (the heist took place over two days)
+        DBDatetime::set_mock_now('2003-02-16 12:00:00');
+        $archived->doArchive();
+
+        // Live mode
+        Versioned::withVersionedMode(function () {
+            Versioned::set_reading_mode('Archive.2000-01-01 12:00:00.Live');
+            $folder = Folder::find_or_make('Folder-that-does-not-exist');
+            // Since this folder doesn't exist we would expect the result to be null
+            $this->assertEmpty($folder);
+
+            // Since this folder doesn't exist at that date and time we would expect the result to be null
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertEmpty($folder);
+
+            // Ensure a folder that exists will still show up
+            Versioned::set_reading_mode('Archive.3000-01-01 12:00:00.Live');
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertNotNull($folder);
+
+            // Test a folder that was archived
+            Versioned::set_reading_mode('Archive.2003-02-15 12:00:00.Live');
+            $folder = Folder::find_or_make('Folder-that-has-been-archived');
+            // Since this folder existed at this point in time we would expect to ge it
+            $this->assertNotNull($folder);
+        });
+
+        // Draft mode
+        // Live mode
+        Versioned::withVersionedMode(function () {
+            Versioned::set_reading_mode('Archive.2000-01-01 12:00:00.Stage');
+            $folder = Folder::find_or_make('Folder-that-does-not-exist');
+            // Since this folder doesn't exist we would expect the result to be null
+            $this->assertEmpty($folder);
+
+            // Since this folder doesn't exist at that date and time we would expect the result to be null
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertEmpty($folder);
+
+            // Ensure a folder that exists will still show up
+            Versioned::set_reading_mode('Archive.3000-01-01 12:00:00.Stage');
+            $folder = Folder::find_or_make('Folder-that-does-exist');
+            $this->assertNotNull($folder);
+
+            // Test a folder that was archived
+            Versioned::set_reading_mode('Archive.2003-02-15 12:00:00.Stage');
+            $folder = Folder::find_or_make('Folder-that-has-been-archived');
+            // Since this folder existed at this point in time we would expect to ge it
+            $this->assertNotNull($folder);
+        });
     }
 }

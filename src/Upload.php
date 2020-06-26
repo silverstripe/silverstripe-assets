@@ -32,10 +32,10 @@ use SilverStripe\Security\Security;
 class Upload extends Controller
 {
 
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         'index',
         'load'
-    );
+    ];
 
     /**
      * A dataobject (typically {@see File}) which implements {@see AssetContainer}
@@ -72,7 +72,7 @@ class Upload extends Controller
      *
      * @var array
      */
-    protected $errors = array();
+    protected $errors = [];
 
     /**
      * Default visibility to assign uploaded files
@@ -143,7 +143,7 @@ class Upload extends Controller
      */
     protected function getNameGenerator($filename)
     {
-        return Injector::inst()->createWithArgs(AssetNameGenerator::class, array($filename));
+        return Injector::inst()->createWithArgs(AssetNameGenerator::class, [$filename]);
     }
 
     /**
@@ -226,10 +226,10 @@ class Upload extends Controller
         $conflictResolution = $this->replaceFile
             ? AssetStore::CONFLICT_OVERWRITE
             : AssetStore::CONFLICT_RENAME;
-        $config = array(
+        $config = [
             'conflict' => $conflictResolution,
             'visibility' => $this->getDefaultVisibility()
-        );
+        ];
         return $container->setFromLocalFile($tmpFile['tmp_name'], $filename, null, null, $config);
     }
 
@@ -388,7 +388,7 @@ class Upload extends Controller
      */
     public function clearErrors()
     {
-        $this->errors = array();
+        $this->errors = [];
         $this->validator->clearErrors();
     }
 

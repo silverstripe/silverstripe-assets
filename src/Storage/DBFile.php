@@ -31,7 +31,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      *
      * @var array
      */
-    protected $allowedCategories = array();
+    protected $allowedCategories = [];
 
     /**
      * List of image mime types supported by the image manipulations API
@@ -41,7 +41,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      * @config
      * @var array
      */
-    private static $supported_images = array(
+    private static $supported_images = [
         'image/jpg',
         'image/jpeg',
         'image/pjpeg',
@@ -64,7 +64,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         'image/x-icon',
         'image/vnd.microsoft.icon',
         'image/vnd.adobe.photoshop',
-    );
+    ];
 
     /**
      * Create a new image manipulation
@@ -72,7 +72,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      * @param string $name
      * @param array|string $allowed List of allowed file categories (not extensions), as per File::$app_categories
      */
-    public function __construct($name = null, $allowed = array())
+    public function __construct($name = null, $allowed = [])
     {
         parent::__construct($name);
         $this->setAllowedCategories($allowed);
@@ -99,13 +99,13 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         return Injector::inst()->get(AssetStore::class);
     }
 
-    private static $composite_db = array(
+    private static $composite_db = [
         "Hash" => "Varchar(255)", // SHA of the base content
         "Filename" => "Varchar(255)", // Path identifier of the base content
         "Variant" => "Varchar(255)", // Identifier of the variant to the base, if given
-    );
+    ];
 
-    private static $casting = array(
+    private static $casting = [
         'URL' => 'Varchar',
         'AbsoluteURL' => 'Varchar',
         'Basename' => 'Varchar',
@@ -114,7 +114,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         'String' => 'Text',
         'Tag' => 'HTMLFragment',
         'Size' => 'Varchar'
-    );
+    ];
 
     public function scaffoldFormField($title = null, $params = null)
     {
@@ -208,7 +208,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         return $this->getBasename();
     }
 
-    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = array())
+    public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = [])
     {
         $this->assertFilenameValid($filename ?: $path);
         $result = $this
@@ -221,7 +221,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         return $result;
     }
 
-    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromStream($stream, $filename, $hash = null, $variant = null, $config = [])
     {
         $this->assertFilenameValid($filename);
         $result = $this
@@ -234,7 +234,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         return $result;
     }
 
-    public function setFromString($data, $filename, $hash = null, $variant = null, $config = array())
+    public function setFromString($data, $filename, $hash = null, $variant = null, $config = [])
     {
         $this->assertFilenameValid($filename);
         $result = $this
@@ -289,6 +289,16 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     }
 
     /**
+     * Return absolute URL for this image. Alias for getAbsoluteURL()
+     *
+     * @return string
+     */
+    public function AbsoluteLink()
+    {
+        return $this->getAbsoluteURL();
+    }
+
+    /**
      * Get URL, but without resampling.
      * Note that this will return the url even if the file does not exist.
      *
@@ -340,11 +350,11 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->exists()) {
             return null;
         }
-        return array(
+        return [
             'Filename' => $this->Filename,
             'Hash' => $this->Hash,
             'Variant' => $this->Variant
-        );
+        ];
     }
 
     public function getVisibility()

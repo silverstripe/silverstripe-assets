@@ -12,6 +12,7 @@ use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\HTML;
@@ -94,6 +95,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         $record = static::find_shortcode_record($arguments, $errorCode);
         if ($errorCode) {
             $fileFound = false;
+            /** @var ErrorPage $record */
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -101,7 +103,11 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         // Retrieve the file URL (ensuring session grant config is respected)
-        $url = $record->getURL($allowSessionGrant);
+        if ($record instanceof File) {
+            $url = $record->getURL($allowSessionGrant);
+        } else {
+            $url = $record->Link();
+        }
 
         // build the HTML tag
         if ($content) {

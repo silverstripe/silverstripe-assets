@@ -1503,4 +1503,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         return FileNameFilter::create();
     }
+
+
+    public function ToImage(): ?AssetContainer
+    {
+        return $this->File->ToImage();
+    }
 }

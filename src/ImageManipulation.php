@@ -731,7 +731,7 @@ trait ImageManipulation
         }
 
         // Skip files we know won't be an image
-        if (!$this->getIsImage() || !$this->getHash()) {
+        if (!$this->getHash()) {
             return null;
         }
 
@@ -853,8 +853,17 @@ trait ImageManipulation
                 $backend = $this->getImageBackend();
 
                 // If backend isn't available
-                if (!$backend || !$backend->getImageResource()) {
+                if (!$backend) {
                     return null;
+                }
+
+                // If we don't have an image resource
+                if (!$backend->getImageResource()) {
+                    // Try to force a reload
+                    $backend->loadFromContainer($this);
+                    if (!$backend->getImageResource()) {
+                        return null;
+                    }
                 }
 
                 // Delegate to user manipulation
@@ -951,7 +960,7 @@ trait ImageManipulation
                 $tuple = $result;
                 Deprecation::notice(
                     '5.0',
-                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array 
+                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array
                         containing a tuple and an image backend, i.e. [$tuple, $result]',
                     Deprecation::SCOPE_GLOBAL
                 );
@@ -982,6 +991,18 @@ trait ImageManipulation
         }
 
         return $file->setOriginal($this);
+    }
+
+    /**
+     * @param string $newExtension
+     * @param callable $callback
+     * @return DBFile The manipulated file
+     */
+    public function manipulateExtension(string $newExtension, callable $callback)
+    {
+        $pathParts = pathinfo($this->getFilename());
+        $variant = $this->variantName('extRewrite', $pathParts['extension'], $newExtension);
+        return $this->manipulate($variant, $callback);
     }
 
     /**

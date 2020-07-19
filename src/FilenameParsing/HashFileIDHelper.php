@@ -19,6 +19,7 @@ use SilverStripe\Core\Injector\Injectable;
 class HashFileIDHelper implements FileIDHelper
 {
     use Injectable;
+    use AlternativeFileExtensionTrait;
 
     /**
      * Default length at which hashes are truncated.
@@ -41,6 +42,11 @@ class HashFileIDHelper implements FileIDHelper
         if ($cleanfilename) {
             $filename = $this->cleanFilename($filename);
         }
+
+        if ($variant) {
+            $filename = $this->rewriteVariantExtension($filename, $variant);
+        }
+
         $name = basename($filename);
 
         // Split extension
@@ -90,10 +96,15 @@ class HashFileIDHelper implements FileIDHelper
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = isset($matches['variant']) ? $matches['variant'] : '';
+
+        if (isset($variant)) {
+            $filename = $this->restoreOriginalExtension($filename, $variant);
+        }
         return new ParsedFileID(
             $filename,
             $matches['hash'],
-            isset($matches['variant']) ? $matches['variant'] : '',
+            $variant,
             $fileID
         );
     }

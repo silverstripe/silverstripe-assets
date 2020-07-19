@@ -51,7 +51,7 @@ class ImageBackendFactory implements Factory
 
         // Verify file exists before creating backend
         $backend = null;
-        if ($store->exists() && $store->getIsImage()) {
+        if ($store->exists()) {
             $backend = $this->creator->create($service, $params);
         }
 

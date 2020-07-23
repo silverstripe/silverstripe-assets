@@ -2,9 +2,11 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use League\Flysystem\Filesystem;
 use PHPUnit_Framework_MockObject_MockObject;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -998,5 +1000,29 @@ class FileTest extends SapphireTest
         $file->CanEditType = 'Anyone';
         $file->ID = 234;
         $this->assertFalse($file->canEdit());
+    }
+
+    public function testArchivingModifiedDeletesBothPhysicalFiles()
+    {
+        $store = $this->getAssetStore();
+        $file = File::create();
+
+        $firstHash = 'a1c09d076de11aabc32b73ae2caca01f2b0533d9';
+        $file->setFromString('first version', 'file.txt');
+        $file->publishSingle();
+
+        $secondHash = 'c7e7f59fa9aaed3df124d32e60982726a40568f9';
+        $file->setFromString('second version', 'file.txt');
+        $file->write();
+
+        // Assert that our test file is a modified state with 2 different physical files
+        $this->assertTrue($file->stagesDiffer());
+        $this->assertSame('public', $store->getVisibility('file.txt', $firstHash));
+        $this->assertSame('protected', $store->getVisibility('file.txt', $secondHash));
+
+        // Assert that archiving the file dataObject removes both physical files
+        $file->doArchive();
+        $this->assertFalse($store->exists('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
     }
 }

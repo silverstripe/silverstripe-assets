@@ -55,8 +55,23 @@ class AssetControlExtension extends DataExtension
         // Prepare blank manipulation
         $manipulations = new AssetManipulationList();
 
+        // When running  `Versioned::onArchive()` .. `Versioned::unPublish()`, $this->owner will refer to
+        // the draft table db record rather than the live table record (now deleted)
+        // This means that'll we'll have the wrong File->Hash at this point
+        // In this scenario, fetch the live table record from the versions table
+        $record = $this->owner;
+        if ($this->isVersioned() && Versioned::get_stage() == Versioned::LIVE) {
+            $versions = $record->Versions();
+            $draftVersion = $versions->filter(['WasPublished' => 0])->sort('ID DESC')->limit(1)->first() ?? null;
+            $liveVersion = $versions->filter(['WasPublished' => 1])->sort('ID DESC')->limit(1)->first() ?? null;
+            if ($draftVersion && $liveVersion && ($draftVersion->FileHash ?? '') != ($liveVersion->FileHash ?? '')) {
+                // $liveVersion is a Versioned_Version, not a File :/  This does not work
+                $record = $liveVersion;
+            }
+        }
+
         // Add all assets for deletion
-        $this->addAssetsFromRecord($manipulations, $this->owner, AssetManipulationList::STATE_DELETED);
+        $this->addAssetsFromRecord($manipulations, $record, AssetManipulationList::STATE_DELETED);
 
         // Whitelist assets that exist in other stages
         $this->addAssetsFromOtherStages($manipulations);
@@ -197,6 +212,9 @@ class AssetControlExtension extends DataExtension
      */
     protected function addAssetsFromRecord(AssetManipulationList $manipulation, DataObject $record, $state)
     {
+        // This is the path we need to use the File_Live->Hash on, because when Versioned::doUnpublish() runs
+        // the Versioned::get_stage() == "Live"
+
         // Find all assets attached to this record
         $assets = $this->findAssets($record);
         if (empty($assets)) {
@@ -220,7 +238,11 @@ class AssetControlExtension extends DataExtension
     {
         // Search for dbfile instances
         $files = array();
+
+        // We need a File here, not a Versioned_Version
+        // Unfortunately the File_Live record no longer exists at this point
         $fields = DataObject::getSchema()->fieldSpecs($record);
+
         foreach ($fields as $field => $db) {
             $fieldObj = $record->$field;
             if (!($fieldObj instanceof DBFile)) {

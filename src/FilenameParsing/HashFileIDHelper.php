@@ -126,4 +126,9 @@ class HashFileIDHelper implements FileIDHelper
     {
         return substr($hash, 0, self::HASH_TRUNCATE_LENGTH);
     }
+
+    public function lookForVariantRecursive(): bool
+    {
+        return false;
+    }
 }

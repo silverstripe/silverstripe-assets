@@ -57,4 +57,9 @@ class MockFileIDHelper implements TestOnly, FileIDHelper
     {
         return $this->lookForVariantInVal;
     }
+
+    public function lookForVariantRecursive(): bool
+    {
+        return true;
+    }
 }

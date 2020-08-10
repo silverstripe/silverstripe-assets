@@ -3,9 +3,12 @@
 namespace SilverStripe\Assets\Tests;
 
 use Generator;
+use League\Flysystem\Filesystem;
 use PHPUnit_Framework_MockObject_MockObject;
+use SilverStripe\Assets\AssetControlExtension;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -1031,5 +1034,182 @@ class FileTest extends SapphireTest
         /** @var Folder $folder */
         $folder = $this->objFromFixture(Folder::class, $fixtureName);
         $this->assertSame($expected, $folder->hasRestrictedAccess());
+    }
+
+    private function createModifiedFile()
+    {
+        $file = File::create();
+        $store = $this->getAssetStore();
+
+        // 'a1c09d076de11aabc32b73ae2caca01f2b0533d9';
+        $file->setFromString('first version', 'file.txt');
+        $firstHash = $file->getHash();
+        $file->publishSingle();
+
+        // 'c7e7f59fa9aaed3df124d32e60982726a40568f9';
+        $file->setFromString('second version', 'file.txt');
+        $secondHash = $file->getHash();
+        $file->write();
+
+        return [$file, $store, $firstHash, $secondHash];
+    }
+
+    /**
+     * Validate the private helper function above works correctly
+     */
+    public function testCreateModifiedFile()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFile();
+
+        // Assert that our test file is a modified state with 2 different physical files
+        $this->assertTrue($file->stagesDiffer());
+        $this->assertSame(AssetStore::VISIBILITY_PUBLIC, $store->getVisibility('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $secondHash));
+    }
+
+    private function createModifiedFileWithDifferentFilename()
+    {
+        $file = File::create();
+        $store = $this->getAssetStore();
+
+        // 'a1c09d076de11aabc32b73ae2caca01f2b0533d9';
+        $file->setFromString('first version', 'file.txt');
+        $firstHash = $file->getHash();
+        $file->publishSingle();
+
+        // 'c7e7f59fa9aaed3df124d32e60982726a40568f9';
+        $file->setFromString('second version', 'file-changed.txt');
+        $secondHash = $file->getHash();
+        $file->write();
+
+        return [$file, $store, $firstHash, $secondHash];
+    }
+
+    /**
+     * Validate the private helper function above works correctly
+     */
+    public function testCreateModifiedFileWithDifferentFilename()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFileWithDifferentFilename();
+
+        // Assert that our test file is a modified state with 2 different physical files
+        $this->assertTrue($file->stagesDiffer());
+        $this->assertSame(AssetStore::VISIBILITY_PUBLIC, $store->getVisibility('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file-changed.txt', $secondHash));
+    }
+
+    /**
+     * Assert that unpublishing a modified file dataObject removes the live file only
+     */
+    public function testUnpublishingModifiedDeletesLiveFile()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFile();
+        $file->doUnpublish();
+        $this->assertFalse($store->exists('file.txt', $firstHash));
+        $this->assertTrue($store->exists('file.txt', $secondHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $secondHash));
+    }
+
+    /**
+     * Assert that unpublishing a modified file dataObject with keep_archived_assets moves the live file
+     * to the protected store
+     */
+    public function testUnpublishingModifiedKeepArchivedLiveFile()
+    {
+        Config::modify()->set(File::class, 'keep_archived_assets', true);
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFile();
+        $file->doUnpublish();
+        $this->assertTrue($store->exists('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $firstHash));
+        $this->assertTrue($store->exists('file.txt', $secondHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject removes both physical files
+     */
+    public function testArchivingModifiedDeletesBothPhysicalFiles()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFile();
+        $file->doArchive();
+        $this->assertFalse($store->exists('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject with keep_archived_assets moves both files
+     * to the protected store
+     */
+    public function testArchivingModifiedKeepArchivedBothPhysicalFiles()
+    {
+        Config::modify()->set(File::class, 'keep_archived_assets', true);
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFile();
+        $file->doArchive();
+        $this->assertTrue($store->exists('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $firstHash));
+        $this->assertTrue($store->exists('file.txt', $secondHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject removes the live file only
+     * (draft file has a different filename)
+     */
+    public function testUnpublishingModifiedDeletesLiveFileWithDifferentFilename()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFileWithDifferentFilename();
+        $file->doUnpublish();
+        $this->assertFalse($store->exists('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
+        $this->assertFalse($store->exists('file-changed.txt', $firstHash));
+        $this->assertTrue($store->exists('file-changed.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject with keep_archived_assets moves the live file only to the
+     * protected store (draft file has a different filename)
+     */
+    public function testUnpublishingModifiedKeepArchivedLiveFileWithDifferentFilename()
+    {
+        Config::modify()->set(File::class, 'keep_archived_assets', true);
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFileWithDifferentFilename();
+        $file->doUnpublish();
+        $this->assertTrue($store->exists('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
+        $this->assertFalse($store->exists('file-changed.txt', $firstHash));
+        $this->assertTrue($store->exists('file-changed.txt', $secondHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file-changed.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject removes both physical files
+     * (draft file has a different filename)
+     */
+    public function testArchivingModifiedDeletesBothPhysicalFilesWithDifferentFilenames()
+    {
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFileWithDifferentFilename();
+        $file->doArchive();
+        $this->assertFalse($store->exists('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
+        $this->assertFalse($store->exists('file-changed.txt', $firstHash));
+        $this->assertFalse($store->exists('file-changed.txt', $secondHash));
+    }
+
+    /**
+     * Assert that archiving a modified file dataObject with keep_archived_assets moves both physical files to the
+     * protected store (draft file has a different filename)
+     */
+    public function testArchivingModifiedKeepArchivedBothPhysicalFilesWithDifferentFilenames()
+    {
+        Config::modify()->set(File::class, 'keep_archived_assets', true);
+        list($file, $store, $firstHash, $secondHash) = $this->createModifiedFileWithDifferentFilename();
+        $file->doArchive();
+        $this->assertTrue($store->exists('file.txt', $firstHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file.txt', $firstHash));
+        $this->assertFalse($store->exists('file.txt', $secondHash));
+        $this->assertFalse($store->exists('file-changed.txt', $firstHash));
+        $this->assertTrue($store->exists('file-changed.txt', $secondHash));
+        $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file-changed.txt', $secondHash));
     }
 }

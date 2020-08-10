@@ -436,7 +436,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
             // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
-            $possibleVariants = $filesystem->listContents($folder, true);
+            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
 
             // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
             $possibleVariants = array_filter($possibleVariants, function ($possibleVariant) {

@@ -53,4 +53,11 @@ interface FileIDHelper
      * @return string
      */
     public function lookForVariantIn(ParsedFileID $parsedFileID);
+
+    /**
+     * Specify if this File ID Helper stores variants in subfolders and require a recursive look up to find all
+     * variants.
+     * @return bool
+     */
+    public function lookForVariantRecursive(): bool;
 }

@@ -238,4 +238,9 @@ class LegacyFileIDHelper implements FileIDHelper
         }
         return $folder . '_resampled';
     }
+
+    public function lookForVariantRecursive(): bool
+    {
+        return true;
+    }
 }

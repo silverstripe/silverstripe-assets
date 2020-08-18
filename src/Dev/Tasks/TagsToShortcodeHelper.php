@@ -167,7 +167,7 @@ class TagsToShortcodeHelper
      * @param string $updateTable
      * @param string $field
      */
-    private function rewriteFieldForRecords(Query $records, $updateTable, $field)
+    protected function rewriteFieldForRecords(Query $records, $updateTable, $field)
     {
         foreach ($records as $row) {
             $content = $row[$field];
@@ -245,9 +245,9 @@ class TagsToShortcodeHelper
     {
         $fileIDHelperResolutionStrategy = FileIDHelperResolutionStrategy::create();
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
-            $hashFileIdHelper = new HashFileIDHelper(),
-            new LegacyFileIDHelper(),
-            $defaultFileIDHelper = new NaturalFileIDHelper(),
+            $hashFileIdHelper = HashFileIDHelper::create(),
+            LegacyFileIDHelper::create(),
+            $defaultFileIDHelper = NaturalFileIDHelper::create(),
         ]);
         $fileIDHelperResolutionStrategy->setDefaultFileIDHelper($defaultFileIDHelper);
 
@@ -322,6 +322,7 @@ class TagsToShortcodeHelper
                     "",
                     " id=\"{$file->ID}\"]",
                 ];
+                $tag = $this->updateTagFromFile($tag, $file);
                 $shortcode = preg_replace($find, $replace, $tag);
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
@@ -334,6 +335,19 @@ class TagsToShortcodeHelper
             return $shortcode;
         }
         return null;
+    }
+
+    /**
+     * This function allows you to implement custom handling of tags
+     * for example you can remedy empty attributes which may break WYSIWYG UI
+     *
+     * @param string $tag
+     * @param File $file
+     * @return string
+     */
+    protected function updateTagFromFile($tag, File $file)
+    {
+        return $tag;
     }
 
     /**
@@ -359,7 +373,7 @@ class TagsToShortcodeHelper
      * @return array An array of fields that derivec from $baseClass.
      * @throws \ReflectionException
      */
-    private function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
+    protected function getFieldMap($baseClass, $includeBaseClass, $fieldNames)
     {
         $mapping = [];
         // Normalise $fieldNames to a string array

@@ -188,7 +188,13 @@ class LegacyFileIDHelper implements FileIDHelper
 
         // Can't have a resampled folder without a variant
         if (empty($validVariants)) {
-            return null;
+            return $this->parseLegacyFormat(
+                $fileID,
+                $matches['variant'],
+                $matches['folder'],
+                $matches['basename'],
+                $matches['extension']
+            );
         }
 
         // Reconcatenate our variants
@@ -217,6 +223,23 @@ class LegacyFileIDHelper implements FileIDHelper
         });
 
         return $variantMethods;
+    }
+
+    /**
+     * This function allows you to implement custom handling of legacy formats
+     * note at this point you are unlikely able to recover the original variant as it's no longer valid or recognized
+     * you may still be able to recover the original file and preserve asset references in HTML fields
+     *
+     * @param string $fileID
+     * @param string $variant
+     * @param string $folder
+     * @param string $filename
+     * @param string $extension
+     * @return ParsedFileID|null
+     */
+    protected function parseLegacyFormat($fileID, $variant, $folder, $filename, $extension)
+    {
+        return null;
     }
 
     public function isVariantOf($fileID, ParsedFileID $original)

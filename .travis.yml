@@ -33,7 +33,6 @@ before_script:
   - phpenv config-rm xdebug.ini
   - export PATH=~/.config/composer/vendor/bin:$PATH
   - echo 'memory_limit = 3G' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-  - php -m
 
 # Install composer dependencies
   - composer validate

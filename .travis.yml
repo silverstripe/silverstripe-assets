@@ -32,7 +32,7 @@ before_script:
   - phpenv rehash
   - phpenv config-rm xdebug.ini
   - export PATH=~/.config/composer/vendor/bin:$PATH
-  - echo 'memory_limit = 6G' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
+  - echo 'memory_limit = 3G' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
   - php -m
 
 # Install composer dependencies
@@ -47,7 +47,7 @@ before_script:
 script:
   - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi
   - if [[ $PHPCS_TEST ]]; then composer run-script lint; fi
-  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then vendor/bin/phpunit --coverage-clover=coverage.xml; cat coverage.xml; fi
+  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then vendor/bin/phpunit --coverage-clover=coverage.xml; fi
   
 
 after_success:

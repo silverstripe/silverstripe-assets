@@ -96,7 +96,7 @@ class FileMigrationHelper
         Environment::increaseTimeLimitTo();
         Environment::setMemoryLimitMax(-1);
         Environment::increaseMemoryLimitTo(-1);
-        
+
         /** @var FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
         $hasher::flush();
@@ -257,8 +257,14 @@ class FileMigrationHelper
             return false;
         }
 
-        // Fix file classname if it has a classname that's incompatible with its extention
+        // Ignore extensionless files
         $extension = $file->getExtension();
+        if ($extension === '') {
+            $this->handleInvalidFile($file, [['message' => 'Files without an extension can not be migrated']], $legacyFilename);
+            return false;
+        }
+
+        // Fix file classname if it has a classname that's incompatible with its extension
         if (!$this->validateFileClassname($file, $extension)) {
             // We disable validation (if it is enabled) so that we are able to write a corrected
             // classname, once that is changed we re-enable it for subsequent writes
@@ -278,21 +284,7 @@ class FileMigrationHelper
         // Remove invalid files
         $validationResult = $file->validate();
         if (!$validationResult->isValid()) {
-            if ($this->config()->get('delete_invalid_files')) {
-                $file->delete();
-            }
-            if ($this->logger) {
-                $messages = implode("\n\n", array_map(function ($msg) {
-                    return $msg['message'];
-                }, $validationResult->getMessages()));
-                $this->logger->warning(
-                    sprintf(
-                        "  %s was not migrated because the file is not valid. More information: %s",
-                        $legacyFilename,
-                        $messages
-                    )
-                );
-            }
+            $this->handleInvalidFile($file, $validationResult->getMessages(), $legacyFilename);
             return false;
         }
 
@@ -327,7 +319,7 @@ class FileMigrationHelper
         } catch (ValidationException $e) {
             if ($this->logger) {
                 $this->logger->error(sprintf(
-                    "File %s could not be migrated due to an error. 
+                    "File %s could not be migrated due to an error.
                     This problem likely existed before the migration began. Error: %s",
                     $legacyFilename,
                     $e->getMessage()
@@ -376,7 +368,7 @@ class FileMigrationHelper
         $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function ($matches) {
             return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
         }, $strippedLegacyFilename);
-        
+
         $files = glob($base . DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
 
         switch (sizeof($files)) {
@@ -568,5 +560,31 @@ class FileMigrationHelper
             ->selectFromTable($table, ['ID', 'Filename'])
             ->execute()
             ->map(); // map ID to Filename
+    }
+
+    /**
+     * @param File $file
+     * @param array $messages
+     * @param string $legacyFilename
+     *
+     * return void
+     */
+    private function handleInvalidFile($file, $messages, $legacyFilename)
+    {
+        if ($this->config()->get('delete_invalid_files')) {
+            $file->delete();
+        }
+        if ($this->logger) {
+            $logMessages = implode("\n\n", array_map(function ($msg) {
+                return $msg['message'];
+            }, $messages));
+            $this->logger->warning(
+                sprintf(
+                    "  %s was not migrated because the file is not valid. More information: %s",
+                    $legacyFilename,
+                    $logMessages
+                )
+            );
+        }
     }
 }

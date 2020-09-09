@@ -178,8 +178,8 @@ class FileMigrationHelperTest extends SapphireTest
     {
         $this->preCondition();
 
-        // The EXE file and missing file won't be migrated
-        $expectNumberOfMigratedFiles = File::get()->exclude('ClassName', Folder::class)->count() - 3;
+        // The EXE file, extensionless file and missing file won't be migrated
+        $expectNumberOfMigratedFiles = File::get()->exclude('ClassName', Folder::class)->count() - 4;
 
         // Do migration
         $helper = new FileMigrationHelper();
@@ -208,6 +208,7 @@ class FileMigrationHelperTest extends SapphireTest
         }
 
         $this->invalidFile();
+        $this->fileWithNoExtension();
         $this->pdfNormalisedToFile();
         $this->badSS3filenames();
         $this->conflictualBadNames();
@@ -304,6 +305,15 @@ class FileMigrationHelperTest extends SapphireTest
     private function invalidFile()
     {
         $invalidID = $this->idFromFixture(File::class, 'invalid');
+        $this->assertNotEmpty($invalidID);
+        $this->assertNull(File::get()->byID($invalidID));
+    }
+    /**
+     * Ensure that invalid file has been removed during migration. One file without an extension should have been removed from the DB
+     */
+    private function fileWithNoExtension()
+    {
+        $invalidID = $this->idFromFixture(File::class, 'no-extension');
         $this->assertNotEmpty($invalidID);
         $this->assertNull(File::get()->byID($invalidID));
     }

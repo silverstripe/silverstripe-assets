@@ -30,15 +30,8 @@ matrix:
       env: DB=MYSQL RECIPE_VERSION=4.6.x-dev PHPUNIT_TEST=1 PDO=1
     - php: 7.4
       env: DB=MYSQL RECIPE_VERSION=4.6.x-dev PHPUNIT_TEST=1
-
-    # Warning: phpunit with --coverage-clover takes too much time, so travis build fails after 10
-    # minutes with no output from the task.
-    # We have to disable it until we come up with another (faster) solution to gather coverage
-    #
-    # See https://github.com/silverstripe/silverstripe-assets/pull/407
-    #
-    # - php: 7.3
-    #   env: DB=MYSQL RECIPE_VERSION=4.6.x-dev PHPUNIT_COVERAGE_TEST=1
+    - php: 7.3
+      env: DB=MYSQL RECIPE_VERSION=4.6.x-dev PHPUNIT_COVERAGE_TEST=1
 
 before_script:
 # Init PHP
@@ -58,11 +51,13 @@ before_script:
   - if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2 --prefer-dist; fi
   - composer update --prefer-dist
   - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o; fi
+  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then pecl install pcov ; composer require pcov/clobber --dev ; vendor/bin/pcov clobber; fi
 
 script:
   - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi
   - if [[ $PHPCS_TEST ]]; then composer run-script lint; fi
-  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then phpdbg -qrr vendor/bin/phpunit --coverage-clover=coverage.xml; fi
+  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then vendor/bin/phpunit --coverage-clover=coverage.xml; fi
+
 
 after_success:
   - if [[ $PHPUNIT_COVERAGE_TEST ]]; then bash <(curl -s https://codecov.io/bash) -f coverage.xml; fi

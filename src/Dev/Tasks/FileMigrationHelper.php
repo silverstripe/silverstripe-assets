@@ -96,7 +96,7 @@ class FileMigrationHelper
         Environment::increaseTimeLimitTo();
         Environment::setMemoryLimitMax(-1);
         Environment::increaseMemoryLimitTo(-1);
-        
+
         /** @var FileHashingService $hasher */
         $hasher = Injector::inst()->get(FileHashingService::class);
         $hasher::flush();
@@ -319,7 +319,7 @@ class FileMigrationHelper
         } catch (ValidationException $e) {
             if ($this->logger) {
                 $this->logger->error(sprintf(
-                    "File %s could not be migrated due to an error. 
+                    "File %s could not be migrated due to an error.
                     This problem likely existed before the migration began. Error: %s",
                     $legacyFilename,
                     $e->getMessage()
@@ -368,7 +368,7 @@ class FileMigrationHelper
         $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function ($matches) {
             return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
         }, $strippedLegacyFilename);
-        
+
         $files = glob($base . DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
 
         switch (sizeof($files)) {
@@ -569,7 +569,7 @@ class FileMigrationHelper
      *
      * return void
      */
-    protected function handleInvalidFile($file, $messages, $legacyFilename)
+    private function handleInvalidFile($file, $messages, $legacyFilename)
     {
         if ($this->config()->get('delete_invalid_files')) {
             $file->delete();

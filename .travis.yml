@@ -21,7 +21,7 @@ matrix:
   fast_finish: true
   include:
     - php: 7.1
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 PHPCS_TEST=1
+      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 PHPCS_TEST=1 COMPOSER_INSTALL_ARG="--prefer-lowest"
     - php: 7.2
       env: DB=PGSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1
     - php: 7.3
@@ -30,25 +30,26 @@ matrix:
       env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 PDO=1
     - php: 7.4
       env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1
+    - php: nightly
+      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 COMPOSER_INSTALL_ARG="--ignore-platform-reqs"
 
 before_script:
 # Init PHP
-  - printf "\n" | pecl install imagick
+  # TODO: Remove this condition once Imagick officially ships PHP 8 support
+  - if [ "$COMPOSER_ARG" != "--ignore-platform-reqs"]; then printf "\n" | pecl install imagick; fi
   - composer self-update || true
   - phpenv rehash
-  - phpenv config-rm xdebug.ini
+  - phpenv config-rm xdebug.ini || true
   - export PATH=~/.config/composer/vendor/bin:$PATH
   - echo 'memory_limit = 4G' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
 
 # Install composer dependencies
   - composer validate
-  - composer install --prefer-dist
-  - composer require --prefer-dist --no-update silverstripe/recipe-core:$RECIPE_VERSION silverstripe/versioned:1.x-dev
-  # Fix for running phpunit 5 on php 7.4+
-  - composer require --no-update sminnee/phpunit-mock-objects:^3
-  - if [[ $DB == PGSQL ]]; then composer require --no-update silverstripe/postgresql:^2 --prefer-dist; fi
-  - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o; fi
+  - composer require --prefer-dist silverstripe/recipe-core:$RECIPE_VERSION silverstripe/versioned:1.x-dev $COMPOSER_INSTALL_ARG
+  - if [[ $DB == PGSQL ]]; then composer require silverstripe/postgresql:^2 --prefer-dist $COMPOSER_INSTALL_ARG; fi
+  - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o $COMPOSER_INSTALL_ARG; fi
   - if [[ $PHPUNIT_COVERAGE_TEST ]]; then pecl install pcov ; composer require pcov/clobber --dev ; vendor/bin/pcov clobber; fi
+  - composer update --prefer-dist $COMPOSER_INSTALL_ARG
 
 script:
   - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi

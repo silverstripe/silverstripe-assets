@@ -26,7 +26,7 @@
     "require-dev": {
         "silverstripe/versioned": "^1@dev",
         "sminnee/phpunit-mock-objects": "^3.4.5",
-        "phpunit/phpunit": "^5.7"
+        "sminnee/phpunit": "^5.7.29"
     },
     "suggest": {
         "ext-exif": "If you use GD backend (the default) you may want to have EXIF extension installed to elude some tricky issues"

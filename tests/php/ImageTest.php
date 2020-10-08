@@ -3,6 +3,8 @@
 namespace SilverStripe\Assets\Tests;
 
 use InvalidArgumentException;
+use PHPUnit_Framework_MockObject_MockBuilder;
+use PHPUnit_Framework_MockObject_MockObject;
 use Prophecy\Prophecy\ObjectProphecy;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -435,11 +437,10 @@ abstract class ImageTest extends SapphireTest
         $hash = sha1($filename);
 
         // Mock unavailable asset backend
-        $builder = $this->getMockAssetBackend($filename, $hash);
-        $builder
-            ->getStream()
-            ->willReturn(null); // Should safely trigger error in InterventionBackend::getImageResource()
-        $container = $builder->reveal();
+        $container = $this->getMockAssetBackend($filename, $hash);
+        $container
+            ->expects($this->any())->method('getStream')
+            ->will($this->returnValue(null)); // Should safely trigger error in InterventionBackend::getImageResource()
 
         // Test backend
         /** @var InterventionBackend $backend */
@@ -485,12 +486,11 @@ abstract class ImageTest extends SapphireTest
         $hash = sha1($filename);
 
         // Get backend which poses as image, but has non-image content
-        $builder = $this->getMockAssetBackend($filename, $hash);
+        $container = $this->getMockAssetBackend($filename, $hash);
         $stream = fopen(__DIR__.'/ImageTest/not-image.txt', 'r');
-        $builder
-            ->getStream()
-            ->willReturn($stream);
-        $container = $builder->reveal();
+        $container
+            ->expects($this->any())->method('getStream')
+            ->will($this->returnValue($stream));
 
         // Test backend
         /** @var InterventionBackend $backend */
@@ -526,9 +526,8 @@ abstract class ImageTest extends SapphireTest
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $this->assertInstanceOf(Image_Backend::class, $image->getImageBackend());
 
-        $builder = $this->prophesize(InterventionBackend::class);
-        $builder->getWidth()->shouldBeCalled()->willReturn(99999);
-        $mockBackend = $builder->reveal();
+        $mockBackend = $this->getMockBuilder(InterventionBackend::class)->getMock();
+        $mockBackend->expects($this->any())->method('getWidth')->will($this->returnValue(99999));
         $image->setImageBackend($mockBackend);
         $this->assertEquals(99999, $image->getWidth());
     }
@@ -536,16 +535,16 @@ abstract class ImageTest extends SapphireTest
     /**
      * @param $filename
      * @param $hash
-     * @return ObjectProphecy
+     * @return PHPUnit_Framework_MockObject_MockObject
      */
     protected function getMockAssetBackend($filename, $hash)
     {
-        $builder = $this->prophesize(AssetContainer::class);
-        $builder->exists()->willReturn(true);
-        $builder->getFilename()->willReturn($filename);
-        $builder->getHash()->willReturn($hash);
-        $builder->getVariant()->willReturn(null);
-        $builder->getIsImage()->willReturn(true);
+        $builder = $this->getMockBuilder(AssetContainer::class)->getMock();
+        $builder->expects($this->any())->method('exists')->will($this->returnValue(true));
+        $builder->expects($this->any())->method('getFilename')->will($this->returnValue($filename));
+        $builder->expects($this->any())->method('getHash')->will($this->returnValue($hash));
+        $builder->expects($this->any())->method('getVariant')->will($this->returnValue(null));
+        $builder->expects($this->any())->method('getIsImage')->will($this->returnValue(true));
         return $builder;
     }
 }

@@ -21,12 +21,13 @@
     "require": {
         "silverstripe/framework": "^4.5",
         "silverstripe/vendor-plugin": "^1.0",
-        "intervention/image": "^2.3"
+        "intervention/image": "^2.3",
+        "league/flysystem": "^1.0.70"
     },
     "require-dev": {
         "silverstripe/versioned": "^1@dev",
         "sminnee/phpunit-mock-objects": "^3.4.5",
-        "phpunit/phpunit": "^5.7"
+        "sminnee/phpunit": "^5.7.29"
     },
     "suggest": {
         "ext-exif": "If you use GD backend (the default) you may want to have EXIF extension installed to elude some tricky issues"

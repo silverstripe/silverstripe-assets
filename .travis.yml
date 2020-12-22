@@ -1,60 +1,15 @@
-language: php
+version: ~> 1.0
 
-dist: xenial
-
-services:
-  - mysql
-  - postgresql
-  - xvfb
-
-apt:
-  packages:
-    - tidy
-    - chromium-chromedriver
-    - chromium-browser
+import:
+  - silverstripe/silverstripe-travis-shared:config/provision/standard-jobs-fixed.yml
 
 env:
   global:
-    - COMPOSER_ROOT_VERSION=1.x-dev
+    - COMPOSER_ROOT_VERSION="1.x-dev"
+    - REQUIRE_RECIPE="4.x-dev"
+    - PHPUNIT_COVERAGE_SUITE="assets"
 
-matrix:
-  fast_finish: true
-  include:
-    - php: 7.1
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 COMPOSER_INSTALL_ARG="--prefer-lowest"
-    - php: 7.2
-      env: DB=PGSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1
-    - php: 7.3
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_COVERAGE_TEST=1
-    - php: 7.4
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 PDO=1
-    - php: 7.4
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 PHPCS_TEST=1
-    - php: nightly
-      env: DB=MYSQL RECIPE_VERSION=4.x-dev PHPUNIT_TEST=1 COMPOSER_INSTALL_ARG="--ignore-platform-reqs"
-
-before_script:
-# Init PHP
-  # TODO: Remove this condition once Imagick officially ships PHP 8 support
-  - if [ "$COMPOSER_ARG" != "--ignore-platform-reqs"]; then printf "\n" | pecl install imagick; fi
-  - composer self-update || true
-  - phpenv rehash
-  - phpenv config-rm xdebug.ini || true
-  - export PATH=~/.config/composer/vendor/bin:$PATH
-  - echo 'memory_limit = 4G' >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
-
-# Install composer dependencies
-  - composer validate
-  - composer require --prefer-dist silverstripe/recipe-core:$RECIPE_VERSION silverstripe/versioned:1.x-dev $COMPOSER_INSTALL_ARG
-  - if [[ $DB == PGSQL ]]; then composer require silverstripe/postgresql:^2 --prefer-dist $COMPOSER_INSTALL_ARG; fi
-  - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o $COMPOSER_INSTALL_ARG; fi
-  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then pecl install pcov ; composer require pcov/clobber --dev ; vendor/bin/pcov clobber; fi
-  - composer update --prefer-dist $COMPOSER_INSTALL_ARG
-
-script:
-  - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit; fi
-  - if [[ $PHPCS_TEST ]]; then composer run-script lint; fi
-  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then vendor/bin/phpunit --coverage-clover=coverage.xml; fi
-
-after_success:
-  - if [[ $PHPUNIT_COVERAGE_TEST ]]; then bash <(curl -s https://codecov.io/bash) -f coverage.xml; fi
+#before_script:
+  # Fix for phpunit timeout issue, e.g.
+  # https://travis-ci.com/github/silverstripe/silverstripe-assets/jobs/451250554
+  #- if [[ $PHPUNIT_COVERAGE_TEST ]]; then pecl install pcov ; composer require pcov/#clobber --dev ; vendor/bin/pcov clobber; fi

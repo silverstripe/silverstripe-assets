@@ -6,6 +6,7 @@ use Exception;
 use InvalidArgumentException;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
+use ReflectionMethod;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
@@ -20,6 +21,7 @@ use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use Symfony\Component\Cache\CacheItem;
 
 class Sha1FileHashingServiceTest extends SapphireTest
 {
@@ -247,5 +249,25 @@ class Sha1FileHashingServiceTest extends SapphireTest
         $service->move($this->fileID, $this->protectedFs, 'different-file.txt');
         $this->assertFalse($service->get($this->fileID, AssetStore::VISIBILITY_PROTECTED));
         $this->assertEquals($this->protectedHash, $service->get('different-file.txt', $this->protectedFs));
+    }
+
+    public function testInvalidCharacterCacheKey()
+    {
+        $service = new Sha1FileHashingService();
+        // We're using reflection here because the method is private
+        $reflectedMethod = new ReflectionMethod(
+            Sha1FileHashingService::class,
+            'buildCacheKey'
+        );
+        $reflectedMethod->setAccessible(true);
+        // We're using this filename here as it was caught in issue #426
+        $cacheKey = $reflectedMethod->invokeArgs(
+            $service,
+            ['Mit_Teamgeist_zum_großen_Paddelerlebnis.pdf', 'file-system']
+        );
+
+        $this->assertNotContains('/', $cacheKey);
+        // Ensure we get a string back after validating the key and it is therefore valid
+        $this->assertInternalType('string', CacheItem::validateKey($cacheKey));
     }
 }

@@ -178,7 +178,11 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     private function buildCacheKey($fileID, $fs)
     {
         $fsID = $this->getFilesystemKey($fs);
-        return base64_encode(sprintf('%s://%s', $fsID, $fileID));
+        $cacheKey = base64_encode(sprintf('%s://%s', $fsID, $fileID));
+        // base64_encode can contain `/` , but that is not a valid character in cache keys
+        // @see CacheItem::validateKey. We therefore replace it with the url encoded equivalent
+        // from https://tools.ietf.org/html/rfc4648#page-8 which is `_`
+        return strtr($cacheKey, ['/' => '_']);
     }
 
     /**

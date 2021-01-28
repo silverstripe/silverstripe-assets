@@ -2,11 +2,15 @@
 
 namespace SilverStripe\Assets;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\Deprecation;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
+use SplFileInfo;
 
 /**
  * A collection of static methods for manipulating the filesystem.
@@ -59,24 +63,43 @@ class Filesystem
      */
     public static function removeFolder($folder, $contentsOnly = false)
     {
+        if (!is_dir($folder)) {
+            return;
+        }
 
-        // remove a file encountered by a recursive call.
-        if (is_file($folder) || is_link($folder)) {
-            unlink($folder);
-        } else {
-            $dir = opendir($folder);
-            while ($file = readdir($dir)) {
-                if (($file == '.' || $file == '..')) {
-                    continue;
-                } else {
-                    self::removeFolder($folder . '/' . $file);
-                }
+        $contents = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        /** @var SplFileInfo $file */
+        foreach ($contents as $file) {
+            if (!$file->isReadable()) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Unreadable file encountered: %s',
+                    $file->getRealPath()
+                ));
             }
-            closedir($dir);
-            if (!$contentsOnly) {
-                rmdir($folder);
+
+            switch ($file->getType()) {
+                case 'dir':
+                    rmdir($file->getRealPath());
+                    break;
+                case 'link':
+                    unlink($file->getPathname());
+                    break;
+                default:
+                    unlink($file->getRealPath());
             }
         }
+
+        unset($contents);
+
+        if ($contentsOnly) {
+            return;
+        }
+
+        rmdir($folder);
     }
 
     /**

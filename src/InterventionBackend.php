@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use BadMethodCallException;
+use Exception;
 use Intervention\Image\Constraint;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\Exception\NotSupportedException;
@@ -13,9 +14,11 @@ use Intervention\Image\Size;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
@@ -289,6 +292,8 @@ class InterventionBackend implements Image_Backend, Flushable
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
             $error = self::FAILED_INVALID;
+            // Attempt to log the exception
+            self::logException($ex);
         } finally {
             if ($error) {
                 $this->markFailed($hash, $variant, $error);
@@ -324,6 +329,8 @@ class InterventionBackend implements Image_Backend, Flushable
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
             $error = self::FAILED_INVALID;
+            // Attempt to log the exception
+            self::logException($ex);
         } finally {
             if ($error) {
                 $this->markFailed($hash, null, $error);
@@ -380,6 +387,8 @@ class InterventionBackend implements Image_Backend, Flushable
 
             return $result;
         } catch (NotSupportedException $e) {
+            // Attempt to log the exception
+            self::logException($e);
             return null;
         }
     }
@@ -400,6 +409,8 @@ class InterventionBackend implements Image_Backend, Flushable
             }
             $resource->save($path, $this->getQuality());
         } catch (NotWritableException $e) {
+            // Attempt to log the exception
+            self::logException($e);
             return false;
         }
         return true;
@@ -857,5 +868,29 @@ class InterventionBackend implements Image_Backend, Flushable
         // Ensure stream is readable
         $meta = stream_get_meta_data($stream);
         return isset($meta['mode']) && (strstr($meta['mode'], 'r') || strstr($meta['mode'], '+'));
+    }
+
+    /**
+     * If we have a logger we'll add in the information, otherwise we won't log it.
+     * The reason for not always logging it by default and making this opt in, is because
+     * there could be instances where a file is requested multiple times and slowly eats
+     * up the available disk space
+     * By default however we log this in dev mode as we want it to be obvious when happening
+     * @param Exception $exception
+     */
+    private static function logException(Exception $exception)
+    {
+        $hasLogger = Injector::inst()->has(LoggerInterface::class.'.InterventionBackend');
+
+        if ($hasLogger || Director::isDev()) {
+            $loggerKey = $hasLogger
+                ? LoggerInterface::class . '.InterventionBackend'
+                : LoggerInterface::class;
+
+            Injector::inst()->get($loggerKey)->error(
+                $exception->getMessage(),
+                ['exception' => $exception]
+            );
+        }
     }
 }

@@ -2,15 +2,12 @@
 
 namespace SilverStripe\Assets;
 
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\Deprecation;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
-use SplFileInfo;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 /**
  * A collection of static methods for manipulating the filesystem.
@@ -63,43 +60,16 @@ class Filesystem
      */
     public static function removeFolder($folder, $contentsOnly = false)
     {
-        if (!is_dir($folder)) {
+        $fs = new SymfonyFilesystem();
+        $fs->remove($folder);
+
+        if (!$contentsOnly) {
             return;
         }
 
-        $contents = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        /** @var SplFileInfo $file */
-        foreach ($contents as $file) {
-            if (!$file->isReadable()) {
-                throw new \InvalidArgumentException(sprintf(
-                    'Unreadable file encountered: %s',
-                    $file->getRealPath()
-                ));
-            }
-
-            switch ($file->getType()) {
-                case 'dir':
-                    rmdir($file->getRealPath());
-                    break;
-                case 'link':
-                    unlink($file->getPathname());
-                    break;
-                default:
-                    unlink($file->getRealPath());
-            }
-        }
-
-        unset($contents);
-
-        if ($contentsOnly) {
-            return;
-        }
-
-        rmdir($folder);
+        // The Symfony Filesystem doesn't have a method of only removing the contents of a folder,
+        // therefore we need to recreate the folder at the end
+        $fs->mkdir($folder, static::config()->folder_create_mask);
     }
 
     /**

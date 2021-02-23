@@ -73,8 +73,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         // Check if a resize is required
         $src = $record->getURL($allowSessionGrant);
         if ($record instanceof Image) {
-            $width = isset($args['width']) ? $args['width'] : null;
-            $height = isset($args['height']) ? $args['height'] : null;
+            $width = isset($args['width']) ? (int) $args['width'] : null;
+            $height = isset($args['height']) ? (int) $args['height'] : null;
             $hasCustomDimensions = ($width && $height);
             if ($hasCustomDimensions && (($width != $record->getWidth()) || ($height != $record->getHeight()))) {
                 $resized = $record->ResizedImage($width, $height);

@@ -89,6 +89,24 @@ class ImageShortcodeProviderTest extends SapphireTest
             ))
         );
     }
+    
+    public function testShortcodeHandlerDoesNotResampleToNonIntegerImagesSizes()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+
+        $this->assertEquals(
+            sprintf(
+                '<img src="%s" alt="" width="50%" height="auto">',
+                $image->Link()
+            ),
+            $parser->parse(sprintf(
+                '[image id="%d" alt="" width="50%" height="auto"]',
+                $image->ID
+            ))
+        );
+    }
 
     public function testShortcodeHandlerFailsGracefully()
     {

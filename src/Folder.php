@@ -71,12 +71,14 @@ class Folder extends File
 
             // When in archived mode, find or make should not find folders that don't exist
             // We check explicitly for Versioned and if it exists then we'll confirm the reading mode isn't archived
-            $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
-            if ($versioned
-                && strpos($versioned::get_reading_mode(), 'Archive.') !== false) {
-                // We return the searched for folder, it will either be null if it doesn't exist
-                // or the folder if it does exist (at the archived date and time)
-                return $item;
+            if (class_exists(Versioned::class)) {
+                $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
+                if ($versioned
+                    && strpos($versioned::get_reading_mode(), 'Archive.') !== false) {
+                    // We return the searched for folder, it will either be null if it doesn't exist
+                    // or the folder if it does exist (at the archived date and time)
+                    return $item;
+                }
             }
 
             if (!$item) {

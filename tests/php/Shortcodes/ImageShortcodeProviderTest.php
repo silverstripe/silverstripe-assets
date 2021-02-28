@@ -98,11 +98,11 @@ class ImageShortcodeProviderTest extends SapphireTest
 
         $this->assertEquals(
             sprintf(
-                '<img src="%s" alt="" width="50%" height="auto">',
+                '<img src="%s" alt="" width="50%%" height="auto">',
                 $image->Link()
             ),
             $parser->parse(sprintf(
-                '[image id="%d" alt="" width="50%" height="auto"]',
+                '[image id="%d" alt="" width="50%%" height="auto"]',
                 $image->ID
             ))
         );

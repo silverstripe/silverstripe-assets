@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets;
 
+use FilesystemIterator;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\Deprecation;
@@ -61,15 +62,22 @@ class Filesystem
     public static function removeFolder($folder, $contentsOnly = false)
     {
         $fs = new SymfonyFilesystem();
-        $fs->remove($folder);
 
         if (!$contentsOnly) {
+            $fs->remove($folder);
+
             return;
         }
 
-        // The Symfony Filesystem doesn't have a method of only removing the contents of a folder,
-        // therefore we need to recreate the folder at the end
-        $fs->mkdir($folder, static::config()->folder_create_mask);
+        // If we've been asked to only delete the files then we will iterate through them and remove them
+        $files = new FilesystemIterator(
+            $folder,
+            FilesystemIterator::CURRENT_AS_PATHNAME | FilesystemIterator::SKIP_DOTS
+        );
+
+        foreach ($files as $file) {
+            $fs->remove($file);
+        }
     }
 
     /**

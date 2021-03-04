@@ -11,6 +11,7 @@ class FilesystemTest extends SapphireTest
     {
         // Create a temporary folder
         $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'silverstripe-assets';
+        Filesystem::removeFolder($path);
         mkdir($path);
         // Chuck a "normal" folder inside it
         $normalFolderPath = $path . DIRECTORY_SEPARATOR . 'normal';

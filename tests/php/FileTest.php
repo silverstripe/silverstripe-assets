@@ -801,7 +801,7 @@ class FileTest extends SapphireTest
     public function testGetAllowedExtensions($allowedExtensions, $expected)
     {
         Config::modify()->set(File::class, 'allowed_extensions', $allowedExtensions);
-        $this->assertSame($expected, $expected);
+        $this->assertSame(array_values($expected), array_values(File::getAllowedExtensions()));
     }
 
     /**

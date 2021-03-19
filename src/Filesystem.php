@@ -2,11 +2,13 @@
 
 namespace SilverStripe\Assets;
 
+use FilesystemIterator;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\Deprecation;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 /**
  * A collection of static methods for manipulating the filesystem.
@@ -59,23 +61,22 @@ class Filesystem
      */
     public static function removeFolder($folder, $contentsOnly = false)
     {
+        $fs = new SymfonyFilesystem();
 
-        // remove a file encountered by a recursive call.
-        if (is_file($folder) || is_link($folder)) {
-            unlink($folder);
-        } else {
-            $dir = opendir($folder);
-            while ($file = readdir($dir)) {
-                if (($file == '.' || $file == '..')) {
-                    continue;
-                } else {
-                    self::removeFolder($folder . '/' . $file);
-                }
-            }
-            closedir($dir);
-            if (!$contentsOnly) {
-                rmdir($folder);
-            }
+        if (!$contentsOnly) {
+            $fs->remove($folder);
+
+            return;
+        }
+
+        // If we've been asked to only delete the files then we will iterate through them and remove them
+        $files = new FilesystemIterator(
+            $folder,
+            FilesystemIterator::CURRENT_AS_PATHNAME | FilesystemIterator::SKIP_DOTS
+        );
+
+        foreach ($files as $file) {
+            $fs->remove($file);
         }
     }
 

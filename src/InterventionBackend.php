@@ -20,10 +20,14 @@ use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Config\Config;
 
+/**
+ * @property LoggerInterface logger
+ */
 class InterventionBackend implements Image_Backend, Flushable
 {
     use Configurable;
@@ -37,6 +41,13 @@ class InterventionBackend implements Image_Backend, Flushable
      * Cache prefix for dimensions
      */
     const CACHE_DIMENSIONS = 'DIMENSIONS_';
+
+    /**
+     * @var string[]
+     */
+    private static $dependencies = [
+        'logger' => '%$' . LoggerInterface::class . '.quiet',
+    ];
 
     /**
      * Is cache flushing enabled?
@@ -293,7 +304,7 @@ class InterventionBackend implements Image_Backend, Flushable
             // Unsupported exceptions are handled without being raised as exceptions
             $error = self::FAILED_INVALID;
             // Attempt to log the exception
-            self::logException($ex);
+            $this->logException($ex);
         } finally {
             if ($error) {
                 $this->markFailed($hash, $variant, $error);
@@ -330,7 +341,7 @@ class InterventionBackend implements Image_Backend, Flushable
             // Unsupported exceptions are handled without being raised as exceptions
             $error = self::FAILED_INVALID;
             // Attempt to log the exception
-            self::logException($ex);
+            $this->logException($ex);
         } finally {
             if ($error) {
                 $this->markFailed($hash, null, $error);
@@ -388,7 +399,7 @@ class InterventionBackend implements Image_Backend, Flushable
             return $result;
         } catch (NotSupportedException $e) {
             // Attempt to log the exception
-            self::logException($e);
+            $this->logException($e);
             return null;
         }
     }
@@ -410,7 +421,7 @@ class InterventionBackend implements Image_Backend, Flushable
             $resource->save($path, $this->getQuality());
         } catch (NotWritableException $e) {
             // Attempt to log the exception
-            self::logException($e);
+            $this->logException($e);
             return false;
         }
         return true;
@@ -531,7 +542,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getWidth()
     {
-        list($width) = $this->getDimensions();
+        [$width] = $this->getDimensions();
         return (int)$width;
     }
 
@@ -540,7 +551,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function getHeight()
     {
-        list(, $height) = $this->getDimensions();
+        [, $height] = $this->getDimensions();
         return (int)$height;
     }
 
@@ -871,26 +882,22 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * If we have a logger we'll add in the information, otherwise we won't log it.
-     * The reason for not always logging it by default and making this opt in, is because
-     * there could be instances where a file is requested multiple times and slowly eats
-     * up the available disk space
-     * By default however we log this in dev mode as we want it to be obvious when happening
+     * If a file operation is erroring we can quickly eat up disk space with these exceptions.
+     * Therefore we only want to log these errors in production if the logging is enabled.
+     *
+     * We always log when in dev mode to try and alert developers to errors that can exist
+     *
      * @param Exception $exception
      */
-    private static function logException(Exception $exception)
+    private function logException(Exception $exception)
     {
-        $hasLogger = Injector::inst()->has(LoggerInterface::class.'.InterventionBackend');
+        $isEnabled = Environment::getEnv('InterventionBackend_EnableExceptionLogging')
+            || Director::isDev();
 
-        if ($hasLogger || Director::isDev()) {
-            $loggerKey = $hasLogger
-                ? LoggerInterface::class . '.InterventionBackend'
-                : LoggerInterface::class;
-
-            Injector::inst()->get($loggerKey)->error(
-                $exception->getMessage(),
-                ['exception' => $exception]
-            );
+        if (!$isEnabled) {
+            return;
         }
+
+        $this->logger->error($exception->getMessage(), ['exception' => $exception]);
     }
 }

@@ -20,8 +20,10 @@ class InterventionBackendTest extends SapphireTest
 
     public function testExceptionsCanGetLogged()
     {
+        // Set up the test logger
         $logger = new TestLogger();
-        Injector::inst()->registerService($logger, LoggerInterface::class . '.InterventionBackend');
+        Injector::inst()->registerService($logger, LoggerInterface::class . '.quiet');
+
         /** @var Image $image */
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         // We need to use an actual image otherwise we can't get the backend instance
@@ -40,7 +42,7 @@ class InterventionBackendTest extends SapphireTest
 
         // Check it was recorded
         $this->assertTrue($logger->hasErrorRecords());
-        $this->assertTrue($logger->hasDebugThatContains('File not readable'));
+        $this->assertTrue($logger->hasErrorThatContains('File not readable'));
 
         // Clean up afterwards
         $image->delete();

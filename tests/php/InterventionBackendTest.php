@@ -8,7 +8,10 @@ use Psr\Log\Test\TestLogger;
 use ReflectionMethod;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\InterventionBackend;
+use SilverStripe\Core\CoreKernel;
+use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Kernel;
 use SilverStripe\Dev\SapphireTest;
 
 class InterventionBackendTest extends SapphireTest
@@ -43,6 +46,18 @@ class InterventionBackendTest extends SapphireTest
         // Check it was recorded
         $this->assertTrue($logger->hasErrorRecords());
         $this->assertTrue($logger->hasErrorThatContains('File not readable'));
+
+        // Ensure logs are sent in live
+        /** @var CoreKernel $kernal */
+        $kernal = Injector::inst()->get(Kernel::class);
+        $kernal->setEnvironment(Kernel::LIVE);
+        $reflectedMethod->invokeArgs($backend, [new NotReadableException('Logs are not sent in live')]);
+        $this->assertFalse($logger->hasErrorThatContains('Logs are not sent in live'));
+
+        // Ensure logs are sent in live when enabled
+        Environment::setEnv('InterventionBackend_EnableExceptionLogging', true);
+        $reflectedMethod->invokeArgs($backend, [new NotReadableException('Ensure logs are sent in live when enabled')]);
+        $this->assertTrue($logger->hasErrorThatContains('Ensure logs are sent in live when enabled'));
 
         // Clean up afterwards
         $image->delete();

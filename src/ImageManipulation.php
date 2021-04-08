@@ -4,6 +4,7 @@ namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
 use LogicException;
+use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
@@ -1001,7 +1002,7 @@ trait ImageManipulation
     public function manipulateExtension(string $newExtension, callable $callback)
     {
         $pathParts = pathinfo($this->getFilename());
-        $variant = $this->variantName('extRewrite', $pathParts['extension'], $newExtension);
+        $variant = $this->variantName(FileIDHelper::EXTENSION_REWRITE_VARIANT, $pathParts['extension'], $newExtension);
         return $this->manipulate($variant, $callback);
     }
 

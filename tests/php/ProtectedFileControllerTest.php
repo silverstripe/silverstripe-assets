@@ -206,6 +206,21 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(200, $variantContent, $result);
     }
 
+    public function testAccessDraftFiles()
+    {
+        $this->logOut();
+
+        $file = $this->objFromFixture(File::class, 'asdf');
+        $file->doUnpublish();
+
+        $result = $this->get($file->FileFilename);
+        $this->assertEquals(404, $result->getStatusCode());
+
+        $this->logInAs('assetadmin');
+        $result = $this->get($file->FileFilename);
+        $this->assertEquals(200, $result->getStatusCode());
+    }
+
     /**
      * Test that access to folders is not permitted
      *

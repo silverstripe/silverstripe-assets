@@ -27,6 +27,7 @@ use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Security;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * Asset store based on flysystem Filesystem as a backend
@@ -1030,7 +1031,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 return true;
             }
             if ($member = Security::getCurrentUser()) {
-                $file = File::get()->filter(['FileFilename' => $parsedFileID->getFilename()])->first();
+                $params = ['FileFilename' => $parsedFileID->getFilename()];
+                if (File::singleton()->hasExtension(Versioned::class)) {
+                    $file = Versioned::withVersionedMode(function () use ($params) {
+                        Versioned::set_stage(Versioned::DRAFT);
+                        return File::get()->filter($params)->first();
+                    });
+                } else {
+                    $file = File::get()->filter($params)->first();
+                }
                 if ($file) {
                     return (bool) $file->canView($member);
                 }

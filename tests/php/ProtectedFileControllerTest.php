@@ -213,11 +213,12 @@ class ProtectedFileControllerTest extends FunctionalTest
         $file = $this->objFromFixture(File::class, 'asdf');
         $file->doUnpublish();
 
-        $result = $this->get($file->FileFilename);
-        $this->assertEquals(404, $result->getStatusCode());
+
+        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $this->assertEquals(403, $result->getStatusCode());
 
         $this->logInAs('assetadmin');
-        $result = $this->get($file->FileFilename);
+        $result = $this->get('assets/55b443b601/FileTest.txt');
         $this->assertEquals(200, $result->getStatusCode());
     }
 

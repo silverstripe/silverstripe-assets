@@ -220,6 +220,16 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->logInAs('assetadmin');
         $result = $this->get('assets/55b443b601/FileTest.txt');
         $this->assertEquals(200, $result->getStatusCode());
+
+        $this->logOut();
+        $fileID = 'assets/restricted-view-folder/55b443b601/File4.txt';
+        $result = $this->get($fileID);
+        $this->assertEquals(403, $result->getStatusCode());
+
+        $this->logInAs('assetadmin');
+        $result = $this->get($fileID);
+        $this->assertEquals(200, $result->getStatusCode());
+
     }
 
     /**

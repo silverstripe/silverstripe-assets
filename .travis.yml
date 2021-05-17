@@ -5,8 +5,7 @@ import:
 
 env:
   global:
-    - COMPOSER_ROOT_VERSION="1.x-dev"
-    - REQUIRE_RECIPE="4.x-dev"
+    - REQUIRE_RECIPE="4.8.x-dev"
     - PHPUNIT_COVERAGE_SUITE="assets"
 
 #before_script:

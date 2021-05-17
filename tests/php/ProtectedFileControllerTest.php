@@ -229,7 +229,6 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->logInAs('assetadmin');
         $result = $this->get($fileID);
         $this->assertEquals(200, $result->getStatusCode());
-
     }
 
     /**

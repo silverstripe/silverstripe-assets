@@ -11,6 +11,7 @@ use SilverStripe\Assets\Storage\ProtectedFileController;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
+use SilverStripe\Versioned\Versioned;
 
 /**
  * @skipUpgrade
@@ -204,6 +205,104 @@ class ProtectedFileControllerTest extends FunctionalTest
         $this->assertResponseEquals(200, $expectedContent, $result);
         $result = $this->get($fileVariantID);
         $this->assertResponseEquals(200, $variantContent, $result);
+    }
+
+    public function testAccessDraftFiles()
+    {
+        $this->logOut();
+
+        /* @var File $file */
+        $file = $this->objFromFixture(File::class, 'asdf');
+        $file->doUnpublish();
+
+        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $this->assertEquals(403, $result->getStatusCode());
+
+        $this->logInAs('assetadmin');
+        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $this->assertEquals(200, $result->getStatusCode());
+
+        $this->logOut();
+        $fileID = 'assets/restricted-view-folder/55b443b601/File4.txt';
+        $result = $this->get($fileID);
+        $this->assertEquals(403, $result->getStatusCode());
+
+        $this->logInAs('assetadmin');
+        $result = $this->get($fileID);
+        $this->assertEquals(200, $result->getStatusCode());
+
+        $this->logOut();
+        // Rename a file. Inaccessible on draft
+        Versioned::withVersionedMode(function () use ($file) {
+            Versioned::set_stage(Versioned::DRAFT);
+            $file->renameFile('renamed.txt');
+            $result = $this->get('assets/55b443b601/renamed.txt');
+            $this->assertEquals(403, $result->getStatusCode());
+        });
+        // Public one is gone after renaming
+        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $this->assertEquals(404, $result->getStatusCode());
+
+        $restrictedFile = $this->objFromFixture(File::class, 'restrictedViewFolder-file4');
+
+        // Restricted file keeps two copies in protected store
+        Versioned::withVersionedMode(function () use ($restrictedFile) {
+            Versioned::set_stage(Versioned::DRAFT);
+            $restrictedFile->renameFile('restricted-view-folder/restricted-renamed.txt');
+            $result = $this->get('assets/restricted-view-folder/55b443b601/restricted-renamed.txt');
+            $this->assertEquals(403, $result->getStatusCode());
+            // Old file name is also still there, but inaccessible
+            $result = $this->get('assets/restricted-view-folder/55b443b601/File4.txt');
+            $this->assertEquals(403, $result->getStatusCode());
+        });
+
+        // Original file is also still there, but inaceessible
+        $result = $this->get('assets/restricted-view-folder/55b443b601/File4.txt');
+        $this->assertEquals(403, $result->getStatusCode());
+
+        $this->logInAs('assetadmin');
+        Versioned::withVersionedMode(function () use ($file) {
+            Versioned::set_stage(Versioned::DRAFT);
+            $result = $this->get('assets/55b443b601/renamed.txt');
+            $this->assertEquals(200, $result->getStatusCode());
+        });
+
+        // Public one is still gone, even when logged in
+        $result = $this->get('assets/55b443b601/FileTest.txt');
+        $this->assertEquals(404, $result->getStatusCode());
+
+        // Restricted file keeps two copies in protected store
+        Versioned::withVersionedMode(function () {
+            Versioned::set_stage(Versioned::DRAFT);
+            $result = $this->get('assets/restricted-view-folder/55b443b601/restricted-renamed.txt');
+            $this->assertEquals(200, $result->getStatusCode());
+            // Old file name is also still there, but inaccessible
+            $result = $this->get('assets/restricted-view-folder/55b443b601/File4.txt');
+            $this->assertEquals(403, $result->getStatusCode());
+        });
+
+        // Original file is also still there, but inaccessible
+        $result = $this->get('assets/restricted-view-folder/55b443b601/File4.txt');
+        $this->assertEquals(403, $result->getStatusCode());
+
+        $file->publishRecursive();
+        $restrictedFile->publishRecursive();
+
+        $this->logOut();
+
+        $result = $this->get('assets/renamed.txt');
+        $this->assertEquals(200, $result->getStatusCode());
+
+        $result = $this->get('assets/restricted-view-folder/55b443b601/restricted-renamed.txt');
+        $this->assertEquals(403, $result->getStatusCode());
+        // Old file name is gone
+        $result = $this->get('assets/restricted-view-folder/55b443b601/File4.txt');
+        $this->assertEquals(404, $result->getStatusCode());
+
+        // New file only accessible to admin
+        $this->logInAs('assetadmin');
+        $result = $this->get('assets/restricted-view-folder/55b443b601/restricted-renamed.txt');
+        $this->assertEquals(200, $result->getStatusCode());
     }
 
     /**

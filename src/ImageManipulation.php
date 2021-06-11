@@ -1037,7 +1037,7 @@ trait ImageManipulation
      * @param string $dimension Name of dimension
      * @return int Validated value
      */
-    protected function castDimension($value, $dimension)
+    public function castDimension($value, $dimension)
     {
         // Check type
         if (!is_numeric($value)) {

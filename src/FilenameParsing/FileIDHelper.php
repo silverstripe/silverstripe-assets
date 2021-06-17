@@ -11,6 +11,11 @@ interface FileIDHelper
 {
 
     /**
+     * A special variant type that can be used to encode a variant filename with a different extension.
+     */
+    const EXTENSION_REWRITE_VARIANT = 'extRewrite';
+
+    /**
      * Map file tuple (hash, name, variant) to a filename to be used by flysystem
      *
      * @param string|ParsedFileID $filename Name of file or ParsedFileID object

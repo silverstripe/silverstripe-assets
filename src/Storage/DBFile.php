@@ -628,4 +628,12 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
             ->getStore()
             ->copy($this->Filename, $this->Hash, $newName);
     }
+
+    public function ToImage(): ?AssetContainer
+    {
+        $image = null;
+        $this->extend('ToImage', $image);
+
+        return $image;
+    }
 }

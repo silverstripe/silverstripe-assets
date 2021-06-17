@@ -14,6 +14,7 @@ use InvalidArgumentException;
 use LogicException;
 use Psr\Http\Message\StreamInterface;
 use Psr\SimpleCache\CacheInterface;
+use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Configurable;
@@ -364,7 +365,9 @@ class InterventionBackend implements Image_Backend, Flushable
             }
 
             // Save file
-            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $url = $assetStore->getAsURL($filename, $hash, $variant, false);
+            $extension = pathinfo($url, PATHINFO_EXTENSION);
+
             $result = $assetStore->setFromString(
                 $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,

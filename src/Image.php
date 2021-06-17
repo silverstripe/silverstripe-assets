@@ -2,6 +2,9 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Assets\Storage\AssetContainer;
+use SilverStripe\Assets\Storage\DBFile;
+
 /**
  * Represents an Image
  */
@@ -59,5 +62,16 @@ class Image extends File
         }
         $this->extend('updatePreviewLink', $link, $action);
         return $link;
+    }
+
+    public function ToImage(): ?AssetContainer
+    {
+        $image = parent::ToImage();
+
+        if (empty($image)) {
+            $image = $this->File;
+        }
+
+        return $image;
     }
 }

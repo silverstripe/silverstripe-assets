@@ -17,6 +17,7 @@ use SilverStripe\Core\Injector\Injectable;
 class NaturalFileIDHelper implements FileIDHelper
 {
     use Injectable;
+    use AlternativeFileExtensionTrait;
 
     public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
     {
@@ -30,6 +31,10 @@ class NaturalFileIDHelper implements FileIDHelper
         if ($cleanfilename) {
             $filename = $this->cleanFilename($filename);
         }
+        if ($variant) {
+            $filename = $this->rewriteVariantExtension($filename, $variant);
+        }
+
         $name = basename($filename);
 
         // Split extension
@@ -80,10 +85,16 @@ class NaturalFileIDHelper implements FileIDHelper
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = isset($matches['variant']) ? $matches['variant'] : '';
+
+        if (isset($variant)) {
+            $filename = $this->restoreOriginalExtension($filename, $variant);
+        }
+
         return new ParsedFileID(
             $filename,
             '',
-            isset($matches['variant']) ? $matches['variant'] : '',
+            $variant,
             $fileID
         );
     }

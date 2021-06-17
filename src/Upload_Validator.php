@@ -152,7 +152,7 @@ class Upload_Validator
      * array('*' => 200, 'jpg' => 1000, '[doc]' => '5m')
      * </code>
      *
-     * @param array|int $rules
+     * @param array|int|string $rules
      */
     public function setAllowedMaxFileSize($rules)
     {

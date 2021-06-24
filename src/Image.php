@@ -25,6 +25,15 @@ class Image extends File
      */
     private static $plural_name = "Images";
 
+    /**
+     * Globally control whether Images added via the WYSIWYG editor or inserted as Image objects in Silverstripe
+     * templates have the loading="lazy" HTML added by default
+     *
+     * @config
+     * @var bool
+     */
+    private static $lazy_loading_enabled = true;
+
     public function __construct($record = null, $isSingleton = false, $queryParams = [])
     {
         parent::__construct($record, $isSingleton, $queryParams);
@@ -59,5 +68,13 @@ class Image extends File
         }
         $this->extend('updatePreviewLink', $link, $action);
         return $link;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function getLazyLoadingEnabled(): bool
+    {
+        return self::config()->get('lazy_loading_enabled');
     }
 }

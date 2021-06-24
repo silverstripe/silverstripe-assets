@@ -547,4 +547,13 @@ abstract class ImageTest extends SapphireTest
         $builder->expects($this->any())->method('getIsImage')->will($this->returnValue(true));
         return $builder;
     }
+
+    public function testGetLazyLoadingEnabled()
+    {
+        $this->assertTrue(Image::getLazyLoadingEnabled());
+        Config::withConfig(function () {
+            Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
+            $this->assertFalse(Image::getLazyLoadingEnabled());
+        });
+    }
 }

@@ -540,12 +540,18 @@ abstract class ImageTest extends SapphireTest
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $this->assertTrue($image->IsLazyLoaded(), 'Images lazy load by default');
 
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" loading="lazy" width="300" height="300" />';
+        $actual = trim($image->getTag());
+        $this->assertEquals($expected, $actual, 'Lazy load img tag renders correctly');
+
         $image->LazyLoad(false);
         $this->assertFalse($image->IsLazyLoaded(), 'Images can be eager loaded on a per-image basis');
 
         $image->LazyLoad(true);
         Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
         $this->assertFalse($image->IsLazyLoaded(), 'Lazy loading can be disabled globally');
+
+        Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
     }
 
     /**

@@ -59,6 +59,13 @@ trait ImageManipulation
     protected $allowGeneration = true;
 
     /**
+     * If image is lazy loaded
+     *
+     * @var bool
+     */
+    protected $lazyLoad = true;
+
+    /**
      * Set whether image resizes are allowed
      *
      * @param bool $allow
@@ -783,6 +790,31 @@ trait ImageManipulation
     }
 
     /**
+     * Return whether image will be lazy loaded
+     *
+     * @return bool
+     */
+    public function IsLazyLoaded()
+    {
+        if (!Config::inst()->get('SilverStripe\\Assets\\Image', 'lazy_loading_enabled')) {
+            return false;
+        }
+        return $this->lazyLoad;
+    }
+
+    /**
+     * Set whether image will be lazy loaded
+     *
+     * @param bool $lazyLoad
+     * @return $this
+     */
+    public function LazyLoad($lazyLoad)
+    {
+        $this->lazyLoad = $lazyLoad;
+        return $this;
+    }
+
+    /**
      * Get the orientation of this image.
      *
      * @return int ORIENTATION_SQUARE | ORIENTATION_PORTRAIT | ORIENTATION_LANDSCAPE
@@ -951,7 +983,7 @@ trait ImageManipulation
                 $tuple = $result;
                 Deprecation::notice(
                     '5.0',
-                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array 
+                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array
                         containing a tuple and an image backend, i.e. [$tuple, $result]',
                     Deprecation::SCOPE_GLOBAL
                 );

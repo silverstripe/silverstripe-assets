@@ -532,6 +532,22 @@ abstract class ImageTest extends SapphireTest
         $this->assertEquals(99999, $image->getWidth());
     }
 
+    public function testLazyLoad()
+    {
+        Config::modify()->set(Image::class, 'lazy_loading_enabled', true);
+
+        /** @var Image $image */
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $this->assertTrue($image->IsLazyLoaded(), 'Images lazy load by default');
+
+        $image->LazyLoad(false);
+        $this->assertFalse($image->IsLazyLoaded(), 'Images can be eager loaded on a per-image basis');
+
+        $image->LazyLoad(true);
+        Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
+        $this->assertFalse($image->IsLazyLoaded(), 'Lazy loading can be disabled globally');
+    }
+
     /**
      * @param $filename
      * @param $hash

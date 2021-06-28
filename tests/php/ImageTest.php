@@ -63,7 +63,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" loading="lazy" width="300" height="300" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -91,7 +91,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="test image" />';
+        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="test image" loading="lazy" width="300" height="300" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -102,7 +102,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
-        $expected = '<img src="/assets/ImageTest/folder/test.image.with.dots.png" alt="test.image.with.dots" />';
+        $expected = '<img src="/assets/ImageTest/folder/test.image.with.dots.png" alt="test.image.with.dots" loading="lazy" width="300" height="300" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -534,24 +534,32 @@ abstract class ImageTest extends SapphireTest
 
     public function testLazyLoad()
     {
-        Config::modify()->set(Image::class, 'lazy_loading_enabled', true);
+        Config::withConfig(function () {
+            Config::modify()->set(Image::class, 'lazy_loading_enabled', true);
 
-        /** @var Image $image */
-        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $this->assertTrue($image->IsLazyLoaded(), 'Images lazy load by default');
+            /** @var Image $image */
+            $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+            $this->assertTrue($image->getIsLazyLoaded(), 'Images lazy load by default');
 
-        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" loading="lazy" width="300" height="300" />';
-        $actual = trim($image->getTag());
-        $this->assertEquals($expected, $actual, 'Lazy load img tag renders correctly');
+            $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" loading="lazy" width="300" height="300" />';
+            $actual = trim($image->getTag());
+            $this->assertEquals($expected, $actual, 'Lazy load img tag renders correctly');
 
-        $image->LazyLoad(false);
-        $this->assertFalse($image->IsLazyLoaded(), 'Images can be eager loaded on a per-image basis');
+            $image->LazyLoad(false);
+            $this->assertFalse($image->getIsLazyLoaded(), 'Images can be eager loaded on a per-image basis');
 
-        $image->LazyLoad(true);
-        Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
-        $this->assertFalse($image->IsLazyLoaded(), 'Lazy loading can be disabled globally');
+            $image->LazyLoad(true);
+            Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
+            $this->assertFalse($image->getIsLazyLoaded(), 'Lazy loading can be disabled globally');
 
-        Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
+            Config::modify()->set(Image::class, 'lazy_loading_enabled', true);
+
+            $mockBackend = $this->getMockBuilder(InterventionBackend::class)->getMock();
+            $mockBackend->expects($this->any())->method('getWidth')->will($this->returnValue(0));
+            $image->setImageBackend($mockBackend);
+            $this->assertEquals(0, $image->getWidth(), 'Image does not have dimensions');
+            $this->assertFalse($image->getIsLazyLoaded(), 'Lazy loading is disabled if image does not have dimensions');
+        });
     }
 
     /**

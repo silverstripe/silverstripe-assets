@@ -63,7 +63,7 @@ trait ImageManipulation
      *
      * @var bool
      */
-    protected $lazyLoad = true;
+    private $lazyLoad = true;
 
     /**
      * Set whether image resizes are allowed
@@ -794,24 +794,34 @@ trait ImageManipulation
      *
      * @return bool
      */
-    public function IsLazyLoaded()
+    public function getIsLazyLoaded() : bool
     {
-        if (!Config::inst()->get('SilverStripe\\Assets\\Image', 'lazy_loading_enabled')) {
-            return false;
+        if (Image::getLazyLoadingEnabled() && $this->getWidth() && $this->getHeight()) {
+            return $this->lazyLoad;
         }
-        return $this->lazyLoad;
+        return false;
     }
 
     /**
      * Set whether image will be lazy loaded
      *
      * @param bool $lazyLoad
-     * @return $this
+     * @return self $this
      */
-    public function LazyLoad($lazyLoad)
+    public function LazyLoad(bool $lazyLoad): self
     {
         $this->lazyLoad = $lazyLoad;
         return $this;
+    }
+
+    /**
+     * Get whether image will be lazy loaded
+     *
+     * @return bool
+     */
+    public function getLazyLoad(): bool
+    {
+        return $this->lazyLoad;
     }
 
     /**

@@ -172,6 +172,10 @@ class FileTest extends SapphireTest
         $this->assertFalse($pdf->getIsImage());
         $this->assertTrue($pdf->exists());
         $this->assertNull($pdf->Pad(100, 100));
+        Config::withConfig(function () use ($pdf) {
+            Config::modify()->set(Image::class, 'lazy_loading_enabled', true);
+            $this->assertFalse($pdf->getIsLazyLoaded());
+        });
 
         // Non-existant image
         $image = new Image();

@@ -42,6 +42,9 @@ use SilverStripe\View\HTML;
  * - Icon()
  * - CMSThumbnail()
  *
+ * Other manipulations that do not create variants:
+ * - LazyLoad()
+ *
  * @mixin AssetContainer
  */
 trait ImageManipulation
@@ -57,6 +60,12 @@ trait ImageManipulation
      * @var bool
      */
     protected $allowGeneration = true;
+
+    /**
+     * List of attributes to render on the frontend
+     * @var array
+     */
+    protected $attributes = [];
 
     /**
      * Set whether image resizes are allowed
@@ -951,7 +960,7 @@ trait ImageManipulation
                 $tuple = $result;
                 Deprecation::notice(
                     '5.0',
-                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array 
+                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array
                         containing a tuple and an image backend, i.e. [$tuple, $result]',
                     Deprecation::SCOPE_GLOBAL
                 );
@@ -980,6 +989,9 @@ trait ImageManipulation
         if ($manipulationResult instanceof Image_Backend) {
             $file->setImageBackend($manipulationResult);
         }
+
+        // Copy our existing attributes to the new object
+        $file->initAttributes($this->attributes);
 
         return $file->setOriginal($this);
     }
@@ -1056,5 +1068,205 @@ trait ImageManipulation
             throw new InvalidArgumentException("{$dimension} must be positive");
         }
         return $value;
+    }
+
+    /**
+     * Create an equivalent DBFile object
+     * @return AssetContainer
+     */
+    private function copyImageBackend(): AssetContainer
+    {
+        // Store result in new DBFile instance
+        /** @var DBFile $file */
+        $file = DBField::create_field(
+            'DBFile',
+            [
+                'Filename' => $this->getFilename(),
+                'Hash' => $this->getHash(),
+                'Variant' => $this->getVariant()
+            ]
+        );
+
+        $backend = $this->getImageBackend();
+        if ($backend) {
+            $file->setImageBackend($backend);
+        }
+
+        return $file->setOriginal($this);
+    }
+
+    /**
+     * Add a HTML attribute when rendering this object. This method is immutable, it will return you a copy of the
+     * original object.
+     * @param string $name
+     * @param mixed $value
+     * @return AssetContainer
+     */
+    public function setAttribute($name, $value)
+    {
+        $file = $this->copyImageBackend();
+        $file->initAttributes(array_merge(
+            $this->attributes,
+            [$name => $value]
+        ));
+
+        return $file;
+    }
+
+    /**
+     * Initialise the attirbutes on this object. Should only be called imiditely after intialising the object.
+     * @param array $attributes
+     * @internal
+     */
+    public function initAttributes(array $attributes)
+    {
+        // This would normally be in a constructor, but there's no way for a trait to interact with that.
+        $this->attributes = $attributes;
+    }
+
+    /**
+     * Retrieve the value of an HTML attribute
+     * @param $name
+     * @return mixed|null
+     */
+    public function getAttribute($name)
+    {
+        $attributes = $this->getAttributes();
+
+        if (isset($attributes[$name])) {
+            return $attributes[$name];
+        }
+
+        return null;
+    }
+
+    /**
+     * Allows customization through an 'updateAttributes' hook on the base class.
+     * Existing attributes are passed in as the first argument and can be manipulated,
+     * but any attributes added through a subclass implementation won't be included.
+     *
+     * @return array
+     */
+    public function getAttributes()
+    {
+        $attributes = [];
+        if ($this->getIsImage()) {
+            $attributes = [
+                'width' => $this->getWidth(),
+                'height' => $this->getHeight(),
+                'alt' => $this->getTitle(),
+                'src' => $this->getURL()
+            ];
+
+            if ($this->IsLazyLoaded()) {
+                $attributes['loading'] = 'lazy';
+            }
+        }
+
+        $attributes = array_merge($attributes, $this->attributes);
+
+        if (isset($attributes['loading']) && $attributes['loading'] === 'eager') {
+            unset($attributes['loading']);
+        }
+
+        $this->extend('updateAttributes', $attributes);
+
+        return $attributes;
+    }
+
+    /**
+     * Custom attributes to process. Falls back to {@link getAttributes()}.
+     *
+     * If at least one argument is passed as a string, all arguments act as excludes, by name.
+     *
+     * @param array $attributes
+     * @return string
+     */
+    public function getAttributesHTML($attributes = null)
+    {
+        $exclude = null;
+
+        if (is_string($attributes)) {
+            $exclude = func_get_args();
+        }
+
+        if (!$attributes || is_string($attributes)) {
+            $attributes = $this->getAttributes();
+        }
+
+        $attributes = (array) $attributes;
+
+        $attributes = array_filter($attributes, function ($v) {
+            return ($v || $v === 0 || $v === '0');
+        });
+
+        if ($exclude) {
+            $attributes = array_diff_key(
+                $attributes,
+                array_flip($exclude)
+            );
+        }
+
+        // Create markup
+        $parts = [];
+
+        foreach ($attributes as $name => $value) {
+            if ($value === true) {
+                $value = $name;
+            } else {
+                if (is_scalar($value)) {
+                    $value = (string) $value;
+                } else {
+                    $value = json_encode($value);
+                }
+            }
+
+            $parts[] = sprintf('%s="%s"', Convert::raw2att($name), Convert::raw2att($value));
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * Determine whether the image should be lazy loaded
+     *
+     * @return bool
+     */
+    public function IsLazyLoaded(): bool
+    {
+        if (Image::getLazyLoadingEnabled() && $this->getIsImage()) {
+            return empty($this->attributes['loading']) || $this->attributes['loading'] === 'lazy';
+        }
+        return false;
+    }
+
+    /**
+     * Set the lazy loading state for this Image
+     * @param mixed $lazyLoad
+     * @return AssetContainer
+     */
+    public function LazyLoad($lazyLoad): AssetContainer
+    {
+        if (!Image::getLazyLoadingEnabled() || !$this->getIsImage()) {
+            return $this;
+        }
+
+        if (is_string($lazyLoad)) {
+            $lazyLoad = strtolower($lazyLoad);
+        }
+
+        $equivalence = [
+            'eager' => [false, 0, '0', 'false', 'eager'],
+            'lazy' => [true, 1, '1', 'true', 'lazy'],
+        ];
+
+        foreach ($equivalence as $loading => $vals) {
+            foreach ($vals as $val) {
+                if ($val === $lazyLoad) {
+                    return $this->setAttribute('loading', $loading);
+                }
+            }
+        }
+        return $this;
     }
 }

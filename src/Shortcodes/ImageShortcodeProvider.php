@@ -71,6 +71,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Check if a resize is required
+        $width = null;
+        $height = null;
         $src = $record->getURL($allowSessionGrant);
         if ($record instanceof Image) {
             $width = isset($args['width']) ? (int) $args['width'] : null;
@@ -84,6 +86,9 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
                 }
             }
         }
+
+        // Determine whether loading="lazy" is set
+        $args = self::updateLoadingValue($args, $width, $height);
 
         // Build the HTML tag
         $attrs = array_merge(
@@ -178,5 +183,30 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         return Image::create([
             'Title' => _t(__CLASS__ . '.IMAGENOTFOUND', 'Image not found'),
         ]);
+    }
+
+    /**
+     * Updated the loading attribute which is used to either lazy-load or eager-load images
+     * Eager-load is the default browser behaviour so when eager loading is specified, the
+     * loading attribute is omitted
+     *
+     * @param array $args
+     * @param int|null $width
+     * @param int|null $height
+     * @return array
+     */
+    private static function updateLoadingValue(array $args, ?int $width, ?int $height): array
+    {
+        if (!Image::getLazyLoadingEnabled()) {
+            return $args;
+        }
+        if (isset($args['loading']) && $args['loading'] == 'eager') {
+            // per image override - unset the loading attribute unset to eager load (default browser behaviour)
+            unset($args['loading']);
+        } elseif ($width && $height) {
+            // width and height must be present to prevent content shifting
+            $args['loading'] = 'lazy';
+        }
+        return $args;
     }
 }

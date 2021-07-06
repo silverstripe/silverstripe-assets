@@ -25,11 +25,6 @@ class Image extends File
      */
     private static $plural_name = "Images";
 
-    private static $casting = [
-        'AttributesHTML' => 'HTMLFragment',
-        'getAttributesHTML' => 'HTMLFragment',
-    ];
-
     /**
      * Globally control whether Images added via the WYSIWYG editor or inserted as Image objects in Silverstripe
      * templates have the loading="lazy" HTML added by default

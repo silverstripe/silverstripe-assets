@@ -48,7 +48,7 @@ class DBFileTest extends SapphireTest
         $this->assertFileExists($fish);
         $obj->MyFile->setFromLocalFile($fish, 'awesome-fish.jpg');
         $this->assertEquals(
-            '<img src="/mysite/assets/a870de278b/awesome-fish.jpg" alt="awesome-fish.jpg" />',
+            '<img width="300" height="300" alt="awesome-fish.jpg" src="/mysite/assets/a870de278b/awesome-fish.jpg" loading="lazy" />',
             trim($obj->MyFile->forTemplate())
         );
 

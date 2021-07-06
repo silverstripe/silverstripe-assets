@@ -148,7 +148,7 @@ class ImageManipulationTest extends SapphireTest
                 'src' => $image->getURL(),
                 'loading' => 'lazy'
             ],
-            $image->getAttributes(),
+            $image->getAttributes()
         );
 
         $this->assertEquals(

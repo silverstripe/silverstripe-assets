@@ -290,8 +290,6 @@ class ImageManipulationTest extends SapphireTest
             '0 (int)' => [0, false],
             '0 (string)' => ['0', false],
             'false (string)' => ['false', false],
-            'eager (lowercase)' => ['eager', false],
-            'eager (mixed)' => ['EaGeR', false],
             'false (uppercase)' => ['FALSE', false],
 
             'true (bool)' => [true, true],
@@ -299,8 +297,6 @@ class ImageManipulationTest extends SapphireTest
             '1 (string)' => ['1', true],
             'true (string)' => ['true', true],
             'true (mixed case)' => ['tRuE', true],
-            'lazy (string)' => ['lazy', true],
-            'lazy (uppercase)' => ['LAZY', true],
         ];
     }
 
@@ -333,7 +329,9 @@ class ImageManipulationTest extends SapphireTest
             'negative value' => [-1],
             'empty string' => [''],
             'number other than 1' => [2],
-            'invalid string' => ['nonsense']
+            'invalid string' => ['nonsense'],
+            'eager' => ['eager'],
+            'lazy' => ['lazy']
         ];
     }
 

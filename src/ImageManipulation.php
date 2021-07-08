@@ -1256,8 +1256,8 @@ trait ImageManipulation
         }
 
         $equivalence = [
-            'eager' => [false, 0, '0', 'false', 'eager'],
-            'lazy' => [true, 1, '1', 'true', 'lazy'],
+            'eager' => [false, 0, '0', 'false'],
+            'lazy' => [true, 1, '1', 'true'],
         ];
 
         foreach ($equivalence as $loading => $vals) {

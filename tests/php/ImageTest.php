@@ -63,7 +63,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="This is a image Title" />';
+        $expected = '<img width="300" height="300" alt="This is a image Title" src="/assets/ImageTest/folder/test-image.png" loading="lazy" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -91,7 +91,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $expected = '<img src="/assets/ImageTest/folder/test-image.png" alt="test image" />';
+        $expected = '<img width="300" height="300" alt="test image" src="/assets/ImageTest/folder/test-image.png" loading="lazy" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);
@@ -102,7 +102,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
-        $expected = '<img src="/assets/ImageTest/folder/test.image.with.dots.png" alt="test.image.with.dots" />';
+        $expected = '<img width="300" height="300" alt="test.image.with.dots" src="/assets/ImageTest/folder/test.image.with.dots.png" loading="lazy" />';
         $actual = trim($image->getTag());
 
         $this->assertEquals($expected, $actual);

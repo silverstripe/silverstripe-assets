@@ -113,7 +113,10 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         'MimeType' => 'Varchar',
         'String' => 'Text',
         'Tag' => 'HTMLFragment',
-        'Size' => 'Varchar'
+        'getTag' => 'HTMLFragment',
+        'Size' => 'Varchar',
+        'AttributesHTML' => 'HTMLFragment',
+        'getAttributesHTML' => 'HTMLFragment',
     ];
 
     public function scaffoldFormField($title = null, $params = null)

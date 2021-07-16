@@ -298,7 +298,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Find a File object by the given filename.
      *
      * @param string $filename Filename to search for, including any custom parent directories.
-     * @return File
+     * @return File|null
      */
     public static function find($filename)
     {

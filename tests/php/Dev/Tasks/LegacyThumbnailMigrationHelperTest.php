@@ -41,7 +41,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     }
 
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -61,7 +61,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());

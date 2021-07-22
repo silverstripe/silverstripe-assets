@@ -29,7 +29,7 @@ class ImageManipulationTest extends SapphireTest
 {
     protected static $fixture_file = 'ImageTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -53,7 +53,7 @@ class ImageManipulationTest extends SapphireTest
         ]);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

@@ -25,7 +25,7 @@ class AssetControlExtensionTest extends SapphireTest
         TestObject::class
     ];
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -55,7 +55,7 @@ class AssetControlExtensionTest extends SapphireTest
         $object3->publishSingle();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -224,7 +224,7 @@ class AssetControlExtensionTest extends SapphireTest
         $this->assertEquals(AssetStore::VISIBILITY_PUBLIC, $object3->Header->getVisibility());
     }
 
-    
+
     public function testReplaceWithVariant()
     {
         $store = $this->getAssetStore();
@@ -250,7 +250,7 @@ class AssetControlExtensionTest extends SapphireTest
             $store->exists($v1->getFilename(), $v1->getHash(), 'boom'),
             sprintf('A variant of %s has been created', $v1->getFilename())
         );
-        
+
         // Let's replace the content of the main file and publish it
         $download->setFromString($v2Content, $v2->getFilename());
         $object1->write();

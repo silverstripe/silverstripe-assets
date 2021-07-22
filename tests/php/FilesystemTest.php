@@ -24,7 +24,7 @@ class FilesystemTest extends SapphireTest
      */
     protected $root;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->root = vfsStream::setup(

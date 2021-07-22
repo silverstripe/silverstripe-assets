@@ -44,7 +44,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         return ASSETS_PATH . '/TagsToShortcodeHelperTest';
     }
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->setupAssetStore();
@@ -67,7 +67,7 @@ class TagsToShortcodeHelperTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());

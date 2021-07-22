@@ -40,7 +40,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     private $fileID = 'Sha1FileHashingServiceTest/Pangram.txt';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -59,7 +59,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
         Sha1FileHashingService::flush();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->publicFs->deleteDir('Sha1FileHashingServiceTest');

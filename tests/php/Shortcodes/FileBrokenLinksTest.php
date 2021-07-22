@@ -17,7 +17,7 @@ class FileBrokenLinksTest extends SapphireTest
         EditableObject::class,
     ];
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -25,7 +25,7 @@ class FileBrokenLinksTest extends SapphireTest
         TestAssetStore::activate('FileBrokenLinksTest');
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

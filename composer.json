@@ -26,9 +26,8 @@
         "league/flysystem": "^1.0.70"
     },
     "require-dev": {
+        "silverstripe/recipe-testing": "^1 || dev-two",
         "silverstripe/versioned": "^1@dev",
-        "sminnee/phpunit-mock-objects": "^3.4.5",
-        "sminnee/phpunit": "^5.7.29",
         "squizlabs/php_codesniffer": "^3",
         "mikey179/vfsstream": "^1.6"
     },

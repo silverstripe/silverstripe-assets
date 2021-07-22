@@ -28,7 +28,7 @@ abstract class ImageTest extends SapphireTest
 {
     protected static $fixture_file = 'ImageTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -52,7 +52,7 @@ abstract class ImageTest extends SapphireTest
         ]);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

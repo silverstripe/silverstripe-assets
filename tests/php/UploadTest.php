@@ -35,7 +35,7 @@ class UploadTest extends SapphireTest
     /**
      * {@inheritDoc}
      */
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         Versioned::set_stage(Versioned::DRAFT);
@@ -48,7 +48,7 @@ class UploadTest extends SapphireTest
     /**
      * {@inheritDoc}
      */
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

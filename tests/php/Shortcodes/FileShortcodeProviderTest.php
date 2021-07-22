@@ -23,7 +23,7 @@ class FileShortcodeProviderTest extends SapphireTest
 {
     protected static $fixture_file = '../FileTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->logInWithPermission('ADMIN');
@@ -49,7 +49,7 @@ class FileShortcodeProviderTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

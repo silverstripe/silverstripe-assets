@@ -17,7 +17,7 @@ class AssetAdapterTest extends SapphireTest
 
     protected $originalServer = null;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -38,7 +38,7 @@ class AssetAdapterTest extends SapphireTest
         $this->originalServer = $_SERVER;
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         if ($this->rootDir) {
             Filesystem::removeFolder($this->rootDir);

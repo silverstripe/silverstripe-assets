@@ -4,6 +4,7 @@ namespace SilverStripe\Assets;
 
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
@@ -28,6 +29,7 @@ use SilverStripe\Security\Member;
  */
 class AssetControlExtension extends DataExtension
 {
+    use Configurable;
 
     /**
      * When archiving versioned dataobjects, should assets be archived with them?
@@ -47,11 +49,26 @@ class AssetControlExtension extends DataExtension
     private static $keep_archived_assets = false;
 
     /**
+     * Configurable list of classes to not run this one
+     * This will also exclude subclasses of the excluded class
+     *
+     * @config
+     * @var array
+     */
+    private static $excluded_classes = [];
+
+    /**
      * Ensure that deletes records remove their underlying file assets, without affecting
      * other staged records.
      */
     public function onAfterDelete()
     {
+        foreach (self::config()->get('excluded_classes') as $class) {
+            if (is_a($this->owner, $class)) {
+                return;
+            }
+        }
+
         // Prepare blank manipulation
         $manipulations = new AssetManipulationList();
 
@@ -71,6 +88,12 @@ class AssetControlExtension extends DataExtension
      */
     public function onBeforeWrite()
     {
+        foreach (self::config()->get('excluded_classes') as $class) {
+            if (is_a($this->owner, $class)) {
+                return;
+            }
+        }
+
         // Prepare blank manipulation
         $manipulations = new AssetManipulationList();
 

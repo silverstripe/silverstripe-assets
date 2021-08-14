@@ -14,6 +14,7 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
@@ -74,8 +75,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      */
     public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
-        $allowSessionGrant = static::config()->allow_session_grant;
-
         /** @var CacheInterface $cache */
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($arguments, $content);
@@ -83,7 +82,12 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         $item = $cache->get($cacheKey);
         if ($item) {
             // Initiate a protected asset grant if necessary
-            if (!empty($item['filename']) && $allowSessionGrant) {
+            $grant = false;
+            $record = static::find_shortcode_record($arguments);
+            if ($record) {
+                $grant = self::getGrant($record);
+            }
+            if (!empty($item['filename']) && $grant) {
                 Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
             }
 
@@ -104,7 +108,8 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
 
         // Retrieve the file URL (ensuring session grant config is respected)
         if ($record instanceof File) {
-            $url = $record->getURL($allowSessionGrant);
+            $grant = self::getGrant($record);
+            $url = $record->getURL($grant);
         } else {
             $url = $record->Link();
         }
@@ -135,6 +140,15 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         return $markup;
+    }
+
+    protected static function getGrant(File $record): bool
+    {
+        return static::config()->allow_session_grant || (
+            class_exists(Versioned::class) &&
+            Versioned::get_default_reading_mode() === 'Stage.' . Versioned::DRAFT &&
+            !$record->hasRestrictedAccess()
+        );
     }
 
     /**

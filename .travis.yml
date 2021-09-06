@@ -5,7 +5,7 @@ import:
 
 env:
   global:
-    - REQUIRE_RECIPE="4.x-dev"
+    - REQUIRE_RECIPE="4.9.x-dev"
     - PHPUNIT_COVERAGE_SUITE="assets"
 
 #before_script:

@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use ReflectionMethod;
+use SilverStripe\Core\Convert;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
@@ -179,6 +181,65 @@ class UploadTest extends SapphireTest
         $u1->setValidator($v);
         $result = $u1->loadIntoFile($tmpFile);
         $this->assertFalse($result, 'Load failed because size was too big');
+    }
+
+    public function testAllowedSizeWontExceedPHPConfig()
+    {
+        $v = new Upload_Validator();
+        $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
+        $reflectionMethod->setAccessible(true);
+        $maxUploadSize = $reflectionMethod->invoke($v);
+
+        // Bump up the size by about 2MB.
+        // This would result in a hard PHP error if upload was attempted.
+        $exceedsMaxPHP = $maxUploadSize + 2000000;
+
+        $v->setAllowedMaxFileSize([
+            'jpg' => Convert::bytes2memstring($exceedsMaxPHP),
+            '*' => Convert::bytes2memstring($exceedsMaxPHP),
+        ]);
+
+        // Our config exceeded the ini settings for PHP, so fall back to that size
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('jpg'));
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('png'));
+    }
+
+    public function testWeFallBackToMaxPHPConfigIfEmptyArrayPassedForConfig()
+    {
+        $v = new Upload_Validator();
+        $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
+        $reflectionMethod->setAccessible(true);
+        $maxUploadSize = $reflectionMethod->invoke($v);
+
+        $v->setAllowedMaxFileSize([]);
+
+        // We just fall back to default, which is the max php upload allowed
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('jpg'));
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('png'));
+    }
+
+    public function testWeHandleEmptyOrNullFileSizeValues()
+    {
+        $v = new Upload_Validator();
+        $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
+        $reflectionMethod->setAccessible(true);
+        $maxUploadSize = $reflectionMethod->invoke($v);
+
+        /*
+         The test for the zip extension should be enabled once
+         the Convert::memstring2bytes if fixed to handle empty strings.
+         */
+        $v->setAllowedMaxFileSize([
+            'jpg' => '50',
+            'png' => 0,
+            'txt' => null,
+            // 'zip' => '',
+        ]);
+
+        $this->assertEquals(50, $v->getAllowedMaxFileSize('jpg'));
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('png'));
+        $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('txt'));
+        // $this->assertEquals($maxUploadSize, $v->getAllowedMaxFileSize('zip'));
     }
 
     public function testPHPUploadErrors()

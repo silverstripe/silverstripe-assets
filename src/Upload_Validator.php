@@ -122,7 +122,6 @@ class Upload_Validator
      */
     public function getAllowedMaxFileSize($ext = null)
     {
-
         // Check if there is any defined instance max file sizes
         if (empty($this->allowedMaxFileSize)) {
             // Set default max file sizes if there isn't
@@ -131,9 +130,7 @@ class Upload_Validator
                 $this->setAllowedMaxFileSize($fileSize);
             } else {
                 // When no default is present, use maximum set by PHP
-                $maxUpload = Convert::memstring2bytes(ini_get('upload_max_filesize'));
-                $maxPost = Convert::memstring2bytes(ini_get('post_max_size'));
-                $this->setAllowedMaxFileSize(min($maxUpload, $maxPost));
+                $this->setAllowedMaxFileSize($this->maxUploadSizeFromPHPIni());
             }
         }
 
@@ -174,23 +171,47 @@ class Upload_Validator
             $finalRules = [];
 
             foreach ($rules as $rule => $value) {
-                if (is_numeric($value)) {
-                    $tmpSize = $value;
-                } else {
-                    $tmpSize = Convert::memstring2bytes($value);
-                }
-
-                $finalRules[$rule] = (int)$tmpSize;
+                $finalRules[$rule] = $this->parseAndVerifyAllowedSize($value);
             }
 
             $this->allowedMaxFileSize = $finalRules;
-        } elseif (is_string($rules)) {
-            $this->allowedMaxFileSize['*'] = Convert::memstring2bytes($rules);
-        } elseif ((int)$rules > 0) {
-            $this->allowedMaxFileSize['*'] = (int)$rules;
+        } else {
+            $this->allowedMaxFileSize['*'] = $this->parseAndVerifyAllowedSize($rules);
         }
 
         return $this;
+    }
+
+    /**
+     * Converts values in bytes or INI format to bytes.
+     * Will fall back to the default PHP size if null|0|''
+     * Verify the parsed size will not exceed PHP's ini settings
+     */
+    private function parseAndVerifyAllowedSize($value): int
+    {
+        $maxPHPAllows = $this->maxUploadSizeFromPHPIni();
+
+        if (is_numeric($value)) {
+            $tmpSize = (int)$value;
+        } elseif (is_string($value)) {
+            $tmpSize = Convert::memstring2bytes($value);
+        }
+
+        if (empty($tmpSize)) {
+            $tmpSize = $maxPHPAllows;
+        }
+
+        return min($maxPHPAllows, $tmpSize);
+    }
+
+    /**
+     * Checks the two ini settings to work out the max upload size php would allow
+     */
+    private function maxUploadSizeFromPHPIni(): int
+    {
+        $maxUpload = Convert::memstring2bytes(ini_get('upload_max_filesize'));
+        $maxPost = Convert::memstring2bytes(ini_get('post_max_size'));
+        return min($maxUpload, $maxPost);
     }
 
     /**

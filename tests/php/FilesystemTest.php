@@ -24,7 +24,7 @@ class FilesystemTest extends SapphireTest
      */
     protected $root;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->root = vfsStream::setup(
@@ -62,7 +62,7 @@ class FilesystemTest extends SapphireTest
         $this->assertDirectoryExists($folderPath);
 
         Filesystem::removeFolder($folderPath);
-        $this->assertDirectoryNotExists($folderPath);
+        $this->assertDirectoryDoesNotExist($folderPath);
     }
 
     public function testRemoveFolderWithFiles()
@@ -73,8 +73,8 @@ class FilesystemTest extends SapphireTest
         $this->assertFileExists($filePath);
 
         Filesystem::removeFolder($folderPath);
-        $this->assertDirectoryNotExists($folderPath);
-        $this->assertFileNotExists($filePath);
+        $this->assertDirectoryDoesNotExist($folderPath);
+        $this->assertFileDoesNotExist($filePath);
     }
 
     public function testRemoveFolderWithSubFolder()
@@ -88,9 +88,9 @@ class FilesystemTest extends SapphireTest
         $this->assertFileExists($filePath);
 
         Filesystem::removeFolder($folderPath);
-        $this->assertDirectoryNotExists($folderPath);
-        $this->assertDirectoryNotExists($emptySubfolder);
-        $this->assertFileNotExists($filePath);
+        $this->assertDirectoryDoesNotExist($folderPath);
+        $this->assertDirectoryDoesNotExist($emptySubfolder);
+        $this->assertFileDoesNotExist($filePath);
     }
 
     public function testRemoveFolderWithFalsyFile()
@@ -101,8 +101,8 @@ class FilesystemTest extends SapphireTest
         $this->assertFileExists($filePath);
 
         Filesystem::removeFolder($folderPath);
-        $this->assertDirectoryNotExists($folderPath);
-        $this->assertFileNotExists($filePath);
+        $this->assertDirectoryDoesNotExist($folderPath);
+        $this->assertFileDoesNotExist($filePath);
     }
 
     public function testRemovedFolderContentsOnly()
@@ -119,8 +119,8 @@ class FilesystemTest extends SapphireTest
 
         Filesystem::removeFolder($folderPath, true);
         $this->assertDirectoryExists($folderPath);
-        $this->assertDirectoryNotExists($emptySubfolder);
-        $this->assertDirectoryNotExists($notEmptySubfolder);
-        $this->assertFileNotExists($filePath);
+        $this->assertDirectoryDoesNotExist($emptySubfolder);
+        $this->assertDirectoryDoesNotExist($notEmptySubfolder);
+        $this->assertFileDoesNotExist($filePath);
     }
 }

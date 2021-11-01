@@ -17,7 +17,7 @@ class AssetAdapterTest extends SapphireTest
 
     protected $originalServer = null;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -38,7 +38,7 @@ class AssetAdapterTest extends SapphireTest
         $this->originalServer = $_SERVER;
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         if ($this->rootDir) {
             Filesystem::removeFolder($this->rootDir);
@@ -56,19 +56,19 @@ class AssetAdapterTest extends SapphireTest
         $_SERVER['SERVER_SOFTWARE'] = 'Apache/2.2.22 (Win64) PHP/5.3.13';
         $adapter = new PublicAssetAdapter($this->rootDir);
         $this->assertFileExists($this->rootDir . '/.htaccess');
-        $this->assertFileNotExists($this->rootDir . '/web.config');
+        $this->assertFileDoesNotExist($this->rootDir . '/web.config');
 
         $htaccess = $adapter->read('.htaccess');
         $content = $htaccess['contents'];
         // Allowed extensions set
-        $this->assertContains('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
+        $this->assertStringContainsString('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
         foreach (File::getAllowedExtensions() as $extension) {
-            $this->assertRegExp('/\b'.preg_quote($extension).'\b/', $content);
+            $this->assertMatchesRegularExpression('/\b'.preg_quote($extension).'\b/', $content);
         }
 
         // Rewrite rules
-        $this->assertContains('RewriteRule .* ../index.php [QSA]', $content);
-        $this->assertContains('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
+        $this->assertStringContainsString('RewriteRule .* ../index.php [QSA]', $content);
+        $this->assertStringContainsString('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
 
         // Test flush restores invalid content
         file_put_contents($this->rootDir . '/.htaccess', '# broken content');
@@ -85,7 +85,7 @@ class AssetAdapterTest extends SapphireTest
         $_SERVER['SERVER_SOFTWARE'] = 'Apache/2.2.22 (Win64) PHP/5.3.13';
         $adapter = new ProtectedAssetAdapter($this->rootDir . '/.protected');
         $this->assertFileExists($this->rootDir . '/.protected/.htaccess');
-        $this->assertFileNotExists($this->rootDir . '/.protected/web.config');
+        $this->assertFileDoesNotExist($this->rootDir . '/.protected/web.config');
 
         // Test url
         $this->assertEquals('/assets/file.jpg', $adapter->getProtectedUrl('file.jpg'));

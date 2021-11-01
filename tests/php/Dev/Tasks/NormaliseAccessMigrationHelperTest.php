@@ -41,7 +41,7 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
     }
 
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -62,7 +62,7 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
         TestAssetStore::activate('NormaliseAccessMigrationHelperTest/assets');
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
@@ -112,11 +112,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
         return new Helper('/assets/NormaliseAccessMigrationHelperTest/');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testNeedToMoveWithFolder()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @var File $file */
         $folder = Folder::find('Uploads');
         $helper = $this->getHelper();
@@ -630,11 +628,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
         );
     }
 
-    /**
-     * @expectedException LogicException
-     */
     public function testNeedToMoveNonExistentFile()
     {
+        $this->expectException(\LogicException::class);
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;

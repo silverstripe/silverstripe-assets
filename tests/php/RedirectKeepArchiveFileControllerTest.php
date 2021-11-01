@@ -20,7 +20,7 @@ use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
 {
 
-    public function setUp()
+    protected function setUp(): void
     {
         File::config()->set('keep_archived_assets', true);
         parent::setUp();
@@ -43,7 +43,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         );
         $file->write();
         $v2HashUrl = $file->getURL(false);
-        
+
         $file->publishSingle();
         $v2Url = $file->getURL(false);
 

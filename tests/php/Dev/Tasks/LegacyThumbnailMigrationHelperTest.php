@@ -41,7 +41,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
     }
 
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -61,7 +61,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
@@ -90,7 +90,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         // Moved contains store relative paths
         $base = TestAssetStore::base_path();
 
-        $this->assertFileNotExists(
+        $this->assertFileDoesNotExist(
             $this->joinPaths($base, $expectedLegacyPath),
             'Legacy file has been removed'
         );
@@ -131,7 +131,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         $base = TestAssetStore::base_path();
 
         foreach ($expected as $expectedLegacyPath => $expectedNewPath) {
-            $this->assertFileNotExists(
+            $this->assertFileDoesNotExist(
                 $this->joinPaths($base, $expectedLegacyPath),
                 'Legacy file has been removed'
             );
@@ -176,7 +176,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
             $expectedNewPath,
             'New file is mapped as expected'
         );
-        $this->assertFileNotExists(
+        $this->assertFileDoesNotExist(
             $this->joinPaths($base, $expectedLegacyPath),
             'Legacy file has been removed'
         );

@@ -24,7 +24,7 @@ class AssetStoreTest extends SapphireTest
     /**
      * @skipUpgrade
      */
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -32,7 +32,7 @@ class AssetStoreTest extends SapphireTest
         TestAssetStore::activate('AssetStoreTest');
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -604,8 +604,8 @@ class AssetStoreTest extends SapphireTest
 
         // Test protected file storage
         $backend->protect($fishTuple['Filename'], $fishTuple['Hash']);
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
+        $this->assertFileDoesNotExist(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
+        $this->assertFileDoesNotExist(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
@@ -633,8 +633,8 @@ class AssetStoreTest extends SapphireTest
         $backend->publish($fishTuple['Filename'], $fishTuple['Hash']);
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish.jpg');
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/parent/lovely-fish__copy.jpg');
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
-        $this->assertFileNotExists(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
+        $this->assertFileDoesNotExist(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish.jpg');
+        $this->assertFileDoesNotExist(ASSETS_PATH . '/AssetStoreTest/.protected/parent/a870de278b/lovely-fish__copy.jpg');
         $this->assertEquals(
             AssetStore::VISIBILITY_PUBLIC,
             $backend->getVisibility($fishTuple['Filename'], $fishTuple['Hash'])

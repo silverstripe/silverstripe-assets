@@ -19,7 +19,7 @@ class FileLinkTrackingTest extends SapphireTest
 
     protected static $fixture_file = "FileLinkTrackingTest.yml";
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -59,7 +59,7 @@ class FileLinkTrackingTest extends SapphireTest
         $page->write();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -77,11 +77,11 @@ class FileLinkTrackingTest extends SapphireTest
         $page->publishRecursive();
 
         // Live and stage pages both have link to public file
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<img src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<p><a href="/assets/FileLinkTrackingTest/testscript-test-file.txt">Working Link</a></p>',
             $page->dbObject('Another')->forTemplate()
         );
@@ -90,11 +90,11 @@ class FileLinkTrackingTest extends SapphireTest
             Versioned::set_stage(Versioned::LIVE);
             /** @var EditableObject $pageLive */
             $pageLive = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<p><a href="/assets/FileLinkTrackingTest/testscript-test-file.txt">Working Link</a></p>',
                 $pageLive->dbObject('Another')->forTemplate()
             );
@@ -119,14 +119,14 @@ class FileLinkTrackingTest extends SapphireTest
         // Note that the "secure" url doesn't have the "FileLinkTrackingTest" component because
         // the mocked test location disappears for secure files.
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<img src="/assets/5a5ee24e44/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
@@ -136,14 +136,14 @@ class FileLinkTrackingTest extends SapphireTest
         // Although the old live page will still point to the old record.
         $image1->publishRecursive();
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<img src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
@@ -152,14 +152,14 @@ class FileLinkTrackingTest extends SapphireTest
         // Publishing the page after publishing the asset should retain linking
         $page->publishRecursive();
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<img src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
@@ -193,7 +193,7 @@ class FileLinkTrackingTest extends SapphireTest
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $livePage = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $livePage->dbObject('Content')->forTemplate()
             );
@@ -214,7 +214,7 @@ class FileLinkTrackingTest extends SapphireTest
 
         // Confirm that the correct image is shown in both the draft and live site
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<img src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
@@ -224,7 +224,7 @@ class FileLinkTrackingTest extends SapphireTest
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
-            $this->assertContains(
+            $this->assertStringContainsString(
                 '<img src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
@@ -243,11 +243,11 @@ class FileLinkTrackingTest extends SapphireTest
         $file = $this->objFromFixture(File::class, 'file1');
         $fileID = $file->ID;
 
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<p><a href="/assets/FileLinkTrackingTest/testscript-test-file.txt">Working Link</a></p>',
             $page->dbObject('Another')->forTemplate()
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p><a href="[file_link,id=%d]">Working Link</a></p>', $fileID),
             $page->Another
         );
@@ -255,11 +255,11 @@ class FileLinkTrackingTest extends SapphireTest
         // Deleting file should trigger css class
         $file->delete();
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<p><a href="" class="ss-broken">Working Link</a></p>',
             $page->dbObject('Another')->forTemplate()
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p><a href="[file_link,id=%d]" class="ss-broken">Working Link</a></p>', $fileID),
             $page->Another
         );
@@ -269,11 +269,11 @@ class FileLinkTrackingTest extends SapphireTest
         $fileLive = Versioned::get_by_stage(File::class, Versioned::LIVE)->byID($fileID);
         $fileLive->doRevertToLive();
         $page = EditableObject::get()->byID($page->ID);
-        $this->assertContains(
+        $this->assertStringContainsString(
             sprintf('<p><a href="[file_link,id=%d]">Working Link</a></p>', $fileID),
             $page->Another
         );
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<p><a href="/assets/FileLinkTrackingTest/testscript-test-file.txt">Working Link</a></p>',
             $page->dbObject('Another')->forTemplate()
         );

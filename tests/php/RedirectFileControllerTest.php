@@ -25,7 +25,7 @@ class RedirectFileControllerTest extends FunctionalTest
 
     protected $autoFollowRedirection = false;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -57,7 +57,7 @@ class RedirectFileControllerTest extends FunctionalTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -216,7 +216,7 @@ class RedirectFileControllerTest extends FunctionalTest
     public function testRedirectAfterPublishSecondVersion($fixtureID)
     {
         $hashHelper = new HashFileIDHelper();
-        
+
         /** @var File $file */
         $file = $this->objFromFixture(File::class, $fixtureID);
         $file->publishSingle();
@@ -384,7 +384,7 @@ class RedirectFileControllerTest extends FunctionalTest
         $hash = substr($file->getHash(), 0, 10);
         $ico = $file->ScaleWidth(32);
         $icoUrl = $ico->getURL(false);
-        
+
         $suffix = $ico->getVariant();
 
         $response = $this->get($icoUrl);

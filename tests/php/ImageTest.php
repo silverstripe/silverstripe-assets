@@ -3,8 +3,7 @@
 namespace SilverStripe\Assets\Tests;
 
 use InvalidArgumentException;
-use PHPUnit_Framework_MockObject_MockBuilder;
-use PHPUnit_Framework_MockObject_MockObject;
+use PHPUnit\Framework\MockObject\MockObject;
 use Prophecy\Prophecy\ObjectProphecy;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -28,7 +27,7 @@ abstract class ImageTest extends SapphireTest
 {
     protected static $fixture_file = 'ImageTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -52,7 +51,7 @@ abstract class ImageTest extends SapphireTest
         ]);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -315,7 +314,7 @@ abstract class ImageTest extends SapphireTest
      */
     public function testImageResizeInvalid($width, $height, $error)
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($error);
         /** @var Image $image */
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
@@ -331,11 +330,9 @@ abstract class ImageTest extends SapphireTest
         ];
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testGenerateImageWithInvalidParameters()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
         $image->ScaleHeight('String');
         $image->Pad(600, 600, 'XXXXXX');
@@ -348,7 +345,7 @@ abstract class ImageTest extends SapphireTest
         $imageFilename = $imageFirst->getURL();
             // Encoding of the arguments is duplicated from cacheFilename
         $neededPart = 'Pad' . Convert::base64url_encode([200,200,'CCCCCC', 0]);
-        $this->assertContains($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
+        $this->assertStringContainsString($neededPart, $imageFilename, 'Filename for cached image is correctly generated');
     }
 
     public function testGenerateImageInSameFolderAsOriginal()
@@ -404,11 +401,9 @@ abstract class ImageTest extends SapphireTest
         );
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testVariantPartsThrowsOnInvalidName()
     {
+        $this->expectException(\InvalidArgumentException::class);
         /** @var Image $image */
         $image = singleton(Image::class);
         $args = ['foo'];
@@ -535,7 +530,7 @@ abstract class ImageTest extends SapphireTest
     /**
      * @param $filename
      * @param $hash
-     * @return PHPUnit_Framework_MockObject_MockObject
+     * @return MockObject
      */
     protected function getMockAssetBackend($filename, $hash)
     {

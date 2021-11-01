@@ -45,7 +45,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         ]
     ];
 
-    public function setUp()
+    protected function setUp(): void
     {
         Config::nest(); // additional nesting here necessary
         Config::modify()->merge(File::class, 'migrate_legacy_file', false);
@@ -181,7 +181,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
         $store->setPublicResolutionStrategy($public);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

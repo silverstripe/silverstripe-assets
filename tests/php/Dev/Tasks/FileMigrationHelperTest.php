@@ -50,7 +50,7 @@ class FileMigrationHelperTest extends SapphireTest
     }
 
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -164,7 +164,7 @@ class FileMigrationHelperTest extends SapphireTest
         )->execute();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         Filesystem::removeFolder($this->getBasePath());
@@ -283,7 +283,7 @@ class FileMigrationHelperTest extends SapphireTest
         $fullFilename = TestAssetStore::base_path() . '/' . $file->getFilename();
         $dir = dirname($fullFilename);
         $baseFilename = basename($fullFilename);
-        $this->assertFileNotExists($dir . '/_resampled');
+        $this->assertFileDoesNotExist($dir . '/_resampled');
         $this->assertFileExists($dir . '/' . $baseFilename);
 
         // Test that SS3.3 variants have been migrated

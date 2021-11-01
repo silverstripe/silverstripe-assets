@@ -4,7 +4,7 @@ namespace SilverStripe\Assets\Tests;
 
 use Generator;
 use League\Flysystem\Filesystem;
-use PHPUnit_Framework_MockObject_MockObject;
+use PHPUnit\Framework\MockObject\MockObject;
 use SilverStripe\Assets\AssetControlExtension;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -37,7 +37,7 @@ class FileTest extends SapphireTest
         MyCustomFile::class
     ];
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
         $this->logInWithPermission('ADMIN');
@@ -70,7 +70,7 @@ class FileTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -835,7 +835,7 @@ class FileTest extends SapphireTest
 
     public function testCanViewReturnsExtendedResult()
     {
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(true);
         $this->assertTrue($file->canView());
@@ -845,11 +845,11 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
-        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        /** @var PermissionChecker&MockObject $permissionChecker */
         $permissionChecker = $this->createMock(PermissionChecker::class);
         $permissionChecker->expects($this->once())->method('canView')->with(123)->willReturn(false);
         Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
@@ -898,7 +898,7 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
@@ -910,7 +910,7 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
@@ -920,11 +920,11 @@ class FileTest extends SapphireTest
 
     public function testCanViewReturnsTrueForUserInGroupWithCanViewTypeOnlyTheseUsers()
     {
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
-        /** @var Member&PHPUnit_Framework_MockObject_MockObject $member */
+        /** @var Member&MockObject $member */
         $member = $this->createMock(Member::class);
         $member->expects($this->once())->method('inGroups')->willReturn(true);
 
@@ -936,11 +936,11 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
-        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        /** @var PermissionChecker&MockObject $permissionChecker */
         $permissionChecker = $this->createMock(PermissionChecker::class);
         $permissionChecker->expects($this->once())->method('canView')->with(234)->willReturn(true);
         Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
@@ -952,7 +952,7 @@ class FileTest extends SapphireTest
 
     public function testCanEditReturnsExtendedResult()
     {
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(true);
         $this->assertTrue($file->canEdit());
@@ -962,7 +962,7 @@ class FileTest extends SapphireTest
     {
         $this->logInWithPermission();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
         $this->assertTrue($file->canEdit());
@@ -972,11 +972,11 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
-        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        /** @var PermissionChecker&MockObject $permissionChecker */
         $permissionChecker = $this->createMock(PermissionChecker::class);
         $permissionChecker->expects($this->once())->method('canEdit')->with(123)->willReturn(false);
         Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');
@@ -990,11 +990,11 @@ class FileTest extends SapphireTest
     {
         $this->logOut();
 
-        /** @var File&PHPUnit_Framework_MockObject_MockObject $file */
+        /** @var File&MockObject $file */
         $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
-        /** @var PermissionChecker&PHPUnit_Framework_MockObject_MockObject $permissionChecker */
+        /** @var PermissionChecker&MockObject $permissionChecker */
         $permissionChecker = $this->createMock(PermissionChecker::class);
         $permissionChecker->expects($this->once())->method('canEdit')->with(234)->willReturn(false);
         Injector::inst()->registerService($permissionChecker, PermissionChecker::class . '.file');

@@ -20,7 +20,7 @@ class ProtectedFileControllerTest extends FunctionalTest
 {
     protected static $fixture_file = 'FileTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -47,7 +47,7 @@ class ProtectedFileControllerTest extends FunctionalTest
         $protectedFile->protectFile();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

@@ -3,7 +3,6 @@
 namespace SilverStripe\Assets\Tests\Flysystem;
 
 use League\Flysystem\Filesystem;
-use PHPUnit_Framework_MockObject_MockObject;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
@@ -41,7 +40,7 @@ class FlysystemAssetStoreTest extends SapphireTest
     /** @var FileResolutionStrategy */
     protected $protectedStrategy;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -136,11 +135,9 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->assertEquals($this->publicFilesystem, $assetStore->getPublicFilesystem());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testBadPublicFilesystem()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $assetStore = new FlysystemAssetStore();
         $assetStore->setPublicFilesystem($this->protectedFilesystem);
     }
@@ -152,11 +149,9 @@ class FlysystemAssetStoreTest extends SapphireTest
         $this->assertEquals($this->protectedFilesystem, $assetStore->getProtectedFilesystem());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testBadProtectedFilesystem()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $assetStore = new FlysystemAssetStore();
         $assetStore->setProtectedFilesystem($this->publicFilesystem);
     }

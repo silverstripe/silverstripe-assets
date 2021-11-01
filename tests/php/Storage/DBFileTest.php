@@ -21,7 +21,7 @@ class DBFileTest extends SapphireTest
 
     protected $usesDatabase = true;
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -30,7 +30,7 @@ class DBFileTest extends SapphireTest
         Director::config()->update('alternate_base_url', '/mysite/');
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -54,7 +54,7 @@ class DBFileTest extends SapphireTest
 
         // Test download tag
         $obj->MyFile->setFromString('puppies', 'subdir/puppy-document.txt');
-        $this->assertContains(
+        $this->assertStringContainsString(
             '<a href="/mysite/assets/subdir/2a17a9cb4b/puppy-document.txt" title="puppy-document.txt" download="puppy-document.txt">',
             trim($obj->MyFile->forTemplate())
         );
@@ -70,7 +70,7 @@ class DBFileTest extends SapphireTest
         $obj->MyFile->setFromLocalFile($fish, 'awesome-fish.jpg');
 
         // This should fail
-        $this->setExpectedException(ValidationException::class);
+        $this->expectException(ValidationException::class);
         $obj->MyFile->setFromString('puppies', 'subdir/puppy-document.txt');
     }
 

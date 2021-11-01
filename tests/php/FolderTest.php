@@ -24,7 +24,7 @@ class FolderTest extends SapphireTest
 
     protected static $fixture_file = 'FileTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -66,7 +66,7 @@ class FolderTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -131,7 +131,7 @@ class FolderTest extends SapphireTest
         );
 
         // Folder does not exist until it contains files
-        $this->assertFileNotExists(
+        $this->assertFileDoesNotExist(
             TestAssetStore::getLocalPath($folder),
             'Empty folder does not have a filesystem record automatically'
         );

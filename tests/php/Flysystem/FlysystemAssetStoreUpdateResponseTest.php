@@ -26,7 +26,7 @@ class FlysystemAssetStoreUpdateResponseTest extends SapphireTest
     /**
      * @skipUpgrade
      */
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -59,7 +59,7 @@ class FlysystemAssetStoreUpdateResponseTest extends SapphireTest
         $this->hash = substr(sha1('hello'), 0, 10);
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();

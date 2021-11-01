@@ -40,7 +40,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     private $fileID = 'Sha1FileHashingServiceTest/Pangram.txt';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -59,7 +59,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
         Sha1FileHashingService::flush();
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->publicFs->deleteDir('Sha1FileHashingServiceTest');
@@ -110,7 +110,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     public function testComputeBadFilesystem()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $service = new Sha1FileHashingService();
         $service->computeFromFile($this->fileID, AssetStore::CONFLICT_OVERWRITE);
     }
@@ -174,7 +174,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     public function testCompareWithEmptyFirstHash()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
 
         $service = new Sha1FileHashingService();
         $this->assertTrue($service->compare('', $this->protectedHash));
@@ -182,7 +182,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     public function testCompareWithEmptySecondHash()
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
 
         $service = new Sha1FileHashingService();
         $this->assertTrue($service->compare($this->protectedHash, ''));
@@ -266,8 +266,8 @@ class Sha1FileHashingServiceTest extends SapphireTest
             ['Mit_Teamgeist_zum_großen_Paddelerlebnis.pdf', 'file-system']
         );
 
-        $this->assertNotContains('/', $cacheKey);
+        $this->assertStringNotContainsString('/', $cacheKey);
         // Ensure we get a string back after validating the key and it is therefore valid
-        $this->assertInternalType('string', CacheItem::validateKey($cacheKey));
+        $this->assertIsString(CacheItem::validateKey($cacheKey));
     }
 }

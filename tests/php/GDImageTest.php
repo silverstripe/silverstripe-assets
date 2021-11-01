@@ -11,7 +11,7 @@ use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
 class GDImageTest extends ImageTest
 {
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 

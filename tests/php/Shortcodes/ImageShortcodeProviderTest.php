@@ -18,7 +18,7 @@ class ImageShortcodeProviderTest extends SapphireTest
 
     protected static $fixture_file = '../ImageTest.yml';
 
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -34,7 +34,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         }
     }
 
-    public function tearDown()
+    protected function tearDown(): void
     {
         TestAssetStore::reset();
         parent::tearDown();
@@ -160,23 +160,23 @@ class ImageShortcodeProviderTest extends SapphireTest
 
         // regular shortcode
         $shortcode = '[image id="' . $id . '" width="300" height="200"]';
-        $this->assertContains('loading="lazy"', $parser->parse($shortcode));
+        $this->assertStringContainsString('loading="lazy"', $parser->parse($shortcode));
 
         // missing width
         $shortcode = '[image id="' . $id . '" height="200"]';
-        $this->assertNotContains('loading="lazy"', $parser->parse($shortcode));
+        $this->assertStringNotContainsString('loading="lazy"', $parser->parse($shortcode));
 
         // missing height
         $shortcode = '[image id="' . $id . '" width="300"]';
-        $this->assertNotContains('loading="lazy"', $parser->parse($shortcode));
+        $this->assertStringNotContainsString('loading="lazy"', $parser->parse($shortcode));
 
         // loading="eager"
         $shortcode = '[image id="' . $id . '" width="300" height="200" loading="eager"]';
-        $this->assertNotContains('loading="lazy"', $parser->parse($shortcode));
+        $this->assertStringNotContainsString('loading="lazy"', $parser->parse($shortcode));
 
         // loading="nonsense"
         $shortcode = '[image id="' . $id . '" width="300" height="200" loading="nonsense"]';
-        $this->assertContains('loading="lazy"', $parser->parse($shortcode));
+        $this->assertStringContainsString('loading="lazy"', $parser->parse($shortcode));
 
         // globally disabled
         Config::withConfig(function () use ($id, $parser) {
@@ -184,7 +184,7 @@ class ImageShortcodeProviderTest extends SapphireTest
             // clear-provider-cache is so that we don't get a cached result from the 'regular shortcode'
             // assertion earlier in this function from ImageShortCodeProvider::handle_shortcode()
             $shortcode = '[image id="' . $id . '" width="300" height="200" clear-provider-cache="1"]';
-            $this->assertNotContains('loading="lazy"', $parser->parse($shortcode));
+            $this->assertStringNotContainsString('loading="lazy"', $parser->parse($shortcode));
         });
     }
 }

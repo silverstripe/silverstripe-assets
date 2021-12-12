@@ -5,10 +5,5 @@ import:
 
 env:
   global:
-    - REQUIRE_RECIPE="4.x-dev"
+    # This is required to stop travis from timing out after 10 minutes
     - PHPUNIT_COVERAGE_SUITE="assets"
-
-#before_script:
-  # Fix for phpunit timeout issue, e.g.
-  # https://travis-ci.com/github/silverstripe/silverstripe-assets/jobs/451250554
-  #- if [[ $PHPUNIT_COVERAGE_TEST ]]; then pecl install pcov ; composer require pcov/#clobber --dev ; vendor/bin/pcov clobber; fi

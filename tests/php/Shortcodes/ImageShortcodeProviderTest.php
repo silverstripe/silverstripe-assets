@@ -73,6 +73,39 @@ class ImageShortcodeProviderTest extends SapphireTest
         );
     }
 
+    public function testShorcodeRegenrator()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'regenerate_shortcode']);
+
+        $this->assertEquals(
+            sprintf(
+                '[image id="%d" alt="My alt text" title="My Title &amp; special character" src="%s"]',
+                $image->ID,
+                $image->Link()
+            ),
+            $parser->parse(sprintf(
+                '[image id="%d" alt="My alt text" title="My Title & special character"]',
+                $image->ID
+            )),
+            'Shortcode regeneration properly reads attributes'
+        );
+
+        $this->assertEquals(
+            sprintf(
+                '[image id="%d" alt="" title="" src="%s"]',
+                $image->ID,
+                $image->Link()
+            ),
+            $parser->parse(sprintf(
+                '[image id="%d" alt="" title=""]',
+                $image->ID
+            )),
+            "Shortcode regeneration properly handles empty attributes"
+        );
+    }
+
     public function testShortcodeHandlerAddsDefaultAttributes()
     {
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');

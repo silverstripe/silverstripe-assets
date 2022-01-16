@@ -145,7 +145,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         // Rebuild shortcode
         $parts = [];
         foreach ($args as $name => $value) {
-            $htmlValue = Convert::raw2att($value ?: $name);
+            $htmlValue = Convert::raw2att($value);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);
         }
         return sprintf("[%s %s]", $shortcode, implode(' ', $parts));

@@ -74,20 +74,12 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      */
     public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
-        $allowSessionGrant = static::config()->allow_session_grant;
-
         /** @var CacheInterface $cache */
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($arguments, $content);
-
-        $item = $cache->get($cacheKey);
-        if ($item) {
-            // Initiate a protected asset grant if necessary
-            if (!empty($item['filename']) && $allowSessionGrant) {
-                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
-            }
-
-            return $item['markup'];
+        $cachedMarkup = static::getCachedMarkup($cache, $cacheKey, $arguments);
+        if ($cachedMarkup) {
+            return $cachedMarkup;
         }
 
         // Find appropriate record, with fallback for error handlers
@@ -104,7 +96,8 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
 
         // Retrieve the file URL (ensuring session grant config is respected)
         if ($record instanceof File) {
-            $url = $record->getURL($allowSessionGrant);
+            $grant = static::getGrant($record);
+            $url = $record->getURL($grant);
         } else {
             $url = $record->Link();
         }
@@ -135,6 +128,38 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         return $markup;
+    }
+
+    /**
+     * @param CacheInterface $cache
+     * @param string $cacheKey
+     * @param array $arguments
+     * @return string
+     */
+    protected static function getCachedMarkup($cache, $cacheKey, $arguments): string
+    {
+        $item = $cache->get($cacheKey);
+        if ($item && !empty($item['filename'])) {
+            // Initiate a protected asset grant if necessary
+            $allowSessionGrant = static::getGrant(null, $arguments);
+            if ($allowSessionGrant) {
+                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
+                return $item['markup'];
+            }
+        }
+        return '';
+    }
+
+    /**
+     * @param File|null $record
+     * @param array|null $args
+     * @return bool
+     */
+    protected static function getGrant(?File $record, ?array $args = null): bool
+    {
+        $grant = static::config()->allow_session_grant;
+        static::singleton()->extend('updateGrant', $grant, $record, $args);
+        return $grant;
     }
 
     /**

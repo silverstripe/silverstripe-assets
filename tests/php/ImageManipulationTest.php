@@ -427,4 +427,28 @@ class ImageManipulationTest extends SapphireTest
             trim($image->renderWith(SSViewer::fromString($template)))
         );
     }
+
+    public function testThumbnailURL()
+    {
+        $img = $this->objFromFixture(Image::class, 'imageWithTitle');
+
+        // File needs to be in draft and users need to be anonymous to test the access
+        $this->logOut();
+        $img->doUnpublish();
+
+        $fileUrl = 'folder/444065542b/test-image__FillWzEwLDEwXQ.png';
+
+        $this->assertEquals(
+            '/assets/' . $fileUrl,
+            $img->ThumbnailURL(10, 10),
+            'Thumbnail URL is correct'
+        );
+
+        /** @var AssetStore assetStore */
+        $assetStore = Injector::inst()->get(AssetStore::class);
+        $this->assertFalse(
+            $assetStore->isGranted($fileUrl),
+            'Current user should not automatically be granted access to view thumbnail'
+        );
+    }
 }

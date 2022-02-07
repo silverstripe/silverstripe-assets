@@ -28,4 +28,4 @@ SilverStripe\Assets\File:
     css: 'CSS file'
     html: 'HTML file'
     htm: 'HTML file'
-    
+    webp: 'WEBP Image'

@@ -207,7 +207,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'docx', 'dotx', 'flv', 'gif', 'gpx', 'gz', 'hqx', 'ico', 'jpeg', 'jpg', 'kml',
         'm4a', 'm4v', 'mid', 'midi', 'mkv', 'mov', 'mp3', 'mp4', 'mpa', 'mpeg', 'mpg', 'ogg', 'ogv', 'pages',
         'pcx', 'pdf', 'png', 'pps', 'ppt', 'pptx', 'potx', 'ra', 'ram', 'rm', 'rtf', 'sit', 'sitx',
-        'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'webm', 'wma', 'wmv', 'xls', 'xlsx', 'xltx', 'zip',
+        'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'webm', 'webp', 'wma', 'wmv', 'xls', 'xlsx', 'xltx', 'zip',
         'zipx',
     ];
 
@@ -229,10 +229,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             'potm', 'potx', 'pps', 'ppt', 'pptx', 'rtf', 'txt', 'xhtml', 'xls', 'xlsx', 'xltm', 'xltx', 'xml',
         ],
         'image' => [
-            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff',
+            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff', 'webp'
         ],
         'image/supported' => [
-            'gif', 'jpeg', 'jpg', 'png', 'bmp', 'ico',
+            'gif', 'jpeg', 'jpg', 'png', 'bmp', 'ico', 'webp'
         ],
         'flash' => [
             'fla', 'swf'
@@ -257,6 +257,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         'gif' => Image::class,
         'bmp' => Image::class,
         'ico' => Image::class,
+        'webp' => Image::class,
     ];
 
     /**

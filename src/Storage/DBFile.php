@@ -64,6 +64,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         'image/x-icon',
         'image/vnd.microsoft.icon',
         'image/vnd.adobe.photoshop',
+        'image/webp',
     ];
 
     /**

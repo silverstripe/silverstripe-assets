@@ -194,33 +194,44 @@ class FileTest extends SapphireTest
         $this->assertNull($broken->Pad(100, 100));
     }
 
-    public function testAppCategory()
+    public function appCategoryDataProvider()
+    {
+        return [
+            ['image', 'jpg'],
+            ['image', 'JPG'],
+            ['image', 'JPEG'],
+            ['image', 'png'],
+            ['image', 'tif'],
+            ['image', 'webp'],
+            ['document', 'pdf'],
+            ['video', 'mov'],
+            ['audio', 'OGG'],
+        ];
+    }
+
+    /**
+     * @dataProvider appCategoryDataProvider
+     */
+    public function testAppCategory($category, $extension)
     {
         // Test various categories
-        $this->assertEquals('image', File::get_app_category('jpg'));
-        $this->assertEquals('image', File::get_app_category('JPG'));
-        $this->assertEquals('image', File::get_app_category('JPEG'));
-        $this->assertEquals('image', File::get_app_category('png'));
-        $this->assertEquals('image', File::get_app_category('tif'));
-        $this->assertEquals('document', File::get_app_category('pdf'));
-        $this->assertEquals('video', File::get_app_category('mov'));
-        $this->assertEquals('audio', File::get_app_category('OGG'));
+        $this->assertEquals($category, File::get_app_category($extension));
     }
 
     public function testGetCategoryExtensions()
     {
         // Test specific categories
         $images = [
-            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff'
+            'alpha', 'als', 'bmp', 'cel', 'gif', 'ico', 'icon', 'jpeg', 'jpg', 'pcx', 'png', 'ps', 'psd', 'tif', 'tiff', 'webp'
         ];
         $this->assertEquals($images, File::get_category_extensions('image'));
         $this->assertEquals(
-            ['bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png'],
+            ['bmp', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'webp'],
             File::get_category_extensions('image/supported')
         );
         $this->assertEquals($images, File::get_category_extensions(['image', 'image/supported']));
         $this->assertEquals(
-            ['bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf'],
+            ['bmp', 'fla', 'gif', 'ico', 'jpeg', 'jpg', 'png', 'swf', 'webp'],
             File::get_category_extensions(['flash', 'image/supported'])
         );
 

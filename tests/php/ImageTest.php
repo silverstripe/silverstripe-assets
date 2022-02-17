@@ -231,6 +231,32 @@ abstract class ImageTest extends SapphireTest
         $this->assertNotEquals($imageHQ->getURL(), $imageHQR->getSourceURL(), 'Path to the original image file was returned by getURL()');
     }
 
+    /**
+     * Tests that a URL to a resampled image is provided when force_resample is
+     * set to true, if the resampled file is smaller than the original.
+     */
+    public function testUpdateURL()
+    {
+        // Test resampled file is served when force_resample = true
+        Config::modify()->set(Image::class, 'force_resample', true);
+
+        $imageHQ = $this->objFromFixture(Image::class, 'highQualityJPEG');
+
+        // File needs to be in draft and users need to be anonymous to test the access
+        $this->logOut();
+        $imageHQ->doUnpublish();
+
+        $url = '';
+        $imageHQ->updateURL($url);
+
+        /** @var AssetStore assetStore */
+        $assetStore = Injector::inst()->get(AssetStore::class);
+        $this->assertFalse(
+            $assetStore->isGranted('folder/a870de278b/test-image-high-quality__Resampled.jpg'),
+            'Current user should not automatically be granted access to resampled image'
+        );
+    }
+
     public function testImageResize()
     {
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');

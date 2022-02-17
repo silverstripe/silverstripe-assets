@@ -303,10 +303,9 @@ trait ImageManipulation
 
         // Only update if resampled file is a smaller file size
         if ($resampled->getAbsoluteSize() < $this->getAbsoluteSize()) {
-            $url = $resampled->getURL();
+            $url = $resampled->getURL(false);
         }
     }
-
 
     /**
      * Generate a resized copy of this image with the given width & height.
@@ -705,7 +704,7 @@ trait ImageManipulation
     {
         $thumbnail = $this->Thumbnail($width, $height);
         if ($thumbnail) {
-            return $thumbnail->getURL();
+            return $thumbnail->getURL(false);
         }
         return $this->getIcon();
     }
@@ -1130,7 +1129,7 @@ trait ImageManipulation
                 'width' => $this->getWidth(),
                 'height' => $this->getHeight(),
                 'alt' => $this->getTitle(),
-                'src' => $this->getURL()
+                'src' => $this->getURL(false)
             ];
 
             if ($this->IsLazyLoaded()) {

@@ -116,6 +116,16 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $singular_name = "File";
 
     private static $plural_name = "Files";
+    
+    /**
+     * define a default value for no_resample config
+     * this will be used to decide if a File subclass needs
+     * to be resampled. This is useful when using AWS S3 module
+     *
+     * @config
+     * @var bool
+     */
+    private static $no_resample = false;
 
     /**
      * Anyone with CMS access can view draft files

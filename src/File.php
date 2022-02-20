@@ -116,6 +116,17 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $singular_name = "File";
 
     private static $plural_name = "Files";
+    
+    /**
+     * Control whether images in the admin will be resampled
+     *
+     * Can be turned off e.g. when using an external resampling service
+     * or a backend that may not support resampling.
+     *
+     * @config
+     * @var bool
+     */
+    private static $resample_images = true;
 
     /**
      * Anyone with CMS access can view draft files

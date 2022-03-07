@@ -150,16 +150,19 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         return $this->version - $this->first;
     }
 
+    #[\ReturnTypeWillChange]
     public function next()
     {
         $this->version++;
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->version = $this->first;
     }
 
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return $this->version < $this->max + $this->first;

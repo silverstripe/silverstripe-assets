@@ -523,7 +523,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      *
      * @param ParsedFileID $parsedFileID
      * @param FileIDHelper $helper
-     * @return ParsedFileID
+     * @return ParsedFileID|null
      */
     private function stripVariantFromParsedFileID(ParsedFileID $parsedFileID, FileIDHelper $helper)
     {

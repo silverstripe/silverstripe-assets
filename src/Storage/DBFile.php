@@ -151,7 +151,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     /**
      * Determine the template to render as on the frontend
      *
-     * @return string Name of template
+     * @return string|null Name of template
      */
     public function getFrontendTemplate()
     {
@@ -173,7 +173,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     /**
      * Get trailing part of filename
      *
-     * @return string
+     * @return string|null
      */
     public function getBasename()
     {
@@ -186,7 +186,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     /**
      * Get file extension
      *
-     * @return string
+     * @return string|null
      */
     public function getExtension()
     {
@@ -318,7 +318,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     /**
      * Get the absolute URL to this resource
      *
-     * @return string
+     * @return string|null
      */
     public function getAbsoluteURL()
     {

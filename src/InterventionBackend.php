@@ -214,7 +214,7 @@ class InterventionBackend implements Image_Backend, Flushable
      * Get the currently assigned image resource, or generates one if not yet assigned.
      * Note: This method may return null if error
      *
-     * @return InterventionImage
+     * @return InterventionImage|null
      */
     public function getImageResource()
     {
@@ -351,7 +351,7 @@ class InterventionBackend implements Image_Backend, Flushable
      * @param string $hash Hash of original file, if storing a variant.
      * @param string $variant Name of variant, if storing a variant.
      * @param array $config Write options. {@see AssetStore}
-     * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
+     * @return array|null Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the given data.
      * @throws BadMethodCallException If image isn't valid
      */

@@ -238,7 +238,7 @@ class Folder extends File
     /**
      * Folders do not have public URLs
      *
-     * @return string
+     * @return string|null
      */
     public function getAbsoluteURL()
     {

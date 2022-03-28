@@ -105,7 +105,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     /**
      * Get absolute path to basedir
      *
-     * @return string
+     * @return string|null
      */
     public static function base_path()
     {

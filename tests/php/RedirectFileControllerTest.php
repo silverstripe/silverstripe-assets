@@ -530,7 +530,7 @@ class RedirectFileControllerTest extends FunctionalTest
      */
     protected function normaliseUrl($path)
     {
-        return str_replace('RedirectFileControllerTest/', '', $path);
+        return str_replace('RedirectFileControllerTest/', '', $path ?: '');
     }
 
     public function get($url, $session = null, $headers = null, $cookies = null)

@@ -210,7 +210,7 @@ class FileMigrationHelper
      * If `$initialStrategy` is not suitable for a migration, we return null.
      * We're overriding the helpers to avoid doing unnecessary checks.
      * @param FileResolutionStrategy $initialStrategy
-     * @return int|FileIDHelperResolutionStrategy
+     * @return int|FileIDHelperResolutionStrategy|null
      */
     private function buildSS3MigrationStrategy(FileResolutionStrategy $initialStrategy)
     {

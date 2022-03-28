@@ -100,7 +100,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
             $this->name = $matches['name'];
             // Check if number is padded
             if (strpos($matches['version'], '0') === 0) {
-                $this->padding = strlen($matches['version']);
+                $this->padding = strlen((string) $matches['version']);
             }
         } else {
             $this->first = 1;

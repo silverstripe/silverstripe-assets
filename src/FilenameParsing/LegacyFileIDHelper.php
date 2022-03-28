@@ -133,7 +133,7 @@ class LegacyFileIDHelper implements FileIDHelper
         return new ParsedFileID(
             $filename,
             '',
-            isset($matches['variant']) ? str_replace('/', '_', $matches['variant']) : '',
+            isset($matches['variant']) ? str_replace('/', '_', $matches['variant'] ?: '') : '',
             $fileID
         );
     }

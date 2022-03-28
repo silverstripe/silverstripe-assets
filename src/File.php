@@ -609,7 +609,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Possible group values are: "audio", "mov", "zip", "image".
      *
      * @param string $ext Extension to check
-     * @return string
+     * @return string|false
      */
     public static function get_app_category($ext)
     {
@@ -732,7 +732,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             // and any file extensions removed.
             $this->setField(
                 'Title',
-                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name))
+                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name) ?: '')
             );
         }
 
@@ -872,7 +872,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * Gets the URL of this file
      *
-     * @return string
+     * @return string|null
      */
     public function getAbsoluteURL()
     {
@@ -888,7 +888,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      *
      * @uses Director::baseURL()
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
-     * @return string
+     * @return string|null
      */
     public function getURL($grant = true)
     {
@@ -902,7 +902,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Get URL, but without resampling.
      *
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
-     * @return string
+     * @return string|null
      */
     public function getSourceURL($grant = true)
     {
@@ -1019,7 +1019,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Given an extension, determine the icon that should be used
      *
      * @param string $extension
-     * @return string Icon filename relative to base url
+     * @return string|null Icon filename relative to base url
      */
     public static function get_icon_for_extension($extension)
     {

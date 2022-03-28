@@ -70,7 +70,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      * @param string $shortcode Name of shortcode used to register this handler
      * @param array $extra Extra arguments
      *
-     * @return string Result of the handled shortcode
+     * @return string|null Result of the handled shortcode
      */
     public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
@@ -202,7 +202,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      *
      * @param int $errorCode HTTP Error value
      *
-     * @return File|SiteTree File or SiteTree object to use for the given error
+     * @return File|SiteTree|null File or SiteTree object to use for the given error
      */
     protected static function find_error_record($errorCode)
     {

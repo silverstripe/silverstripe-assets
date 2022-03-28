@@ -1024,7 +1024,7 @@ trait ImageManipulation
 
         // Regex needs to be case insensitive since allMethodNames() is all lowercased
         $regex = '#^(?<format>(' . implode('|', $methods) . '))(?<encodedargs>(.*))#i';
-        preg_match($regex, $variantName, $matches);
+        preg_match($regex, (string) $variantName, $matches);
 
         if (!$matches) {
             throw new InvalidArgumentException('Invalid variant name: ' . $variantName);

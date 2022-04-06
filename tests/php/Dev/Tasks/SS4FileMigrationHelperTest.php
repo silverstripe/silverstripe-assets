@@ -122,8 +122,12 @@ class SS4FileMigrationHelperTest extends SapphireTest
             ->canvas(400, 300, '#142237')
             ->text($targetedStage, 20, 170, function (AbstractFont $font) {
                 $font->color('#44C8F5');
+                $font->align('');
+                $font->valign('');
             })->text($filename, 20, 185, function (AbstractFont $font) {
                 $font->color('#ffffff');
+                $font->align('');
+                $font->valign('');
             })->rectangle(20, 200, 100, 202, function (AbstractShape $shape) {
                 $shape->background('#DA1052');
             });

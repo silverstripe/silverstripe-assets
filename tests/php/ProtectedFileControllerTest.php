@@ -345,7 +345,11 @@ class ProtectedFileControllerTest extends FunctionalTest
         if ($code === 200) {
             $this->assertFalse($response->isError());
             $this->assertEquals($body, $response->getBody());
-            $this->assertEquals('text/plain', $response->getHeader('Content-Type'));
+            // finfo::file() in league/flysystem Local::getMimeType() will return a mimetype of
+            // 'text/plain' for test case pdfs in php7.4 + 8.0 , though in php8.1 it will
+            // return 'application/octet-stream' which is then converted to 'application/pdf'
+            // based on the file extension
+            $this->assertTrue(in_array($response->getHeader('Content-Type'), ['text/plain', 'application/pdf']));
         } else {
             $this->assertTrue($response->isError());
         }

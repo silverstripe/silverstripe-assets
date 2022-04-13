@@ -508,16 +508,16 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     public function setFromLocalFile($path, $filename = null, $hash = null, $variant = null, $config = [])
     {
         // Validate this file exists
-        if (!file_exists($path)) {
+        if (!file_exists($path ?? '')) {
             throw new InvalidArgumentException("$path does not exist");
         }
 
         // Get filename to save to
         if (empty($filename)) {
-            $filename = basename($path);
+            $filename = basename($path ?? '');
         }
 
-        $stream = fopen($path, 'r');
+        $stream = fopen($path ?? '', 'r');
         if ($stream === false) {
             throw new InvalidArgumentException("$path could not be opened for reading");
         }
@@ -534,7 +534,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     public function setFromString($data, $filename, $hash = null, $variant = null, $config = [])
     {
         $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $data);
+        fwrite($stream, $data ?? '');
         rewind($stream);
         try {
             return $this->setFromStream($stream, $filename, $hash, $variant, $config);
@@ -555,7 +555,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if (!$this->isSeekableStream($stream)) {
             $path = $this->getStreamAsFile($stream);
             $result = $this->setFromLocalFile($path, $filename, $hash, $variant, $config);
-            unlink($path);
+            unlink($path ?? '');
             return $result;
         }
 
@@ -644,7 +644,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                             // Move cached hash value to new location
                             $hasher->move($origin, $fs, $destination);
                         }
-                        $this->truncateDirectory(dirname($origin), $fs);
+                        $this->truncateDirectory(dirname($origin ?? ''), $fs);
                     }
                 }
 
@@ -738,7 +738,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Truncate empty dirs
-        $this->truncateDirectory(dirname($parsedFileID->getFileID()), $fs);
+        $this->truncateDirectory(dirname($parsedFileID->getFileID() ?? ''), $fs);
 
         return $deleted;
     }
@@ -752,12 +752,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     protected function truncateDirectory($dirname, Filesystem $filesystem)
     {
         if ($dirname
-            && ltrim($dirname, '.')
+            && ltrim($dirname ?? '', '.')
             && !$this->config()->get('keep_empty_dirs')
             && !$filesystem->listContents($dirname)
         ) {
             $filesystem->deleteDir($dirname);
-            $this->truncateDirectory(dirname($dirname), $filesystem);
+            $this->truncateDirectory(dirname($dirname ?? ''), $filesystem);
         }
     }
 
@@ -771,7 +771,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function findVariants($fileID, Filesystem $filesystem)
     {
-        $dirname = ltrim(dirname($fileID), '.');
+        $dirname = ltrim(dirname($fileID ?? ''), '.');
         foreach ($filesystem->listContents($dirname) as $next) {
             if ($next['type'] !== 'file') {
                 continue;
@@ -849,7 +849,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 // Blast existing variants from the destination
                 $to->delete($toFileID);
                 $hasher->move($toFileID, $to, '.swap/' . $fromFileID, $from);
-                $this->truncateDirectory(dirname($toFileID), $to);
+                $this->truncateDirectory(dirname($toFileID ?? ''), $to);
             }
         }
 
@@ -870,7 +870,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Remove the origin file and keep the file ID
             $from->delete($fromFileID);
             $hasher->move($fromFileID, $from, $toFileID, $to);
-            $this->truncateDirectory(dirname($fromFileID), $from);
+            $this->truncateDirectory(dirname($fromFileID ?? ''), $from);
         }
 
         foreach ($swapFiles as $variantParsedFileID) {
@@ -924,7 +924,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Truncate empty dirs
-        $this->truncateDirectory(dirname($fileID), $from);
+        $this->truncateDirectory(dirname($fileID ?? ''), $from);
     }
 
     /**
@@ -964,7 +964,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $from->delete($fromFileID);
 
             $hasher->move($fromFileID, $from, $toFileID, $to);
-            $this->truncateDirectory(dirname($fromFileID), $from);
+            $this->truncateDirectory(dirname($fromFileID ?? ''), $from);
         }
     }
 
@@ -1077,7 +1077,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         // Get temporary file and name
         $file = tempnam(sys_get_temp_dir(), 'ssflysystem');
-        $buffer = fopen($file, 'w');
+        $buffer = fopen($file ?? '', 'w');
         if (!$buffer) {
             throw new FlysystemException("Could not create temporary file");
         }
@@ -1693,7 +1693,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     $hasher->move($origin, $fs, $targetVariantFileID);
                     $ops[$origin] = $targetVariantFileID;
                 }
-                $this->truncateDirectory(dirname($origin), $fs);
+                $this->truncateDirectory(dirname($origin ?? ''), $fs);
             }
         }
 

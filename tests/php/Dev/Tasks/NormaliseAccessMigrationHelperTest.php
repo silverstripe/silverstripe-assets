@@ -85,7 +85,7 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
         $naturalPath = $file->getFilename();
         $hashPath = sprintf(
             '%s/%s',
-            substr($file->getHash(), 0, 10),
+            substr($file->getHash() ?? '', 0, 10),
             $file->getFilename()
         );
 
@@ -885,7 +885,7 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
         $img->write();
         $img->CMSThumbnail()->getURL();
 
-        $hashPath = sprintf('%s/%s', substr($img->getHash(), 0, 10), $variantFilename);
+        $hashPath = sprintf('%s/%s', substr($img->getHash() ?? '', 0, 10), $variantFilename);
 
         $this->assertTrue($protected->has($hashPath));
 

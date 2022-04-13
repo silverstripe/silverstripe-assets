@@ -74,7 +74,7 @@ class FileNameFilterTest extends SapphireTest
         );
         $this->assertGreaterThan(
             strlen('.jpg'),
-            strlen($result)
+            strlen($result ?? '')
         );
     }
 

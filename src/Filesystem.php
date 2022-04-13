@@ -44,11 +44,11 @@ class Filesystem
      */
     public static function makeFolder($folder)
     {
-        if (!file_exists($base = dirname($folder))) {
+        if (!file_exists($base = dirname($folder ?? ''))) {
             self::makeFolder($base);
         }
-        if (!file_exists($folder)) {
-            mkdir($folder, static::config()->folder_create_mask);
+        if (!file_exists($folder ?? '')) {
+            mkdir($folder ?? '', static::config()->folder_create_mask ?? 0);
         }
     }
 
@@ -89,14 +89,14 @@ class Filesystem
      */
     public static function remove_folder_if_empty($folder, $recursive = true)
     {
-        if (!is_readable($folder)) {
+        if (!is_readable($folder ?? '')) {
             return false;
         }
-        $handle = opendir($folder);
+        $handle = opendir($folder ?? '');
         while (false !== ($entry = readdir($handle))) {
             if ($entry != "." && $entry != "..") {
                 // if an empty folder is detected, remove that one first and move on
-                if ($recursive && is_dir($entry) && self::remove_folder_if_empty($entry)) {
+                if ($recursive && is_dir($entry ?? '') && self::remove_folder_if_empty($entry)) {
                     continue;
                 }
                 // if a file was encountered, or a subdirectory was not empty, return false.
@@ -104,7 +104,7 @@ class Filesystem
             }
         }
         // if we are still here, the folder is empty.
-        rmdir($folder);
+        rmdir($folder ?? '');
         return true;
     }
 
@@ -143,7 +143,7 @@ class Filesystem
             $folder = Director::baseFolder() . '/' . $folder;
         }
 
-        $items = scandir($folder);
+        $items = scandir($folder ?? '');
         foreach ($items as $item) {
             if ($item[0] != '.') {
                 // Recurse into folders
@@ -154,9 +154,9 @@ class Filesystem
                 } else {
                     $extension = null;
                     if ($extensionList) {
-                        $extension = strtolower(substr($item, strrpos($item, '.')+1));
+                        $extension = strtolower(substr($item ?? '', strrpos($item ?? '', '.')+1));
                     }
-                    if (!$extensionList || in_array($extension, $extensionList)) {
+                    if (!$extensionList || in_array($extension, $extensionList ?? [])) {
                         $modTime = max($modTime, filemtime("$folder/$item"));
                     }
                 }

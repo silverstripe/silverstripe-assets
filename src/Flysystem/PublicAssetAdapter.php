@@ -66,11 +66,11 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
         // Detect segment between web root directory and assets root
         $path = Convert::slashes($path, '/');
         $basePath = Convert::slashes(Director::publicFolder(), '/');
-        if (stripos($path, $basePath) === 0) {
-            $prefix = substr($path, strlen($basePath));
+        if (stripos($path ?? '', $basePath ?? '') === 0) {
+            $prefix = substr($path ?? '', strlen($basePath ?? ''));
         } else {
             $prefix = ASSETS_DIR;
         }
-        $this->parentUrlPrefix = ltrim($prefix, '/');
+        $this->parentUrlPrefix = ltrim($prefix ?? '', '/');
     }
 }

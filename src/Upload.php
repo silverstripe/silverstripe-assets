@@ -262,7 +262,7 @@ class Upload extends Controller
         }
         $nameFilter = FileNameFilter::create();
         $file = $nameFilter->filter($tmpFile['name']);
-        $filename = basename($file);
+        $filename = basename($file ?? '');
         if ($folderPath) {
             $filename = File::join_paths($folderPath, $filename);
         }
@@ -399,7 +399,7 @@ class Upload extends Controller
      */
     public function isError()
     {
-        return (count($this->errors));
+        return (count($this->errors ?? []));
     }
 
     /**

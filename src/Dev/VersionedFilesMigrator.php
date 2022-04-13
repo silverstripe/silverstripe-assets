@@ -92,10 +92,10 @@ class VersionedFilesMigrator
     {
         foreach ($this->getVersionDirectories() as $path) {
             $htaccessPath = Path::join($path, '.htaccess');
-            if (!file_exists($htaccessPath)) {
+            if (!file_exists($htaccessPath ?? '')) {
                 $content = "Require all denied";
-                @file_put_contents($htaccessPath, $content);
-                if (file_exists($htaccessPath)) {
+                @file_put_contents($htaccessPath ?? '', $content);
+                if (file_exists($htaccessPath ?? '')) {
                     $this->output("Added .htaccess file to $htaccessPath");
                 } else {
                     $this->output("Failed to add .htaccess file to $htaccessPath");
@@ -110,13 +110,13 @@ class VersionedFilesMigrator
     private function doDelete()
     {
         foreach ($this->getVersionDirectories() as $path) {
-            if (!is_dir($path)) {
+            if (!is_dir($path ?? '')) {
                 continue;
             }
 
             Filesystem::removeFolder($path);
 
-            if (!is_dir($path)) {
+            if (!is_dir($path ?? '')) {
                 $this->output("Deleted $path");
             } else {
                 $this->output("Failed to delete $path");

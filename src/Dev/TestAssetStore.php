@@ -123,7 +123,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         // Remove all files in this store
         if (self::$basedir) {
             $path = self::base_path();
-            if (file_exists($path)) {
+            if (file_exists($path ?? '')) {
                 SSFilesystem::removeFolder($path);
             }
         }

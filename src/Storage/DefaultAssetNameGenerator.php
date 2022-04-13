@@ -81,26 +81,26 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
     public function __construct($filename)
     {
         // Normalise filename slashes to `/` (fixed across OS for DB file identifier separator)
-        $this->filename = trim(preg_replace('#[/\\\\]+#', '/', $filename), '/');
-        $this->directory = ltrim(dirname($this->filename), '.');
-        $name = basename($this->filename);
+        $this->filename = trim(preg_replace('#[/\\\\]+#', '/', $filename ?? '') ?? '', '/');
+        $this->directory = ltrim(dirname($this->filename ?? ''), '.');
+        $name = basename($this->filename ?? '');
         // Note: Unlike normal extensions, we want to split at the first period, not the last.
-        if (($pos = strpos($name, '.')) !== false) {
-            $this->extension = substr($name, $pos);
-            $name = substr($name, 0, $pos);
+        if (($pos = strpos($name ?? '', '.')) !== false) {
+            $this->extension = substr($name ?? '', $pos ?? 0);
+            $name = substr($name ?? '', 0, $pos);
         } else {
             $this->extension = null;
         }
 
         // Extract version prefix if already applied to this file
         $this->padding = 0;
-        $pattern = '/^(?<name>[^\/]+?)' . preg_quote($this->getPrefix()) . '(?<version>[0-9]+)$/';
-        if (preg_match($pattern, $name, $matches)) {
+        $pattern = '/^(?<name>[^\/]+?)' . preg_quote($this->getPrefix() ?? '') . '(?<version>[0-9]+)$/';
+        if (preg_match($pattern ?? '', $name ?? '', $matches)) {
             $this->first = (int)$matches['version'];
             $this->name = $matches['name'];
             // Check if number is padded
-            if (strpos($matches['version'], '0') === 0) {
-                $this->padding = strlen($matches['version']);
+            if (strpos($matches['version'] ?? '', '0') === 0) {
+                $this->padding = strlen($matches['version'] ?? '');
             }
         } else {
             $this->first = 1;
@@ -120,6 +120,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         return Config::inst()->get(__CLASS__, 'version_prefix');
     }
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         $version = $this->version;
@@ -134,7 +135,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
             $version = substr(md5(time()), 0, 10);
         } elseif ($this->padding) {
             // Else, pad
-            $version = str_pad($version, $this->padding, '0', STR_PAD_LEFT);
+            $version = str_pad($version ?? '', $this->padding ?? 0, '0', STR_PAD_LEFT);
         }
 
         // Build next name
@@ -145,21 +146,25 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         return $filename;
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->version - $this->first;
     }
 
+    #[\ReturnTypeWillChange]
     public function next()
     {
         $this->version++;
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->version = $this->first;
     }
 
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return $this->version < $this->max + $this->first;

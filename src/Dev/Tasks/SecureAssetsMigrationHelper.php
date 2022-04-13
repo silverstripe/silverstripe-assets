@@ -138,14 +138,14 @@ class SecureAssetsMigrationHelper
     public function htaccessMatch($content)
     {
         $regexes = $this->htaccessRegexes;
-        $lines = explode("\n", $content);
+        $lines = explode("\n", $content ?? '');
 
-        if (count($lines) != count($regexes)) {
+        if (count($lines ?? []) != count($regexes ?? [])) {
             return false;
         }
 
         foreach ($lines as $i => $line) {
-            if (!preg_match($regexes[$i], $line)) {
+            if (!preg_match($regexes[$i] ?? '', $line ?? '')) {
                 return false;
             }
         }

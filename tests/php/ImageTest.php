@@ -63,7 +63,7 @@ abstract class ImageTest extends SapphireTest
 
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $expected = '<img width="300" height="300" alt="This is a image Title" src="/assets/ImageTest/folder/test-image.png" loading="lazy" />';
-        $actual = trim($image->getTag());
+        $actual = trim($image->getTag() ?? '');
 
         $this->assertEquals($expected, $actual);
     }
@@ -91,7 +91,7 @@ abstract class ImageTest extends SapphireTest
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
         $expected = '<img width="300" height="300" alt="test image" src="/assets/ImageTest/folder/test-image.png" loading="lazy" />';
-        $actual = trim($image->getTag());
+        $actual = trim($image->getTag() ?? '');
 
         $this->assertEquals($expected, $actual);
     }
@@ -102,7 +102,7 @@ abstract class ImageTest extends SapphireTest
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
         $expected = '<img width="300" height="300" alt="test.image.with.dots" src="/assets/ImageTest/folder/test.image.with.dots.png" loading="lazy" />';
-        $actual = trim($image->getTag());
+        $actual = trim($image->getTag() ?? '');
 
         $this->assertEquals($expected, $actual);
     }
@@ -455,7 +455,7 @@ abstract class ImageTest extends SapphireTest
         // Test loading of inaccessible asset
         /** @var AssetContainer|ObjectProphecy $builder */
         $filename = 'folder/file.jpg';
-        $hash = sha1($filename);
+        $hash = sha1($filename ?? '');
 
         // Mock unavailable asset backend
         $container = $this->getMockAssetBackend($filename, $hash);
@@ -504,7 +504,7 @@ abstract class ImageTest extends SapphireTest
         // Test loading of inaccessible asset
         /** @var AssetContainer|ObjectProphecy $builder */
         $filename = 'folder/not-image.txt';
-        $hash = sha1($filename);
+        $hash = sha1($filename ?? '');
 
         // Get backend which poses as image, but has non-image content
         $container = $this->getMockAssetBackend($filename, $hash);

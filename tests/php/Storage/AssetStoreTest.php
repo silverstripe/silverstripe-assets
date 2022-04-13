@@ -67,7 +67,7 @@ class AssetStoreTest extends SapphireTest
 
         // Test setFromStream (seekable)
         $fish1 = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
-        $fish1Stream = fopen($fish1, 'r');
+        $fish1Stream = fopen($fish1 ?? '', 'r');
         $fish1Tuple = $backend->setFromStream($fish1Stream, 'parent/awesome-fish.jpg');
         fclose($fish1Stream);
         $this->assertEquals(
@@ -82,7 +82,7 @@ class AssetStoreTest extends SapphireTest
         // Test with non-seekable streams
         TestAssetStore::$seekable_override = false;
         $fish2 = realpath(__DIR__ . '/../ImageTest/test-image-low-quality.jpg');
-        $fish2Stream = fopen($fish2, 'r');
+        $fish2Stream = fopen($fish2 ?? '', 'r');
         $fish2Tuple = $backend->setFromStream($fish2Stream, 'parent/mediocre-fish.jpg');
         fclose($fish2Stream);
 
@@ -745,7 +745,7 @@ class AssetStoreTest extends SapphireTest
             $tuple['Hash'],
             'variant'
         );
-        $hash = substr($tuple['Hash'], 0, 10);
+        $hash = substr($tuple['Hash'] ?? '', 0, 10);
         $this->assertFileExists(
             ASSETS_PATH .
             "/AssetStoreTest/.protected/$hash/explicitelyProtectedStore__variant.txt"
@@ -781,7 +781,7 @@ class AssetStoreTest extends SapphireTest
         $protectedFs = $store->getProtectedFilesystem();
 
         $hash = sha1('hello');
-        $hashPath = substr($hash, 0, 10) . '/hello.txt';
+        $hashPath = substr($hash ?? '', 0, 10) . '/hello.txt';
         $naturalPath = 'hello.txt';
 
         $file = new File();
@@ -847,7 +847,7 @@ class AssetStoreTest extends SapphireTest
     public function listOfVariantsToWrite()
     {
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $filename = 'folder/file.txt';
         $variant = 'uppercase';
         $parsedFiledID = new ParsedFileID($filename, $hash);
@@ -905,21 +905,21 @@ class AssetStoreTest extends SapphireTest
         $legacyHelper = new LegacyFileIDHelper();
 
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $filename = 'folder/file.txt';
         $hashPath = $hashHelper->buildFileID($filename, $hash);
         $legacyPath = $legacyHelper->buildFileID($filename, $hash);
 
         $variant = 'uppercase';
-        $vContent = strtoupper($content);
+        $vContent = strtoupper($content ?? '');
         $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
         $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
         $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
 
         return [
             // Main file only
-            [$public, [$filename => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
-            [$public, [$hashPath => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$filename => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$public, [$hashPath => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath ?? '')]],
             [$protected, [$filename => $content], $filename, $hash, [$hashPath], [$filename]],
             [$protected, [$hashPath => $content], $filename, $hash, [$hashPath], [$filename]],
 
@@ -930,7 +930,7 @@ class AssetStoreTest extends SapphireTest
                 $filename,
                 $hash,
                 [$filename, $vNatural],
-                [$hashPath, $vHash, dirname($hashPath)]
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
             ],
             [
                 $public,
@@ -938,7 +938,7 @@ class AssetStoreTest extends SapphireTest
                 $filename,
                 $hash,
                 [$filename, $vNatural],
-                [$hashPath, $vHash, dirname($hashPath)]
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
             ],
             [
                 $protected,
@@ -964,7 +964,7 @@ class AssetStoreTest extends SapphireTest
                 $filename,
                 $hash,
                 [$filename, $vNatural],
-                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+                [$vLegacy, dirname($vLegacy ?? ''), dirname(dirname($vLegacy ?? ''))]
             ],
         ];
     }
@@ -1010,21 +1010,21 @@ class AssetStoreTest extends SapphireTest
         $legacyHelper = new LegacyFileIDHelper();
 
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $filename = 'folder/file.txt';
         $hashPath = $hashHelper->buildFileID($filename, $hash);
         $legacyPath = $legacyHelper->buildFileID($filename, $hash);
 
         $variant = 'uppercase';
-        $vContent = strtoupper($content);
+        $vContent = strtoupper($content ?? '');
         $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
         $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
         $vLegacy = $legacyHelper->buildFileID($filename, $hash, $variant);
 
         return [
             // Main file only
-            [$public, [$filename => $content], $filename, [$filename], [$hashPath, dirname($hashPath)]],
-            [$public, [$hashPath => $content], $hashPath, [$filename], [$hashPath, dirname($hashPath)]],
+            [$public, [$filename => $content], $filename, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$public, [$hashPath => $content], $hashPath, [$filename], [$hashPath, dirname($hashPath ?? '')]],
             [$protected, [$filename => $content], $filename, [$hashPath], [$filename]],
             [$protected, [$hashPath => $content], $hashPath, [$hashPath], [$filename]],
 
@@ -1034,14 +1034,14 @@ class AssetStoreTest extends SapphireTest
                 [$filename => $content, $vNatural => $vContent],
                 $filename,
                 [$filename, $vNatural],
-                [$hashPath, $vHash, dirname($hashPath)]
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
             ],
             [
                 $public,
                 [$hashPath => $content, $vHash => $vContent],
                 $hashPath,
                 [$filename, $vNatural],
-                [$hashPath, $vHash, dirname($hashPath)]
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
             ],
             [
                 $protected,
@@ -1064,7 +1064,7 @@ class AssetStoreTest extends SapphireTest
                 [$legacyPath => $content, $vLegacy => $vContent],
                 $legacyPath,
                 [$filename, $vNatural],
-                [$vLegacy, dirname($vLegacy), dirname(dirname($vLegacy))]
+                [$vLegacy, dirname($vLegacy ?? ''), dirname(dirname($vLegacy ?? ''))]
             ],
 
             // Test files with a parent folder that could be confused for an hash folder
@@ -1125,7 +1125,7 @@ class AssetStoreTest extends SapphireTest
 
         $this->assertEquals($expectedFilename, $results['Filename']);
         $this->assertTrue(
-            strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash']) === 0
+            strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash'] ?? '') === 0
         );
 
         $fs = $this->getFilesystem($fsName);
@@ -1146,7 +1146,7 @@ class AssetStoreTest extends SapphireTest
      */
     private function getFilesystem($fs)
     {
-        switch (strtolower($fs)) {
+        switch (strtolower($fs ?? '')) {
             case AssetStore::VISIBILITY_PUBLIC:
                 return $this->getBackend()->getPublicFilesystem();
             case AssetStore::VISIBILITY_PROTECTED:
@@ -1169,7 +1169,7 @@ class AssetStoreTest extends SapphireTest
         // "decade1980" could be confused for an hash because it's 10 hexa-decimal characters
         $filename = 'decade1980/pangram.txt';
         $content = 'The quick brown fox jumps over a lazy dog';
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $store = $this->getBackend();
 
         // File haven't been created yet
@@ -1182,7 +1182,7 @@ class AssetStoreTest extends SapphireTest
         $this->assertFalse($store->exists($filename, $hash, 'variant'));
 
         // Create variant on protected store
-        $store->setFromString(strtoupper($content), $filename, $hash, 'variant');
+        $store->setFromString(strtoupper($content ?? ''), $filename, $hash, 'variant');
         $this->assertTrue($store->exists($filename, $hash, 'variant'));
 
         // Publish file to public store

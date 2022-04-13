@@ -77,8 +77,8 @@ class FileMigrationHelperTest extends SapphireTest
             rewind($fromMain);
             $fs->write($filename, $fromMain);
 
-            $dir = dirname($filename);
-            $basename = basename($filename);
+            $dir = dirname($filename ?? '');
+            $basename = basename($filename ?? '');
 
             rewind($fromVariant);
             $fs->write($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
@@ -263,7 +263,7 @@ class FileMigrationHelperTest extends SapphireTest
                 "File with name {$filename} has the correct content"
             );
             $this->assertEquals(
-                sha1($expectedContent),
+                sha1($expectedContent ?? ''),
                 $file->File->getHash(),
                 "File with name {$filename} has the correct hash"
             );
@@ -281,21 +281,21 @@ class FileMigrationHelperTest extends SapphireTest
     {
         // Test that our image variant got moved correctly
         $fullFilename = TestAssetStore::base_path() . '/' . $file->getFilename();
-        $dir = dirname($fullFilename);
-        $baseFilename = basename($fullFilename);
+        $dir = dirname($fullFilename ?? '');
+        $baseFilename = basename($fullFilename ?? '');
         $this->assertFileDoesNotExist($dir . '/_resampled');
         $this->assertFileExists($dir . '/' . $baseFilename);
 
         // Test that SS3.3 variants have been migrated
-        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__resizeXYZ.$2', $baseFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__resizeXYZ.$2', $baseFilename ?? '');
         $this->assertFileExists($dir . '/' . $variantFilename);
-        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_scaleABC.$2', $variantFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_scaleABC.$2', $variantFilename ?? '');
         $this->assertFileExists($dir . '/' . $variantFilename);
 
         // Test that pre SS3.0 variants have been migrated
-        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__ScaleWidthWzEwMF0.$2', $baseFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1__ScaleWidthWzEwMF0.$2', $baseFilename ?? '');
         $this->assertFileExists($dir . '/' . $variantFilename);
-        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_FitWzEwMCwxMDBd.$2', $variantFilename);
+        $variantFilename = preg_replace('#^(.*)\.(.*)$#', '$1_FitWzEwMCwxMDBd.$2', $variantFilename ?? '');
         $this->assertFileExists($dir . '/' . $variantFilename);
     }
 
@@ -376,7 +376,7 @@ class FileMigrationHelperTest extends SapphireTest
             "bad_name.doc has the expected content"
         );
         $this->assertEquals(
-            sha1($expectedGoodContent),
+            sha1($expectedGoodContent ?? ''),
             $good->File->getHash(),
             "bad_name.doc has the expected hash"
         );
@@ -388,7 +388,7 @@ class FileMigrationHelperTest extends SapphireTest
             "bad_name-v2.doc has the expected content"
         );
         $this->assertEquals(
-            sha1($expectedBadContent),
+            sha1($expectedBadContent ?? ''),
             $bad->File->getHash(),
             "bad_name-v2.doc has the expected hash"
         );

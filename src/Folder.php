@@ -50,7 +50,7 @@ class Folder extends File
     public static function find_or_make($folderPath)
     {
         // Safely split all parts
-        $parts = array_filter(preg_split("#[/\\\\]+#", $folderPath));
+        $parts = array_filter(preg_split("#[/\\\\]+#", $folderPath ?? '') ?? []);
 
         $parentID = 0;
         $item = null;
@@ -74,7 +74,7 @@ class Folder extends File
             if (class_exists(Versioned::class)) {
                 $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
                 if ($versioned
-                    && strpos($versioned::get_reading_mode(), 'Archive.') !== false) {
+                    && strpos($versioned::get_reading_mode() ?? '', 'Archive.') !== false) {
                     // We return the searched for folder, it will either be null if it doesn't exist
                     // or the folder if it does exist (at the archived date and time)
                     return $item;
@@ -215,7 +215,7 @@ class Folder extends File
     {
         return sprintf(
             "<span class=\"jstree-foldericon\"></span><span class=\"item\">%s</span>",
-            Convert::raw2att(preg_replace('~\R~u', ' ', $this->Title))
+            Convert::raw2att(preg_replace('~\R~u', ' ', $this->Title ?? ''))
         );
     }
 

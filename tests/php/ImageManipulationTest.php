@@ -424,7 +424,7 @@ class ImageManipulationTest extends SapphireTest
 
         $this->assertEquals(
             $expected,
-            trim($image->renderWith(SSViewer::fromString($template)))
+            trim($image->renderWith(SSViewer::fromString($template)) ?? '')
         );
     }
 

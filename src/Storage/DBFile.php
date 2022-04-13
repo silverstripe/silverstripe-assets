@@ -88,7 +88,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     {
         // Check file type
         $mime = $this->getMimeType();
-        return $mime && in_array($mime, $this->config()->supported_images);
+        return $mime && in_array($mime, $this->config()->supported_images ?? []);
     }
 
     /**
@@ -180,7 +180,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->exists()) {
             return null;
         }
-        return basename($this->getSourceURL());
+        return basename($this->getSourceURL() ?? '');
     }
 
     /**
@@ -193,7 +193,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->exists()) {
             return null;
         }
-        return pathinfo($this->Filename, PATHINFO_EXTENSION);
+        return pathinfo($this->Filename ?? '', PATHINFO_EXTENSION);
     }
 
     /**
@@ -442,7 +442,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     public function setAllowedCategories($categories)
     {
         if (is_string($categories)) {
-            $categories = preg_split('/\s*,\s*/', $categories);
+            $categories = preg_split('/\s*,\s*/', $categories ?? '');
         }
         $this->allowedCategories = (array)$categories;
         return $this;
@@ -469,17 +469,17 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      */
     protected function isValidFilename($filename)
     {
-        $extension = strtolower(File::get_file_extension($filename));
+        $extension = strtolower(File::get_file_extension($filename) ?? '');
 
         // Validate true if within the list of allowed extensions
         $allowed = $this->getAllowedExtensions();
         if ($allowed) {
-            return in_array($extension, $allowed);
+            return in_array($extension, $allowed ?? []);
         }
 
         // If no extensions are configured, fallback to global list
         $globalList = File::getAllowedExtensions();
-        if (in_array($extension, $globalList)) {
+        if (in_array($extension, $globalList ?? [])) {
             return true;
         }
 
@@ -522,7 +522,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         $message = _t(
             'SilverStripe\\Assets\\File.INVALIDEXTENSION_SHORT_EXT',
             'Extension \'{extension}\' is not allowed',
-            [ 'extension' => strtolower(File::get_file_extension($filename)) ]
+            [ 'extension' => strtolower(File::get_file_extension($filename) ?? '') ]
         );
         $result->addError($message);
         return false;

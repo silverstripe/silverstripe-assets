@@ -381,7 +381,7 @@ class RedirectFileControllerTest extends FunctionalTest
         $file->setFromLocalFile(__DIR__ . '/ImageTest/landscape-to-portrait.jpg', $file->FileFilename);
         $file->write();
         $file->publishSingle();
-        $hash = substr($file->getHash(), 0, 10);
+        $hash = substr($file->getHash() ?? '', 0, 10);
         $ico = $file->ScaleWidth(32);
         $icoUrl = $ico->getURL(false);
 
@@ -483,7 +483,7 @@ class RedirectFileControllerTest extends FunctionalTest
     protected function assertGetResponse($url, $code, $body, $location, $message = '')
     {
         // Make sure the url is prefix with assets
-        $url = '/assets/' . preg_replace('#^/?(assets)?\/?#', '', $url);
+        $url = '/assets/' . preg_replace('#^/?(assets)?\/?#', '', $url ?? '');
         $this->assertResponse(
             $code,
             $body,
@@ -530,7 +530,7 @@ class RedirectFileControllerTest extends FunctionalTest
      */
     protected function normaliseUrl($path)
     {
-        return str_replace('RedirectFileControllerTest/', '', $path);
+        return str_replace('RedirectFileControllerTest/', '', $path ?? '');
     }
 
     public function get($url, $session = null, $headers = null, $cookies = null)

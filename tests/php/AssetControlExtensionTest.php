@@ -236,8 +236,8 @@ class AssetControlExtensionTest extends SapphireTest
         $v3Content = 'Documents/File.txt v3';
 
         $v1 = new ParsedFileID($download->getFilename(), $download->getHash());
-        $v2 = $v1->setHash(sha1($v2Content));
-        $v3 = $v1->setHash(sha1($v3Content));
+        $v2 = $v1->setHash(sha1($v2Content ?? ''));
+        $v3 = $v1->setHash(sha1($v3Content ?? ''));
 
         // Start by creating a pre-existing variant
         $download->setFromString(

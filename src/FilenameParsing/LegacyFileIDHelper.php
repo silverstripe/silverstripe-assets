@@ -64,23 +64,23 @@ class LegacyFileIDHelper implements FileIDHelper
             $filename =  $filename->getFilename();
         }
 
-        $name = basename($filename);
+        $name = basename($filename ?? '');
 
         // Split extension
         $extension = null;
-        if (($pos = strpos($name, '.')) !== false) {
-            $extension = substr($name, $pos);
-            $name = substr($name, 0, $pos);
+        if (($pos = strpos($name ?? '', '.')) !== false) {
+            $extension = substr($name ?? '', $pos ?? 0);
+            $name = substr($name ?? '', 0, $pos);
         }
 
         $fileID = $name;
 
         // Add directory
-        $dirname = ltrim(dirname($filename), '.');
+        $dirname = ltrim(dirname($filename ?? ''), '.');
 
         // Add variant
         if ($variant) {
-            $fileID = '_resampled/' . str_replace('_', '/', $variant) . '/' . $fileID;
+            $fileID = '_resampled/' . str_replace('_', '/', $variant ?? '') . '/' . $fileID;
         }
 
         if ($dirname) {
@@ -98,7 +98,7 @@ class LegacyFileIDHelper implements FileIDHelper
     public function cleanFilename($filename)
     {
         // Swap backslash for forward slash
-        $filename = str_replace('\\', '/', $filename);
+        $filename = str_replace('\\', '/', $filename ?? '');
 
         // There's not really any relevant cleaning rule for legacy. It's not important any way because we won't be
         // generating legacy URLs, aside from maybe for testing.
@@ -120,12 +120,12 @@ class LegacyFileIDHelper implements FileIDHelper
         }
 
         // not a valid file (or not a part of the filesystem)
-        if (!preg_match($pattern, $fileID, $matches)) {
+        if (!preg_match($pattern ?? '', $fileID ?? '', $matches)) {
             return null;
         }
 
         // Can't have a resampled folder without a variant
-        if (empty($matches['variant']) && strpos($fileID, '_resampled') !== false) {
+        if (empty($matches['variant']) && strpos($fileID ?? '', '_resampled') !== false) {
             return $this->parseSilverStripe30VariantFileID($fileID);
         }
 
@@ -156,27 +156,27 @@ class LegacyFileIDHelper implements FileIDHelper
         }
 
         // not a valid file (or not a part of the filesystem)
-        if (!preg_match($pattern, $fileID, $matches)) {
+        if (!preg_match($pattern ?? '', $fileID ?? '', $matches)) {
             return null;
         }
 
         // Our SS3 variant can be confused with regular filenames, let's minimise the risk of this by making
         // sure all our variants use a valid SS3 variant expression
-        $variant = trim($matches['variant'], '-');
-        $possibleVariants = explode('-', $variant);
+        $variant = trim($matches['variant'] ?? '', '-');
+        $possibleVariants = explode('-', $variant ?? '');
         $validVariants = [];
         $validVariantRegex = '#^(' . $variantPartialRegex . ')(?<base64>(.+))$#i';
 
         // Loop through the possible variants until we find an invalid one
         while ($possible = array_shift($possibleVariants)) {
             // Find the base64 encoded argument attached to the image method
-            if (preg_match($validVariantRegex, $possible, $variantMatches)) {
+            if (preg_match($validVariantRegex ?? '', $possible ?? '', $variantMatches)) {
                 try {
                     // Our base 64 encoded string always decodes to a string representation of php array
                     // So we're assuming it always starts with a `[` and ends with a `]`
                     $base64Str = $variantMatches['base64'];
-                    $argumentString = base64_decode($base64Str);
-                    if ($argumentString && preg_match('/^\[.*\]$/', $argumentString)) {
+                    $argumentString = base64_decode($base64Str ?? '');
+                    if ($argumentString && preg_match('/^\[.*\]$/', $argumentString ?? '')) {
                         $validVariants[] = $possible;
                         continue;
                     }
@@ -216,7 +216,7 @@ class LegacyFileIDHelper implements FileIDHelper
         // This is important because the regex will match the string in order of appearance.
         // e.g. `paddedimageW10` could be confused for `pad` with a base64 string of `dedimageW10`
         usort($variantMethods, function ($a, $b) {
-            return strlen($b) - strlen($a);
+            return strlen($b ?? '') - strlen($a ?? '');
         });
 
         return $variantMethods;
@@ -230,7 +230,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
     public function lookForVariantIn(ParsedFileID $parsedFileID)
     {
-        $folder = dirname($parsedFileID->getFilename());
+        $folder = dirname($parsedFileID->getFilename() ?? '');
         if ($folder == '.') {
             $folder = '';
         } else {

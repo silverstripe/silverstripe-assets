@@ -247,7 +247,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
      */
     protected function assertFileAt(File $file, $visibility, $stage)
     {
-        $ucVisibility = ucfirst($visibility);
+        $ucVisibility = ucfirst($visibility ?? '');
         $filename = $file->getFilename();
         $hash = $file->getHash();
         /** @var FlysystemAssetStore $store */
@@ -282,7 +282,7 @@ class SS4FileMigrationHelperTest extends SapphireTest
      */
     protected function assertImageAt(Image $file, $visibility, $stage)
     {
-        $ucVisibility = ucfirst($visibility);
+        $ucVisibility = ucfirst($visibility ?? '');
         $filename = $file->getFilename();
         $hash = $file->getHash();
         $pfid = new ParsedFileID($filename, $hash);

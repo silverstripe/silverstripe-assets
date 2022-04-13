@@ -56,8 +56,8 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
             $file->write();
             $file->publishFile();
             $dest = $this->joinPaths(TestAssetStore::base_path(), $file->generateFilename());
-            Filesystem::makeFolder(dirname($dest));
-            copy($from, $dest);
+            Filesystem::makeFolder(dirname($dest ?? ''));
+            copy($from ?? '', $dest ?? '');
         }
     }
 
@@ -187,7 +187,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
         $origFolder = $image->Parent()->getFilename();
         $this->assertEquals(
             $origFolder ? $origFolder : '.' . DIRECTORY_SEPARATOR,
-            dirname($expectedNewPath) . DIRECTORY_SEPARATOR,
+            dirname($expectedNewPath ?? '') . DIRECTORY_SEPARATOR,
             'Thumbnails are created in same folder as original file'
         );
     }
@@ -264,8 +264,8 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
             TestAssetStore::base_path(),
             $resampledRelativePath
         );
-        Filesystem::makeFolder(dirname($resampledPath));
-        copy($origPath, $resampledPath);
+        Filesystem::makeFolder(dirname($resampledPath ?? ''));
+        copy($origPath ?? '', $resampledPath ?? '');
 
         return $resampledRelativePath;
     }
@@ -301,7 +301,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
         $cacheFilename = $this->joinPaths(
             $cacheFilename,
-            basename($image->generateFilename())
+            basename($image->generateFilename() ?? '')
         );
 
         return $cacheFilename;
@@ -335,7 +335,7 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
         $cacheFilename = $this->joinPaths(
             $cacheFilename,
-            $formatPrefix . basename($image->generateFilename())
+            $formatPrefix . basename($image->generateFilename() ?? '')
         );
 
         return $cacheFilename;
@@ -359,17 +359,17 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
 
         // Perform the manipulation (only to get the resulting path)
         foreach ($formats as $format => $args) {
-            $resampled = call_user_func_array([$resampled, $format], $args);
+            $resampled = call_user_func_array([$resampled, $format], $args ?? []);
             $resampleds [] = $resampled;
         }
 
         $path = TestAssetStore::getLocalPath($resampled, false, true); // relative to store
-        $path = preg_replace('#^/#', '', $path); // normalise with other store relative paths
+        $path = preg_replace('#^/#', '', $path ?? ''); // normalise with other store relative paths
 
         // Not using File->delete() since that actually deletes the original file, not only variant.
         if (!$keep) {
             foreach ($resampleds as $resampled) {
-                unlink(TestAssetStore::getLocalPath($resampled));
+                unlink(TestAssetStore::getLocalPath($resampled) ?? '');
             }
         }
 

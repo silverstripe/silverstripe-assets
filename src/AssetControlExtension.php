@@ -236,7 +236,7 @@ class AssetControlExtension extends DataExtension
         }
 
         // De-dupe
-        return array_map("unserialize", array_unique(array_map("serialize", $files)));
+        return array_map("unserialize", array_unique(array_map("serialize", $files ?? [])));
     }
 
     /**

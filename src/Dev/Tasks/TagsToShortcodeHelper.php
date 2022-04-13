@@ -93,7 +93,7 @@ class TagsToShortcodeHelper
         $this->baseClass = $baseClass ?: DataObject::class;
         $this->includeBaseClass = $includeBaseClass;
 
-        $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS));
+        $this->validTagsPattern = implode('|', array_keys(static::VALID_TAGS ?? []));
         $this->validAttributesPattern = implode('|', static::VALID_ATTRIBUTES);
     }
 
@@ -152,7 +152,7 @@ class TagsToShortcodeHelper
     {
         $sqlSelect = SQLSelect::create(['"ID"', "\"$field\""], "\"$table\"");
         $whereAnys = [];
-        foreach (array_keys(static::VALID_TAGS) as $tag) {
+        foreach (array_keys(static::VALID_TAGS ?? []) as $tag) {
             $whereAnys[]= "\"$table\".\"$field\" LIKE '%<$tag%'";
             $whereAnys[]= "\"$table\".\"$field\" LIKE '%[$tag%'";
         }
@@ -194,7 +194,7 @@ class TagsToShortcodeHelper
         $tags = $this->getTagsInContent($content);
         foreach ($tags as $tag) {
             if ($newTag = $this->getNewTag($tag)) {
-                $content = str_replace($tag, $newTag, $content);
+                $content = str_replace($tag ?? '', $newTag ?? '', $content ?? '');
             }
         }
 
@@ -211,7 +211,7 @@ class TagsToShortcodeHelper
         $resultTags = [];
 
         $regex = '/<('.$this->validTagsPattern.')\s[^>]*?('.$this->validAttributesPattern.')\s*=.*?>/i';
-        preg_match_all($regex, $content, $matches, PREG_SET_ORDER);
+        preg_match_all($regex ?? '', $content ?? '', $matches, PREG_SET_ORDER);
         if ($matches) {
             foreach ($matches as $match) {
                 $resultTags []= $match[0];
@@ -232,7 +232,7 @@ class TagsToShortcodeHelper
             $this->validTagsPattern,
             $this->validAttributesPattern
         );
-        preg_match($pattern, $tag, $matches);
+        preg_match($pattern ?? '', $tag ?? '', $matches);
         return $matches;
     }
 
@@ -253,7 +253,7 @@ class TagsToShortcodeHelper
 
         // set fileID to the filepath relative to assets dir
         $pattern = sprintf('#^/?(%s/?)?#', ASSETS_DIR);
-        $fileID = preg_replace($pattern, '', $src);
+        $fileID = preg_replace($pattern ?? '', '', $src ?? '');
 
         // Our file reference might be using invalid file name that will have been cleaned up by the migration task.
         $fileID = $defaultFileIDHelper->cleanFilename($fileID);
@@ -288,7 +288,7 @@ class TagsToShortcodeHelper
         if (!isset($tuple['tagType']) || !isset($tuple['src'])) {
             return null;
         }
-        $tagType = strtolower($tuple['tagType']);
+        $tagType = strtolower($tuple['tagType'] ?? '');
         $src = $tuple['src'] ?: $tuple['href'];
 
         // Search for a File object containing this filename
@@ -322,12 +322,12 @@ class TagsToShortcodeHelper
                     "",
                     " id=\"{$file->ID}\"]",
                 ];
-                $shortcode = preg_replace($find, $replace, $tag);
+                $shortcode = preg_replace($find ?? '', $replace ?? '', $tag ?? '');
             } elseif ($tagType == 'a') {
                 $attribute = 'href';
                 $find = "/$attribute\s*=\s*(?:\"|').*?(?:\"|')/i";
                 $replace = "$attribute=\"[file_link,id={$file->ID}]\"";
-                $shortcode = preg_replace($find, $replace, $tag);
+                $shortcode = preg_replace($find ?? '', $replace ?? '', $tag ?? '');
             } else {
                 return null;
             }
@@ -382,8 +382,8 @@ class TagsToShortcodeHelper
             $fields = $schema->fieldSpecs($class, DataObjectSchema::DB_ONLY|DataObjectSchema::UNINHERITED);
 
             foreach ($fields as $field => $type) {
-                $type = preg_replace('/\(.*\)$/', '', $type);
-                if (in_array($type, $fieldNames)) {
+                $type = preg_replace('/\(.*\)$/', '', $type ?? '');
+                if (in_array($type, $fieldNames ?? [])) {
                     $table = $schema->tableForField($class, $field);
                     if (!isset($mapping[$class])) {
                         $mapping[$class] = [];
@@ -391,7 +391,7 @@ class TagsToShortcodeHelper
                     if (!isset($mapping[$class][$table])) {
                         $mapping[$class][$table] = [];
                     }
-                    if (!in_array($field, $mapping[$class][$table])) {
+                    if (!in_array($field, $mapping[$class][$table] ?? [])) {
                         $mapping[$class][$table][] = $field;
                     }
                 }

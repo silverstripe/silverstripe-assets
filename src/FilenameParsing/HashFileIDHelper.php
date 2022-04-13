@@ -41,19 +41,19 @@ class HashFileIDHelper implements FileIDHelper
         if ($cleanfilename) {
             $filename = $this->cleanFilename($filename);
         }
-        $name = basename($filename);
+        $name = basename($filename ?? '');
 
         // Split extension
         $extension = null;
-        if (($pos = strpos($name, '.')) !== false) {
-            $extension = substr($name, $pos);
-            $name = substr($name, 0, $pos);
+        if (($pos = strpos($name ?? '', '.')) !== false) {
+            $extension = substr($name ?? '', $pos ?? 0);
+            $name = substr($name ?? '', 0, $pos);
         }
 
         $fileID = $this->truncate($hash) . '/' . $name;
 
         // Add directory
-        $dirname = ltrim(dirname($filename), '.');
+        $dirname = ltrim(dirname($filename ?? ''), '.');
         if ($dirname) {
             $fileID = $dirname . '/' . $fileID;
         }
@@ -74,10 +74,10 @@ class HashFileIDHelper implements FileIDHelper
     public function cleanFilename($filename)
     {
         // Swap backslash for forward slash
-        $filename = str_replace('\\', '/', $filename);
+        $filename = str_replace('\\', '/', $filename ?? '');
 
         // Since we use double underscore to delimit variants, eradicate them from filename
-        return preg_replace('/_{2,}/', '_', $filename);
+        return preg_replace('/_{2,}/', '_', $filename ?? '');
     }
 
     public function parseFileID($fileID)
@@ -85,7 +85,7 @@ class HashFileIDHelper implements FileIDHelper
         $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-f0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
-        if (!preg_match($pattern, $fileID, $matches)) {
+        if (!preg_match($pattern ?? '', $fileID ?? '', $matches)) {
             return null;
         }
 
@@ -108,7 +108,7 @@ class HashFileIDHelper implements FileIDHelper
 
     public function lookForVariantIn(ParsedFileID $parsedFileID)
     {
-        $folder = dirname($parsedFileID->getFilename());
+        $folder = dirname($parsedFileID->getFilename() ?? '');
         if ($folder == '.') {
             $folder = '';
         } else {
@@ -124,7 +124,7 @@ class HashFileIDHelper implements FileIDHelper
      */
     private function truncate($hash)
     {
-        return substr($hash, 0, self::HASH_TRUNCATE_LENGTH);
+        return substr($hash ?? '', 0, self::HASH_TRUNCATE_LENGTH);
     }
 
     public function lookForVariantRecursive(): bool

@@ -79,7 +79,7 @@ class FileFinder
                 $class::$default_options,
                 $this->options
             );
-        } while ($class = get_parent_class($class));
+        } while ($class = get_parent_class($class ?? ''));
     }
 
     /**
@@ -90,7 +90,7 @@ class FileFinder
      */
     public function getOption($name)
     {
-        if (!array_key_exists($name, $this->options)) {
+        if (!array_key_exists($name, $this->options ?? [])) {
             throw new InvalidArgumentException("The option $name doesn't exist.");
         }
 
@@ -106,7 +106,7 @@ class FileFinder
      */
     public function setOption($name, $value)
     {
-        if (!array_key_exists($name, $this->options)) {
+        if (!array_key_exists($name, $this->options ?? [])) {
             throw new InvalidArgumentException("The option $name doesn't exist.");
         }
 
@@ -134,7 +134,7 @@ class FileFinder
      */
     public function find($base)
     {
-        $base = rtrim($base, '/');
+        $base = rtrim($base ?? '', '/');
         // Special case for a base path of /, eg. a chroot environment
         if ($base === '') {
             $base = '/';
@@ -149,7 +149,7 @@ class FileFinder
         while ($path = array_shift($paths)) {
             list($path, $depth) = $path;
 
-            foreach (scandir($path) as $basename) {
+            foreach (scandir($path ?? '') as $basename) {
                 if ($basename == '.' || $basename == '..') {
                     continue;
                 }
@@ -203,7 +203,7 @@ class FileFinder
     protected function acceptDir($basename, $pathname, $depth)
     {
         if ($regex = $this->getOption('dir_regex')) {
-            if (!preg_match($regex, $basename)) {
+            if (!preg_match($regex ?? '', $basename ?? '')) {
                 return false;
             }
         }
@@ -213,7 +213,7 @@ class FileFinder
         }
 
         if ($ignore = $this->getOption('ignore_dirs')) {
-            if (in_array($basename, $ignore)) {
+            if (in_array($basename, $ignore ?? [])) {
                 return false;
             }
         }
@@ -251,13 +251,13 @@ class FileFinder
     protected function acceptFile($basename, $pathname, $depth)
     {
         if ($regex = $this->getOption('name_regex')) {
-            if (!preg_match($regex, $basename)) {
+            if (!preg_match($regex ?? '', $basename ?? '')) {
                 return false;
             }
         }
 
         if ($ignore = $this->getOption('ignore_files')) {
-            if (in_array($basename, $ignore)) {
+            if (in_array($basename, $ignore ?? [])) {
                 return false;
             }
         }

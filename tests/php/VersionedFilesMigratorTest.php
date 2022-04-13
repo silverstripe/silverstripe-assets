@@ -66,7 +66,7 @@ class VersionedFilesMigratorTest extends SapphireTest
 
         foreach ($this->getTestVersionDirectories() as $dir) {
             $path = Path::join(BASE_PATH, $dir);
-            $this->assertFalse(is_dir($path), $dir . ' still exists!');
+            $this->assertFalse(is_dir($path ?? ''), $dir . ' still exists!');
         }
     }
 
@@ -84,7 +84,7 @@ class VersionedFilesMigratorTest extends SapphireTest
 
         foreach ($this->getTestVersionDirectories() as $dir) {
             $path = Path::join($dir, '.htaccess');
-            $this->assertTrue(file_exists($path), $path . ' does not exist');
+            $this->assertTrue(file_exists($path ?? ''), $path . ' does not exist');
         }
     }
 

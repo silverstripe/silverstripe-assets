@@ -129,7 +129,7 @@ class LegacyThumbnailMigrationHelper
         $moved = [];
 
         // Get normalised store relative path
-        $folderPath = preg_replace('#^/#', '', $folder->getFilename());
+        $folderPath = preg_replace('#^/#', '', $folder->getFilename() ?? '');
         $resampledFolderPath = $folderPath . '_resampled';
 
         // Legacy thumbnails couldn't have been stored in a protected filesystem
@@ -190,7 +190,7 @@ class LegacyThumbnailMigrationHelper
         // get migrated leave the folder where it is.
         if (!$foundError) {
             $files = array_filter(
-                $filesystem->listContents($resampledFolderPath, true),
+                $filesystem->listContents($resampledFolderPath, true) ?? [],
                 function ($file) {
                     return $file['type'] === 'file';
                 }

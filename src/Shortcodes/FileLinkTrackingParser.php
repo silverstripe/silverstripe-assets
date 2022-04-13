@@ -44,7 +44,7 @@ class FileLinkTrackingParser
             }
 
             // Link to a file on this site.
-            if (preg_match('/\[file_link([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $href, $matches)) {
+            if (preg_match('/\[file_link([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $href ?? '', $matches)) {
                 $id = (int)$matches['id'];
                 $results[] = [
                     'Type' => 'file',
@@ -56,7 +56,7 @@ class FileLinkTrackingParser
         }
 
         // Find all [image ] shortcodes (will be inline, not inside attributes)
-        if (preg_match_all('/\[image([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $htmlValue->getContent(), $matches)) {
+        if (preg_match_all('/\[image([^\]]+)\bid=(["])?(?<id>\d+)\D/i', $htmlValue->getContent() ?? '', $matches)) {
             foreach ($matches['id'] as $id) {
                 $results[] = [
                     'Type' => 'image',

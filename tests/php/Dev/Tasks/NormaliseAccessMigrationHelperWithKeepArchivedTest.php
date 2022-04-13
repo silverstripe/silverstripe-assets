@@ -61,7 +61,7 @@ class NormaliseAccessMigrationHelperWithKeepArchivedTest extends NormaliseAccess
         $naturalPath = $file->getFilename();
         $hashPath = sprintf(
             '%s/%s',
-            substr($file->getHash(), 0, 10),
+            substr($file->getHash() ?? '', 0, 10),
             $file->getFilename()
         );
 

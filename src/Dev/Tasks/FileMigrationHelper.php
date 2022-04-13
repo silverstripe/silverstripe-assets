@@ -358,7 +358,7 @@ class FileMigrationHelper
     private function findNativeFile($base, File $file, $legacyFilename)
     {
         $path = $base . DIRECTORY_SEPARATOR . $legacyFilename;
-        if (file_exists($path)) {
+        if (file_exists($path ?? '')) {
             return true;
         }
 
@@ -366,12 +366,12 @@ class FileMigrationHelper
 
         // Try to find an alternative file
         $legacyFilenameGlob = preg_replace_callback('/[a-z]/i', function ($matches) {
-            return sprintf('[%s%s]', strtolower($matches[0]), strtoupper($matches[0]));
-        }, $strippedLegacyFilename);
+            return sprintf('[%s%s]', strtolower($matches[0] ?? ''), strtoupper($matches[0] ?? ''));
+        }, $strippedLegacyFilename ?? '');
 
         $files = glob($base . DIRECTORY_SEPARATOR . ASSETS_DIR . DIRECTORY_SEPARATOR . $legacyFilenameGlob);
 
-        switch (sizeof($files)) {
+        switch (sizeof($files ?? [])) {
             case 0:
                 $this->logger->error(sprintf(
                     '%s could not be migrated because no matching file was found.',
@@ -433,7 +433,7 @@ class FileMigrationHelper
                 DIRECTORY_SEPARATOR
             ),
             '',
-            $path
+            $path ?? ''
         );
     }
 
@@ -577,7 +577,7 @@ class FileMigrationHelper
         if ($this->logger) {
             $logMessages = implode("\n\n", array_map(function ($msg) {
                 return $msg['message'];
-            }, $messages));
+            }, $messages ?? []));
             $this->logger->warning(
                 sprintf(
                     "  %s was not migrated because the file is not valid. More information: %s",

@@ -127,7 +127,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         }
 
         $dbHash = $file->getHash();
-        if (strpos($dbHash, $parsedFileID->getHash()) === 0) {
+        if (strpos($dbHash ?? '', $parsedFileID->getHash() ?? '') === 0) {
             return $parsedFileID;
         }
 
@@ -211,7 +211,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
         // Add default helper to list of resolvable helpers
         $defaultHelper = $this->getDefaultFileIDHelper();
-        $defaultHelperIndex = array_search($defaultHelper, $helpers);
+        $defaultHelperIndex = array_search($defaultHelper, $helpers ?? []);
         if ($defaultHelperIndex !== false) {
             unset($helpers[$defaultHelperIndex]);
         }
@@ -406,7 +406,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
         // Build a list of possible helperss to try
         $helpers = $this->getResolutionFileIDHelpers();
         $defaultHelper = $this->getDefaultFileIDHelper();
-        if (!in_array($defaultHelper, $helpers)) {
+        if (!in_array($defaultHelper, $helpers ?? [])) {
             // If the default helper is not already in our list of resolution helpers, add it to the list
             array_unshift($helpers, $defaultHelper);
         }
@@ -439,16 +439,16 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
 
             // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
-            $possibleVariants = array_filter($possibleVariants, function ($possibleVariant) {
+            $possibleVariants = array_filter($possibleVariants ?? [], function ($possibleVariant) {
                 return $possibleVariant['type'] !== 'dir';
             });
             $possibleVariants = array_map(function ($possibleVariant) {
                 return $possibleVariant['path'];
-            }, $possibleVariants);
+            }, $possibleVariants ?? []);
 
             // Let's explicitely add the main variant to the list if need be
             $mainVariant = $this->stripVariantFromParsedFileID($parsedFileID, $helper)->getFileID();
-            if (!in_array($mainVariant, $possibleVariants) && $filesystem->has($mainVariant)) {
+            if (!in_array($mainVariant, $possibleVariants ?? []) && $filesystem->has($mainVariant)) {
                 $possibleVariants[] = $mainVariant;
             }
 

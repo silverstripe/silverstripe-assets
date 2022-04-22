@@ -207,7 +207,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     protected static function find_error_record($errorCode)
     {
         $result = static::singleton()->invokeWithExtensions('getErrorRecordFor', $errorCode);
-        $result = array_filter($result);
+        $result = array_filter($result ?? []);
         if ($result) {
             return reset($result);
         }
@@ -226,7 +226,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     {
         $key = SSViewer::config()->get('global_key');
         $viewer = new SSViewer_FromString($key);
-        $globalKey = md5($viewer->process(ArrayData::create([])));
+        $globalKey = md5($viewer->process(ArrayData::create([])) ?? '');
         $argsKey = md5(serialize($params)) . '#' . md5(serialize($content));
 
         return "{$globalKey}#{$argsKey}";

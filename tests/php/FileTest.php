@@ -83,13 +83,13 @@ class FileTest extends SapphireTest
         // because the parent folders don't exist in the database
         $folder = Folder::find_or_make('/FileTest/');
         $testfilePath = ASSETS_PATH . '/FileTest/CreateWithFilenameHasCorrectPath.txt'; // Important: No leading slash
-        $fh = fopen($testfilePath, 'w');
+        $fh = fopen($testfilePath ?? '', 'w');
         fwrite($fh, str_repeat('x', 1000000));
         fclose($fh);
 
         $file = new File();
 
-        $file->File->Hash = sha1_file($testfilePath);
+        $file->File->Hash = sha1_file($testfilePath ?? '');
         $file->setFromLocalFile($testfilePath);
         $file->ParentID = $folder->ID;
         $file->write();
@@ -148,7 +148,7 @@ class FileTest extends SapphireTest
         $result = $file->validate();
         $this->assertFalse($result->isValid());
         $messages = $result->getMessages();
-        $this->assertEquals(1, count($messages));
+        $this->assertEquals(1, count($messages ?? []));
         $this->assertEquals('Extension \'php\' is not allowed', $messages[0]['message']);
 
         // Valid ext
@@ -246,7 +246,7 @@ class FileTest extends SapphireTest
     public function testAllFilesHaveCategory()
     {
         // Can't use dataprovider due to https://github.com/sebastianbergmann/phpunit/issues/1206
-        foreach (array_filter(File::getAllowedExtensions()) as $ext) {
+        foreach (array_filter(File::getAllowedExtensions() ?? []) as $ext) {
             $this->assertNotEmpty(
                 File::get_app_category($ext),
                 "Assert that extension {$ext} has a valid category"
@@ -812,7 +812,7 @@ class FileTest extends SapphireTest
     public function testGetAllowedExtensions($allowedExtensions, $expected)
     {
         Config::modify()->set(File::class, 'allowed_extensions', $allowedExtensions);
-        $this->assertSame(array_values($expected), array_values(File::getAllowedExtensions()));
+        $this->assertSame(array_values($expected ?? []), array_values(File::getAllowedExtensions() ?? []));
     }
 
     /**

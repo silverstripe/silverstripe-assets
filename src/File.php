@@ -315,7 +315,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function find($filename)
     {
         // Split to folders and the actual filename, and traverse the structure.
-        $parts = array_filter(preg_split("#[/\\\\]+#", $filename));
+        $parts = array_filter(preg_split("#[/\\\\]+#", $filename ?? '') ?? []);
         $parentID = 0;
         /** @var File $item */
         $item = null;
@@ -614,9 +614,9 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_app_category($ext)
     {
-        $ext = strtolower($ext);
+        $ext = strtolower($ext ?? '');
         foreach (static::config()->get('app_categories') as $category => $exts) {
-            if (in_array($ext, $exts)) {
+            if (in_array($ext, $exts ?? [])) {
                 return $category;
             }
         }
@@ -638,7 +638,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Fix arguments into a single array
         if (!is_array($categories)) {
             $categories = [$categories];
-        } elseif (count($categories) === 1 && is_array(reset($categories))) {
+        } elseif (count($categories ?? []) === 1 && is_array(reset($categories))) {
             $categories = reset($categories);
         }
 
@@ -647,14 +647,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
         // Merge all categories into list of extensions
         $extensions = [];
-        foreach (array_filter($categories) as $category) {
+        foreach (array_filter($categories ?? []) as $category) {
             if (isset($appCategories[$category])) {
                 $extensions = array_merge($extensions, $appCategories[$category]);
             } else {
                 throw new InvalidArgumentException("Unknown file category: $category");
             }
         }
-        $extensions = array_unique($extensions);
+        $extensions = array_unique($extensions ?? []);
         sort($extensions);
         return $extensions;
     }
@@ -733,7 +733,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             // and any file extensions removed.
             $this->setField(
                 'Title',
-                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name))
+                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name ?? '') ?? '')
             );
         }
 
@@ -972,7 +972,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }
 
         // Detect change in foldername
-        $newFolder = ltrim(dirname(trim($filename, '/')), '.');
+        $newFolder = ltrim(dirname(trim($filename ?? '', '/')), '.');
         if ($folder !== $newFolder) {
             if (!$newFolder) {
                 $this->ParentID = 0;
@@ -983,7 +983,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }
 
         // Update base name
-        $this->Name = basename($filename);
+        $this->Name = basename($filename ?? '');
         return $this;
     }
 
@@ -1013,7 +1013,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_file_extension($filename)
     {
-        return pathinfo($filename, PATHINFO_EXTENSION);
+        return pathinfo($filename ?? '', PATHINFO_EXTENSION);
     }
 
     /**
@@ -1024,7 +1024,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_icon_for_extension($extension)
     {
-        $extension = strtolower($extension);
+        $extension = strtolower($extension ?? '');
         $module = ModuleLoader::getModule('silverstripe/framework');
 
         $candidates = [
@@ -1063,11 +1063,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $file_types = self::config()->get('file_types');
 
         // Get extension
-        $extension = strtolower(self::get_file_extension($filename));
+        $extension = strtolower(self::get_file_extension($filename) ?? '');
 
         if (isset($file_types[$extension])) {
             return _t(
-                __CLASS__ . '.' . ucfirst($extension) . 'Type',
+                __CLASS__ . '.' . ucfirst($extension ?? '') . 'Type',
                 $file_types[$extension]
             );
         }
@@ -1163,8 +1163,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_class_for_file_extension($ext)
     {
-        $map = array_change_key_case(self::config()->get('class_for_file_extension'), CASE_LOWER);
-        return (array_key_exists(strtolower($ext), $map)) ? $map[strtolower($ext)] : $map['*'];
+        $map = array_change_key_case(self::config()->get('class_for_file_extension') ?? [], CASE_LOWER);
+        return (array_key_exists(strtolower($ext ?? ''), $map ?? [])) ? $map[strtolower($ext)] : $map['*'];
     }
 
     /**
@@ -1339,13 +1339,13 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function join_paths($part = null)
     {
         $args = func_get_args();
-        if (count($args) === 1 && is_array($args[0])) {
+        if (count($args ?? []) === 1 && is_array($args[0])) {
             $args = $args[0];
         }
 
         $parts = [];
         foreach ($args as $arg) {
-            $part = trim($arg, ' \\/');
+            $part = trim($arg ?? '', ' \\/');
             if ($part) {
                 $parts[] = $part;
             }
@@ -1460,12 +1460,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 $value = true;
             }
 
-            $key = strtolower($key);
+            $key = strtolower($key ?? '');
             // Skip disabled extensions
             if (in_array($value, [null, false], true)) {
                 // Remove disabled extensions from pre-set list
-                if (in_array($key, $allowedExtensions)) {
-                    $allowedExtensions = array_diff($allowedExtensions, [$key]);
+                if (in_array($key, $allowedExtensions ?? [])) {
+                    $allowedExtensions = array_diff($allowedExtensions ?? [], [$key]);
                 }
                 continue;
             }
@@ -1485,10 +1485,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         // Fix illegal characters
         $filter = $this->getFilter();
-        $parts = array_filter(preg_split("#[/\\\\]+#", $name));
+        $parts = array_filter(preg_split("#[/\\\\]+#", $name ?? '') ?? []);
         return implode('/', array_map(function ($part) use ($filter) {
             return $filter->filter($part);
-        }, $parts));
+        }, $parts ?? []));
     }
 
     public function flushCache($persistent = true)

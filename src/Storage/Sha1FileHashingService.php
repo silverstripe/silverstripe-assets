@@ -48,7 +48,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     public function computeFromStream($stream)
     {
         Util::rewindStream($stream);
-        $hc = hash_init($this->algo());
+        $hc = hash_init($this->algo() ?? '');
         hash_update_stream($hc, $stream);
         $fullHash = hash_final($hc);
 
@@ -132,7 +132,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
             throw new InvalidArgumentException('Sha1FileHashingService::validateHash can not validate empty hashes');
         }
         // Return true if $hashOne start with $hashTwo or if $hashTwo starts with $hashOne
-        return strpos($hashOne, $hashTwo) === 0 || strpos($hashTwo, $hashOne) === 0;
+        return strpos($hashOne ?? '', $hashTwo ?? '') === 0 || strpos($hashTwo ?? '', $hashOne ?? '') === 0;
     }
 
     public function isCached()
@@ -182,7 +182,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
         // base64_encode can contain `/` , but that is not a valid character in cache keys
         // @see CacheItem::validateKey. We therefore replace it with the url encoded equivalent
         // from https://tools.ietf.org/html/rfc4648#page-8 which is `_`
-        return strtr($cacheKey, ['/' => '_']);
+        return strtr($cacheKey ?? '', ['/' => '_']);
     }
 
     /**

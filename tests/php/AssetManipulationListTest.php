@@ -81,6 +81,6 @@ class AssetManipulationListTest extends SapphireTest
      */
     protected function countItems(AssetManipulationList $set)
     {
-        return count($set->getPublicAssets()) + count($set->getProtectedAssets()) + count($set->getDeletedAssets());
+        return count($set->getPublicAssets() ?? []) + count($set->getProtectedAssets() ?? []) + count($set->getDeletedAssets() ?? []);
     }
 }

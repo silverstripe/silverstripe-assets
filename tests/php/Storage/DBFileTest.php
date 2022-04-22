@@ -49,14 +49,14 @@ class DBFileTest extends SapphireTest
         $obj->MyFile->setFromLocalFile($fish, 'awesome-fish.jpg');
         $this->assertEquals(
             '<img width="300" height="300" alt="awesome-fish.jpg" src="/mysite/assets/a870de278b/awesome-fish.jpg" loading="lazy" />',
-            trim($obj->MyFile->forTemplate())
+            trim($obj->MyFile->forTemplate() ?? '')
         );
 
         // Test download tag
         $obj->MyFile->setFromString('puppies', 'subdir/puppy-document.txt');
         $this->assertStringContainsString(
             '<a href="/mysite/assets/subdir/2a17a9cb4b/puppy-document.txt" title="puppy-document.txt" download="puppy-document.txt">',
-            trim($obj->MyFile->forTemplate())
+            trim($obj->MyFile->forTemplate() ?? '')
         );
     }
 

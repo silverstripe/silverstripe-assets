@@ -58,7 +58,7 @@ class AssetAdapter extends Local
         // Get root path, and ensure that this exists and is safe
         $root = $this->findRoot($root);
         Filesystem::makeFolder($root);
-        $root = realpath($root);
+        $root = realpath($root ?? '');
 
         // Override permissions with config
         $permissions = $this->normalisePermissions($this->config()->get('file_permissions'));
@@ -100,13 +100,13 @@ class AssetAdapter extends Local
         }
 
         // Substitute leading ./ with BASE_PATH
-        if (strpos($root, './') === 0) {
-            return BASE_PATH . substr($root, 1);
+        if (strpos($root ?? '', './') === 0) {
+            return BASE_PATH . substr($root ?? '', 1);
         }
 
         // Substitute leading ./ with parent of BASE_PATH, in case storage is outside of the webroot.
-        if (strpos($root, '../') === 0) {
-            return dirname(BASE_PATH) . substr($root, 2);
+        if (strpos($root ?? '', '../') === 0) {
+            return dirname(BASE_PATH) . substr($root ?? '', 2);
         }
 
         return $root;
@@ -130,7 +130,7 @@ class AssetAdapter extends Local
     {
         // Get server type
         $type = isset($_SERVER['SERVER_SOFTWARE']) ? $_SERVER['SERVER_SOFTWARE'] : '*';
-        list($type) = explode('/', strtolower($type));
+        list($type) = explode('/', strtolower($type ?? ''));
 
         // Determine configurations to write
         $rules = $this->config()->get('server_configuration');
@@ -178,7 +178,7 @@ class AssetAdapter extends Local
         foreach (File::getAllowedExtensions() as $extension) {
             if ($extension) {
                 $allowedExtensions->push(new ArrayData([
-                    'Extension' => preg_quote($extension)
+                    'Extension' => preg_quote($extension ?? '')
                 ]));
             }
         }

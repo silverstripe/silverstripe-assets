@@ -22,7 +22,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         $suggestions = iterator_to_array($generator);
 
         // Expect 100 suggestions
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
 
         // First item is always the same as input
         $this->assertEquals('folder/MyFile-001.jpg', $suggestions[0]);
@@ -41,7 +41,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         // Test with a value starting above 1
         $generator = new DefaultAssetNameGenerator('folder/MyFile-024.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
         $this->assertEquals('folder/MyFile-024.jpg', $suggestions[0]);
         $this->assertEquals('folder/MyFile-025.jpg', $suggestions[1]);
         $this->assertEquals('folder/MyFile-026.jpg', $suggestions[2]);
@@ -53,7 +53,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         // Test without numeric value
         $generator = new DefaultAssetNameGenerator('folder/MyFile.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
         $this->assertEquals('folder/MyFile.jpg', $suggestions[0]);
         $this->assertEquals('folder/MyFile2.jpg', $suggestions[1]);
         $this->assertEquals('folder/MyFile3.jpg', $suggestions[2]);
@@ -67,7 +67,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         Config::modify()->merge(DefaultAssetNameGenerator::class, 'version_prefix', '-v');
         $generator = new DefaultAssetNameGenerator('/some\folder/MyFile.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
 
         // Slashes are always normalised
         $this->assertEquals('some/folder/MyFile.jpg', $suggestions[0]);
@@ -85,7 +85,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         // Test with item that doesn't contain the prefix
         $generator = new DefaultAssetNameGenerator('folder/MyFile-001.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
         $this->assertEquals('folder/MyFile-001.jpg', $suggestions[0]);
         $this->assertEquals('folder/MyFile-001-v2.jpg', $suggestions[1]);
         $this->assertEquals('folder/MyFile-001-v4.jpg', $suggestions[3]);
@@ -97,7 +97,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         // Test with item that contains prefix
         $generator = new DefaultAssetNameGenerator('folder/MyFile-v24.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
         $this->assertEquals('folder/MyFile-v24.jpg', $suggestions[0]);
         $this->assertEquals('folder/MyFile-v25.jpg', $suggestions[1]);
         $this->assertEquals('folder/MyFile-v26.jpg', $suggestions[2]);
@@ -109,7 +109,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         // Test without numeric value
         $generator = new DefaultAssetNameGenerator('folder/MyFile.jpg');
         $suggestions = iterator_to_array($generator);
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
         $this->assertEquals('folder/MyFile.jpg', $suggestions[0]);
         $this->assertEquals('folder/MyFile-v2.jpg', $suggestions[1]);
         $this->assertEquals('folder/MyFile-v3.jpg', $suggestions[2]);
@@ -125,7 +125,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         $suggestions = iterator_to_array($generator);
 
         // Expect 100 suggestions
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
 
         // First item is always the same as input
         $this->assertEquals('folder/subfolder', $suggestions[0]);
@@ -139,7 +139,7 @@ class DefaultAssetNameGeneratorTest extends SapphireTest
         $suggestions = iterator_to_array($generator);
 
         // Expect 100 suggestions
-        $this->assertEquals(100, count($suggestions));
+        $this->assertEquals(100, count($suggestions ?? []));
 
         // First item is always the same as input
         $this->assertEquals('folder/subfolder', $suggestions[0]);

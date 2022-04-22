@@ -258,13 +258,13 @@ class InterventionBackend implements Image_Backend, Flushable
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
             $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
-            $path = tempnam($tempPath, 'interventionimage_');
-            if ($extension = pathinfo($assetContainer->getFilename(), PATHINFO_EXTENSION)) {
+            $path = tempnam($tempPath ?? '', 'interventionimage_');
+            if ($extension = pathinfo($assetContainer->getFilename() ?? '', PATHINFO_EXTENSION)) {
                 //tmpnam creates a file, we should clean it up if we are changing the path name
-                unlink($path);
+                unlink($path ?? '');
                 $path .= "." . $extension;
             }
-            $bytesWritten = file_put_contents($path, $stream);
+            $bytesWritten = file_put_contents($path ?? '', $stream);
             // if we fail to write, then load from stream
             if ($bytesWritten === false) {
                 $resource = $this->getImageManager()->make($stream);
@@ -309,7 +309,7 @@ class InterventionBackend implements Image_Backend, Flushable
     public function loadFrom($path)
     {
         // Avoid repeat load of broken images
-        $hash = sha1($path);
+        $hash = sha1($path ?? '');
         if ($this->hasFailed($hash, null)) {
             return $this;
         }
@@ -364,7 +364,7 @@ class InterventionBackend implements Image_Backend, Flushable
             }
 
             // Save file
-            $extension = pathinfo($filename, PATHINFO_EXTENSION);
+            $extension = pathinfo($filename ?? '', PATHINFO_EXTENSION);
             $result = $assetStore->setFromString(
                 $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,
@@ -767,13 +767,13 @@ class InterventionBackend implements Image_Backend, Flushable
         $ttl = isset($errorTTLs[$reason]) ? $errorTTLs[$reason] : $errorTTLs[self::FAILED_UNKNOWN];
 
         // Detect increasing waits
-        if (is_string($ttl) && strstr($ttl, ',')) {
-            $ttl = preg_split('#\s*,\s*#', $ttl);
+        if (is_string($ttl) && strstr($ttl ?? '', ',')) {
+            $ttl = preg_split('#\s*,\s*#', $ttl ?? '');
         }
         if (is_array($ttl)) {
             $index = min(
                 $this->getCache()->get($key.'_ttl', -1) + 1,
-                count($ttl) - 1
+                count($ttl ?? []) - 1
             );
             $this->getCache()->set($key.'_ttl', $index);
             $ttl = $ttl[$index];
@@ -810,8 +810,8 @@ class InterventionBackend implements Image_Backend, Flushable
             $this->image->destroy();
         }
         // remove our temp file if it exists
-        if (file_exists($this->getTempPath())) {
-            unlink($this->getTempPath());
+        if (file_exists($this->getTempPath() ?? '')) {
+            unlink($this->getTempPath() ?? '');
         }
     }
 
@@ -856,6 +856,6 @@ class InterventionBackend implements Image_Backend, Flushable
 
         // Ensure stream is readable
         $meta = stream_get_meta_data($stream);
-        return isset($meta['mode']) && (strstr($meta['mode'], 'r') || strstr($meta['mode'], '+'));
+        return isset($meta['mode']) && (strstr($meta['mode'] ?? '', 'r') || strstr($meta['mode'] ?? '', '+'));
     }
 }

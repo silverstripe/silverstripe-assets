@@ -97,11 +97,11 @@ class Upload_Validator
      */
     public function getLargestAllowedMaxFileSize()
     {
-        if (!count($this->allowedMaxFileSize)) {
+        if (!count($this->allowedMaxFileSize ?? [])) {
             return null;
         }
 
-        return max(array_values($this->allowedMaxFileSize));
+        return max(array_values($this->allowedMaxFileSize ?? []));
     }
 
     /**
@@ -128,7 +128,7 @@ class Upload_Validator
         }
 
         if ($ext !== null) {
-            $ext = strtolower($ext);
+            $ext = strtolower($ext ?? '');
             if (isset($this->allowedMaxFileSize[$ext])) {
                 return $this->allowedMaxFileSize[$ext];
             }
@@ -156,9 +156,9 @@ class Upload_Validator
      */
     public function setAllowedMaxFileSize($rules)
     {
-        if (is_array($rules) && count($rules)) {
+        if (is_array($rules) && count($rules ?? [])) {
             // make sure all extensions are lowercase
-            $rules = array_change_key_case($rules, CASE_LOWER);
+            $rules = array_change_key_case($rules ?? [], CASE_LOWER);
             $finalRules = [];
 
             foreach ($rules as $rule => $value) {
@@ -204,7 +204,7 @@ class Upload_Validator
 
         // make sure all rules are lowercase
         foreach ($rules as &$rule) {
-            $rule = strtolower($rule);
+            $rule = strtolower($rule ?? '');
         }
 
         $this->allowedExtensions = $rules;
@@ -250,8 +250,8 @@ class Upload_Validator
      */
     public function isValidExtension()
     {
-        return !count($this->allowedExtensions)
-            || in_array($this->getFileExtension(), $this->allowedExtensions, true);
+        return !count($this->allowedExtensions ?? [])
+            || in_array($this->getFileExtension(), $this->allowedExtensions ?? [], true);
     }
 
     /**
@@ -262,9 +262,9 @@ class Upload_Validator
      */
     public function getFileExtension()
     {
-        $pathInfo = pathinfo($this->tmpFile['name']);
+        $pathInfo = pathinfo($this->tmpFile['name'] ?? '');
         if (isset($pathInfo['extension'])) {
-            return strtolower($pathInfo['extension']);
+            return strtolower($pathInfo['extension'] ?? '');
         }
 
         // Special case for files without extensions
@@ -349,7 +349,7 @@ class Upload_Validator
 
         // Check if file is valid uploaded (with exception for unit testing)
         $useUploadedFile = $this->config()->get('use_is_uploaded_file');
-        if ($useUploadedFile && !is_uploaded_file($this->tmpFile['tmp_name'])) {
+        if ($useUploadedFile && !is_uploaded_file($this->tmpFile['tmp_name'] ?? '')) {
             return false;
         }
 

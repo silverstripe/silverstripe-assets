@@ -41,7 +41,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         // We're creating an adapter independantly from our AssetStore here, so we can test the Strategy indepentantly
         $this->tmpFolder = tempnam(sys_get_temp_dir(), '');
-        unlink($this->tmpFolder);
+        unlink($this->tmpFolder ?? '');
 
         $this->fs = new Filesystem(
             new Local($this->tmpFolder)
@@ -61,7 +61,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
                 $this->fs->delete($fileMeta['path']);
             }
         }
-        rmdir($this->tmpFolder);
+        rmdir($this->tmpFolder ?? '');
 
         parent::tearDown();
     }
@@ -113,7 +113,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
         $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
         $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
-        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash() ?? '', $redirect->getHash() ?? '') === 0);
     }
 
     /**
@@ -190,7 +190,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
         $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
         $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
-        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash() ?? '', $redirect->getHash() ?? '') === 0);
         $this->assertEmpty($fileDO->getVariant());
 
         $strategy->setVersionedStage(Versioned::LIVE);
@@ -201,7 +201,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $redirect = $strategy->softResolveFileID($expectedPath, $this->fs);
         $this->assertEquals($expectedPath, $redirect->getFileID(), 'Resolution strategy should have found a file.');
         $this->assertEquals($fileDO->getFilename(), $redirect->getFilename());
-        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash(), $redirect->getHash()) === 0);
+        $redirect->getHash() && $this->assertTrue(strpos($fileDO->getHash() ?? '', $redirect->getHash() ?? '') === 0);
         $this->assertEmpty($fileDO->getVariant());
     }
 
@@ -400,7 +400,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         // Set up some dummy file
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $filename = 'folder/file.txt';
         $variant = 'uppercase';
         $dbFile = new File(['FileFilename' => $filename, 'FileHash' => $hash]);
@@ -427,7 +427,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertNull($strategy->searchForTuple($variantPfID, $fs));
 
         // Looking for a natural path variant file not in DB
-        $fs->write($variantNaturalPath, strtoupper($content));
+        $fs->write($variantNaturalPath, strtoupper($content ?? ''));
 
         $respPfID = $strategy->searchForTuple($variantPfID, $fs);
         $this->assertNotNull($respPfID);
@@ -551,7 +551,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
         $this->fs->write('Folder/FolderFile.pdf', 'version 1');
         $this->fs->write(
-            sprintf('Folder/%s/FolderFile.pdf', substr($expectedHash, 0, 10)),
+            sprintf('Folder/%s/FolderFile.pdf', substr($expectedHash ?? '', 0, 10)),
             'version 1'
         );
         $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
@@ -605,7 +605,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     public function listVariantwihtoutFileID()
     {
         $content = "The quick brown fox jumps over the lazy dog.";
-        $hash = sha1($content);
+        $hash = sha1($content ?? '');
         $filename = 'folder/file.txt';
         $variant = 'uppercase';
         $pfID = new ParsedFileID($filename, $hash);

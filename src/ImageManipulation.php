@@ -719,7 +719,7 @@ trait ImageManipulation
     public function getIcon()
     {
         $filename = $this->getFilename();
-        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $ext = pathinfo($filename ?? '', PATHINFO_EXTENSION);
         return File::get_icon_for_extension($ext);
     }
 
@@ -1020,11 +1020,11 @@ trait ImageManipulation
      */
     public function variantParts($variantName)
     {
-        $methods = array_map('preg_quote', singleton(Image::class)->allMethodNames());
+        $methods = array_map('preg_quote', singleton(Image::class)->allMethodNames() ?? []);
 
         // Regex needs to be case insensitive since allMethodNames() is all lowercased
         $regex = '#^(?<format>(' . implode('|', $methods) . '))(?<encodedargs>(.*))#i';
-        preg_match($regex, $variantName, $matches);
+        preg_match($regex ?? '', $variantName ?? '', $matches);
 
         if (!$matches) {
             throw new InvalidArgumentException('Invalid variant name: ' . $variantName);
@@ -1187,7 +1187,7 @@ trait ImageManipulation
         }
 
         if (is_string($lazyLoad)) {
-            $lazyLoad = strtolower($lazyLoad);
+            $lazyLoad = strtolower($lazyLoad ?? '');
         }
 
         $equivalence = [

@@ -75,7 +75,7 @@ class ProtectedFileController extends Controller
     public function isValidFilename($filename)
     {
         // Block hidden files
-        return !preg_match('#(^|[\\\\/])\\..*#', $filename);
+        return !preg_match('#(^|[\\\\/])\\..*#', $filename ?? '');
     }
 
     /**

@@ -69,18 +69,18 @@ class FileNameFilter
      */
     public function filter($name)
     {
-        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        $ext = pathinfo($name ?? '', PATHINFO_EXTENSION);
 
         $transliterator = $this->getTransliterator();
         if ($transliterator) {
             $name = $transliterator->toASCII($name);
         }
         foreach ($this->getReplacements() as $regex => $replace) {
-            $name = preg_replace($regex, $replace, $name);
+            $name = preg_replace($regex ?? '', $replace ?? '', $name ?? '');
         }
 
         // Safeguard against empty file names
-        $nameWithoutExt = pathinfo($name, PATHINFO_FILENAME);
+        $nameWithoutExt = pathinfo($name ?? '', PATHINFO_FILENAME);
         if (empty($nameWithoutExt)) {
             $name = $this->getDefaultName();
             $name .= $ext ? '.' . $ext : '';

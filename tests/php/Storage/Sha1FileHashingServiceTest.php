@@ -44,8 +44,8 @@ class Sha1FileHashingServiceTest extends SapphireTest
     {
         parent::setUp();
 
-        $this->publicHash = sha1($this->publicContent);
-        $this->protectedHash = sha1($this->protectedContent);
+        $this->publicHash = sha1($this->publicContent ?? '');
+        $this->protectedHash = sha1($this->protectedContent ?? '');
 
         $this->publicFs = Injector::inst()->get(
             sprintf('%s.%s', Filesystem::class, AssetStore::VISIBILITY_PUBLIC)
@@ -71,7 +71,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
         $service = new Sha1FileHashingService();
         $stream = fopen('php://temp', 'r+');
         try {
-            fwrite($stream, $this->publicContent);
+            fwrite($stream, $this->publicContent ?? '');
             $hash = $service->computeFromStream($stream);
             $this->assertEquals($this->publicHash, $hash);
         } finally {
@@ -162,7 +162,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
     public function testCompare()
     {
         $service = new Sha1FileHashingService();
-        $partialHash = substr($this->protectedHash, 0, 10);
+        $partialHash = substr($this->protectedHash ?? '', 0, 10);
 
         $this->assertTrue($service->compare($this->protectedHash, $this->protectedHash));
         $this->assertTrue($service->compare($this->protectedHash, $partialHash));

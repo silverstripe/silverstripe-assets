@@ -100,8 +100,8 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Clean out any empty attributes (aside from alt)
-        $attrs = array_filter($attrs, function ($k, $v) {
-            return strlen(trim($v)) || $k === 'alt';
+        $attrs = array_filter($attrs ?? [], function ($k, $v) {
+            return strlen(trim($v ?? '')) || $k === 'alt';
         }, ARRAY_FILTER_USE_BOTH);
 
         $markup = HTML::createTag('img', $attrs);

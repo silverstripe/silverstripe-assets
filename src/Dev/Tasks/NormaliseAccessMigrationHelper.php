@@ -162,18 +162,18 @@ class NormaliseAccessMigrationHelper
             } else {
                 $this->warning(sprintf(
                     'Could not find any files with incorrect access permission, but %d errors were found.',
-                    sizeof($this->errors)
+                    sizeof($this->errors ?? [])
                 ));
             }
 
             return [
                 'total' => 0,
                 'success' => 0,
-                'fail' => sizeof($this->errors)
+                'fail' => sizeof($this->errors ?? [])
             ];
         }
 
-        $this->notice(sprintf('%d files with bad access permission have been found.', sizeof($badFiles)));
+        $this->notice(sprintf('%d files with bad access permission have been found.', sizeof($badFiles ?? [])));
 
         $step++;
 
@@ -185,12 +185,12 @@ class NormaliseAccessMigrationHelper
 
         // Step 3 - Move files to their correct spots
         $this->notice(sprintf('Step %d/%d: Correct files with bad access permission', $step, $totalStep));
-        $badFileIDs = array_keys($badFiles);
+        $badFileIDs = array_keys($badFiles ?? []);
         unset($badFiles);
 
         $success = 0;
         $fail = 0;
-        $count = sizeof($badFileIDs);
+        $count = sizeof($badFileIDs ?? []);
         foreach ($this->loopBadFiles($badFileIDs) as $file) {
             try {
                 if ($this->fix($file)) {
@@ -210,7 +210,7 @@ class NormaliseAccessMigrationHelper
 
         // Print out some summary info
         if ($this->errors) {
-            $this->warning(sprintf('Completed with %d errors', sizeof($this->errors)));
+            $this->warning(sprintf('Completed with %d errors', sizeof($this->errors ?? [])));
             foreach ($this->errors as $error) {
                 $this->warning($error);
             }
@@ -221,7 +221,7 @@ class NormaliseAccessMigrationHelper
         return [
             'total' => $count,
             'success' => $success,
-            'fail' => sizeof($this->errors)
+            'fail' => sizeof($this->errors ?? [])
         ];
     }
 
@@ -276,12 +276,12 @@ class NormaliseAccessMigrationHelper
 
         // Sort list of folders so that the deeper ones are processed first
         usort($this->public_folders_to_truncate, function ($a, $b) {
-            $aCrumbs = explode('/', $a);
-            $bCrumbs = explode('/', $b);
-            if (sizeof($aCrumbs) > sizeof($bCrumbs)) {
+            $aCrumbs = explode('/', $a ?? '');
+            $bCrumbs = explode('/', $b ?? '');
+            if (sizeof($aCrumbs ?? []) > sizeof($bCrumbs ?? [])) {
                 return -1;
             }
-            if (sizeof($aCrumbs) < sizeof($bCrumbs)) {
+            if (sizeof($aCrumbs ?? []) < sizeof($bCrumbs ?? [])) {
                 return 1;
             }
             return 0;
@@ -297,7 +297,7 @@ class NormaliseAccessMigrationHelper
 
         foreach ($truncatedPaths as $path) {
             // For each folder that we've deleted, recursively check if we can now delete its parent.
-            $this->recursiveTruncate(dirname($path), $fs);
+            $this->recursiveTruncate(dirname($path ?? ''), $fs);
         }
 
         // Restore initial config
@@ -345,11 +345,11 @@ class NormaliseAccessMigrationHelper
      */
     private function recursiveTruncate($path, FilesystemInterface $fs)
     {
-        if ($path && ltrim($path, '.') && empty($fs->listContents($path))
+        if ($path && ltrim($path ?? '', '.') && empty($fs->listContents($path))
         ) {
             $this->info(sprintf('Deleting empty folder %s', $path));
             $fs->deleteDir($path);
-            $this->recursiveTruncate(dirname($path), $fs);
+            $this->recursiveTruncate(dirname($path ?? ''), $fs);
         }
     }
 
@@ -366,22 +366,22 @@ class NormaliseAccessMigrationHelper
 
         $url = $file->getSourceURL(false);
 
-        if ($this->basePath && strpos($url, $this->basePath) === 0) {
+        if ($this->basePath && strpos($url ?? '', $this->basePath ?? '') === 0) {
             // This bit is only relevant for unit test because our URL will be prefixied with the TestAssetStore path
-            $url = substr($url, strlen($this->basePath));
+            $url = substr($url ?? '', strlen($this->basePath ?? ''));
         }
 
-        $url = trim($url, '/');
+        $url = trim($url ?? '', '/');
 
-        if (strpos($url, ASSETS_DIR . '/') === 0) {
+        if (strpos($url ?? '', ASSETS_DIR . '/') === 0) {
             // Remove the assets prefix
-            $url = substr($url, strlen(ASSETS_DIR . '/'));
+            $url = substr($url ?? '', strlen(ASSETS_DIR . '/'));
         }
 
-        $folderPath = trim(dirname($url), '/');
+        $folderPath = trim(dirname($url ?? ''), '/');
 
 
-        if (!in_array($folderPath, $this->public_folders_to_truncate)) {
+        if (!in_array($folderPath, $this->public_folders_to_truncate ?? [])) {
             $this->public_folders_to_truncate[] = $folderPath;
         }
     }
@@ -408,13 +408,13 @@ class NormaliseAccessMigrationHelper
         }
 
         foreach ($operations as &$ops) {
-            $ops = array_filter($ops, function ($storeToMove) {
+            $ops = array_filter($ops ?? [], function ($storeToMove) {
                 // We only keep operation that involvs protecting files for now.
                 return $storeToMove === AssetStore::VISIBILITY_PROTECTED;
             });
         }
 
-        return array_filter($operations, function ($ops) {
+        return array_filter($operations ?? [], function ($ops) {
             return !empty($ops);
         });
     }
@@ -584,7 +584,7 @@ class NormaliseAccessMigrationHelper
             $moveOperations[Versioned::DRAFT] = $this->needToMoveVersion($draftFile);
         }
 
-        return array_filter($moveOperations);
+        return array_filter($moveOperations ?? []);
     }
 
     /**
@@ -621,7 +621,7 @@ class NormaliseAccessMigrationHelper
      */
     private function validateInputFile(File $file)
     {
-        if (in_array($file->ClassName, $this->folderClasses)) {
+        if (in_array($file->ClassName, $this->folderClasses ?? [])) {
             throw new InvalidArgumentException(sprintf(
                 '%s::%s(): Provided File can not be a Folder',
                 __CLASS__,
@@ -639,7 +639,7 @@ class NormaliseAccessMigrationHelper
     private function validateVisibility(File $file, $visibility)
     {
         $validVisibilities = [AssetStore::VISIBILITY_PROTECTED, AssetStore::VISIBILITY_PUBLIC];
-        if (!in_array($visibility, $validVisibilities)) {
+        if (!in_array($visibility, $validVisibilities ?? [])) {
             throw new LogicException(sprintf(
                 '%s::%s(): File %s visibility of "%s" is invalid',
                 __CLASS__,
@@ -659,9 +659,9 @@ class NormaliseAccessMigrationHelper
     {
         $limit = 100;
         $yieldCount = 0;
-        $total = sizeof($IDs);
+        $total = sizeof($IDs ?? []);
 
-        $chunks = array_chunk($IDs, $limit);
+        $chunks = array_chunk($IDs ?? [], $limit ?? 0);
         unset($IDs);
 
         foreach ($chunks as $chunk) {
@@ -670,7 +670,7 @@ class NormaliseAccessMigrationHelper
             foreach (File::get()->filter('ID', $chunk) as $file) {
                 yield $file;
             }
-            $yieldCount += sizeof($chunk);
+            $yieldCount += sizeof($chunk ?? []);
             $this->notice(sprintf('Processed %d files out of %d', $yieldCount, $total));
         }
     }

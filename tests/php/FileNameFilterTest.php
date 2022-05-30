@@ -59,9 +59,11 @@ class FileNameFilterTest extends SapphireTest
         );
     }
 
-    public function testFilterWithEmptyString()
+    /**
+     * @dataProvider providerFilterWithEmptyString
+     */
+    public function testFilterWithEmptyString($name)
     {
-        $name = 'ö ö ö.jpg';
         $filter = new FileNameFilter();
         $filter->setTransliterator(new Transliterator());
         $result = $filter->filter($name);
@@ -76,6 +78,11 @@ class FileNameFilterTest extends SapphireTest
             strlen('.jpg'),
             strlen($result ?? '')
         );
+    }
+
+    public function providerFilterWithEmptyString()
+    {
+        return [['ö ö ö.jpg'], ['新しいファイル.jpg']];
     }
 
     public function testUnderscoresStartOfNameRemoved()

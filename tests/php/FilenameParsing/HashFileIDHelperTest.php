@@ -5,7 +5,7 @@ use InvalidArgumentException;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
-class HashFileIDHelperTest extends FileIDHelperTester
+class HashFileIDHelperTest extends FileIDHelperTest
 {
 
     protected function getHelper()

@@ -4,7 +4,7 @@ namespace SilverStripe\Assets\Tests\FilenameParsing;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
-class MigrationLegacyFileIDHelperTest extends FileIDHelperTester
+class MigrationLegacyFileIDHelperTest extends FileIDHelperTest
 {
 
     protected function getHelper()

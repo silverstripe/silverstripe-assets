@@ -9,7 +9,7 @@ use SilverStripe\Dev\SapphireTest;
  * All the `FileIDHelper` have the exact same signature and very similar structure. Their basic tests will share the
  * same structure.
  */
-abstract class FileIDHelperTester extends SapphireTest
+abstract class FileIDHelperTest extends SapphireTest
 {
 
     /**

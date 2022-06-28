@@ -4,11 +4,17 @@ namespace SilverStripe\Assets\Tests\Shortcodes;
 
 use SilverStripe\Assets\File;
 use Silverstripe\Assets\Dev\TestAssetStore;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\ShortcodeParser;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
+use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
+use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Security\InheritedPermissions;
+use SilverStripe\Security\Member;
 
 /**
  * @skipUpgrade
@@ -219,5 +225,40 @@ class ImageShortcodeProviderTest extends SapphireTest
             $shortcode = '[image id="' . $id . '" width="300" height="200" clear-provider-cache="1"]';
             $this->assertStringNotContainsString('loading="lazy"', $parser->parse($shortcode));
         });
+    }
+
+    public function testRegenerateShortcode()
+    {
+        $assetStore = Injector::inst()->get(AssetStore::class);
+        $member = Member::create();
+        $member->write();
+        // Logout first to throw away the existing session which may have image grants.
+        $this->logOut();
+        $this->logInAs($member);
+        // image is in protected asset store
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $image->CanViewType = InheritedPermissions::ONLY_THESE_USERS;
+        $image->write();
+        $url = $image->getUrl(false);
+        $args = [
+            'id' => $image->ID,
+            'src' => $url,
+            'width' => '550',
+            'height' => '366',
+            'class' => 'leftAlone ss-htmleditorfield-file image',
+        ];
+        $shortHash = substr($image->getHash(), 0, 10);
+        $expected = implode(' ', [
+            '[image id="' . $image->ID . '" src="/assets/folder/' . $shortHash . '/test-image.png" width="550"',
+            'height="366" class="leftAlone ss-htmleditorfield-file image"]'
+        ]);
+        $parsedFileID = new ParsedFileID($image->getFilename(), $image->getHash());
+        $html = ImageShortcodeProvider::regenerate_shortcode($args, '', '', 'image');
+        $this->assertSame($expected, $html);
+        $this->assertFalse($assetStore->isGranted($parsedFileID));
+        Config::modify()->set(FileShortcodeProvider::class, 'allow_session_grant', true);
+        $html = ImageShortcodeProvider::regenerate_shortcode($args, '', '', 'image');
+        $this->assertSame($expected, $html);
+        $this->assertTrue($assetStore->isGranted($parsedFileID));
     }
 }

@@ -136,10 +136,12 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function regenerate_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
+        $allowSessionGrant = static::config()->allow_session_grant;
+
         // Check if there is a suitable record
         $record = static::find_shortcode_record($args);
         if ($record) {
-            $args['src'] = $record->getURL();
+            $args['src'] = $record->getURL($allowSessionGrant);
         }
 
         // Rebuild shortcode

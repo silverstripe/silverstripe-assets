@@ -1,9 +1,0 @@
-version: ~> 1.0
-
-import:
-  - silverstripe/silverstripe-travis-shared:config/provision/standard-jobs-fixed.yml
-
-env:
-  global:
-    # This is required to stop travis from timing out after 10 minutes
-    - PHPUNIT_COVERAGE_SUITE="assets"

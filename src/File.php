@@ -20,7 +20,6 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
@@ -98,7 +97,7 @@ use SilverStripe\View\HTML;
  * @mixin RecursivePublishable
  * @mixin InheritedPermissionsExtension
  */
-class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
+class File extends DataObject implements AssetContainer, Thumbnail, PermissionProvider, Resettable
 {
     use ImageManipulation;
 
@@ -116,7 +115,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $singular_name = "File";
 
     private static $plural_name = "Files";
-    
+
     /**
      * Control whether images in the admin will be resampled
      *
@@ -571,13 +570,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function getCMSFields()
     {
         $image = HTML::createTag('img', [
-            'src' => $this->PreviewLink(),
             'alt' => $this->getTitle(),
             'class' => 'd-block mx-auto',
         ]);
 
         $fields = FieldList::create(
-            HTMLReadonlyField::create('IconFull', _t(__CLASS__.'.PREVIEW', 'Preview'), $image),
             TextField::create("Title", $this->fieldLabel('Title')),
             TextField::create("Name", $this->fieldLabel('Filename')),
             TextField::create("Filename", _t(__CLASS__.'.PATH', 'Path'))
@@ -1193,7 +1190,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         if (!$this->File->exists()) {
             return null;
         }
-            return $this->File->getMetaData();
+        return $this->File->getMetaData();
     }
 
     public function getMimeType()
@@ -1201,7 +1198,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         if (!$this->File->exists()) {
             return null;
         }
-            return $this->File->getMimeType();
+        return $this->File->getMimeType();
     }
 
     public function getStream()
@@ -1387,25 +1384,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function canViewFile()
     {
         return $this->File->canViewFile();
-    }
-
-    public function CMSEditLink()
-    {
-        $link = null;
-        $this->extend('updateCMSEditLink', $link);
-        return $link;
-    }
-
-    public function PreviewLink($action = null)
-    {
-        // Since AbsoluteURL can whitelist protected assets,
-        // do permission check first
-        if (!$this->canView()) {
-            return null;
-        }
-        $link = $this->getIcon();
-        $this->extend('updatePreviewLink', $link, $action);
-        return $link;
     }
 
     /**

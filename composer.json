@@ -32,9 +32,6 @@
         "ext-exif": "If you use GD backend (the default) you may want to have EXIF extension installed to elude some tricky issues"
     },
     "extra": {
-        "branch-alias": {
-            "dev-master": "2.x-dev"
-        },
         "installer-name": "silverstripe-assets"
     },
     "autoload": {

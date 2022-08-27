@@ -992,7 +992,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($granted) {
             $session->set(self::GRANTS_SESSION, $granted);
         } else {
-            $session->clear(self::GRANTS_SESSION);
+            $session->remove(self::GRANTS_SESSION);
         }
     }
 

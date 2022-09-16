@@ -14,6 +14,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\FileTest\MyCustomFile;
 use SilverStripe\Control\Director;
+use SilverStripe\Control\Controller;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
@@ -370,8 +371,67 @@ class FileTest extends SapphireTest
         // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
 
+        // Login as ADMIN and grant session access by default
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+
+        $this->assertEquals(['55b443b601/FileTest.txt' => true], $granted);
+        $this->logOut();
+
+        // Login as member with 'VIEW_DRAFT_CONTENT' permisson to access to file and get session access
+        $this->logInWithPermission('VIEW_DRAFT_CONTENT');
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+        $this->assertEquals(['55b443b601/FileTest.txt' => true], $granted);
+
+        // Login as member of another Group that doesn't have permisson to access to file
+        // and don't grant session access
         $rootfile->publishSingle();
+        $this->logOut();
+        $this->logInWithPermission('SOME_PERMISSIONS');
+        
         $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
+
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+        $this->assertNull($granted);
+    }
+
+    public function testGetSourceURL()
+    {
+        /** @var File $rootfile */
+        $rootfile = $this->objFromFixture(File::class, 'asdf');
+
+        // Links to incorrect base (assets/ rather than assets/FileTest)
+        // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getSourceURL());
+        
+        // Login as ADMIN and grant session access by default
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+
+        $this->assertEquals(['55b443b601/FileTest.txt' => true], $granted);
+        $this->logOut();
+
+        // Login as member with 'VIEW_DRAFT_CONTENT' permisson to access to file and get session access
+        $this->logInWithPermission('VIEW_DRAFT_CONTENT');
+        $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getURL());
+
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+        $this->assertEquals(['55b443b601/FileTest.txt' => true], $granted);
+
+        // Login as member of another Group that doesn't have permisson to access to file
+        // and don't grant session access
+        $rootfile->publishSingle();
+        $this->logOut();
+        $this->logInWithPermission('SOME_PERMISSIONS');
+        
+        $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getSourceURL());
+
+        $session = Controller::curr()->getRequest()->getSession();
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
+        $this->assertNull($granted);
     }
 
     public function testGetAbsoluteURL()

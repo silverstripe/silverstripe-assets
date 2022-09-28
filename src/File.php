@@ -891,8 +891,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
      * @return string
      */
-    public function getURL($grant = true)
+    public function getURL($grant = false)
     {
+        if (!$grant && $this->canView()) {
+            $grant = true;
+        }
+        
         if ($this->File->exists()) {
             return $this->File->getURL($grant);
         }
@@ -905,8 +909,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
      * @return string
      */
-    public function getSourceURL($grant = true)
+    public function getSourceURL($grant = false)
     {
+        if (!$grant && $this->canView()) {
+            $grant = true;
+        }
+
         if ($this->File->exists()) {
             return $this->File->getSourceURL($grant);
         }

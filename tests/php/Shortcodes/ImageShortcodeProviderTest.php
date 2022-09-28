@@ -256,6 +256,15 @@ class ImageShortcodeProviderTest extends SapphireTest
         $html = ImageShortcodeProvider::regenerate_shortcode($args, '', '', 'image');
         $this->assertSame($expected, $html);
         $this->assertFalse($assetStore->isGranted($parsedFileID));
+
+        // Login as member with 'VIEW_DRAFT_CONTENT' permisson to access to file and get session access
+        $this->logOut();
+
+        $this->logInWithPermission('VIEW_DRAFT_CONTENT');
+        // Provide permissions to view file for any logged in users
+        $image->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
+        $image->write();
+
         Config::modify()->set(FileShortcodeProvider::class, 'allow_session_grant', true);
         $html = ImageShortcodeProvider::regenerate_shortcode($args, '', '', 'image');
         $this->assertSame($expected, $html);

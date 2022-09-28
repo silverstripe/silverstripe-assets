@@ -367,7 +367,7 @@ class ImageManipulationTest extends SapphireTest
     {
         $alt = 'This is a image Title';
         $src = '/assets/ImageTest/folder/test-image.png';
-        $srcCroped = '/assets/ImageTest/folder/test-image__CropWidthWyIxMDAiXQ.png';
+        $srcCroped = '/assets/ImageTest/folder/test-image__CropWidthWzEwMF0.png';
 
         return [
             'Simple output' => [

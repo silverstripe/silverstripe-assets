@@ -21,8 +21,6 @@ use SilverStripe\ORM\DB;
  * older file format to resolve.
  *
  * You may also provide a `VersionedStage` to only look at files that were published.
- *
- * @internal This is still an evolving API. It may change in the next minor release.
  */
 class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 {

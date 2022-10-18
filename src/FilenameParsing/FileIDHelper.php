@@ -4,8 +4,6 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 /**
  * Helps build and parse Filename Identifiers (ake: FileIDs) according to a predefined format.
- *
- * @internal This is still an evolving API. It may change in the next minor release.
  */
 interface FileIDHelper
 {

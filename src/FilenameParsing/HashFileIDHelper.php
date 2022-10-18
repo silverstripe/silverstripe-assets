@@ -13,8 +13,6 @@ use SilverStripe\Core\Injector\Injectable;
  * SilverStripe 4.4.
  *
  * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`
- *
- * @internal This is still an evolving API. It may change in the next minor release.
  */
 class HashFileIDHelper implements FileIDHelper
 {

@@ -546,7 +546,7 @@ class FileMigrationHelper
     /**
      * Get map of File IDs to legacy filenames
      *
-     * @deprecated 4.4.0
+     * @deprecated 4.4.0 Will be removed without equivalent functionality to replace it
      * @return array
      */
     protected function getFilenameArray()

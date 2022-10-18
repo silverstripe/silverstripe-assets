@@ -348,7 +348,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function RelativeLink()
     {
-        Deprecation::notice('4.0', 'Use getURL instead, as not all files will be relative to the site root.');
+        Deprecation::notice('4.0', 'Use getURL() instead');
         return Director::makeRelative($this->getURL());
     }
 

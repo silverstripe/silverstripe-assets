@@ -112,7 +112,7 @@ TXT;
             ],
             'Unprotected' => [
                 'unprotected',
-                null,
+                '',
                 false
             ],
             'Protected with modified htaccess' => [

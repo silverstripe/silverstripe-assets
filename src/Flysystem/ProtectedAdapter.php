@@ -2,12 +2,12 @@
 
 namespace SilverStripe\Assets\Flysystem;
 
-use League\Flysystem\AdapterInterface;
+use League\Flysystem\FilesystemAdapter;
 
 /**
  * An adapter which does not publicly expose protected files
  */
-interface ProtectedAdapter extends AdapterInterface
+interface ProtectedAdapter extends FilesystemAdapter
 {
 
     /**

@@ -2,11 +2,10 @@
 
 namespace SilverStripe\Assets\Dev;
 
-use League\Flysystem\Adapter\Local;
-use League\Flysystem\AdapterInterface;
-use League\Flysystem\Filesystem;
+use League\Flysystem\Visibility;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\Filesystem as SSFilesystem;
+use SilverStripe\Assets\Flysystem\LocalFilesystemAdapter;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
@@ -16,6 +15,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Flysystem\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\GeneratedAssetHandler;
 use SilverStripe\Control\Controller;
@@ -65,14 +65,14 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         $publicFilesystem = new Filesystem(
             $publicAdapter,
             [
-                'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+                'visibility' => Visibility::PUBLIC
             ]
         );
         $protectedAdapter = new ProtectedAssetAdapter(ASSETS_PATH . '/' . $basedir . '/.protected');
         $protectedFilesystem = new Filesystem(
             $protectedAdapter,
             [
-                'visibility' => AdapterInterface::VISIBILITY_PRIVATE
+                'visibility' => Visibility::PRIVATE
             ]
         );
 
@@ -156,9 +156,9 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         if (!$forceProtected && !$filesystem->has($fileID)) {
             $filesystem = $assetStore->getPublicFilesystem();
         }
-        /** @var Local $adapter */
+        /** @var LocalFilesystemAdapter $adapter */
         $adapter = $filesystem->getAdapter();
-        return $relative ? $fileID : $adapter->applyPathPrefix($fileID);
+        return $relative ? $fileID : $adapter->prefixPath($fileID);
     }
 
     public function cleanFilename($filename)

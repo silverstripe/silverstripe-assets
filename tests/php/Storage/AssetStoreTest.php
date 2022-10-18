@@ -419,7 +419,7 @@ class AssetStoreTest extends SapphireTest
         );
         $fishMeta = $backend->getMetadata($fishTuple['Filename'], $fishTuple['Hash']);
         $this->assertEquals(151889, $fishMeta['size']);
-        $this->assertEquals('file', $fishMeta['type']);
+        $this->assertEquals('image/jpeg', $fishMeta['type']);
         $this->assertNotEmpty($fishMeta['timestamp']);
 
         // text
@@ -431,7 +431,7 @@ class AssetStoreTest extends SapphireTest
         );
         $puppiesMeta = $backend->getMetadata($puppiesTuple['Filename'], $puppiesTuple['Hash']);
         $this->assertEquals(7, $puppiesMeta['size']);
-        $this->assertEquals('file', $puppiesMeta['type']);
+        $this->assertEquals('text/plain', $puppiesMeta['type']);
         $this->assertNotEmpty($puppiesMeta['timestamp']);
     }
 
@@ -891,7 +891,7 @@ class AssetStoreTest extends SapphireTest
             $variantParsedFileID->getVariant()
         );
 
-        $this->assertTrue($fs->has($expectedVariantPath));
+        $this->assertTrue($fs->fileExists($expectedVariantPath));
     }
 
     public function listOfFilesToNormalise()
@@ -990,12 +990,12 @@ class AssetStoreTest extends SapphireTest
         $fs = $this->getFilesystem($fsName);
 
         foreach ($expected as $expectedFile) {
-            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertTrue($fs->fileExists($expectedFile), "$expectedFile should exists");
             $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
         }
 
         foreach ($notExpected as $notExpectedFile) {
-            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+            $this->assertFalse($fs->fileExists($notExpectedFile), "$notExpectedFile should NOT exists");
         }
     }
 
@@ -1131,12 +1131,12 @@ class AssetStoreTest extends SapphireTest
         $fs = $this->getFilesystem($fsName);
 
         foreach ($expected as $expectedFile) {
-            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertTrue($fs->fileExists($expectedFile), "$expectedFile should exists");
             $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
         }
 
         foreach ($notExpected as $notExpectedFile) {
-            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+            $this->assertFalse($fs->fileExists($notExpectedFile), "$notExpectedFile should NOT exists");
         }
     }
 

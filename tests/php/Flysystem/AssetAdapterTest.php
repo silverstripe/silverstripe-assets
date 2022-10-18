@@ -58,8 +58,7 @@ class AssetAdapterTest extends SapphireTest
         $this->assertFileExists($this->rootDir . '/.htaccess');
         $this->assertFileDoesNotExist($this->rootDir . '/web.config');
 
-        $htaccess = $adapter->read('.htaccess');
-        $content = $htaccess['contents'];
+        $content = $adapter->read('.htaccess');
         // Allowed extensions set
         $this->assertStringContainsString('RewriteCond %{REQUEST_URI} !^[^.]*[^\/]*\.(?i:', $content);
         foreach (File::getAllowedExtensions() as $extension) {
@@ -74,7 +73,7 @@ class AssetAdapterTest extends SapphireTest
         file_put_contents($this->rootDir . '/.htaccess', '# broken content');
         $adapter->flush();
         $htaccess2 = $adapter->read('.htaccess');
-        $this->assertEquals($content, $htaccess2['contents']);
+        $this->assertEquals($content, $htaccess2);
 
         // Test URL
         $this->assertEquals('/assets/AssetAdapterTest/file.jpg', $adapter->getPublicUrl('file.jpg'));

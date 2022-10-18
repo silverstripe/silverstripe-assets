@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
+use League\Flysystem\UnableToCheckExistence;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
@@ -298,7 +299,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
      * @param ParsedFileID $parsedFileID
      * @param Filesystem $filesystem
      * @return bool|string
-     * @throws \League\Flysystem\FileNotFoundException
+     * @throws UnableToCheckExistence
      */
     private function findHashOf(FileIDHelper $helper, ParsedFileID $parsedFileID, Filesystem $filesystem)
     {
@@ -436,7 +437,7 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
             // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
-            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
+            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive())->toArray();
 
             // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
             $possibleVariants = array_filter($possibleVariants ?? [], function ($possibleVariant) {

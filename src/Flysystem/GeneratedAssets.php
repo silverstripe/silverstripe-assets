@@ -3,8 +3,8 @@
 namespace SilverStripe\Assets\Flysystem;
 
 use Exception;
-use League\Flysystem\File;
-use League\Flysystem\Filesystem;
+use SilverStripe\Assets\Flysystem\Filesystem;
+use League\Flysystem\UnableToWriteFile;
 use SilverStripe\Assets\Storage\GeneratedAssetHandler;
 
 /**
@@ -80,7 +80,7 @@ class GeneratedAssets implements GeneratedAssetHandler
      * @param string $filename
      * @param callable $callback
      * @return bool Whether or not the file exists
-     * @throws Exception If an error has occurred during save
+     * @throws UnableToWriteFile If an error has occurred during save
      */
     protected function checkOrCreate($filename, $callback = null)
     {
@@ -102,21 +102,17 @@ class GeneratedAssets implements GeneratedAssetHandler
     public function setContent($filename, $content)
     {
         // Store content
-        $result = $this
-                ->getFilesystem()
-                ->put($filename, $content);
-
-        if (!$result) {
-            throw new Exception("Error regenerating file \"{$filename}\"");
-        }
+        $this->getFilesystem()->write($filename, $content);
     }
 
     public function removeContent($filename)
     {
-        if ($this->getFilesystem()->has($filename)) {
-            /** @var File $handler */
-            $handler = $this->getFilesystem()->get($filename);
-            $handler->delete();
+        $filesystem = $this->getFilesystem();
+        
+        if ($filesystem->directoryExists($filename)) {
+            $filesystem->deleteDirectory($filename);
+        } elseif ($filesystem->fileExists($filename)) {
+            $filesystem->delete($filename);
         }
     }
 }

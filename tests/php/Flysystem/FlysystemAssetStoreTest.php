@@ -2,9 +2,9 @@
 
 namespace SilverStripe\Assets\Tests\Flysystem;
 
-use League\Flysystem\Filesystem;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
+use SilverStripe\Assets\Flysystem\Filesystem;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
@@ -49,7 +49,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
+            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
             ->setConstructorArgs([$this->publicAdapter])
             ->getMock();
 
@@ -58,7 +58,7 @@ class FlysystemAssetStoreTest extends SapphireTest
             ->getMock();
 
         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream', 'getTimestamp'])
+            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
             ->setConstructorArgs([$this->protectedAdapter])
             ->getMock();
 

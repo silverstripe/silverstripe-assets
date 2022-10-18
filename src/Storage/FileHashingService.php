@@ -2,7 +2,7 @@
 
 namespace SilverStripe\Assets\Storage;
 
-use League\Flysystem\FileNotFoundException;
+use League\Flysystem\UnableToCheckExistence;
 use League\Flysystem\Filesystem;
 
 /**
@@ -27,7 +27,7 @@ interface FileHashingService
      * @param string $fileID
      * @param Filesystem|string $fs
      * @return string
-     * @throws FileNotFoundException
+     * @throws UnableToCheckExistence
      */
     public function computeFromFile($fileID, $fs);
 

@@ -10,14 +10,14 @@ SilverStripe\Core\Injector\Injector:
     class: SilverStripe\Assets\Flysystem\ProtectedAssetAdapter
   # Define the default filesystem
   League\Flysystem\Filesystem.public:
-    class: League\Flysystem\Filesystem
+    class: SilverStripe\Assets\Flysystem\Filesystem
     constructor:
       FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\PublicAdapter'
       FilesystemConfig:
         visibility: public
   # Define the secondary filesystem for protected assets
   League\Flysystem\Filesystem.protected:
-    class: League\Flysystem\Filesystem
+    class: SilverStripe\Assets\Flysystem\Filesystem
     constructor:
       FilesystemAdapter: '%$SilverStripe\Assets\Flysystem\ProtectedAdapter'
       FilesystemConfig:

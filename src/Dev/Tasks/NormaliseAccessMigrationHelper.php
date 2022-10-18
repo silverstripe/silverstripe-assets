@@ -4,7 +4,7 @@ namespace SilverStripe\Assets\Dev\Tasks;
 use Exception;
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemOperator;
 use LogicException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -290,7 +290,7 @@ class NormaliseAccessMigrationHelper
         foreach ($this->public_folders_to_truncate as $path) {
             if ($this->canBeTruncated($path, $fs)) {
                 $this->info(sprintf('Deleting empty folder %s', $path));
-                $fs->deleteDir($path);
+                $fs->deleteDirectory($path);
                 $truncatedPaths[] = $path;
             }
         }
@@ -308,17 +308,17 @@ class NormaliseAccessMigrationHelper
     /**
      * Check if the provided folder can be deleted on this Filesystem
      * @param string $path
-     * @param FilesystemInterface $fs
+     * @param FilesystemOperator $fs
      * @return bool
      */
-    private function canBeTruncated($path, FilesystemInterface $fs)
+    private function canBeTruncated($path, FilesystemOperator $fs)
     {
-        if (!$fs->has($path)) {
+        if (!$fs->directoryExists($path)) {
             // The folder doesn't exists
             return false;
         }
 
-        $contents = $fs->listContents($path);
+        $contents = $fs->listContents($path, true)->toArray();
 
         foreach ($contents as $content) {
             if ($content['type'] !== 'dir') {
@@ -341,14 +341,14 @@ class NormaliseAccessMigrationHelper
     /**
      * Delete this folder if it doesn't contain any files and parent folders if they don't contain any files either.
      * @param string $path
-     * @param FilesystemInterface $fs
+     * @param FilesystemOperator $fs
      */
-    private function recursiveTruncate($path, FilesystemInterface $fs)
+    private function recursiveTruncate($path, FilesystemOperator $fs)
     {
-        if ($path && ltrim($path ?? '', '.') && empty($fs->listContents($path))
+        if ($path && ltrim($path ?? '', '.') && empty($fs->listContents($path)->toArray())
         ) {
             $this->info(sprintf('Deleting empty folder %s', $path));
-            $fs->deleteDir($path);
+            $fs->deleteDirectory($path);
             $this->recursiveTruncate(dirname($path ?? ''), $fs);
         }
     }

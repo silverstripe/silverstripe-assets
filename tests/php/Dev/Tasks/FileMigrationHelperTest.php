@@ -75,25 +75,25 @@ class FileMigrationHelperTest extends SapphireTest
         foreach (Image::get() as $file) {
             $filename = $file->generateFilename();
             rewind($fromMain);
-            $fs->write($filename, $fromMain);
+            $fs->writeStream($filename, $fromMain);
 
             $dir = dirname($filename ?? '');
             $basename = basename($filename ?? '');
 
             rewind($fromVariant);
-            $fs->write($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
+            $fs->writeStream($dir . '/_resampled/resizeXYZ/' . $basename, $fromVariant);
             rewind($fromVariant);
-            $fs->write($dir . '/_resampled/resizeXYZ/scaleABC/' . $basename, $fromVariant);
+            $fs->writeStream($dir . '/_resampled/resizeXYZ/scaleABC/' . $basename, $fromVariant);
             rewind($fromVariant);
-            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-' . $basename, $fromVariant);
+            $fs->writeStream($dir . '/_resampled/ScaleWidthWzEwMF0-' . $basename, $fromVariant);
             rewind($fromVariant);
-            $fs->write($dir . '/_resampled/ScaleWidthWzEwMF0-FitWzEwMCwxMDBd-' . $basename, $fromVariant);
+            $fs->writeStream($dir . '/_resampled/ScaleWidthWzEwMF0-FitWzEwMCwxMDBd-' . $basename, $fromVariant);
         }
         fclose($fromMain);
         fclose($fromVariant);
 
-        $fs->rename('wrong-case.txt', 'wRoNg-CaSe.tXt');
-        $fs->rename('Uploads/good-case-bad-folder.txt', 'uploads/good-case-bad-folder.txt');
+        $fs->move('wrong-case.txt', 'wRoNg-CaSe.tXt');
+        $fs->move('Uploads/good-case-bad-folder.txt', 'uploads/good-case-bad-folder.txt');
         $fs->copy('too-many-alternative-case.txt', 'Too-Many-Alternative-Case.txt');
         $fs->copy('too-many-alternative-case.txt', 'Too-Many-Alternative-Case.TXT');
         $fs->delete('too-many-alternative-case.txt');

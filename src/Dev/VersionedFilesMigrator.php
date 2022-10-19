@@ -3,16 +3,17 @@
 namespace SilverStripe\Assets\Dev;
 
 use SilverStripe\Assets\Filesystem;
-use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Path;
-use SilverStripe\Dev\BuildTask;
 use InvalidArgumentException;
+use SilverStripe\Dev\Deprecation;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
 
+/**
+ * @deprecated 1.12.0 VersionedFilesMigrator will not be needed in
+ *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ */
 class VersionedFilesMigrator
 {
     use Injectable;
@@ -62,6 +63,13 @@ class VersionedFilesMigrator
      */
     public function __construct($strategy = self::STRATEGY_DELETE, $basePath = ASSETS_DIR, $output = true)
     {
+        Deprecation::notice(
+            '1.12.0',
+            'VersionedFilesMigrator will not be needed in Silverstripe CMS 5. ' .
+            'Run the task prior to upgrading your project.',
+            Deprecation::SCOPE_CLASS
+        );
+
         if (!in_array($strategy, [self::STRATEGY_DELETE, self::STRATEGY_PROTECT])) {
             throw new InvalidArgumentException(sprintf(
                 'Invalid strategy: %s',

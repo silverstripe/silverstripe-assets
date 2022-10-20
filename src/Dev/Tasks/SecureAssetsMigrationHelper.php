@@ -10,6 +10,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Queries\SQLSelect;
 
@@ -25,7 +26,8 @@ use SilverStripe\ORM\Queries\SQLSelect;
  *
  * See https://github.com/silverstripe/silverstripe-assets/issues/231
  *
- * @internal
+ * @deprecated 1.12.0 SecureAssetsMigrationHelper will not be needed in
+ *   Silverstripe CMS 5. Run the task prior to upgrading your project.
  */
 class SecureAssetsMigrationHelper
 {
@@ -48,6 +50,13 @@ class SecureAssetsMigrationHelper
 
     public function __construct()
     {
+        Deprecation::notice(
+            '1.12.0',
+            'SecureAssetsMigrationHelper will not be needed in Silverstripe CMS 5. ' .
+            'Run the task prior to upgrading your project.',
+            Deprecation::SCOPE_CLASS
+        );
+
         $this->logger = new NullLogger();
 
         $this->htaccessRegexes = [

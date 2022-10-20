@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\FilenameParsing;
 use Exception;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Parsed SS3 style legacy asset URLs. e.g.: `Uploads/_resampled/ResizedImageWzYwLDgwXQ/sam.jpg`
@@ -12,7 +13,7 @@ use SilverStripe\Core\Injector\Injectable;
  * SS3 legacy paths are no longer used in SilverStripe 4, but a way to parse them is needed for redirecting old SS3
  * urls.
  *
- * @internal This is still an evolving API. It may change in the next minor release.
+ * @deprecated 1.12.0 Legacy file names will not be supported in Silverstripe CMS 5
  */
 class LegacyFileIDHelper implements FileIDHelper
 {
@@ -21,7 +22,7 @@ class LegacyFileIDHelper implements FileIDHelper
 
     /**
      * List of SilverStripe 3 image method names that can appear in variants. Prior to SilverStripe 3.3, variants were
-     * incoded in the filename with dashes. e.g.: `_resampled/FitW10-sam.jpg` rather than `_resampled/FitW10/sam.jpg`.
+     * encoded in the filename with dashes. e.g.: `_resampled/FitW10-sam.jpg` rather than `_resampled/FitW10/sam.jpg`.
      * @config
      */
     private static $ss3_image_variant_methods = [
@@ -53,6 +54,7 @@ class LegacyFileIDHelper implements FileIDHelper
      */
     public function __construct($failNewerVariant = true)
     {
+        Deprecation::notice('1.12.0', 'Legacy file names will not be supported in Silverstripe CMS 5', Deprecation::SCOPE_CLASS);
         $this->failNewerVariant = $failNewerVariant;
     }
 

@@ -4,7 +4,12 @@ namespace SilverStripe\Assets\Dev\Tasks;
 
 use SilverStripe\Assets\Dev\VersionedFilesMigrator;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\Dev\Deprecation;
 
+/**
+ * @deprecated 1.12.0 VersionedFilesMigrationTask will not be needed in
+ *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ */
 class VersionedFilesMigrationTask extends BuildTask
 {
     const STRATEGY_DELETE = 'delete';
@@ -15,10 +20,21 @@ class VersionedFilesMigrationTask extends BuildTask
 
     protected $title = 'Migrate versionedfiles';
 
-    protected $description = 'If you had the symbiote/silverstripe-versionedfiles module installed on your 3.x site, it 
+    protected $description = 'If you had the symbiote/silverstripe-versionedfiles module installed on your 3.x site, it
         is no longer needed in 4.x as this functionality is provided by default. This task will remove the old _versions
-        folders or protect them, depending on the strategy you use. Use ?strategy=delete or ?strategy=protect (Apache 
+        folders or protect them, depending on the strategy you use. Use ?strategy=delete or ?strategy=protect (Apache
         only). [Default: delete]';
+
+    public function __construct()
+    {
+        Deprecation::notice(
+            '1.12.0',
+            'VersionedFilesMigrationTask will not be needed in Silverstripe CMS 5. ' .
+            'Run the task prior to upgrading your project.',
+            Deprecation::SCOPE_CLASS
+        );
+        parent::__construct();
+    }
 
     /**
      * @param HTTPRequest $request

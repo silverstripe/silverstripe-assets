@@ -9,6 +9,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -20,7 +21,9 @@ use SilverStripe\Versioned\Versioned;
  *
  * This service does not alter these records in such a way that prevents downgrading back to 3.x
  *
- * @internal This class is not a part of Silverstripe CMS public API
+ * @deprecated 1.12.0 FolderMigrationHelper will not be needed in
+ *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ *
  */
 class FolderMigrationHelper
 {
@@ -38,6 +41,12 @@ class FolderMigrationHelper
 
     public function __construct()
     {
+        Deprecation::notice(
+            '1.12.0',
+            'FolderMigrationHelper will not be needed in Silverstripe CMS 5. ' .
+            'Run the task prior to upgrading your project.',
+            Deprecation::SCOPE_CLASS
+        );
         $this->logger = new NullLogger();
     }
 

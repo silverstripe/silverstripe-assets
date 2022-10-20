@@ -86,12 +86,7 @@ class TagsToShortcodeHelper
      */
     public function __construct($baseClass = null, $includeBaseClass = false)
     {
-        Deprecation::notice(
-            '1.12.0',
-            'TagsToShortcodeHelper will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $flysystemAssetStore = singleton(AssetStore::class);
         if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
             throw new InvalidArgumentException("FlysystemAssetStore missing");

@@ -54,12 +54,7 @@ class LegacyThumbnailMigrationHelper
 
     public function __construct()
     {
-        Deprecation::notice(
-            '1.12.0',
-            'LegacyThumbnailMigrationHelper will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $this->logger = new NullLogger();
     }
 

@@ -771,7 +771,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function findVariants($fileID, Filesystem $filesystem)
     {
-        Deprecation::notice('1.12.0', 'Use `' . FileResolutionStrategy::class . '::findVariants()` instead');
+        Deprecation::notice('1.12.0', 'Use FileResolutionStrategy::findVariants() instead');
         $dirname = ltrim(dirname($fileID ?? ''), '.');
         foreach ($filesystem->listContents($dirname) as $next) {
             if ($next['type'] !== 'file') {
@@ -914,7 +914,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function moveBetweenFilesystems($fileID, Filesystem $from, Filesystem $to)
     {
-        Deprecation::notice('1.4.0', 'Use `moveBetweenFileStore` instead');
+        Deprecation::notice('1.4.0', 'Use moveBetweenFileStore() instead');
         foreach ($this->findVariants($fileID, $from) as $nextID) {
             // Copy via stream
             $stream = $from->readStream($nextID);
@@ -1062,7 +1062,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getStreamSHA1($stream)
     {
-        Deprecation::notice('1.4.0', 'Use `' . FileHashingService::class . '::computeFromStream()` instead');
+        Deprecation::notice('1.4.0', 'Use FileHashingService::computeFromStream() instead');
         return Injector::inst()
             ->get(FileHashingService::class)
             ->computeFromStream($stream);
@@ -1355,7 +1355,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function cleanFilename($filename)
     {
-        Deprecation::notice('1.4.0', 'Use `' . FileIDHelper::class . '::cleanFilename()` instead');
+        Deprecation::notice('1.4.0', 'Use FileIDHelper::cleanFilename() instead');
         /** @var FileIDHelper $helper */
         $helper = Injector::inst()->get(HashFileIDHelper::class);
         return $helper->cleanFilename($filename);
@@ -1370,7 +1370,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function parseFileID($fileID)
     {
-        Deprecation::notice('1.4.0', 'Use `' . FileResolutionStrategy::class . '::parseFileID()` instead');
+        Deprecation::notice('1.4.0', 'Use FileResolutionStrategy::parseFileID() instead');
         /** @var ParsedFileID $parsedFileID */
         $parsedFileID = $this->getProtectedResolutionStrategy()->parseFileID($fileID);
         return $parsedFileID ? $parsedFileID->getTuple() : null;
@@ -1385,14 +1385,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getOriginalFilename($fileID)
     {
-        Deprecation::notice(
-            '1.4.0',
-            'Use `' .
-            FileResolutionStrategy::class .
-            '::parseFileID()` and `' .
-            ParsedFileID::class .
-            '::getFilename()` instead.'
-        );
+        Deprecation::notice('1.4.0', 'Use FileResolutionStrategy::parseFileID() and ParsedFileID::getFilename() instead');
         $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
         return $parsedFiledID ? $parsedFiledID->getFilename() : null;
     }
@@ -1406,14 +1399,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function getVariant($fileID)
     {
-        Deprecation::notice(
-            '1.4.0',
-            'Use `' .
-            FileResolutionStrategy::class .
-            '::parseFileID()` and `' .
-            ParsedFileID::class .
-            '::getVariant()` instead.'
-        );
+        Deprecation::notice('1.4.0', 'Use FileResolutionStrategy::parseFileID() and ParsedFileID::getVariant() instead');
         $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
         return $parsedFiledID ? $parsedFiledID->getVariant() : null;
     }
@@ -1427,14 +1413,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      */
     protected function removeVariant($fileID)
     {
-        Deprecation::notice(
-            '1.4.0',
-            'Use `' .
-            FileResolutionStrategy::class .
-            '::parseFileID()` and `' .
-            ParsedFileID::class .
-            '::setVariant()` instead'
-        );
+        Deprecation::notice('1.4.0', 'Use FileResolutionStrategy::parseFileID() and ParsedFileID::setVariant() instead');
         $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
         if ($parsedFiledID) {
             return $this->getPublicResolutionStrategy()->buildFileID($parsedFiledID->setVariant(''));

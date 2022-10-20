@@ -62,12 +62,7 @@ class FileMigrationHelper
 
     public function __construct()
     {
-        Deprecation::notice(
-            '1.12.0',
-            'FileMigrationHelper will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $this->logger = new NullLogger();
     }
 
@@ -555,11 +550,12 @@ class FileMigrationHelper
     /**
      * Get map of File IDs to legacy filenames
      *
-     * @deprecated 4.4.0 Will be removed without equivalent functionality to replace it
+     * @deprecated 1.4.0 Will be removed without equivalent functionality to replace it
      * @return array
      */
     protected function getFilenameArray()
     {
+        Deprecation::notice('1.4.0', 'Will be removed without equivalent functionality to replace it');
         $table = DataObject::singleton(File::class)->baseTable();
         // Convert original query, ensuring the legacy "Filename" is included in the result
         /** @skipUpgrade */

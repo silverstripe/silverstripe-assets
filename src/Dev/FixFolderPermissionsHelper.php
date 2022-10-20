@@ -18,8 +18,7 @@ use SilverStripe\Security\InheritedPermissionFlusher;
  * This helper class resets the `CanViewType` of files that are `NULL`.
  * You need to flush your cache after running this via CLI.
  *
- * @deprecated 1.12.0 FixFolderPermissionsHelper will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class FixFolderPermissionsHelper
 {

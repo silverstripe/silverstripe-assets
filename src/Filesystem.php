@@ -111,7 +111,7 @@ class Filesystem
     /**
      * Cleanup function to reset all the Filename fields.  Visit File/fixfiles to call.
      *
-     * @deprecated 5.0
+     * @deprecated 5.0 Will be removed without equivalent functionality to replace it
      */
     public function fixfiles()
     {

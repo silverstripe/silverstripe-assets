@@ -11,8 +11,7 @@ use SilverStripe\Dev\Deprecation;
  * SS4 and its File Migration Task changes the way in which files are stored in the assets folder, with files placed
  * in subfolders named with partial hashmap values of the file version. This build task goes through the HTML content
  * fields looking for instances of image links, and corrects the link path to what it should be, with an image shortcode.
- * @deprecated 1.12.0 TagsToShortcodeTask will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class TagsToShortcodeTask extends BuildTask
 {

@@ -767,7 +767,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $fileID ID of original file to compare with.
      * @param Filesystem $filesystem
      * @return Generator
-     * @deprecated 1.12.0 Use `FileResolutionStrategy::findVariants()` instead
+     * @deprecated 1.12.0 Use FileResolutionStrategy::findVariants() instead
      */
     protected function findVariants($fileID, Filesystem $filesystem)
     {
@@ -910,7 +910,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $fileID
      * @param Filesystem $from
      * @param Filesystem $to
-     * @deprecated 1.4.0 Use `moveBetweenFileStore()` instead
+     * @deprecated 1.4.0 Use moveBetweenFileStore() instead
      */
     protected function moveBetweenFilesystems($fileID, Filesystem $from, Filesystem $to)
     {
@@ -1351,7 +1351,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $filename
      * @return string
-     * @deprecated 1.4.0 Use `FileIDHelper::cleanFilename()` instead
+     * @deprecated 1.4.0 Use FileIDHelper::cleanFilename() instead
      */
     protected function cleanFilename($filename)
     {
@@ -1366,7 +1366,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID
      * @return array
-     * @deprecated 1.4.0 Use `FileResolutionStrategy::parseFileID()` instead
+     * @deprecated 1.4.0 Use FileResolutionStrategy::parseFileID() instead
      */
     protected function parseFileID($fileID)
     {
@@ -1381,7 +1381,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID Adapter specific identifier for this file/version
      * @return string Filename for this file, omitting hash and variant
-     * @deprecated 1.4.0 Use `FileResolutionStrategy::parseFileID()` and `ParsedFileID::getFilename()` instead
+     * @deprecated 1.4.0 Use FileResolutionStrategy::parseFileID() and ParsedFileID::getFilename() instead
      */
     protected function getOriginalFilename($fileID)
     {
@@ -1402,7 +1402,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID
      * @return string
-     * @deprecated 1.4.0 Use `FileResolutionStrategy::parseFileID()` and `ParsedFileID::getVariant()` instead
+     * @deprecated 1.4.0 Use FileResolutionStrategy::parseFileID() and ParsedFileID::getVariant() instead
      */
     protected function getVariant($fileID)
     {
@@ -1423,7 +1423,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param string $fileID
      * @return string FileID without variant
-     * @deprecated 1.4.0 Use `FileResolutionStrategy::parseFileID()` and `ParsedFileID::setVariant()` instead
+     * @deprecated 1.4.0 Use FileResolutionStrategy::parseFileID() and ParsedFileID::setVariant() instead
      */
     protected function removeVariant($fileID)
     {

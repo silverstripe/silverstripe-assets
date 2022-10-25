@@ -7,8 +7,7 @@ use SilverStripe\Dev\BuildTask;
 use SilverStripe\Dev\Deprecation;
 
 /**
- * @deprecated 1.12.0 VersionedFilesMigrationTask will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class VersionedFilesMigrationTask extends BuildTask
 {
@@ -27,12 +26,7 @@ class VersionedFilesMigrationTask extends BuildTask
 
     public function __construct()
     {
-        Deprecation::notice(
-            '1.12.0',
-            'VersionedFilesMigrationTask will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         parent::__construct();
     }
 

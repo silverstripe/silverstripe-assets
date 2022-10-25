@@ -26,8 +26,7 @@ use SilverStripe\ORM\Queries\SQLSelect;
  *
  * See https://github.com/silverstripe/silverstripe-assets/issues/231
  *
- * @deprecated 1.12.0 SecureAssetsMigrationHelper will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class SecureAssetsMigrationHelper
 {
@@ -50,12 +49,7 @@ class SecureAssetsMigrationHelper
 
     public function __construct()
     {
-        Deprecation::notice(
-            '1.12.0',
-            'SecureAssetsMigrationHelper will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
 
         $this->logger = new NullLogger();
 

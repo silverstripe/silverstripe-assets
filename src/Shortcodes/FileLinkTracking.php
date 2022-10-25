@@ -66,12 +66,12 @@ class FileLinkTracking extends DataExtension
     private static $show_file_link_tracking = false;
 
     /**
-     * @deprecated 4.2..5.0 Use FileTracking() instead
+     * @deprecated 1.2.0 Use FileTracking() instead
      * @return File[]|ManyManyList
      */
     public function ImageTracking()
     {
-        Deprecation::notice('5.0', 'Use FileTracking() instead');
+        Deprecation::notice('1.2.0', 'Use FileTracking() instead');
         return $this->FileTracking();
     }
 

@@ -21,8 +21,7 @@ use SilverStripe\Versioned\Versioned;
  *
  * This service does not alter these records in such a way that prevents downgrading back to 3.x
  *
- * @deprecated 1.12.0 FolderMigrationHelper will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  *
  */
 class FolderMigrationHelper
@@ -41,12 +40,7 @@ class FolderMigrationHelper
 
     public function __construct()
     {
-        Deprecation::notice(
-            '1.12.0',
-            'FolderMigrationHelper will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $this->logger = new NullLogger();
     }
 

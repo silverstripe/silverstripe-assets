@@ -11,8 +11,7 @@ use SilverStripe\Dev\Deprecation;
 use Symfony\Component\Finder\Finder;
 
 /**
- * @deprecated 1.12.0 VersionedFilesMigrator will not be needed in
- *   Silverstripe CMS 5. Run the task prior to upgrading your project.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class VersionedFilesMigrator
 {
@@ -63,12 +62,7 @@ class VersionedFilesMigrator
      */
     public function __construct($strategy = self::STRATEGY_DELETE, $basePath = ASSETS_DIR, $output = true)
     {
-        Deprecation::notice(
-            '1.12.0',
-            'VersionedFilesMigrator will not be needed in Silverstripe CMS 5. ' .
-            'Run the task prior to upgrading your project.',
-            Deprecation::SCOPE_CLASS
-        );
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
 
         if (!in_array($strategy, [self::STRATEGY_DELETE, self::STRATEGY_PROTECT])) {
             throw new InvalidArgumentException(sprintf(

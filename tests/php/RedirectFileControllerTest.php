@@ -141,7 +141,7 @@ class RedirectFileControllerTest extends FunctionalTest
         // This replicates a scenario where a file was publish under a hash path in SilverStripe 4.3
         $store = $this->getAssetStore();
         $fs = $store->getPublicFilesystem();
-        $fs->rename($naturalUrl, $hashUrl);
+        $fs->move($naturalUrl, $hashUrl);
 
         $response = $this->get('assets/' . $naturalUrl);
         $this->assertResponse(

@@ -146,7 +146,7 @@ class LegacyThumbnailMigrationHelper
 
         $foundError = false;
         // Recurse through folder
-        foreach ($filesystem->listContents($resampledFolderPath, true) as $fileInfo) {
+        foreach ($filesystem->listContents($resampledFolderPath, true)->toArray() as $fileInfo) {
             if ($fileInfo['type'] !== 'file') {
                 continue;
             }
@@ -179,7 +179,7 @@ class LegacyThumbnailMigrationHelper
                 continue;
             }
 
-            $filesystem->rename($oldResampledPath, $newResampledPath);
+            $filesystem->move($oldResampledPath, $newResampledPath);
 
             $this->logger->info(sprintf('Moved legacy thumbnail %s to %s', $oldResampledPath, $newResampledPath));
 
@@ -190,13 +190,13 @@ class LegacyThumbnailMigrationHelper
         // get migrated leave the folder where it is.
         if (!$foundError) {
             $files = array_filter(
-                $filesystem->listContents($resampledFolderPath, true) ?? [],
+                $filesystem->listContents($resampledFolderPath, true)->toArray() ?? [],
                 function ($file) {
                     return $file['type'] === 'file';
                 }
             );
             if (empty($files)) {
-                $filesystem->deleteDir($resampledFolderPath);
+                $filesystem->deleteDirectory($resampledFolderPath);
             } else {
                 // This should not be possible. If it is, then there's probably a bug.
                 $this->logger->error(sprintf(

@@ -2,14 +2,12 @@
 
 namespace SilverStripe\Assets\Flysystem;
 
+use Exception;
 use Generator;
 use InvalidArgumentException;
-use League\Flysystem\Directory;
-use League\Flysystem\Exception as FlysystemException;
-use League\Flysystem\Filesystem;
-use League\Flysystem\Util;
 use LogicException;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Util;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
@@ -581,7 +579,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 }
             }
 
-            $result = $filesystem->putStream($fileID, $stream);
+            $result = $filesystem->writeStream($fileID, $stream);
 
             // If we have an hash for a main file, let's pre-warm our file hashing cache.
             if ($hash || !$variant) {
@@ -640,7 +638,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                             // Invalidate hash of delete file
                             $hasher->invalidate($origin, $fs);
                         } else {
-                            $fs->rename($origin, $destination);
+                            $fs->move($origin, $destination);
                             // Move cached hash value to new location
                             $hasher->move($origin, $fs, $destination);
                         }
@@ -754,9 +752,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($dirname
             && ltrim($dirname ?? '', '.')
             && !$this->config()->get('keep_empty_dirs')
-            && !$filesystem->listContents($dirname)
+            && !$filesystem->listContents($dirname)->toArray()
         ) {
-            $filesystem->deleteDir($dirname);
+            $filesystem->deleteDirectory($dirname);
             $this->truncateDirectory(dirname($dirname ?? ''), $filesystem);
         }
     }
@@ -772,7 +770,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     protected function findVariants($fileID, Filesystem $filesystem)
     {
         $dirname = ltrim(dirname($fileID ?? ''), '.');
-        foreach ($filesystem->listContents($dirname) as $next) {
+        foreach ($filesystem->listContents($dirname)->toArray() as $next) {
             if ($next['type'] !== 'file') {
                 continue;
             }
@@ -840,7 +838,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
                 // Cache destination file into the origin store under a `.swap` directory
                 $stream = $to->readStream($toFileID);
-                $from->putStream('.swap/' . $fromFileID, $stream);
+                $from->writeStream('.swap/' . $fromFileID, $stream);
                 if (is_resource($stream)) {
                     fclose($stream);
                 }
@@ -862,7 +860,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $toFileID = $toStrategy->buildFileID($variantParsedFileID);
 
             $stream = $from->readStream($fromFileID);
-            $to->putStream($toFileID, $stream);
+            $to->writeStream($toFileID, $stream);
             if (is_resource($stream)) {
                 fclose($stream);
             }
@@ -875,10 +873,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         foreach ($swapFiles as $variantParsedFileID) {
             $fileID = $variantParsedFileID->getFileID();
-            $from->rename('.swap/' . $fileID, $fileID);
+            $from->move('.swap/' . $fileID, $fileID);
             $hasher->move('.swap/' . $fileID, $from, $fileID);
         }
-        $from->deleteDir('.swap');
+        $from->deleteDirectory('.swap');
     }
 
     public function protect($filename, $hash)
@@ -916,7 +914,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         foreach ($this->findVariants($fileID, $from) as $nextID) {
             // Copy via stream
             $stream = $from->readStream($nextID);
-            $to->putStream($nextID, $stream);
+            $to->writeStream($nextID, $stream);
             if (is_resource($stream)) {
                 fclose($stream);
             }
@@ -954,7 +952,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $toFileID = $toStrategy->buildFileID($variantParsedFileID);
 
             $stream = $from->readStream($fromFileID);
-            $to->putStream($toFileID, $stream);
+            $to->writeStream($toFileID, $stream);
             if (is_resource($stream)) {
                 fclose($stream);
             }
@@ -1071,7 +1069,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      *
      * @param resource $stream
      * @return string Filename of resulting stream content
-     * @throws FlysystemException
+     * @throws Exception
      */
     protected function getStreamAsFile($stream)
     {
@@ -1079,14 +1077,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $file = tempnam(sys_get_temp_dir(), 'ssflysystem');
         $buffer = fopen($file ?? '', 'w');
         if (!$buffer) {
-            throw new FlysystemException("Could not create temporary file");
+            throw new Exception("Could not create temporary file");
         }
 
         // Transfer from given stream
         Util::rewindStream($stream);
         stream_copy_to_stream($stream, $buffer);
         if (!fclose($buffer)) {
-            throw new FlysystemException("Could not write stream to temporary file");
+            throw new Exception("Could not write stream to temporary file");
         }
 
         return $file;
@@ -1113,7 +1111,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param string $variant Variant to write
      * @param array $config Write options. {@see AssetStore}
      * @return array Tuple associative array (Filename, Hash, Variant)
-     * @throws FlysystemException
+     * @throws InvalidArgumentException
      */
     protected function writeWithCallback($callback, $filename, $hash, $variant = null, $config = [])
     {
@@ -1198,10 +1196,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Submit and validate result
-        $result = $callback($fs, $parsedFileID->getFileID());
-        if (!$result) {
-            throw new FlysystemException("Could not save {$filename}");
-        }
+        $callback($fs, $parsedFileID->getFileID());
 
         return $parsedFileID->getTuple();
     }
@@ -1233,7 +1228,15 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
         return $this->applyToFileOnFilesystem(
             function (ParsedFileID $parsedFileID, Filesystem $fs) {
-                return $fs->getMetadata($parsedFileID->getFileID());
+                $path = $parsedFileID->getFileID();
+                return [
+                    'timestamp' => $fs->lastModified($path),
+                    'fileExists' => $fs->fileExists($path),
+                    'directoryExists' => $fs->directoryExists($path),
+                    'type' => $fs->mimeType($path),
+                    'size' => $fs->fileSize($path),
+                    'visibility' => $fs->visibility($path),
+                ];
             },
             new ParsedFileID($filename, $hash, $variant)
         );
@@ -1244,7 +1247,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
         return $this->applyToFileOnFilesystem(
             function (ParsedFileID $parsedFileID, Filesystem $fs) {
-                return $fs->getMimetype($parsedFileID->getFileID());
+                return $fs->mimetype($parsedFileID->getFileID());
             },
             new ParsedFileID($filename, $hash, $variant)
         );
@@ -1551,14 +1554,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     protected function createResponseFor(Filesystem $flysystem, $fileID)
     {
         // Block directory access
-        if ($flysystem->get($fileID) instanceof Directory) {
+        if ($flysystem->directoryExists($fileID)) {
             return $this->createDeniedResponse();
         }
 
         // Create streamable response
         $stream = $flysystem->readStream($fileID);
-        $size = $flysystem->getSize($fileID);
-        $mime = $flysystem->getMimetype($fileID);
+        $size = $flysystem->fileSize($fileID);
+        $mime = $flysystem->mimetype($fileID);
         $response = HTTPStreamResponse::create($stream, $size)
             ->addHeader('Content-Type', $mime);
 
@@ -1655,7 +1658,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @param FileResolutionStrategy $strategy
      * @return array List of new file names with the old name as the key
      * @throws \League\Flysystem\FileExistsException
-     * @throws \League\Flysystem\FileNotFoundException
+     * @throws \League\Flysystem\UnableToCheckExistence
      */
     private function normaliseToDefaultPath(ParsedFileID $pfid, Filesystem $fs, FileResolutionStrategy $strategy)
     {
@@ -1689,7 +1692,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     $fs->delete($origin);
                     $hasher->invalidate($origin, $fs);
                 } else {
-                    $fs->rename($origin, $targetVariantFileID);
+                    $fs->move($origin, $targetVariantFileID);
                     $hasher->move($origin, $fs, $targetVariantFileID);
                     $ops[$origin] = $targetVariantFileID;
                 }

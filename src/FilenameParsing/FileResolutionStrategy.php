@@ -68,7 +68,7 @@ interface FileResolutionStrategy
      * @param array|ParsedFileID $tuple
      * @param Filesystem $filesystem
      * @return generator|ParsedFileID[]|null
-     * @throws \League\Flysystem\FileNotFoundException
+     * @throws \League\Flysystem\UnableToCheckExistence
      */
     public function findVariants($tuple, Filesystem $filesystem);
 

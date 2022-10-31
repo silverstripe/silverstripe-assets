@@ -2,12 +2,12 @@
 
 namespace SilverStripe\Assets\Flysystem;
 
-use League\Flysystem\AdapterInterface;
+use League\Flysystem\FilesystemAdapter;
 
 /**
  * Represents an AbstractAdapter which exposes its assets via public urls
  */
-interface PublicAdapter extends AdapterInterface
+interface PublicAdapter extends FilesystemAdapter
 {
 
     /**

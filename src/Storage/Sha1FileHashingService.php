@@ -4,8 +4,8 @@ namespace SilverStripe\Assets\Storage;
 
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
-use League\Flysystem\Util;
 use Psr\SimpleCache\CacheInterface;
+use SilverStripe\Assets\Util;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
@@ -195,7 +195,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     {
         $filesystem = $this->getFilesystem($fs);
         return $filesystem->has($fileID) ?
-            $filesystem->getTimestamp($fileID) :
+            $filesystem->lastModified($fileID) :
             DBDatetime::now()->getTimestamp();
     }
 

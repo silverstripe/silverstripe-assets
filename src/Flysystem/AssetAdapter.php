@@ -2,9 +2,9 @@
 
 namespace SilverStripe\Assets\Flysystem;
 
-use Exception;
-use League\Flysystem\Adapter\Local;
 use League\Flysystem\Config as FlysystemConfig;
+use League\Flysystem\UnableToWriteFile;
+use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Core\Config\Config;
@@ -16,7 +16,7 @@ use SilverStripe\View\SSViewer;
 /**
  * Adapter for local filesystem based on assets directory
  */
-class AssetAdapter extends Local
+class AssetAdapter extends LocalFilesystemAdapter
 {
     use Configurable;
 
@@ -61,8 +61,10 @@ class AssetAdapter extends Local
         $root = realpath($root ?? '');
 
         // Override permissions with config
-        $permissions = $this->normalisePermissions($this->config()->get('file_permissions'));
-        parent::__construct($root, $writeFlags, $linkHandling, $permissions);
+        $permissions = PortableVisibilityConverter::fromArray(
+            $this->normalisePermissions($this->config()->get('file_permissions'))
+        );
+        parent::__construct($root, $permissions, $writeFlags, $linkHandling);
 
         // Configure server
         $this->configureServer();
@@ -124,7 +126,7 @@ class AssetAdapter extends Local
      * Configure server files for this store
      *
      * @param bool $forceOverwrite Force regeneration even if files already exist
-     * @throws Exception
+     * @throws UnableToWriteFile
      */
     protected function configureServer($forceOverwrite = false)
     {
@@ -146,18 +148,19 @@ class AssetAdapter extends Local
 
         // Apply each configuration
         $config = new FlysystemConfig();
-        $config->set('visibility', $visibility);
+        $config->extend(['visibility' => $visibility]);
         foreach ($configurations as $file => $template) {
             // Ensure file contents
-            if ($forceOverwrite || !$this->has($file)) {
+            if ($forceOverwrite || !$this->fileExists($file)) {
                 // Evaluate file
-                $content = $this->renderTemplate($template);
-                $success = $this->write($file, $content, $config);
-                if (!$success) {
-                    throw new Exception("Error writing server configuration file \"{$file}\"");
+                try {
+                    $content = $this->renderTemplate($template);
+                    $this->write($file, $content, $config);
+                } catch (UnableToWriteFile $exception) {
+                    throw UnableToWriteFile::atLocation($file, $exception->reason(), $exception);
                 }
             }
-            $perms = $this->getVisibility($file);
+            $perms = $this->visibility($file);
             if ($perms['visibility'] !== $visibility) {
                 // Ensure correct permissions
                 $this->setVisibility($file, $visibility);

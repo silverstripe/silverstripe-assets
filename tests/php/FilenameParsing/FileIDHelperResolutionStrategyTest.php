@@ -1,7 +1,6 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
@@ -12,6 +11,7 @@ use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+use SilverStripe\Assets\Flysystem\LocalFilesystemAdapter;
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
@@ -44,7 +44,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         unlink($this->tmpFolder ?? '');
 
         $this->fs = new Filesystem(
-            new Local($this->tmpFolder)
+            new LocalFilesystemAdapter($this->tmpFolder)
         );
         Injector::inst()->registerService($this->fs, Filesystem::class . '.public');
     }
@@ -54,9 +54,9 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         TestAssetStore::reset();
 
         // Clean up our temp adapter
-        foreach ($this->fs->listContents() as $fileMeta) {
+        foreach ($this->fs->listContents('')->toArray() as $fileMeta) {
             if ($fileMeta['type'] === 'dir') {
-                $this->fs->deleteDir($fileMeta['path']);
+                $this->fs->deleteDirectory($fileMeta['path']);
             } else {
                 $this->fs->delete($fileMeta['path']);
             }
@@ -372,7 +372,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $found = $strategy->searchForTuple($tuple, $this->fs, true);
         $this->assertEquals($expected, $found->getFileID(), 'The file has been written');
 
-        $this->fs->put($expected, 'the hash will change and will not match our tuple');
+        $this->fs->write($expected, 'the hash will change and will not match our tuple');
 
         $found = $strategy->searchForTuple($tuple, $this->fs, false);
         $this->assertEquals(
@@ -434,8 +434,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
 
         // Looking for hash path of file NOT in DB
-        $fs->rename($naturalPath, $hashPath);
-        $fs->rename($variantNaturalPath, $variantHashPath);
+        $fs->move($naturalPath, $hashPath);
+        $fs->move($variantNaturalPath, $variantHashPath);
         $this->assertNull($strategy->searchForTuple($pfID, $fs), 'strategy does not know in what folder to look');
         $this->assertNull($strategy->searchForTuple($variantPfID, $fs), 'strategy does not know in what folder to look');
 
@@ -523,9 +523,9 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs->write('RootFile.txt', 'version 1');
 
         $expectedPaths = [
-            'Folder/FolderFile.pdf',
             'Folder/FolderFile__mockedvariant.pdf',
-            'Folder/SubFolder/SubFolderFile.pdf'
+            'Folder/FolderFile.pdf',
+            'Folder/SubFolder/SubFolderFile.pdf',
         ];
 
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
@@ -557,8 +557,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
 
         $expectedPaths = [
-            ['Folder/FolderFile.pdf', ''],
-            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
+            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant'],
+            ['Folder/FolderFile.pdf', '']
             // The hash path won't be match, because we're not providing a hash
         ];
 

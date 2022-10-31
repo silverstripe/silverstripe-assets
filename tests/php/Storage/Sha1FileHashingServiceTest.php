@@ -2,23 +2,12 @@
 
 namespace SilverStripe\Assets\Tests\Storage;
 
-use Exception;
-use InvalidArgumentException;
-use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
+use League\Flysystem\UnableToReadFile;
 use ReflectionMethod;
-use Silverstripe\Assets\Dev\TestAssetStore;
-use SilverStripe\Assets\File;
-use SilverStripe\Assets\FilenameParsing\FileIDHelper;
-use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\ParsedFileID;
-use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
-use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use Symfony\Component\Cache\CacheItem;
@@ -62,8 +51,8 @@ class Sha1FileHashingServiceTest extends SapphireTest
     protected function tearDown(): void
     {
         parent::tearDown();
-        $this->publicFs->deleteDir('Sha1FileHashingServiceTest');
-        $this->protectedFs->deleteDir('Sha1FileHashingServiceTest');
+        $this->publicFs->deleteDirectory('Sha1FileHashingServiceTest');
+        $this->protectedFs->deleteDirectory('Sha1FileHashingServiceTest');
     }
 
     public function testComputeFromStream()
@@ -103,7 +92,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
 
     public function testComputeMissingFile()
     {
-        $this->expectException(FileNotFoundException::class);
+        $this->expectException(UnableToReadFile::class);
         $service = new Sha1FileHashingService();
         $service->computeFromFile('missing-file.text', AssetStore::VISIBILITY_PROTECTED);
     }
@@ -150,7 +139,7 @@ class Sha1FileHashingServiceTest extends SapphireTest
         // Our timestamp is accruate to the second, we need to wait a bit to make sure our new timestamp won't be in
         // the same second as the old one.
         sleep(2);
-        $this->publicFs->update($this->fileID, $this->protectedContent);
+        $this->publicFs->write($this->fileID, $this->protectedContent);
 
         $this->assertEquals(
             $this->protectedHash,

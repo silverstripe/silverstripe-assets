@@ -349,7 +349,7 @@ class ProtectedFileControllerTest extends FunctionalTest
             // 'text/plain' for test case pdfs in php7.4 + 8.0 , though in php8.1 it will
             // return 'application/octet-stream' which is then converted to 'application/pdf'
             // based on the file extension
-            $this->assertTrue(in_array($response->getHeader('Content-Type'), ['text/plain', 'application/pdf']));
+            $this->assertTrue(in_array($response->getHeader('Content-Type'), ['text/plain', 'application/pdf', 'application/octet-stream']));
         } else {
             $this->assertTrue($response->isError());
         }

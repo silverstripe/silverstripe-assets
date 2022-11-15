@@ -3,9 +3,17 @@ namespace SilverStripe\Assets\Tests\FilenameParsing;
 
 use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+use SilverStripe\Dev\Deprecation;
 
 class MigrationLegacyFileIDHelperTest extends FileIDHelperTester
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
+    }
 
     protected function getHelper()
     {

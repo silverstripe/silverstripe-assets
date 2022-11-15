@@ -27,6 +27,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Ensures that File dataobjects can be safely migrated from 3.x
@@ -54,6 +55,9 @@ class NormaliseAccessMigrationHelperWithHashPathTest extends NormaliseAccessMigr
      */
     public function testSanityCheck()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
 
@@ -89,6 +93,9 @@ class NormaliseAccessMigrationHelperWithHashPathTest extends NormaliseAccessMigr
 
     public function testFixWithImageVariants()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var FlysystemAssetStore $store */
         $store = Injector::inst()->get(AssetStore::class);
         $public = $store->getPublicFilesystem();

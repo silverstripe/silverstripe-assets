@@ -17,6 +17,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Dev\Deprecation;
 
 class AssetStoreTest extends SapphireTest
 {
@@ -237,6 +238,9 @@ class AssetStoreTest extends SapphireTest
      */
     public function testGetOriginalFilename()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $store = new TestAssetStore();
         $this->assertEquals(
             'directory/lovely-fish.jpg',
@@ -395,6 +399,9 @@ class AssetStoreTest extends SapphireTest
      */
     public function testParseFileID($fileID, $tuple)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $store = new TestAssetStore();
         $result = $store->parseFileID($fileID);
         if (is_null($tuple)) {
@@ -441,6 +448,9 @@ class AssetStoreTest extends SapphireTest
      */
     public function testLegacyFilenames()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
 
         $backend = $this->getBackend();
@@ -555,10 +565,19 @@ class AssetStoreTest extends SapphireTest
     {
         $store = $this->getBackend();
 
-        // Disable legacy filenames
-        Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', false);
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution(null));
         $this->assertEquals(AssetStore::CONFLICT_OVERWRITE, $store->getDefaultConflictResolution('somevariant'));
+    }
+
+    /**
+     * Test default conflict resolution for legacy filenames
+     */
+    public function testDefaultConflictResolutionLegacy()
+    {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
+        $store = $this->getBackend();
 
         // Enable legacy filenames -- legacy filename used to have different conflict resolution prior to 1.4.0
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
@@ -775,6 +794,9 @@ class AssetStoreTest extends SapphireTest
 
     public function testGetFilesystemFor()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $store = $this->getBackend();
 
         $publicFs = $store->getPublicFilesystem();
@@ -902,6 +924,98 @@ class AssetStoreTest extends SapphireTest
         /** @var FileIDHelper $hashHelper */
         $hashHelper = new HashFileIDHelper();
         $naturalHelper = new NaturalFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content ?? '');
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content ?? '');
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$public, [$hashPath => $content], $filename, $hash, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$protected, [$filename => $content], $filename, $hash, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $filename, $hash, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $filename,
+                $hash,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFilesToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $filename
+     * @param string $hash
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
+    {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $results = $this->getBackend()->normalise($filename, $hash);
+
+        $this->assertEquals($filename, $results['Filename']);
+        $this->assertEquals($hash, $results['Hash']);
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    public function listOfFilesToNormaliseWithLegacy()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
         $legacyHelper = new LegacyFileIDHelper();
 
         $content = "The quick brown fox jumps over the lazy dog.";
@@ -970,7 +1084,7 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * @dataProvider listOfFilesToNormalise
+     * @dataProvider listOfFilesToNormaliseWithLegacy
      * @param string $fsName
      * @param array $contents
      * @param string $filename
@@ -978,8 +1092,14 @@ class AssetStoreTest extends SapphireTest
      * @param array $expected
      * @param array $notExpected
      */
-    public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
+    public function testNormaliseWithLegacy($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
     {
+        // This is a duplicate of testNormalise that a dataprovider
+        // with the deprecated class LegacyFileIDHelper
+        // Delete the dataprovider at the same time as deleting this test
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->writeDummyFiles($fsName, $contents);
 
         $results = $this->getBackend()->normalise($filename, $hash);
@@ -1000,6 +1120,135 @@ class AssetStoreTest extends SapphireTest
     }
 
     public function listOfFileIDsToNormalise()
+    {
+        $public = AssetStore::VISIBILITY_PUBLIC;
+        $protected = AssetStore::VISIBILITY_PROTECTED;
+
+        /** @var FileIDHelper $hashHelper */
+        $hashHelper = new HashFileIDHelper();
+        $naturalHelper = new NaturalFileIDHelper();
+
+        $content = "The quick brown fox jumps over the lazy dog.";
+        $hash = sha1($content ?? '');
+        $filename = 'folder/file.txt';
+        $hashPath = $hashHelper->buildFileID($filename, $hash);
+
+        $variant = 'uppercase';
+        $vContent = strtoupper($content ?? '');
+        $vNatural = $naturalHelper->buildFileID($filename, $hash, $variant);
+        $vHash = $hashHelper->buildFileID($filename, $hash, $variant);
+
+        return [
+            // Main file only
+            [$public, [$filename => $content], $filename, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$public, [$hashPath => $content], $hashPath, [$filename], [$hashPath, dirname($hashPath ?? '')]],
+            [$protected, [$filename => $content], $filename, [$hashPath], [$filename]],
+            [$protected, [$hashPath => $content], $hashPath, [$hashPath], [$filename]],
+
+            // Main File with variant
+            [
+                $public,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
+            ],
+            [
+                $public,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$filename, $vNatural],
+                [$hashPath, $vHash, dirname($hashPath ?? '')]
+            ],
+            [
+                $protected,
+                [$filename => $content, $vNatural => $vContent],
+                $filename,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+            [
+                $protected,
+                [$hashPath => $content, $vHash => $vContent],
+                $hashPath,
+                [$hashPath, $vHash],
+                [$filename, $vNatural]
+            ],
+
+            // Test files with a parent folder that could be confused for an hash folder
+            'natural path in public store with 10-char folder' => [
+                $public,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                ['multimedia/video.mp4'],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in protected store with 10-char folder' => [
+                $protected,
+                ['multimedia/video.mp4' => $content],
+                'multimedia/video.mp4',
+                [$hashHelper->buildFileID('multimedia/video.mp4', $hash)],
+                [],
+                'multimedia/video.mp4'
+            ],
+            'natural path in public store with 10-hexadecimal-char folder' => [
+                $public,
+                ['0123456789/video.mp4' => $content],
+                '0123456789/video.mp4',
+                ['0123456789/video.mp4'],
+                [],
+                '0123456789/video.mp4'
+            ],
+            'natural path in protected store with 10-hexadecimal-char folder' => [
+                $protected,
+                ['abcdef7890/video.mp4' => $content],
+                'abcdef7890/video.mp4',
+                [$hashHelper->buildFileID('abcdef7890/video.mp4', $hash)],
+                [],
+                'abcdef7890/video.mp4'
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider listOfFileIDsToNormalise
+     * @param string $fsName
+     * @param array $contents
+     * @param string $fileID
+     * @param array $expected
+     * @param array $notExpected
+     */
+    public function testNormalisePath(
+        $fsName,
+        array $contents,
+        $fileID,
+        array $expected,
+        array $notExpected = [],
+        $expectedFilename = 'folder/file.txt'
+    ) {
+        $this->writeDummyFiles($fsName, $contents);
+
+        $results = $this->getBackend()->normalisePath($fileID);
+
+        $this->assertEquals($expectedFilename, $results['Filename']);
+        $this->assertTrue(
+            strpos(sha1("The quick brown fox jumps over the lazy dog."), $results['Hash'] ?? '') === 0
+        );
+
+        $fs = $this->getFilesystem($fsName);
+
+        foreach ($expected as $expectedFile) {
+            $this->assertTrue($fs->has($expectedFile), "$expectedFile should exists");
+            $this->assertNotEmpty($fs->read($expectedFile), "$expectedFile should be non empty");
+        }
+
+        foreach ($notExpected as $notExpectedFile) {
+            $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
+        }
+    }
+
+    public function listOfFileIDsToNormaliseWithLegacy()
     {
         $public = AssetStore::VISIBILITY_PUBLIC;
         $protected = AssetStore::VISIBILITY_PROTECTED;
@@ -1104,14 +1353,14 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * @dataProvider listOfFileIDsToNormalise
+     * @dataProvider listOfFileIDsToNormaliseWithLegacy
      * @param string $fsName
      * @param array $contents
      * @param string $fileID
      * @param array $expected
      * @param array $notExpected
      */
-    public function testNormalisePath(
+    public function testNormalisePathWithLegacy(
         $fsName,
         array $contents,
         $fileID,
@@ -1119,6 +1368,12 @@ class AssetStoreTest extends SapphireTest
         array $notExpected = [],
         $expectedFilename = 'folder/file.txt'
     ) {
+        // This is a duplicate of testNormalise that a dataprovider
+        // with the deprecated class LegacyFileIDHelper
+        // Delete the dataprovider at the same time as deleting this test
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->writeDummyFiles($fsName, $contents);
 
         $results = $this->getBackend()->normalisePath($fileID);

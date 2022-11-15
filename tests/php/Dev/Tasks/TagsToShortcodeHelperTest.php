@@ -19,6 +19,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBHTMLVarchar;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Dev\Deprecation;
 
 class TagsToShortcodeHelperTest extends SapphireTest
 {
@@ -76,6 +77,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testRewrite()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
@@ -105,6 +109,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testPublishedFileRewrite()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $document = $this->objFromFixture(File::class, 'document');
         $image = $this->objFromFixture(Image::class, 'image1');
 
@@ -116,6 +123,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testLivePageRewrite()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var PseudoPage $newPage */
         $newPage = $this->objFromFixture(PseudoPage::class, 'page1');
         $newPage->publishSingle();
@@ -158,6 +168,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testRewriteRegularObject()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
@@ -183,6 +196,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testRewriteSubclassObject()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $tagsToShortcodeHelper->run();
 
@@ -209,6 +225,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
 
     public function testStagelessVersionedObject()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         // This is just here to make sure that the logic for converting live content doesn't fall on its face when
         // encountering a versioned object that does not support stages.
 
@@ -235,6 +254,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function testNewContent($input, $output = false)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $tagsToShortcodeHelper = new TagsToShortcodeHelper();
         $actual = $tagsToShortcodeHelper->getNewContent($input);
         $this->assertEquals($output ?: $input, $actual);
@@ -484,6 +506,9 @@ class TagsToShortcodeHelperTest extends SapphireTest
      */
     public function testAmbigiousCleanedName()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $underscoreFile = 3;
         $trippleUnderscore = 4;
 

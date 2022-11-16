@@ -54,7 +54,13 @@ class LegacyFileIDHelper implements FileIDHelper
      */
     public function __construct($failNewerVariant = true)
     {
-        Deprecation::notice('1.12.0', 'Legacy file names will not be supported in Silverstripe CMS 5', Deprecation::SCOPE_CLASS);
+        Deprecation::withNoReplacement(function () {
+            Deprecation::notice(
+                '1.12.0',
+                'Legacy file names will not be supported in Silverstripe CMS 5',
+                Deprecation::SCOPE_CLASS
+            );
+        });
         $this->failNewerVariant = $failNewerVariant;
     }
 

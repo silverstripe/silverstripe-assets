@@ -11,7 +11,6 @@ use SilverStripe\Assets\File;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Assets\Tests\Storage\AssetStoreTest\TestAssetStore;
 
 /**
  * We rerun all the same test in `RedirectFileControllerTest` but with keep_archived_assets on

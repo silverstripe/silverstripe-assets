@@ -27,7 +27,7 @@ class DBFileTest extends SapphireTest
 
         // Set backend
         TestAssetStore::activate('DBFileTest');
-        Director::config()->update('alternate_base_url', '/mysite/');
+        Director::config()->set('alternate_base_url', '/mysite/');
     }
 
     protected function tearDown(): void

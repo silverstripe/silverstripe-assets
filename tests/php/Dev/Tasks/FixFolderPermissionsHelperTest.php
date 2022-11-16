@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets\Tests\Dev\Tasks;
 
 use SilverStripe\Assets\Folder;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Dev\Tasks\FixFolderPermissionsHelper;
 
@@ -15,6 +16,9 @@ class FixFolderPermissionsHelperTest extends SapphireTest
 
     public function testTask()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $task = new FixFolderPermissionsHelper();
         $updated = $task->run();
 

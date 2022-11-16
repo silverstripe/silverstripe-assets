@@ -62,7 +62,9 @@ class FileMigrationHelper
 
     public function __construct()
     {
-        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
+        Deprecation::withNoReplacement(function () {
+            Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
+        });
         $this->logger = new NullLogger();
     }
 

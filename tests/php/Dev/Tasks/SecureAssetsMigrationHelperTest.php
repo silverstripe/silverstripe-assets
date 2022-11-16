@@ -9,6 +9,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Dev\Tasks\SecureAssetsMigrationHelper;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Dev\Deprecation;
 
 class SecureAssetsMigrationHelperTest extends SapphireTest
 {
@@ -64,6 +65,9 @@ class SecureAssetsMigrationHelperTest extends SapphireTest
      */
     public function testMigrate($fixture, $htaccess, $expected)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $helper = new SecureAssetsMigrationHelper();
 
         /** @var TestAssetStore $store */
@@ -125,6 +129,9 @@ TXT;
 
     public function testHtaccessMatchesExact()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $htaccess = <<<TXT
 RewriteEngine On
 RewriteBase /
@@ -138,6 +145,9 @@ TXT;
 
     public function testHtaccessDoesNotMatchWithAdditionsAtStart()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $htaccess = <<<TXT
 Other stuff
 RewriteEngine On
@@ -152,6 +162,9 @@ TXT;
 
     public function testHtaccessDoesNotMatchWithAdditionsAtEnd()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $htaccess = <<<TXT
 RewriteEngine On
 RewriteBase /
@@ -167,6 +180,9 @@ TXT;
 
     public function testHtaccessDoesNotMatchWithAdditionsInBetween()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $htaccess = <<<TXT
 RewriteEngine On
 RewriteBase /

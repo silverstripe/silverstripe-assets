@@ -1,11 +1,19 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 
 class LegacyFileIDHelperTest extends FileIDHelperTester
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
+    }
 
     protected function getHelper()
     {

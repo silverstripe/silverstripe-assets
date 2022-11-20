@@ -20,6 +20,20 @@ use SilverStripe\View\Parsers\ShortcodeParser;
  */
 class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeHandler, Flushable
 {
+    /**
+     * A whitelist of attributes which are allowed in the resultant markup.
+     *
+     * @config
+     */
+    private static array $attribute_whitelist = [
+        'alt',
+        'class',
+        'height',
+        'loading',
+        'src',
+        'title',
+        'width',
+    ];
 
     /**
      * Gets the list of shortcodes provided by this handler
@@ -99,9 +113,10 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             $attrs['alt'] = $record->Title;
         }
 
-        // Clean out any empty attributes (aside from alt)
-        $attrs = array_filter($attrs ?? [], function ($k, $v) {
-            return strlen(trim($v ?? '')) || $k === 'alt';
+        // Clean out any empty attributes (aside from alt) and anything not whitelisted
+        $whitelist = static::config()->get('attribute_whitelist');
+        $attrs = array_filter($attrs ?? [], function ($v, $k) use ($whitelist) {
+            return in_array($k, $whitelist) && (strlen(trim($v ?? '')) || $k === 'alt');
         }, ARRAY_FILTER_USE_BOTH);
 
         $markup = HTML::createTag('img', $attrs);

@@ -28,6 +28,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Ensures that File dataobjects can be safely migrated from 3.x
@@ -50,6 +51,9 @@ class NormaliseAccessMigrationHelperWithKeepArchivedTest extends NormaliseAccess
      */
     public function testSanityCheck()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
 

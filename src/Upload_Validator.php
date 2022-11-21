@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Core\Convert;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
@@ -121,8 +122,8 @@ class Upload_Validator
                 $this->setAllowedMaxFileSize($fileSize);
             } else {
                 // When no default is present, use maximum set by PHP
-                $maxUpload = File::ini2bytes(ini_get('upload_max_filesize'));
-                $maxPost = File::ini2bytes(ini_get('post_max_size'));
+                $maxUpload = Convert::memstring2bytes(ini_get('upload_max_filesize'));
+                $maxPost = Convert::memstring2bytes(ini_get('post_max_size'));
                 $this->setAllowedMaxFileSize(min($maxUpload, $maxPost));
             }
         }
@@ -165,7 +166,7 @@ class Upload_Validator
                 if (is_numeric($value)) {
                     $tmpSize = $value;
                 } else {
-                    $tmpSize = File::ini2bytes($value);
+                    $tmpSize = Convert::memstring2bytes($value);
                 }
 
                 $finalRules[$rule] = (int)$tmpSize;
@@ -173,7 +174,7 @@ class Upload_Validator
 
             $this->allowedMaxFileSize = $finalRules;
         } elseif (is_string($rules)) {
-            $this->allowedMaxFileSize['*'] = File::ini2bytes($rules);
+            $this->allowedMaxFileSize['*'] = Convert::memstring2bytes($rules);
         } elseif ((int)$rules > 0) {
             $this->allowedMaxFileSize['*'] = (int)$rules;
         }

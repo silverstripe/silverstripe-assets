@@ -20,6 +20,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\Queries\SQLUpdate;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Ensures that File dataobjects can be safely migrated from 3.x
@@ -176,6 +177,9 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testMigration()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->preCondition();
 
         // The EXE file, extensionless file and missing file won't be migrated
@@ -428,6 +432,9 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testMigrationWithLegacyFilenames()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         Config::modify()->set(FlysystemAssetStore::class, 'legacy_filenames', true);
         $this->testMigration();
     }
@@ -438,6 +445,9 @@ class FileMigrationHelperTest extends SapphireTest
      */
     public function testInvalidAssetStoreStrategy()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $strategy = FileIDHelperResolutionStrategy::create();
         $strategy->setDefaultFileIDHelper(new HashFileIDHelper());
         $strategy->setResolutionFileIDHelpers([new HashFileIDHelper()]);

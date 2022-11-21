@@ -37,21 +37,21 @@ class ImageBackendFactory implements Factory
      */
     public function create($service, array $params = [])
     {
-        /** @var AssetContainer */
-        $store = reset($params);
-        if (!$store instanceof AssetContainer) {
+        /** @var AssetContainer $assetContainer */
+        $assetContainer = reset($params);
+        if (!$assetContainer instanceof AssetContainer) {
             throw new BadMethodCallException("Can only create Image_Backend for " . AssetContainer::class);
         }
 
         // Check cache
-        $key = sha1($store->getHash().'-'.$store->getVariant());
+        $key = sha1($assetContainer->getHash().'-'.$assetContainer->getVariant());
         if (array_key_exists($key, $this->cache ?? [])) {
             return $this->cache[$key];
         }
 
         // Verify file exists before creating backend
         $backend = null;
-        if ($store->exists() && $store->getIsImage()) {
+        if ($assetContainer->exists() && $assetContainer->getIsImage()) {
             $backend = $this->creator->create($service, $params);
         }
 

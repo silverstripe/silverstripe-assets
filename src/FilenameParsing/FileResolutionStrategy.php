@@ -5,8 +5,6 @@ use League\Flysystem\Filesystem;
 
 /**
  * Represents a strategy for resolving files on a Flysystem Adapter.
- *
- * @internal This is still an evolving API. It may change in the next minor release.
  */
 interface FileResolutionStrategy
 {

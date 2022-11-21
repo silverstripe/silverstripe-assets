@@ -17,6 +17,7 @@ use SilverStripe\Core\Environment;
 use SilverStripe\Assets\File;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\Connect\DatabaseException;
 use SilverStripe\ORM\Connect\Query;
 use SilverStripe\ORM\DataObject;
@@ -31,6 +32,7 @@ use SilverStripe\Versioned\Versioned;
  * SS4 and its File Migration Task changes the way in which files are stored in the assets folder, with files placed
  * in subfolders named with partial hashmap values of the file version. This helper class goes through the HTML content
  * fields looking for instances of image links, and corrects the link path to what it should be, with an image shortcode.
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class TagsToShortcodeHelper
 {
@@ -84,6 +86,7 @@ class TagsToShortcodeHelper
      */
     public function __construct($baseClass = null, $includeBaseClass = false)
     {
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $flysystemAssetStore = singleton(AssetStore::class);
         if (!($flysystemAssetStore instanceof FlysystemAssetStore)) {
             throw new InvalidArgumentException("FlysystemAssetStore missing");

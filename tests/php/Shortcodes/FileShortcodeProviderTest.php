@@ -44,7 +44,7 @@ class FileShortcodeProviderTest extends SapphireTest
 
         // Conditional fixture creation in case the 'cms' and 'errorpage' modules are installed
         if (class_exists(ErrorPage::class)) {
-            Config::inst()->update(SiteTree::class, 'create_default_pages', true);
+            Config::inst()->set(SiteTree::class, 'create_default_pages', true);
             ErrorPage::singleton()->requireDefaultRecords();
         }
     }

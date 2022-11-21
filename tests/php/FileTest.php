@@ -24,6 +24,7 @@ use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Tests for the File class
@@ -823,6 +824,9 @@ class FileTest extends SapphireTest
      */
     public function testIni2Bytes($iniValue, $expected)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->assertSame($expected, File::ini2bytes($iniValue));
     }
 

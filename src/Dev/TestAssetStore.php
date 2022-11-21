@@ -90,8 +90,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         Injector::inst()->registerService($generated, GeneratedAssetHandler::class);
         Requirements::backend()->setAssetHandler($generated);
 
-        // Disable legacy and set defaults
-        FlysystemAssetStore::config()->set('legacy_filenames', false);
+        // Set defaults
         Director::config()->set('alternate_base_url', '/');
         DBFile::config()->set('force_resample', false);
         File::config()->set('force_resample', false);

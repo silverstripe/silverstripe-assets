@@ -14,6 +14,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
@@ -74,6 +75,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
      */
     public function testSanityCheck()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
 
@@ -114,6 +118,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveWithFolder()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->expectException(\InvalidArgumentException::class);
         /** @var File $file */
         $folder = Folder::find('Uploads');
@@ -123,6 +130,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMovePublishedNoRestrictionFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -147,6 +157,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMovePublishedRestrictedFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -171,6 +184,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveMetaChangedOnlyNoRestrictionFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -199,6 +215,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveMetaChangedOnlyRestrictedFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -227,6 +246,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveDraftNoRestrictionFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->doUnpublish();
@@ -252,6 +274,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveDraftRestrictedFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->doUnpublish();
@@ -277,6 +302,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveUnrestrictedMixedDraftLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -318,6 +346,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveRestrictedMixedDraftLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -358,6 +389,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveRestrictedLiveFileUnrestrictedDraft()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -389,6 +423,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
      */
     public function testNeedToMoveUnrestrictedLiveFileRestrictedDraft()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -418,6 +455,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
      */
     public function testNeedToMoveRestrictedLiveUnrestrictedDraft()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -443,6 +483,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveFileInProtectedFolder()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'secret');
         $file->doUnpublish();
@@ -479,6 +522,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveRenamedFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -503,6 +549,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveReplacedRenamedFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::ANYONE;
@@ -536,6 +585,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFindBadFilesWithProtectedDraft()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->protectFile();
@@ -549,6 +601,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFindBadFilesWithPublishedDraft()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->publishFile();
@@ -568,6 +623,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFindBadFilesWithProtectedLive()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->publishSingle();
@@ -583,6 +641,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFindBadFilesWithPublishedLive()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->publishSingle();
@@ -602,6 +663,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFindBadFilesWithMultiPublishedVersions()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->publishSingle();
@@ -630,6 +694,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testNeedToMoveNonExistentFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $this->expectException(\LogicException::class);
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
@@ -644,6 +711,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testRun()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         foreach (File::get()->exclude('ClassName', Folder::class) as $file) {
             $file->publishFile();
@@ -676,6 +746,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
      */
     public function testRunWithLotsOfFiles()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         // Create a two hundred good files
         for ($i = 0; $i < 200; $i++) {
             $file = new File();
@@ -724,6 +797,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithProtectedDraftFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->protectFile();
@@ -739,6 +815,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithPublicDraftFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->publishFile();
@@ -754,6 +833,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithPublicLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->publishSingle();
@@ -770,6 +852,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithProtectedLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->publishSingle();
@@ -786,6 +871,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithPublicRestrictedLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -803,6 +891,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithProtectedRestrictedLiveFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->CanViewType = InheritedPermissions::LOGGED_IN_USERS;
@@ -820,6 +911,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithUpdatedDraftMetadataFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->publishSingle();
@@ -844,6 +938,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithUpdatedDraftFile()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var File $file */
         $file = $this->objFromFixture(File::class, 'file1');
         $file->publishSingle();
@@ -874,6 +971,9 @@ class NormaliseAccessMigrationHelperTest extends SapphireTest
 
     public function testFixWithImageVariants()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var FlysystemAssetStore $store */
         $store = Injector::inst()->get(AssetStore::class);
         $public = $store->getPublicFilesystem();

@@ -7,6 +7,7 @@ use Psr\Log\NullLogger;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Core\Injector\Injectable;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Security\InheritedPermissionFlusher;
@@ -16,6 +17,8 @@ use SilverStripe\Security\InheritedPermissionFlusher;
  * @see https://github.com/silverstripe/silverstripe-secureassets
  * This helper class resets the `CanViewType` of files that are `NULL`.
  * You need to flush your cache after running this via CLI.
+ *
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class FixFolderPermissionsHelper
 {
@@ -30,6 +33,7 @@ class FixFolderPermissionsHelper
 
     public function __construct()
     {
+        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
         $this->logger = new NullLogger();
     }
 

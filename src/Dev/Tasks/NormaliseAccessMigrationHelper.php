@@ -19,6 +19,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\Versioned\Versioned;
@@ -28,6 +29,8 @@ use SilverStripe\Versioned\Versioned;
  * the appropriate physical location.
  *
  * This is meant to correct files that got save to the wrong location following the CVE-2019-12245 vulnerability.
+ *
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class NormaliseAccessMigrationHelper
 {
@@ -88,6 +91,9 @@ class NormaliseAccessMigrationHelper
      */
     public function __construct($base = '')
     {
+        Deprecation::withNoReplacement(function () {
+            Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
+        });
         $this->logger = new NullLogger();
         if ($base) {
             $this->basePath = $base;

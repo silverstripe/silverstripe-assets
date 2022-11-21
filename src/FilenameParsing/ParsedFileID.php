@@ -4,8 +4,6 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 /**
  * Immutable representation of a parsed fileID broken down into its sub-components.
- *
- * @internal This is still an evolving API. It may change in the next minor release.
  */
 class ParsedFileID
 {

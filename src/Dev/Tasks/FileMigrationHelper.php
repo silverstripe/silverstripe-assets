@@ -16,6 +16,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Environment;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -27,6 +28,8 @@ use SilverStripe\Versioned\Versioned;
  * Service to help migrate File dataobjects to the new APL.
  *
  * This service does not alter these records in such a way that prevents downgrading back to 3.x
+ *
+ * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
  */
 class FileMigrationHelper
 {
@@ -59,6 +62,9 @@ class FileMigrationHelper
 
     public function __construct()
     {
+        Deprecation::withNoReplacement(function () {
+            Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it', Deprecation::SCOPE_CLASS);
+        });
         $this->logger = new NullLogger();
     }
 
@@ -546,11 +552,12 @@ class FileMigrationHelper
     /**
      * Get map of File IDs to legacy filenames
      *
-     * @deprecated 4.4.0
+     * @deprecated 1.4.0 Will be removed without equivalent functionality to replace it
      * @return array
      */
     protected function getFilenameArray()
     {
+        Deprecation::notice('1.4.0', 'Will be removed without equivalent functionality to replace it');
         $table = DataObject::singleton(File::class)->baseTable();
         // Convert original query, ensuring the legacy "Filename" is included in the result
         /** @skipUpgrade */

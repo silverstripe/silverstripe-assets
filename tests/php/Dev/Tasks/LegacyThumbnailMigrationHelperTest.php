@@ -11,6 +11,7 @@ use SilverStripe\Assets\Dev\Tasks\LegacyThumbnailMigrationHelper;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Tests\Dev\Tasks\FileMigrationHelperTest\Extension;
 use SilverStripe\Core\Convert;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\SapphireTest;
 
 class LegacyThumbnailMigrationHelperTest extends SapphireTest
@@ -73,6 +74,9 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
      */
     public function testMigratesWithExistingThumbnailInNewLocation($coreVersion)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
 
@@ -105,6 +109,9 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
      */
     public function testMigratesMultipleFilesInSameFolder($coreVersion)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
 
@@ -148,6 +155,9 @@ class LegacyThumbnailMigrationHelperTest extends SapphireTest
      */
     public function testMigrate($fixtureId, $formats, $coreVersion)
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         /** @var TestAssetStore $store */
         $store = singleton(AssetStore::class); // will use TestAssetStore
 

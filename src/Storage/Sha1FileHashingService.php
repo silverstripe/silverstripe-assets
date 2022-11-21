@@ -16,8 +16,6 @@ use SilverStripe\ORM\FieldType\DBDatetime;
  * Utility for computing and comparing unique file hash. All `$fs` parameters can either be:
  * * an `AssetStore` constant VISIBILITY constant or
  * * an actual `Filesystem` object.
- *
- * @internal This interface is not part of the official SilverStripe API and may be altered in minor releases.
  */
 class Sha1FileHashingService implements FileHashingService, Flushable
 {

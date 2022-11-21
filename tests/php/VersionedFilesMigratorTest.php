@@ -15,6 +15,7 @@ use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Path;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Dev\Deprecation;
 
 class VersionedFilesMigratorTest extends SapphireTest
 {
@@ -29,7 +30,6 @@ class VersionedFilesMigratorTest extends SapphireTest
     {
         return ASSETS_PATH . '/VersionedFilesMigrationTest';
     }
-
 
     protected function setUp(): void
     {
@@ -57,6 +57,9 @@ class VersionedFilesMigratorTest extends SapphireTest
      */
     public function testMigrationDeletes()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $migrator = VersionedFilesMigrator::create(
             VersionedFilesMigrator::STRATEGY_DELETE,
             TestAssetStore::base_path(),
@@ -75,6 +78,9 @@ class VersionedFilesMigratorTest extends SapphireTest
      */
     public function testMigrationProtects()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $migrator = VersionedFilesMigrator::create(
             VersionedFilesMigrator::STRATEGY_PROTECT,
             TestAssetStore::base_path(),

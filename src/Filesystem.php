@@ -5,9 +5,6 @@ namespace SilverStripe\Assets;
 use FilesystemIterator;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Control\Director;
-use SilverStripe\Dev\Deprecation;
-use SilverStripe\Security\Permission;
-use SilverStripe\Security\Security;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 /**
@@ -106,27 +103,6 @@ class Filesystem
         // if we are still here, the folder is empty.
         rmdir($folder ?? '');
         return true;
-    }
-
-    /**
-     * Cleanup function to reset all the Filename fields.  Visit File/fixfiles to call.
-     *
-     * @deprecated 1.12.0 Will be removed without equivalent functionality to replace it
-     */
-    public function fixfiles()
-    {
-        Deprecation::notice('1.12.0', 'Will be removed without equivalent functionality to replace it');
-        if (!Permission::check('ADMIN')) {
-            return Security::permissionFailure($this);
-        }
-
-        $files = File::get();
-        foreach ($files as $file) {
-            $file->updateFilesystem();
-            echo "<li>", $file->Filename;
-            $file->write();
-        }
-        echo "<p>Done!";
     }
 
     /**

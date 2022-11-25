@@ -15,6 +15,9 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\AssetStoreRouter;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
+use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\Filesystem;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\GeneratedAssetHandler;
@@ -160,9 +163,11 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         return $relative ? $fileID : $adapter->prefixPath($fileID);
     }
 
-    public function cleanFilename($filename)
+    public function cleanFilename(string $filename)
     {
-        return parent::cleanFilename($filename);
+        /** @var FileIDHelper $helper */
+        $helper = Injector::inst()->get(HashFileIDHelper::class);
+        return $helper->cleanFilename($filename);
     }
 
     public function getFileID($filename, $hash, $variant = null)
@@ -170,24 +175,39 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         return parent::getFileID($filename, $hash, $variant);
     }
 
-    public function parseFileID($fileID)
+    public function parseFileID(string $fileID)
     {
-        return parent::parseFileID($fileID);
+        /** @var ParsedFileID $parsedFileID */
+        $parsedFileID = $this->getProtectedResolutionStrategy()->parseFileID($fileID);
+        return $parsedFileID ? $parsedFileID->getTuple() : null;
     }
 
-    public function getOriginalFilename($fileID)
+    public function getOriginalFilename(string $fileID)
     {
-        return parent::getOriginalFilename($fileID);
+        /** @var ParsedFileID $parsedFileID */
+        $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
+        return $parsedFiledID ? $parsedFiledID->getFilename() : null;
     }
 
-    public function getFilesystemFor($fileID)
+    public function getFilesystemFor(string $fileID)
     {
-        return parent::getFilesystemFor($fileID);
+        return $this->applyToFileIDOnFilesystem(
+            function (ParsedFileID $parsedFileID, Filesystem $fs) {
+                return $fs;
+            },
+            $fileID
+        );
     }
 
-    public function removeVariant($fileID)
+    public function removeVariant(string $fileID)
     {
-        return parent::removeVariant($fileID);
+        /** @var ParsedFileID $parsedFileID */
+        $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
+        if ($parsedFiledID) {
+            return $this->getPublicResolutionStrategy()->buildFileID($parsedFiledID->setVariant(''));
+        }
+
+        return $fileID;
     }
 
     public function getDefaultConflictResolution($variant)

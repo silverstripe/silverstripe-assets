@@ -11,7 +11,6 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\InjectorNotFoundException;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\View\AttributesHTML;
@@ -952,17 +951,7 @@ trait ImageManipulation
             $result = call_user_func($callback, $store, $filename, $hash, $variant);
 
             // Preserve backward compatibility
-            if (isset($result['Filename'])) {
-                $tuple = $result;
-                Deprecation::notice(
-                    '5.0',
-                    'Closure passed to ImageManipulation::manipulate() should return null or a two-item array
-                        containing a tuple and an image backend, i.e. [$tuple, $result]',
-                    Deprecation::SCOPE_GLOBAL
-                );
-            } else {
-                list($tuple, $manipulationResult) = $result;
-            }
+            list($tuple, $manipulationResult) = $result;
         } else {
             $tuple = [
                 'Filename' => $filename,

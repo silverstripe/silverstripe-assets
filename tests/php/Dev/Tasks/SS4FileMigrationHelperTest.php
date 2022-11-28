@@ -29,6 +29,7 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Dev\Deprecation;
 
 /**
  * Test a generic SS4.3 to SS4.4 file migration. Also serve as basis for more fancy file migration test
@@ -194,6 +195,9 @@ class SS4FileMigrationHelperTest extends SapphireTest
 
     public function testMigration()
     {
+        if (Deprecation::isEnabled()) {
+            $this->markTestSkipped('Test calls deprecated code');
+        }
         $helper = new FileMigrationHelper();
         $result = $helper->run(TestAssetStore::base_path());
 

@@ -144,7 +144,9 @@ class LegacyThumbnailMigrationHelper
         }
 
         $failNewerVariant = false;
-        $legacyFileIDParser = new LegacyFileIDHelper($failNewerVariant);
+        $legacyFileIDParser = Deprecation::withNoReplacement(function () use ($failNewerVariant) {
+            return new LegacyFileIDHelper($failNewerVariant);
+        });
         $naturalFileIDParser = new NaturalFileIDHelper();
 
         $foundError = false;

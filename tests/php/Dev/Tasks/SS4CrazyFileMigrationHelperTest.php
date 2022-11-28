@@ -16,6 +16,8 @@ use SilverStripe\Versioned\Versioned;
  * public ones. We're transitioning to a scenario where Hash paths are used for both protected and public files.
  *
  * This is meant to test the robustness of the solution under a weird set up.
+ *
+ * @deprecated test - Delete this test in CMS5
  */
 class SS4CrazyFileMigrationHelperTest extends SS4FileMigrationHelperTest
 {

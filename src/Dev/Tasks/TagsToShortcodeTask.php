@@ -41,10 +41,12 @@ class TagsToShortcodeTask extends BuildTask
     {
         Injector::inst()->get(FileHashingService::class)->enableCache();
 
-        $tagsToShortcodeHelper = new TagsToShortcodeHelper(
-            $request->getVar('baseClass'),
-            isset($request->getVars()['includeBaseClass'])
-        );
+        $tagsToShortcodeHelper = Deprecation::withNoReplacement(function () use ($request) {
+            return new TagsToShortcodeHelper(
+                $request->getVar('baseClass'),
+                isset($request->getVars()['includeBaseClass'])
+            );
+        });
         $tagsToShortcodeHelper->run();
 
         echo 'DONE';

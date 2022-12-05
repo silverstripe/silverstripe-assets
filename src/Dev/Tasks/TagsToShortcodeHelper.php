@@ -247,9 +247,12 @@ class TagsToShortcodeHelper
     private function getParsedFileIDFromSrc($src)
     {
         $fileIDHelperResolutionStrategy = FileIDHelperResolutionStrategy::create();
+        $legacyFileIDHelper = Deprecation::withNoReplacement(function () {
+            return new LegacyFileIDHelper();
+        });
         $fileIDHelperResolutionStrategy->setResolutionFileIDHelpers([
             $hashFileIdHelper = new HashFileIDHelper(),
-            new LegacyFileIDHelper(),
+            $legacyFileIDHelper,
             $defaultFileIDHelper = new NaturalFileIDHelper(),
         ]);
         $fileIDHelperResolutionStrategy->setDefaultFileIDHelper($defaultFileIDHelper);

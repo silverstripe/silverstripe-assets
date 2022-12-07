@@ -15,7 +15,6 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Core\Resettable;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
@@ -341,15 +340,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function Link()
     {
         return $this->getURL();
-    }
-
-    /**
-     * @deprecated 1.0.0 Use getURL() instead
-     */
-    public function RelativeLink()
-    {
-        Deprecation::notice('1.0.0', 'Use getURL() instead');
-        return Director::makeRelative($this->getURL());
     }
 
     /**
@@ -1118,19 +1108,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return round($size/(1024*1024)) . ' MB';
         }
         return round(($size/(1024*1024*1024))*10)/10 . ' GB';
-    }
-
-    /**
-     * Convert a php.ini value (eg: 512M) to bytes
-     *
-     * @deprecated 1.12.0 Use Convert::memstring2bytes() instead
-     * @param  string $iniValue
-     * @return int
-     */
-    public static function ini2bytes($iniValue)
-    {
-        Deprecation::notice('1.12.0', 'Use Convert::memstring2bytes() instead');
-        return Convert::memstring2bytes($iniValue);
     }
 
     /**

@@ -4,8 +4,6 @@ namespace SilverStripe\Assets\Tests\FilenameParsing;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
-use SilverStripe\Dev\Deprecation;
 
 /**
  * All the `FileIDHelper` have the exact same signature and very similar structure. Their basic tests will share the
@@ -69,9 +67,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testBuildFileID($expected, $input)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $this->assertEquals($expected, $help->buildFileID(...$input));
         $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input)));
     }
@@ -84,9 +79,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testDirtyBuildFildID($expected, $input)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input), null, null, false));
     }
 
@@ -97,9 +89,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testCleanFilename($expected, $input)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $this->assertEquals($expected, $help->cleanFilename($input));
     }
 
@@ -109,9 +98,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testParseFileID($input, $expected)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $parsedFiledID = $help->parseFileID($input);
 
         list($expectedFilename, $expectedHash) = $expected;
@@ -131,9 +117,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testParseBrokenFileID($input)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $parsedFiledID = $help->parseFileID($input);
         $this->assertNull($parsedFiledID);
     }
@@ -145,9 +128,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testVariantOf($variantFileID, ParsedFileID $original, $expected)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $isVariantOf = $help->isVariantOf($variantFileID, $original);
         $this->assertEquals($expected, $isVariantOf);
     }
@@ -158,9 +138,6 @@ abstract class FileIDHelperTester extends SapphireTest
     public function testLookForVariantIn(ParsedFileID $original, $expected)
     {
         $help = $this->getHelper();
-        if ($help instanceof LegacyFileIDHelper && Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
         $path = $help->lookForVariantIn($original);
         $this->assertEquals($expected, $path);
     }

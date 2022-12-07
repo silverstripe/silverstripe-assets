@@ -24,7 +24,6 @@ use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\Dev\Deprecation;
 
 /**
  * Tests for the File class
@@ -813,34 +812,6 @@ class FileTest extends SapphireTest
         $this->assertEquals('name/file.jpg', File::join_paths('name/', '/', 'file.jpg'));
         $this->assertEquals('file.jpg', File::join_paths('/', '/', 'file.jpg'));
         $this->assertEquals('', File::join_paths('/', '/'));
-    }
-
-    /**
-     * Test that ini2bytes returns the number of bytes for a PHP ini style size declaration
-     *
-     * @param string $iniValue
-     * @param int    $expected
-     * @dataProvider ini2BytesProvider
-     */
-    public function testIni2Bytes($iniValue, $expected)
-    {
-        if (Deprecation::isEnabled()) {
-            $this->markTestSkipped('Test calls deprecated code');
-        }
-        $this->assertSame($expected, File::ini2bytes($iniValue));
-    }
-
-    /**
-     * @return array
-     */
-    public function ini2BytesProvider()
-    {
-        return [
-            ['2k', 2 * 1024],
-            ['512M', 512 * 1024 * 1024],
-            ['1024g', 1024 * 1024 * 1024 * 1024],
-            ['1024G', 1024 * 1024 * 1024 * 1024]
-        ];
     }
 
     /**

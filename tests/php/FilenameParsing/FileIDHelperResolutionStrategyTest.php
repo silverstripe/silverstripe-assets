@@ -8,7 +8,6 @@ use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
-use SilverStripe\Assets\FilenameParsing\LegacyFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Flysystem\LocalFilesystemAdapter;
@@ -523,8 +522,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs->write('RootFile.txt', 'version 1');
 
         $expectedPaths = [
-            'Folder/FolderFile__mockedvariant.pdf',
             'Folder/FolderFile.pdf',
+            'Folder/FolderFile__mockedvariant.pdf',
             'Folder/SubFolder/SubFolderFile.pdf',
         ];
 
@@ -557,8 +556,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
 
         $expectedPaths = [
-            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant'],
-            ['Folder/FolderFile.pdf', '']
+            ['Folder/FolderFile.pdf', ''],
+            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
             // The hash path won't be match, because we're not providing a hash
         ];
 

@@ -404,25 +404,7 @@ class RedirectFileControllerTest extends FunctionalTest
             $response,
             'Hash path variant of public file should redirect to natural path.'
         );
-
-        $response = $this->get("/assets/{$foldername}_resampled/$suffix/$filename.$ext");
-        $this->assertResponse(
-            301,
-            '',
-            $icoUrl,
-            $response,
-            'SS3 Legacy path to variant should redirect.'
-        );
-
-        $response = $this->get("/assets/{$foldername}_resampled/$suffix-$filename.$ext");
-        $this->assertResponse(
-            301,
-            '',
-            $icoUrl,
-            $response,
-            'SS3.0 Legacy path to variant should redirect.'
-        );
-
+        
         $file->setFromLocalFile(__DIR__ . '/ImageTest/test-image-high-quality.jpg', $file->FileFilename);
         $file->write();
         $file->publishSingle();

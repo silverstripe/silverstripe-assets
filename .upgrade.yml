@@ -32,7 +32,6 @@ mappings:
   File: SilverStripe\Assets\File
   SS_FileFinder: SilverStripe\Assets\FileFinder
   SilverStripe\Assets\SS_FileFinder: SilverStripe\Assets\FileFinder
-  FileMigrationHelper: SilverStripe\Assets\FileMigrationHelper
   FileNameFilter: SilverStripe\Assets\FileNameFilter
   Filesystem: SilverStripe\Assets\Filesystem
   Folder: SilverStripe\Assets\Folder
@@ -46,8 +45,6 @@ mappings:
   AssetControlExtensionTest_ArchivedObject: SilverStripe\Assets\Tests\AssetControlExtensionTest\ArchivedObject
   AssetManipulationListTest: SilverStripe\Assets\Tests\AssetManipulationListTest
   FileFinderTest: SilverStripe\Assets\Tests\FileFinderTest
-  FileMigrationHelperTest: SilverStripe\Assets\Tests\FileMigrationHelperTest
-  FileMigrationHelperTest_Extension: SilverStripe\Assets\Tests\FileMigrationHelperTest\Extension
   FileNameFilterTest: SilverStripe\Assets\Tests\FileNameFilterTest
   FileTest: SilverStripe\Assets\Tests\FileTest
   FileTest_MyCustomFile: SilverStripe\Assets\Tests\FileTest\MyCustomFile
@@ -141,14 +138,8 @@ warnings:
     'SilverStripe\Assets\Image::AssetLibraryThumbnail()':
       message: 'Renamed to CMSThumbnail()'
       replacement: 'CMSThumbnail'
-    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->parseFileID()':
-      message: 'Replaced with getDefaultFileIDHelper()->parseFileID()'
     'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getFileID()':
       message: 'Replace with getDefaultFileIDHelper()->buildFileID()'
-    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getOriginalFilename()':
-      message: 'Replace with getDefaultFileIDHelper()->parseFileID()->getFilename()'
-    'SilverStripe\Assets\Flysystem\FlysystemAssetStore->getVariant()':
-      message: 'Replace with getDefaultFileIDHelper()->parseFileID()->getVariant()'
 renameWarnings:
   - File
   - Image

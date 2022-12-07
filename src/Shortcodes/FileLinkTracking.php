@@ -4,7 +4,6 @@ namespace SilverStripe\Assets\Shortcodes;
 
 use DOMElement;
 use SilverStripe\Assets\File;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormScaffolder;
 use SilverStripe\ORM\DataExtension;
@@ -64,16 +63,6 @@ class FileLinkTracking extends DataExtension
      * @var boolean
      */
     private static $show_file_link_tracking = false;
-
-    /**
-     * @deprecated 1.2.0 Use FileTracking() instead
-     * @return File[]|ManyManyList
-     */
-    public function ImageTracking()
-    {
-        Deprecation::notice('1.2.0', 'Use FileTracking() instead');
-        return $this->FileTracking();
-    }
 
     /**
      * FileParser for link tracking

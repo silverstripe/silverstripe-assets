@@ -10,6 +10,7 @@ use League\Flysystem\WhitespacePathNormalizer;
 class Filesystem extends LeagueFilesystem
 {
     private $adapter;
+    private PathNormalizer $pathNormalizer;
 
     public function __construct(
         FilesystemAdapter $adapter,

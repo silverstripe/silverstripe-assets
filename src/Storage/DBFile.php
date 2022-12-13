@@ -326,7 +326,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->exists()) {
             return null;
         }
-        return Director::absoluteURL($this->getURL());
+        return Director::absoluteURL((string) $this->getURL());
     }
 
     public function getMetaData()

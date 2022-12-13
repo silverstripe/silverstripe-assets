@@ -869,7 +869,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         $url = $this->getURL();
         if ($url) {
-            return Director::absoluteURL($url);
+            return Director::absoluteURL((string) $url);
         }
         return null;
     }

@@ -530,14 +530,13 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $variantGenerator = $strategy->findVariants($tuple, $this->fs);
 
         /** @var ParsedFileID $parsedFileID */
+        $c = 0;
         foreach ($variantGenerator as $parsedFileID) {
-            $this->assertNotEmpty($expectedPaths);
-            $expectedPath = array_shift($expectedPaths);
-            $this->assertEquals($expectedPath, $parsedFileID->getFileID());
+            $this->assertTrue(in_array($parsedFileID->getFileID(), $expectedPaths));
             $this->assertEquals('mockedvariant', $parsedFileID->getVariant());
+            $c++;
         }
-
-        $this->assertEmpty($expectedPaths);
+        $this->assertSame(count($expectedPaths), $c);
     }
 
     public function testFindHashlessVariant()
@@ -555,24 +554,23 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         );
         $this->fs->write('Folder/FolderFile__mockedvariant.pdf', 'version 1 -- mockedvariant');
 
-        $expectedPaths = [
-            ['Folder/FolderFile.pdf', ''],
-            ['Folder/FolderFile__mockedvariant.pdf', 'mockedvariant']
+        $expectedPathsVariants = [
+            'Folder/FolderFile.pdf|',
+            'Folder/FolderFile__mockedvariant.pdf|mockedvariant'
             // The hash path won't be match, because we're not providing a hash
         ];
 
         $variantGenerator = $strategy->findVariants(new ParsedFileID('Folder/FolderFile.pdf'), $this->fs);
 
+        $c = 0;
         /** @var ParsedFileID $parsedFileID */
         foreach ($variantGenerator as $parsedFileID) {
-            $this->assertNotEmpty($expectedPaths, 'More files were returned than expected');
-            $expectedPath = array_shift($expectedPaths);
-            $this->assertEquals($expectedPath[0], $parsedFileID->getFileID());
-            $this->assertEquals($expectedPath[1], $parsedFileID->getVariant());
+            $pathVariant = implode('|', [$parsedFileID->getFileID(), $parsedFileID->getVariant()]);
+            $this->assertTrue(in_array($pathVariant, $expectedPathsVariants));
             $this->assertEquals($expectedHash, $parsedFileID->getHash());
+            $c++;
         }
-
-        $this->assertEmpty($expectedPaths, "Not all expected files were returned");
+        $this->assertSame(count($expectedPathsVariants), $c);
     }
 
     public function testParseFileID()

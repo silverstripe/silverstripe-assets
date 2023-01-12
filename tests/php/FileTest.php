@@ -390,7 +390,7 @@ class FileTest extends SapphireTest
         $rootfile->publishSingle();
         $this->logOut();
         $this->logInWithPermission('SOME_PERMISSIONS');
-        
+
         $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getURL());
 
         $session = Controller::curr()->getRequest()->getSession();
@@ -406,7 +406,7 @@ class FileTest extends SapphireTest
         // Links to incorrect base (assets/ rather than assets/FileTest)
         // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals('/assets/55b443b601/FileTest.txt', $rootfile->getSourceURL());
-        
+
         // Login as ADMIN and grant session access by default
         $session = Controller::curr()->getRequest()->getSession();
         $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION);
@@ -426,7 +426,7 @@ class FileTest extends SapphireTest
         $rootfile->publishSingle();
         $this->logOut();
         $this->logInWithPermission('SOME_PERMISSIONS');
-        
+
         $this->assertEquals('/assets/FileTest/FileTest.txt', $rootfile->getSourceURL());
 
         $session = Controller::curr()->getRequest()->getSession();
@@ -442,13 +442,13 @@ class FileTest extends SapphireTest
         // Links to incorrect base (assets/ rather than assets/FileTest)
         // because ProtectedAdapter doesn't know about custom base dirs in TestAssetStore
         $this->assertEquals(
-            Director::absoluteBaseURL() . 'assets/55b443b601/FileTest.txt',
+            Controller::join_links(Director::absoluteBaseURL(), 'assets/55b443b601/FileTest.txt'),
             $rootfile->getAbsoluteURL()
         );
 
         $rootfile->publishSingle();
         $this->assertEquals(
-            Director::absoluteBaseURL() . 'assets/FileTest/FileTest.txt',
+            Controller::join_links(Director::absoluteBaseURL(), 'assets/FileTest/FileTest.txt'),
             $rootfile->getAbsoluteURL()
         );
     }

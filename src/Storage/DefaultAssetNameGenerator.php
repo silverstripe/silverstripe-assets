@@ -120,7 +120,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         return Config::inst()->get(__CLASS__, 'version_prefix');
     }
 
-    public function current(): mixed
+    public function current(): string
     {
         $version = $this->version;
 
@@ -145,7 +145,7 @@ class DefaultAssetNameGenerator implements AssetNameGenerator
         return $filename;
     }
 
-    public function key(): mixed
+    public function key(): int
     {
         return $this->version - $this->first;
     }

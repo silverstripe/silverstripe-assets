@@ -14,7 +14,6 @@ use SilverStripe\Control\HTTPResponse;
 
 /**
  * We rerun all the same test in `RedirectFileControllerTest` but with keep_archived_assets on
- * @skipUpgrade
  */
 class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
 {

@@ -16,9 +16,6 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Versioned\Versioned;
 
-/**
- * @skipUpgrade
- */
 class RedirectFileControllerTest extends FunctionalTest
 {
     protected static $fixture_file = 'FileTest.yml';

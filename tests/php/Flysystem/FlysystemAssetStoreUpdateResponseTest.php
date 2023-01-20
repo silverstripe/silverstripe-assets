@@ -23,9 +23,6 @@ class FlysystemAssetStoreUpdateResponseTest extends SapphireTest
 
     private $hash;
 
-    /**
-     * @skipUpgrade
-     */
     protected function setUp(): void
     {
         parent::setUp();

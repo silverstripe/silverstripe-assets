@@ -13,9 +13,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Versioned\Versioned;
 
-/**
- * @skipUpgrade
- */
 class ProtectedFileControllerTest extends FunctionalTest
 {
     protected static $fixture_file = 'FileTest.yml';

@@ -27,7 +27,6 @@ use SilverStripe\Versioned\Versioned;
 
 /**
  * Tests for the File class
- * @skipUpgrade
  */
 class FileTest extends SapphireTest
 {

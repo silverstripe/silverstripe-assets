@@ -20,9 +20,6 @@ use SilverStripe\Dev\SapphireTest;
 class AssetStoreTest extends SapphireTest
 {
 
-    /**
-     * @skipUpgrade
-     */
     protected function setUp(): void
     {
         parent::setUp();

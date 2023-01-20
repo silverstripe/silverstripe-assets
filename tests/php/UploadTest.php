@@ -15,9 +15,6 @@ use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
 
-/**
- * @skipUpgrade
- */
 class UploadTest extends SapphireTest
 {
     /**

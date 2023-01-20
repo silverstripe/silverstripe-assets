@@ -15,7 +15,6 @@ use SilverStripe\Versioned\Versioned;
 
 /**
  * Tests {@see AssetControlExtension}
- * @skipUpgrade
  */
 class AssetControlExtensionTest extends SapphireTest
 {

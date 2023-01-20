@@ -17,7 +17,6 @@ use SilverStripe\Versioned\Versioned;
 
 /**
  * @author Ingo Schommer (ingo at silverstripe dot com)
- * @skipUpgrade
  */
 class FolderTest extends SapphireTest
 {

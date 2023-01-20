@@ -293,9 +293,6 @@ class InterventionBackend implements Image_Backend, Flushable
             if ($error) {
                 $this->markFailed($hash, $variant, $error);
             }
-            if (isset($path) && file_exists($path)) {
-                unlink($path);
-            }
         }
         return null;
     }

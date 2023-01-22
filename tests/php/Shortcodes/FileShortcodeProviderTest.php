@@ -16,9 +16,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
-/**
- * @skipUpgrade
- */
 class FileShortcodeProviderTest extends SapphireTest
 {
     protected static $fixture_file = '../FileTest.yml';

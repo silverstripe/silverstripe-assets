@@ -20,7 +20,6 @@ class GDImageTest extends ImageTest
             return;
         }
 
-        /** @skipUpgrade */
         // this is a hack because the service locator cahces config settings meaning you can't properly override them
         Injector::inst()->setConfigLocator(new SilverStripeServiceConfigurationLocator());
         Config::modify()->set(Injector::class, ImageManager::class, [

@@ -16,9 +16,6 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
 
-/**
- * @skipUpgrade
- */
 class ImageShortcodeProviderTest extends SapphireTest
 {
 

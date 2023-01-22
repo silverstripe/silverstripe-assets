@@ -21,7 +21,6 @@ use SilverStripe\View\SSViewer;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
- * @skipUpgrade
  */
 class ImageManipulationTest extends SapphireTest
 {

@@ -267,4 +267,81 @@ class ImageShortcodeProviderTest extends SapphireTest
         $this->assertSame($expected, $html);
         $this->assertTrue($assetStore->isGranted($parsedFileID));
     }
+
+    public function testEmptyAttributesAreRemoved()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+
+        // Note that alt is allowed to be empty
+        $this->assertEquals(
+            sprintf(
+                '<img src="%s" alt="">',
+                $image->Link()
+            ),
+            $parser->parse(sprintf('[image id=%d alt="" class=""]', $image->ID))
+        );
+    }
+
+    public function testOnlyWhitelistedAttributesAllowed()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+        $whitelist = ImageShortcodeProvider::config()->get('attribute_whitelist');
+
+        $attributes = '';
+        foreach ($whitelist as $attrName) {
+            if ($attrName === 'src') {
+                continue;
+            }
+            $attributes .= $attrName . '="' . $attrName . '" ';
+        }
+
+        $this->assertEquals(
+            sprintf(
+                '<img src="%s" %s>',
+                $image->Link(),
+                trim($attributes)
+            ),
+            $parser->parse(sprintf(
+                '[image id="%d" %s style="width:100px" data-some-value="my-data"]',
+                $image->ID,
+                trim($attributes)
+            ))
+        );
+    }
+
+    public function testWhiteIsConfigurable()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $parser = new ShortcodeParser();
+        $parser->register('image', [ImageShortcodeProvider::class, 'handle_shortcode']);
+        $whitelist = ImageShortcodeProvider::config()->get('attribute_whitelist');
+
+        $attributes = '';
+        foreach ($whitelist as $attrName) {
+            if ($attrName === 'src') {
+                continue;
+            }
+            $attributes .= $attrName . '="' . $attrName . '" ';
+        }
+
+        // Allow new whitelisted attribute
+        Config::modify()->merge(ImageShortcodeProvider::class, 'attribute_whitelist', ['data-some-value']);
+
+        $this->assertEquals(
+            sprintf(
+                '<img src="%s" %s>',
+                $image->Link(),
+                trim($attributes) . ' data-some-value="my-data"'
+            ),
+            $parser->parse(sprintf(
+                '[image id="%d" %s style="width:100px" data-some-value="my-data"]',
+                $image->ID,
+                trim($attributes)
+            ))
+        );
+    }
 }

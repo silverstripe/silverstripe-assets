@@ -8,6 +8,8 @@ use League\Flysystem\Filesystem;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
+use SilverStripe\Assets\FilenameParsing\FileIDHelperResolutionStrategy;
+use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
@@ -700,6 +702,11 @@ class AssetStoreTest extends SapphireTest
      */
     public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
     {
+        /** @var FileIDHelperResolutionStrategy $protectedStrat */
+        $protectedStrat = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
+        $originalHelpers = $protectedStrat->getResolutionFileIDHelpers();
+        $protectedStrat->setResolutionFileIDHelpers(array_merge($originalHelpers, [new NaturalFileIDHelper()]));
+
         $this->writeDummyFiles($fsName, $contents);
 
         $results = $this->getBackend()->normalise($filename, $hash);
@@ -717,8 +724,10 @@ class AssetStoreTest extends SapphireTest
         foreach ($notExpected as $notExpectedFile) {
             $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
         }
+
+        $protectedStrat->setResolutionFileIDHelpers($originalHelpers);
     }
-    
+
     public function listOfFileIDsToNormalise()
     {
         $public = AssetStore::VISIBILITY_PUBLIC;
@@ -827,6 +836,11 @@ class AssetStoreTest extends SapphireTest
         array $notExpected = [],
         $expectedFilename = 'folder/file.txt'
     ) {
+        /** @var FileIDHelperResolutionStrategy $protectedStrat */
+        $protectedStrat = Injector::inst()->get(FileResolutionStrategy::class . '.protected');
+        $originalHelpers = $protectedStrat->getResolutionFileIDHelpers();
+        $protectedStrat->setResolutionFileIDHelpers(array_merge($originalHelpers, [new NaturalFileIDHelper()]));
+
         $this->writeDummyFiles($fsName, $contents);
 
         $results = $this->getBackend()->normalisePath($fileID);
@@ -846,6 +860,8 @@ class AssetStoreTest extends SapphireTest
         foreach ($notExpected as $notExpectedFile) {
             $this->assertFalse($fs->has($notExpectedFile), "$notExpectedFile should NOT exists");
         }
+
+        $protectedStrat->setResolutionFileIDHelpers($originalHelpers);
     }
 
     /**

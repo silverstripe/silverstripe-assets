@@ -38,7 +38,6 @@ SilverStripe\Core\Injector\Injector:
       DefaultFileIDHelper: '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
       ResolutionFileIDHelpers:
         - '%$SilverStripe\Assets\FilenameParsing\HashFileIDHelper'
-        - '%$SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper'
       VersionedStage: Stage
 ---
 Name: assetscore

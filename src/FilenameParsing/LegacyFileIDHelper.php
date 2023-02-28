@@ -132,18 +132,34 @@ class LegacyFileIDHelper implements FileIDHelper
             return null;
         }
 
+        // This helper is only used if the natural and hash helpers have already failed to parse the ID
+        // So if we can parse the ID here it means the project has a deprecated legacy file structure.
+        $deprecationMessage = 'Use of legacy file resolution strategies is deprecated.'
+        . ' See https://docs.silverstripe.org/en/4/developer_guides/files/file_migration/.'
+        . ' After migrating your files, change your file resolution configuration to match the defaults:'
+        . ' https://github.com/silverstripe/silverstripe-installer/blob/4/app/_config/assets.yml';
+
+
         // Can't have a resampled folder without a variant
         if (empty($matches['variant']) && strpos($fileID ?? '', '_resampled') !== false) {
-            return $this->parseSilverStripe30VariantFileID($fileID);
+            $parsed = $this->parseSilverStripe30VariantFileID($fileID);
+            if ($parsed) {
+                Deprecation::notice('4.13.0', $deprecationMessage, Deprecation::SCOPE_GLOBAL);
+            }
+            return $parsed;
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
-        return new ParsedFileID(
+        $parsed = new ParsedFileID(
             $filename,
             '',
             isset($matches['variant']) ? str_replace('/', '_', $matches['variant']) : '',
             $fileID
         );
+        if ($parsed) {
+            Deprecation::notice('4.13.0', $deprecationMessage, Deprecation::SCOPE_GLOBAL);
+        }
+        return $parsed;
     }
 
     /**

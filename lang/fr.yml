@@ -1,0 +1,52 @@
+fr:
+  SilverStripe\Assets\File:
+    AviType: 'Fichier vidéo AVI'
+    CREATED: 'Premier téléchargement'
+    CssType: 'Fichier CSS'
+    DRAFT: Brouillon
+    DmgType: 'Image disque Apple'
+    DocType: 'Document Word'
+    EDIT_ALL_DESCRIPTION: 'Editer tous les fichiers'
+    EDIT_ALL_HELP: 'Editer tout fichier du site, même si des restrictions s''appliquent'
+    GifType: 'Image GIF - idéal pour diagrammes'
+    GzType: 'Fichier compressé GZIP'
+    HtmlType: 'Fichier HTML'
+    INVALIDEXTENSION_SHORT: 'Extension de fichier non autorisée'
+    IcoType: Icône
+    JpgType: 'Image JPEG - idéal pour photos'
+    JsType: 'Fichier javascript'
+    LASTEDIT: 'Dernière modification'
+    MODIFIED: Modifié
+    Mp3Type: 'Fichier audio MP3'
+    MpgType: 'Fichier vidéo MPEG'
+    NOFILESIZE: 'Taille du fichier : 0 octet'
+    NOVALIDUPLOAD: 'Fichier non valide pour un téléchargement'
+    PATH: Chemin
+    PLURALNAME: Fichiers
+    PLURALS:
+      one: '1 fichier'
+      many: '{count} fichiers'
+      other: '{count} fichiers'
+    PdfType: 'Fichier PDF Adobe Acrobat'
+    PngType: 'Image PNG - format passe-partout'
+    SINGULARNAME: Fichier
+    TOOLARGE: 'Fichier trop volumineux, {size} maximum autorisés'
+    TiffType: 'Image TIFF'
+    URL: URL
+    WavType: 'Fichier audio WAV'
+    XlsType: 'Tableur Excel'
+    ZipType: 'Fichier compressé ZIP'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Dossiers
+    PLURALS:
+      one: '1 dossier'
+      many: '{count} dossiers'
+      other: '{count} dossiers'
+    SINGULARNAME: Dossier
+  SilverStripe\Assets\Image:
+    PLURALNAME: Images
+    PLURALS:
+      one: '1 image'
+      many: '{count} images'
+      other: '{count} images'
+    SINGULARNAME: Image

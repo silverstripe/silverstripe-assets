@@ -1,0 +1,39 @@
+hr:
+  SilverStripe\Assets\File:
+    AviType: 'AVI video datoteka'
+    CREATED: 'Prvi prijenos'
+    CssType: 'CSS datoteka'
+    DRAFT: Nacrt
+    DmgType: 'Apple disk slika'
+    DocType: 'Word dokument'
+    EDIT_ALL_DESCRIPTION: 'Uredi bilo koju datoteku'
+    EDIT_ALL_HELP: 'Uredi bilo koju datoteku na siteu, čak i zaštićene'
+    GifType: 'GIF slika - dobra za diagrame'
+    GzType: 'GZIP komprimirana datoteka'
+    HtmlType: 'HTML datoteka'
+    INVALIDEXTENSION_SHORT: 'Ekstenzija nije dozvoljena'
+    IcoType: Ikona
+    JpgType: 'JPEG slika - dobra za fotografije'
+    JsType: 'Javascript datoteka'
+    LASTEDIT: 'Zadnje uređeno'
+    MODIFIED: Uređeno
+    Mp3Type: 'MP3 audio datoteka'
+    MpgType: 'MPEG video datoteka'
+    NOFILESIZE: 'Veličina datoteke je nula bajtova,'
+    NOVALIDUPLOAD: 'Datoteka nije ispravno prenešena'
+    PATH: Putanja
+    PLURALNAME: Datoteke
+    PdfType: 'Adobe Acrobat PDF datoteka'
+    PngType: 'PNG slika - dobar sveopći format'
+    SINGULARNAME: oteka
+    TOOLARGE: 'Veličina datoteke je prevelika, maksimalno {size} dozvoljeno'
+    URL: URL
+    WavType: 'WAV audio datoteka'
+    XlsType: 'Excell tablica'
+    ZipType: 'ZIP komprimirana datoteka'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Direktoriji
+    SINGULARNAME: Direktor
+  SilverStripe\Assets\Image:
+    PLURALNAME: Slike
+    SINGULARNAME: Slika

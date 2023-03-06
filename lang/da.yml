@@ -1,0 +1,49 @@
+da:
+  SilverStripe\Assets\File:
+    AviType: 'AVI video fil'
+    CREATED: 'Først uploadet'
+    CssType: 'CSS fil'
+    DRAFT: Kladde
+    DmgType: 'Apple disk image'
+    DocType: 'Word dokument'
+    EDIT_ALL_DESCRIPTION: 'Rediger enhver fil'
+    EDIT_ALL_HELP: 'Rediger enhver fil på sitet, også beskyttede'
+    GifType: 'GIF billede - god til illustrationer'
+    GzType: 'GZIP komprimeret fil'
+    HtmlType: 'HTML fil'
+    INVALIDEXTENSION_SHORT: 'Endelse ikke tilladt'
+    IcoType: 'Ikon billedefil'
+    JpgType: 'JPEG billede - god til fotos'
+    JsType: 'Javascript fil'
+    LASTEDIT: 'Senest ændret'
+    MODIFIED: Modificeret
+    Mp3Type: 'MP3 lyd fil'
+    MpgType: 'MPEG video fil'
+    NOFILESIZE: 'Filstørrelse er nul bytes.'
+    NOVALIDUPLOAD: 'Filen er ikke gyldig til upload'
+    PATH: Sti
+    PLURALNAME: Filer
+    PLURALS:
+      one: 'En fil'
+      other: '{count} Filer'
+    PdfType: 'Adobe Acrobat PDF fil'
+    PngType: 'PNG billede - godt allround format'
+    SINGULARNAME: Fil
+    TOOLARGE: 'Filen er for stor, maksimalt tilladt {size}'
+    TiffType: 'Tagged billede format'
+    URL: URL
+    WavType: 'WAV lyd fil'
+    XlsType: 'Excel regneark'
+    ZipType: 'ZIP komprimeret fil'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Mapper
+    PLURALS:
+      one: 'En mappe'
+      other: '{count} Mapper'
+    SINGULARNAME: Mappe
+  SilverStripe\Assets\Image:
+    PLURALNAME: Billeder
+    PLURALS:
+      one: 'Et billede'
+      other: '{count} billeder'
+    SINGULARNAME: Billede

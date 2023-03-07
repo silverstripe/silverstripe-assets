@@ -24,6 +24,7 @@ it:
     PLURALS:
       one: 'Un File'
       other: '{count} File'
+      many: '{count} File'
     PdfType: 'File PDF Adobe Acrobat'
     PngType: 'Immagine PNG - adatta per tutti gli usi'
     SINGULARNAME: File
@@ -33,15 +34,19 @@ it:
     WavType: 'File audio WAV'
     XlsType: 'Foglio elettronico Excel'
     ZipType: 'File ZIP compresso'
+    EDIT_ALL_DESCRIPTION: 'Modifica ogni file'
+    EDIT_ALL_HELP: 'Modifica ogni file sul sito, anche se protetto'
   SilverStripe\Assets\Folder:
     PLURALNAME: Cartelle
     PLURALS:
       one: 'Una Cartella'
       other: '{count} Cartelle'
+      many: '{count} Cartelle'
     SINGULARNAME: Cartella
   SilverStripe\Assets\Image:
     PLURALNAME: Immagini
     PLURALS:
       one: 'Una Immagine'
       other: '{count} Immagini'
+      many: '{count} Immagini'
     SINGULARNAME: Immagine

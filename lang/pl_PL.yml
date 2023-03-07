@@ -1,0 +1,55 @@
+pl_PL:
+  SilverStripe\Assets\File:
+    AviType: 'Plik wideo .AVI'
+    CREATED: 'Wysłano po raz pierwszy'
+    CssType: 'Plik .CSS'
+    DRAFT: Szkic
+    DmgType: 'Obraz dysku Apple'
+    DocType: 'Plik Word'
+    EDIT_ALL_DESCRIPTION: 'Edytuj dowolny plik'
+    EDIT_ALL_HELP: 'Edytuj dowolny plik, nawet jeśli jest ograniczony'
+    GifType: 'Obraz GIF - dobry dla diagramów'
+    GzType: 'Plik skompresowany GZIP'
+    HtmlType: 'Plik HTML'
+    INVALIDEXTENSION_SHORT: 'To rozszerzenie nie jest dozwolone'
+    IcoType: 'Obraz .iso'
+    JpgType: 'Obraz JPEG - dobry do zdjęć'
+    JsType: 'Plik JavaScript'
+    LASTEDIT: 'Ostatnia zmiana'
+    MODIFIED: Zmodyfikowany
+    Mp3Type: 'Plik audio MP3'
+    MpgType: 'Plik wideo MPEG'
+    NOFILESIZE: 'Plik jest pusty, wielkość pliku wynosi 0 bajtów.'
+    NOVALIDUPLOAD: 'Plik jest niepoprawny, nie można go przesłać'
+    PATH: Ścieżka
+    PLURALNAME: Pliki
+    PLURALS:
+      one: Plik
+      few: 'Plików {count}'
+      many: 'Plików {count}'
+      other: 'Pliki {count}'
+    PdfType: 'Plik .PDF'
+    PngType: 'Obraz PNG - dobry format ogólnego zastosowania'
+    SINGULARNAME: Plik
+    TOOLARGE: 'Wielkość pliku jest zbyt duża, {size} to maksymalna dozwolona wielkość'
+    TiffType: 'Plik .tiff'
+    URL: URL
+    WavType: 'Plik audio .WAV'
+    XlsType: 'Excel arkusz kalkulacyjny'
+    ZipType: 'Skompresowany plik .ZIP'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Foldery
+    PLURALS:
+      one: Folder
+      few: 'Folderów {count}'
+      many: 'Folderów {count}'
+      other: 'Foldery {count}'
+    SINGULARNAME: Folder
+  SilverStripe\Assets\Image:
+    PLURALNAME: Obrazki
+    PLURALS:
+      one: Obrazek
+      few: 'Obrazków {count}'
+      many: 'Obrazków {count}'
+      other: '{count} obrazów'
+    SINGULARNAME: Obrazek

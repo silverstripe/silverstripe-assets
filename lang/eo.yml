@@ -33,6 +33,8 @@ eo:
     WavType: WAV-sondosiero
     XlsType: Excel-kalkultabelo
     ZipType: 'kompaktigita ZIP-dosiero'
+    EDIT_ALL_DESCRIPTION: 'Redakti ajnan dosieron'
+    EDIT_ALL_HELP: 'Redakti ajnan dosieron en la retejo, eĉ se limigite alirebla'
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:

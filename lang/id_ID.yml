@@ -1,0 +1,39 @@
+id_ID:
+  SilverStripe\Assets\File:
+    AviType: 'Berkas video AVI'
+    CREATED: 'Pertama upload'
+    CssType: 'Berkas CSS'
+    DRAFT: Draf
+    DocType: 'Dokumen Word'
+    EDIT_ALL_DESCRIPTION: 'Edit berkas lainnya'
+    GifType: 'Gambar GIF -  bagus untuk diagram'
+    GzType: 'Berkas GZIP terkompresi'
+    HtmlType: 'Berkas HTML'
+    INVALIDEXTENSION_SHORT: 'Ekstensi tidak diperbolehkan'
+    IcoType: 'Gambar Icon'
+    JpgType: 'Gambar JPEG - bagus untuk foto'
+    JsType: 'Berkas Javascript'
+    LASTEDIT: 'Terakhir diubah'
+    MODIFIED: Dimodif
+    Mp3Type: 'Berkas suara MP3'
+    MpgType: 'Berkas video MPEG'
+    NOFILESIZE: 'Ukuran berkas kosong bit'
+    PLURALNAME: Berkas
+    PLURALS:
+      other: '{count} berkas'
+    PdfType: 'Berkas Adobe Acrobat PDF'
+    SINGULARNAME: Berkas
+    TOOLARGE: 'Ukuran berkas terlalu besar, maksimum {size} yang diizinkan'
+    URL: URL
+    WavType: 'Berkas suara WAV'
+    ZipType: 'Berkas ZIP Terkompresi'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Map
+    PLURALS:
+      other: '{count} Maps'
+    SINGULARNAME: Map
+  SilverStripe\Assets\Image:
+    PLURALNAME: Gambar
+    PLURALS:
+      other: '{count} Gambar'
+    SINGULARNAME: Gambar

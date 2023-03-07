@@ -1,0 +1,55 @@
+sl:
+  SilverStripe\Assets\File:
+    AviType: 'Datoteka AVI'
+    CREATED: Ustvarjena
+    CssType: 'Datoteka CSS'
+    DRAFT: Osnutek
+    DmgType: 'Datoteka DMG'
+    DocType: 'Datoteka DOC'
+    EDIT_ALL_DESCRIPTION: 'Urejanje poljubne datoteke'
+    EDIT_ALL_HELP: 'Urejanje poljubne datoteke, četudi je zaščitena'
+    GifType: 'Datoteka GIF'
+    GzType: 'Datoteka GZIP'
+    HtmlType: 'Datoteka HTML'
+    INVALIDEXTENSION_SHORT: 'Nedovoljena pripona'
+    IcoType: 'Datoteka ICO'
+    JpgType: 'Datoteka JPEG'
+    JsType: 'Datoteka JavaScript'
+    LASTEDIT: 'Nazadnje spremenjena'
+    MODIFIED: Spremenjena
+    Mp3Type: 'Datoteka MP3'
+    MpgType: 'Datoteka MPEG'
+    NOFILESIZE: 'Velikost datoteke je nič.'
+    NOVALIDUPLOAD: 'Neveljaven tip datoteke'
+    PATH: Pot
+    PLURALNAME: Datoteke
+    PLURALS:
+      one: Datoteka
+      two: '{count} datoteki'
+      few: '{count} datotek'
+      other: '{count} datotek'
+    PdfType: 'Datoteka PDF'
+    PngType: 'Datoteka PNG'
+    SINGULARNAME: Datoteka
+    TOOLARGE: 'Datoteka je prevelika, največja še dovoljena velikost je {size}'
+    TiffType: 'Datoteka TIF'
+    URL: 'Naslov URL'
+    WavType: 'Datoteka WAV'
+    XlsType: 'Datoteka XLS'
+    ZipType: 'Datoteka ZIP'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Mape
+    PLURALS:
+      one: Mapa
+      two: '{count} mapi'
+      few: '{count} map'
+      other: '{count} map'
+    SINGULARNAME: Mapa
+  SilverStripe\Assets\Image:
+    PLURALNAME: Slike
+    PLURALS:
+      one: Slika
+      two: '{count} sliki'
+      few: '{count} slik'
+      other: '{count} slik'
+    SINGULARNAME: Slika

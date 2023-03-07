@@ -1,0 +1,49 @@
+fi_FI:
+  SilverStripe\Assets\File:
+    AviType: AVI-videotiedosto
+    CREATED: 'Ensimmäisenä siirretty'
+    CssType: CSS-tiedosto
+    DRAFT: Vedos
+    DmgType: 'Apple DMG-tiedosto'
+    DocType: Word-dokumentti
+    EDIT_ALL_DESCRIPTION: 'Kaikkien tiedostojen muokkaus'
+    EDIT_ALL_HELP: 'Muokkaa mitä tahansa sivuston tiedostoa, myös rajoitettuja'
+    GifType: 'GIF-kuva, esim. graafisille kuvaajille'
+    GzType: 'GZIP-pakattu tiedosto'
+    HtmlType: HTML-tiedosto
+    INVALIDEXTENSION_SHORT: 'Ei sallittu tiedostopääte'
+    IcoType: Icon-kuva
+    JpgType: 'JPEG-kuva, esim. valokuville'
+    JsType: Javaskripti-tiedosto
+    LASTEDIT: 'Viimeksi muokattu'
+    MODIFIED: Muokattu
+    Mp3Type: MP3-äänitiedosto
+    MpgType: MPEG-videotiedosto
+    NOFILESIZE: 'Tiedostokoko on nolla tavua.'
+    NOVALIDUPLOAD: 'Tiedosto ei ole kelvollinen siirrettäväksi'
+    PATH: Polku
+    PLURALNAME: Tiedostot
+    PLURALS:
+      one: Tiedosto
+      other: '{count} tiedostoa'
+    PdfType: 'Adobe Acrobat PDF-tiedosto'
+    PngType: 'PNG-kuva, esim. taustattomille kuville'
+    SINGULARNAME: Tiedosto
+    TOOLARGE: 'Tiedostokoko on liian iso: suurin sallittu koko on {size}'
+    TiffType: TIFF-kuva
+    URL: URL-osoite
+    WavType: WAV-äänitiedosto
+    XlsType: Excel-laskentataulukko
+    ZipType: 'ZIP-pakattu tiedosto'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Kansiot
+    PLURALS:
+      one: Kansio
+      other: '{count} kansiota'
+    SINGULARNAME: Kansio
+  SilverStripe\Assets\Image:
+    PLURALNAME: Kuvat
+    PLURALS:
+      one: Kuva
+      other: '{count} kuvaa'
+    SINGULARNAME: Kuva

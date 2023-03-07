@@ -31,6 +31,10 @@ de:
     WavType: WAV-Audiodatei
     XlsType: Excel-Tabelle
     ZipType: 'ZIP-komprimierte Datei'
+    EDIT_ALL_DESCRIPTION: 'Alle Dateien bearbeiten'
+    EDIT_ALL_HELP: 'Alle, auch eingeschränkte, Dateien bearbeiten'
+    NOVALIDUPLOAD: 'Die Datei ist kein gültiger Upload'
+    TiffType: 'Tagged Image File Format'
   SilverStripe\Assets\Folder:
     PLURALNAME: Ordner
     PLURALS:

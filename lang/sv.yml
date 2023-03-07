@@ -1,0 +1,48 @@
+sv:
+  SilverStripe\Assets\File:
+    AviType: 'AVI video-fil'
+    CREATED: Uppladdad
+    CssType: CSS-fil
+    DRAFT: Utkast
+    DmgType: 'Apple skivavbild'
+    DocType: Word-dokument
+    EDIT_ALL_DESCRIPTION: 'Ändra alla filer'
+    GifType: 'GIF-bild - bra för diagram'
+    GzType: 'GZIP-komprimerad fil'
+    HtmlType: HTML-fil
+    INVALIDEXTENSION_SHORT: 'Filändelse ej tillåten'
+    IcoType: Ikon-bild
+    JpgType: 'JPEG-bild - bra för fotografier'
+    JsType: Javascript-fil
+    LASTEDIT: 'Senast ändrad'
+    MODIFIED: Ändrad
+    Mp3Type: 'MP3 ljud-fil'
+    MpgType: 'MPEG video-fil'
+    NOFILESIZE: 'Filstorleken är 0 bytes'
+    NOVALIDUPLOAD: 'Filen är inte en giltig uppladdning'
+    PATH: Sökväg
+    PLURALNAME: Filer
+    PLURALS:
+      one: 'En fil'
+      other: '{count} filer'
+    PdfType: 'Adobe Acrobat PDF-fil'
+    PngType: 'PNG-bild - bra generellt format'
+    SINGULARNAME: Fil
+    TOOLARGE: 'Filen är för stor.  Tillåten maxstorlek är {size}'
+    TiffType: 'Taggat bild-format'
+    URL: URL
+    WavType: 'WAV ljud-fil'
+    XlsType: Excel-fil
+    ZipType: 'ZIP komprimerad-fil'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Mappar
+    PLURALS:
+      one: 'En mapp'
+      other: '{count} mappar'
+    SINGULARNAME: Mapp
+  SilverStripe\Assets\Image:
+    PLURALNAME: Bilder
+    PLURALS:
+      one: 'En bild'
+      other: '{count} bilder'
+    SINGULARNAME: Bild

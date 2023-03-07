@@ -14,7 +14,7 @@ bg:
     JpgType: 'JPEG файл - подходящ за снимки'
     JsType: 'Javascript файл'
     LASTEDIT: 'Последно променен'
-    MODIFIED: 'Редактиран'
+    MODIFIED: Редактиран
     Mp3Type: 'MP3 аудио'
     MpgType: 'MPEG видео'
     NOFILESIZE: 'Големината на файла е 0 байта'

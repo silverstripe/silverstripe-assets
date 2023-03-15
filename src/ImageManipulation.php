@@ -1072,23 +1072,15 @@ trait ImageManipulation
      */
     private function copyImageBackend(): AssetContainer
     {
-        // Store result in new DBFile instance
-        /** @var DBFile $file */
-        $file = DBField::create_field(
-            'DBFile',
-            [
-                'Filename' => $this->getFilename(),
-                'Hash' => $this->getHash(),
-                'Variant' => $this->getVariant()
-            ]
-        );
+        $file = clone $this;
 
         $backend = $this->getImageBackend();
         if ($backend) {
             $file->setImageBackend($backend);
         }
 
-        return $file->setOriginal($this);
+        $file->File->setOriginal($this);
+        return $file;
     }
 
     /**
@@ -1106,6 +1098,9 @@ trait ImageManipulation
             $this->attributes,
             [$name => $value]
         ));
+
+        // If this file has already been rendered then AttributesHTML will be cached, so we have to clear the cache
+        $file->objCacheClear();
 
         return $file;
     }

@@ -2,19 +2,16 @@
 
 namespace SilverStripe\Assets\Tests;
 
-use InvalidArgumentException;
 use Prophecy\Prophecy\ObjectProphecy;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
-use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Assets\Tests\ImageManipulationTest\LazyLoadAccessorExtension;
 use SilverStripe\Core\Config\Config;
-use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\SSViewer;
@@ -360,6 +357,29 @@ class ImageManipulationTest extends SapphireTest
             $image->LazyLoad(false)->LazyLoad($val)->IsLazyLoaded(),
             'Invalid value does not change Lazy Load Value'
         );
+    }
+
+    public function testLazyLoadIsAccessibleInExtensions()
+    {
+        Image::add_extension(LazyLoadAccessorExtension::class);
+
+        /** @var Image $origin */
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+
+        $this->assertTrue(
+            $image->LazyLoad(true)->getLazyLoadValueViaExtension(),
+            'Incorrect LazyLoad value reported by extension'
+        );
+        $this->assertFalse(
+            $image->LazyLoad(false)->getLazyLoadValueViaExtension(),
+            'Incorrect LazyLoad value reported by extension'
+        );
+        $this->assertTrue(
+            $image->LazyLoad(false)->LazyLoad(true)->getLazyLoadValueViaExtension(),
+            'Incorrect LazyLoad value reported by extension'
+        );
+
+        Image::remove_extension(LazyLoadAccessorExtension::class);
     }
 
     public function renderProvider()

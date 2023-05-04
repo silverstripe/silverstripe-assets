@@ -5,6 +5,12 @@
 
 Required component of [Silverstripe Framework](https://github.com/silverstripe/silverstripe-framework)
 
+## Installation
+
+```sh
+composer require silverstripe/assets
+```
+
 ## Links ##
 
  * [License](./LICENSE)

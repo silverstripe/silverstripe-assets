@@ -20,18 +20,6 @@ class AssetAdapterTest extends SapphireTest
     protected function setUp(): void
     {
         parent::setUp();
-
-        AssetAdapter::config()->set('file_permissions', [
-            'file' => [
-                'public' => 0644,
-                'private' => 0600,
-            ],
-            'dir' => [
-                'public' => 0755,
-                'private' => 0700,
-            ]
-        ]);
-
         $this->rootDir = ASSETS_PATH . '/AssetAdapterTest';
         Filesystem::makeFolder($this->rootDir);
         Config::modify()->set(Director::class, 'alternate_base_url', '/');
@@ -49,6 +37,20 @@ class AssetAdapterTest extends SapphireTest
             $this->originalServer = null;
         }
         parent::tearDown();
+    }
+
+    public function testDefaultPermissions()
+    {
+        $this->assertSame(Config::inst()->get(AssetAdapter::class, 'file_permissions'), [
+            'file' => [
+                'public' => 0664,
+                'private' => 0600,
+            ],
+            'dir' => [
+                'public' => 0775,
+                'private' => 0775,
+            ]
+        ]);
     }
 
     public function testPublicAdapter()

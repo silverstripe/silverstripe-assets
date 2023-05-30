@@ -35,6 +35,9 @@ eo:
     ZipType: 'kompaktigita ZIP-dosiero'
     EDIT_ALL_DESCRIPTION: 'Redakti ajnan dosieron'
     EDIT_ALL_HELP: 'Redakti ajnan dosieron en la retejo, eĉ se limigite alirebla'
+    INVALIDEXTENSION_SHORT_EXT: 'Sufikso ''{extension}'' ne estas permesita'
+    PARTIALUPLOAD: 'Dosiero ne tute alŝutiĝis. Bonvolu reprovi.'
+    PREVIEW: Antaŭvido
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:
@@ -47,3 +50,13 @@ eo:
       one: 'Unu bildo'
       other: '{count} bildoj'
     SINGULARNAME: Bildo
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bildo ne troviĝis'
+  SilverStripe\Assets\Shortcodes\FileLink:
+    PLURALNAME: 'Dosieraj ligiloj'
+    PLURALS:
+      one: 'Unu dosiera ligilo'
+      other: '{count} dosieraj ligiloj'
+    SINGULARNAME: 'Dosiera ligilo'
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bildo ne troviĝis'

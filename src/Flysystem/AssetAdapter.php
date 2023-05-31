@@ -39,6 +39,10 @@ class AssetAdapter extends LocalFilesystemAdapter
     /**
      * Config compatible permissions configuration
      *
+     * dir.private is defaulted to 0775 rather than 0700 to mimic the behaviour of CMS 4 where
+     * league/flysystem v1 would use the 'public' 0775 visibility for all directories, while still using
+     * the 'private' 0600 visibility for draft files
+     *
      * @config
      * @var array
      */
@@ -49,7 +53,7 @@ class AssetAdapter extends LocalFilesystemAdapter
         ],
         'dir' => [
             'public' => 0775,
-            'private' => 0700,
+            'private' => 0775,
         ]
     ];
 

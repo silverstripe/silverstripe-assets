@@ -34,6 +34,7 @@ sv:
     WavType: 'WAV ljud-fil'
     XlsType: Excel-fil
     ZipType: 'ZIP komprimerad-fil'
+    db_File: Fil
   SilverStripe\Assets\Folder:
     PLURALNAME: Mappar
     PLURALS:

@@ -35,6 +35,7 @@ fi_FI:
     WavType: WAV-äänitiedosto
     XlsType: Excel-laskentataulukko
     ZipType: 'ZIP-pakattu tiedosto'
+    db_File: Tiedosto
   SilverStripe\Assets\Folder:
     PLURALNAME: Kansiot
     PLURALS:

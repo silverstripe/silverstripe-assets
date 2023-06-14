@@ -38,6 +38,7 @@ eo:
     INVALIDEXTENSION_SHORT_EXT: 'Sufikso ''{extension}'' ne estas permesita'
     PARTIALUPLOAD: 'Dosiero ne tute alŝutiĝis. Bonvolu reprovi.'
     PREVIEW: Antaŭvido
+    db_File: Dosiero
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:

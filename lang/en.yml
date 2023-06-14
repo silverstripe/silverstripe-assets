@@ -12,7 +12,7 @@ en:
     GzType: 'GZIP compressed file'
     HtmlType: 'HTML file'
     INVALIDEXTENSION_SHORT: 'Extension is not allowed'
-    INVALIDEXTENSION_SHORT_EXT: 'Extension ''{extension}'' is not allowed'
+    INVALIDEXTENSION_SHORT_EXT: "Extension '{extension}' is not allowed"
     IcoType: 'Icon image'
     JpgType: 'JPEG image - good for photos'
     JsType: 'Javascript file'
@@ -38,6 +38,25 @@ en:
     WavType: 'WAV audo file'
     XlsType: 'Excel spreadsheet'
     ZipType: 'ZIP compressed file'
+    belongs_to_SubmittedFileField: 'Submitted file field'
+    db_CanEditType: 'Can edit type'
+    db_CanViewType: 'Can view type'
+    db_File: File
+    db_FileContentCache: 'File content cache'
+    db_Name: Name
+    db_ShowInSearch: 'Show in search'
+    db_Title: Title
+    db_UserFormUpload: 'User form upload'
+    db_Version: Version
+    has_many_BackLinks: 'Back links'
+    has_one_BasicFieldsTestPage: 'Basic fields test page'
+    has_one_Company: Company
+    has_one_Owner: Owner
+    has_one_Parent: Parent
+    has_one_Subsite: Subsite
+    has_one_TestPage: 'Test page'
+    many_many_EditorGroups: 'Editor groups'
+    many_many_ViewerGroups: 'Viewer groups'
   SilverStripe\Assets\Folder:
     PLURALNAME: Folders
     PLURALS:
@@ -58,5 +77,9 @@ en:
       one: 'A File Link'
       other: '{count} File Links'
     SINGULARNAME: 'File Link'
+    has_one_Linked: Linked
+    has_one_Parent: Parent
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'File tracking'
   SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
     IMAGENOTFOUND: 'Image not found'

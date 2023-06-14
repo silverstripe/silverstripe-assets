@@ -32,6 +32,7 @@ bg:
     WavType: 'WAV аудио'
     XlsType: 'Excel таблица'
     ZipType: 'Компресиран файл ZIP'
+    db_File: Файл
   SilverStripe\Assets\Folder:
     PLURALNAME: Папки
     PLURALS:

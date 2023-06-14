@@ -31,6 +31,7 @@ hr:
     WavType: 'WAV audio datoteka'
     XlsType: 'Excell tablica'
     ZipType: 'ZIP komprimirana datoteka'
+    db_File: oteka
   SilverStripe\Assets\Folder:
     PLURALNAME: Direktoriji
     SINGULARNAME: Direktor

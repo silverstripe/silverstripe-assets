@@ -37,6 +37,7 @@ pl_PL:
     WavType: 'Plik audio .WAV'
     XlsType: 'Excel arkusz kalkulacyjny'
     ZipType: 'Skompresowany plik .ZIP'
+    db_File: Plik
   SilverStripe\Assets\Folder:
     PLURALNAME: Foldery
     PLURALS:

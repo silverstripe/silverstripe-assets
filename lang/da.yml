@@ -35,6 +35,7 @@ da:
     WavType: 'WAV lyd fil'
     XlsType: 'Excel regneark'
     ZipType: 'ZIP komprimeret fil'
+    db_File: Fil
   SilverStripe\Assets\Folder:
     PLURALNAME: Mapper
     PLURALS:

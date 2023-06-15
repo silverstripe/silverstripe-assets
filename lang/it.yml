@@ -36,6 +36,7 @@ it:
     ZipType: 'File ZIP compresso'
     EDIT_ALL_DESCRIPTION: 'Modifica ogni file'
     EDIT_ALL_HELP: 'Modifica ogni file sul sito, anche se protetto'
+    db_File: File
   SilverStripe\Assets\Folder:
     PLURALNAME: Cartelle
     PLURALS:

@@ -27,6 +27,7 @@ id_ID:
     URL: URL
     WavType: 'Berkas suara WAV'
     ZipType: 'Berkas ZIP Terkompresi'
+    db_File: Berkas
   SilverStripe\Assets\Folder:
     PLURALNAME: Map
     PLURALS:

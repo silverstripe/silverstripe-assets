@@ -397,6 +397,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return $member->inGroups($this->ViewerGroups());
         }
 
+        // Specific users can view this file
+        if ($this->CanViewType === InheritedPermissions::ONLY_THESE_MEMBERS) {
+            if (!$member) {
+                return false;
+            }
+            return $this->ViewerMembers()->filter('ID', $member->ID)->count() > 0;
+        }
+
         // Check default root level permissions
         return $this->getPermissionChecker()->canView($this->ID, $member);
     }
@@ -423,7 +431,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }
 
         // Delegate to parent if inheriting permissions
-        if ($this->CanEditType === 'Inherit' && $this->ParentID) {
+        if ($this->CanEditType === InheritedPermissions::INHERIT && $this->ParentID) {
             return $this->getPermissionChecker()->canEdit($this->ParentID, $member);
         }
 
@@ -518,7 +526,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $id = $file->ID;
         $parentID = $file->ParentID;
         $canViewType = $file->CanViewType;
-        if (in_array($canViewType, [InheritedPermissions::LOGGED_IN_USERS, InheritedPermissions::ONLY_THESE_USERS])) {
+        if (in_array($canViewType, [
+                InheritedPermissions::LOGGED_IN_USERS,
+                InheritedPermissions::ONLY_THESE_USERS,
+                InheritedPermissions::ONLY_THESE_MEMBERS,
+            ])) {
             self::$has_restricted_permissions_cache[$id] = true;
             return true;
         }

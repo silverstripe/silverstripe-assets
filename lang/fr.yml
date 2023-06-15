@@ -36,6 +36,7 @@ fr:
     WavType: 'Fichier audio WAV'
     XlsType: 'Tableur Excel'
     ZipType: 'Fichier compressé ZIP'
+    db_File: Fichier
   SilverStripe\Assets\Folder:
     PLURALNAME: Dossiers
     PLURALS:

@@ -37,6 +37,7 @@ sl:
     WavType: 'Datoteka WAV'
     XlsType: 'Datoteka XLS'
     ZipType: 'Datoteka ZIP'
+    db_File: Datoteka
   SilverStripe\Assets\Folder:
     PLURALNAME: Mape
     PLURALS:

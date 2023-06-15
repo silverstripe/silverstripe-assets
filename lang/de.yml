@@ -35,6 +35,7 @@ de:
     EDIT_ALL_HELP: 'Alle, auch eingeschränkte, Dateien bearbeiten'
     NOVALIDUPLOAD: 'Die Datei ist kein gültiger Upload'
     TiffType: 'Tagged Image File Format'
+    db_File: Datei
   SilverStripe\Assets\Folder:
     PLURALNAME: Ordner
     PLURALS:

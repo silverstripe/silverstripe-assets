@@ -79,7 +79,7 @@ en:
     SINGULARNAME: 'File Link'
     has_one_Linked: Linked
     has_one_Parent: Parent
-  SilverStripe\Assets\Shortcodes\FileLinkTracking:
-    many_many_FileTracking: 'File tracking'
   SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
     IMAGENOTFOUND: 'Image not found'
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'File tracking'

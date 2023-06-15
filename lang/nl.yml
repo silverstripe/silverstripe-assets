@@ -35,6 +35,7 @@ nl:
     WavType: 'WAV audio bestand'
     XlsType: 'Excel spreadsheet'
     ZipType: 'ZIP gecomprimeerd bestand'
+    db_File: Bestand
   SilverStripe\Assets\Folder:
     PLURALNAME: Mappen
     PLURALS:

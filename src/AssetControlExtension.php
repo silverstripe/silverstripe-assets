@@ -222,7 +222,7 @@ class AssetControlExtension extends DataExtension
      *
      * @return bool
      */
-    protected function hasAssets()
+    private function hasAssets()
     {
         $fields = DataObject::getSchema()->fieldSpecs($this->owner);
         foreach ($fields as $field => $db) {

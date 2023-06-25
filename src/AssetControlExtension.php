@@ -217,12 +217,7 @@ class AssetControlExtension extends DataExtension
         }
     }
 
-    /**
-     * Check if the owner has assets
-     *
-     * @return bool
-     */
-    private function hasAssets()
+    private function hasAssets(): bool
     {
         $fields = DataObject::getSchema()->fieldSpecs($this->owner);
         foreach ($fields as $field => $db) {

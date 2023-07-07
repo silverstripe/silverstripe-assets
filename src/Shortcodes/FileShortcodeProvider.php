@@ -102,6 +102,8 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
             $url = $record->Link();
         }
 
+        $url = $url ?? '';
+
         // build the HTML tag
         if ($content) {
             // build some useful meta-data (file type and size) as data attributes
@@ -139,11 +141,12 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     protected static function getCachedMarkup($cache, $cacheKey, $arguments): string
     {
         $item = $cache->get($cacheKey);
-        if ($item && !empty($item['filename'])) {
+        $assetStore = Injector::inst()->get(AssetStore::class);
+        if ($item && !empty($item['filename']) && $assetStore->exists($item['filename'], $item['hash'])) {
             // Initiate a protected asset grant if necessary
             $allowSessionGrant = static::getGrant(null, $arguments);
             if ($allowSessionGrant) {
-                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
+                $assetStore->grant($item['filename'], $item['hash']);
                 return $item['markup'];
             }
         }

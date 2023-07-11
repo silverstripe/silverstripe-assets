@@ -140,7 +140,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     {
         $item = $cache->get($cacheKey);
         $assetStore = Injector::inst()->get(AssetStore::class);
-        if ($item && !empty($item['filename']) && $item['markup']) {
+        if ($item && $item['markup'] && !empty($item['filename'])) {
             // Initiate a protected asset grant if necessary
             $allowSessionGrant = static::getGrant(null, $arguments);
             if ($allowSessionGrant && $assetStore->exists($item['filename'], $item['hash'])) {

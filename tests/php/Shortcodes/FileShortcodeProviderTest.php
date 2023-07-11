@@ -146,4 +146,37 @@ class FileShortcodeProviderTest extends SapphireTest
         $parser->parse(sprintf('[file_link,id=%d]', $testFile->ID));
         $this->assertFalse($assetStore->isGranted($testFile));
     }
+
+    public function testMarkupHasStringValue()
+    {
+        $testFile = $this->objFromFixture(File::class, 'asdf');
+        $testFileID = $testFile->ID;
+        $tuple = $testFile->File->getValue();
+
+        $assetStore = Injector::inst()->get(AssetStore::class);
+
+        $parser = new ShortcodeParser();
+        $parser->register('file_link', [FileShortcodeProvider::class, 'handle_shortcode']);
+
+        FileShortcodeProvider::config()->set('allow_session_grant', true);
+
+        $fileShortcode = sprintf('[file_link,id=%d]', $testFileID);
+        $this->assertEquals(
+            $testFile->Link(),
+            $parser->parse(sprintf('[file_link,id=%d]', $testFileID)),
+            'Test that shortcode with existing file ID is parsed.'
+        );
+
+        $testFile->deleteFile();
+        $this->assertFalse(
+            $assetStore->exists($tuple['Filename'], $tuple['Hash']),
+            'Test that file was removed from Asset store.'
+        );
+
+        $this->assertEquals(
+            '',
+            $parser->parse(sprintf('[file_link,id=%d]', $testFileID)),
+            'Test that shortcode with invalid file ID is not parsed.'
+        );
+    }
 }

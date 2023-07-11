@@ -139,11 +139,15 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     protected static function getCachedMarkup($cache, $cacheKey, $arguments): string
     {
         $item = $cache->get($cacheKey);
-        if ($item && !empty($item['filename'])) {
+        $assetStore = Injector::inst()->get(AssetStore::class);
+        if ($item
+            && !empty($item['filename'])
+            && $assetStore->exists($item['filename'], $item['hash'])
+            && $item['markup']) {
             // Initiate a protected asset grant if necessary
             $allowSessionGrant = static::getGrant(null, $arguments);
             if ($allowSessionGrant) {
-                Injector::inst()->get(AssetStore::class)->grant($item['filename'], $item['hash']);
+                $assetStore->grant($item['filename'], $item['hash']);
                 return $item['markup'];
             }
         }

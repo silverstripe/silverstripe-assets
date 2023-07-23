@@ -146,10 +146,18 @@ class AssetAdapter extends Local
 
         // Apply each configuration
         $config = new FlysystemConfig();
-        $config->set('visibility', $visibility);
         foreach ($configurations as $file => $template) {
             // Ensure file contents
             if ($forceOverwrite || !$this->has($file)) {
+                if ($this->has($file)) {
+                    $perms = $this->getVisibility($file);
+                    // If the visibility is already correct, do not try to re-set it.
+                    // Attempting to set the visibility of a file/folder when the filesystem is already
+                    // set correctly causes "Operation not permitted" errors on some Linux servers.
+                    if ($perms['visibility'] !== $visibility) {
+                        $config->set('visibility', $visibility);
+                    }
+                }
                 // Evaluate file
                 $content = $this->renderTemplate($template);
                 $success = $this->write($file, $content, $config);
@@ -157,6 +165,7 @@ class AssetAdapter extends Local
                     throw new Exception("Error writing server configuration file \"{$file}\"");
                 }
             }
+
             $perms = $this->getVisibility($file);
             if ($perms['visibility'] !== $visibility) {
                 // Ensure correct permissions

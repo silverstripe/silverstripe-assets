@@ -142,6 +142,7 @@ class FileLinkTracking extends DataExtension
             }
         }
 
+        // We cannot rely on linkedPages being empty, because we need to remove them if there was any
         if (!$hasTrackedFields) {
             return;
         }

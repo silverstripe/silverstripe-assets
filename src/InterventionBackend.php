@@ -172,7 +172,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function setAssetContainer($assetContainer)
     {
-        $this->image = null;
+        $this->setImageResource(null);
         $this->container = $assetContainer;
         return $this;
     }
@@ -337,6 +337,12 @@ class InterventionBackend implements Image_Backend, Flushable
     public function setImageResource($image)
     {
         $this->image = $image;
+        if ($image === null) {
+            // remove our temp file if it exists
+            if (file_exists($this->getTempPath() ?? '')) {
+                unlink($this->getTempPath() ?? '');
+            }
+        }
         return $this;
     }
 

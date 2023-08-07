@@ -5,8 +5,6 @@ namespace SilverStripe\Assets\Shortcodes;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Core\Convert;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\View\HTML;
@@ -156,7 +154,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         // Rebuild shortcode
         $parts = [];
         foreach ($args as $name => $value) {
-            $htmlValue = Convert::raw2att($value);
+            $htmlValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8', false);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);
         }
         return sprintf("[%s %s]", $shortcode, implode(' ', $parts));

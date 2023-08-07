@@ -340,7 +340,7 @@ class InterventionBackend implements Image_Backend, Flushable
         if ($image === null) {
             // remove our temp file if it exists
             if (file_exists($this->getTempPath() ?? '')) {
-                unlink($this->getTempPath() ?? '');
+                unlink($this->getTempPath());
             }
         }
         return $this;

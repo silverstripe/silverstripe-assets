@@ -221,7 +221,7 @@ class AssetControlExtension extends DataExtension
     {
         $fields = DataObject::getSchema()->fieldSpecs($this->owner);
         foreach ($fields as $field => $db) {
-            $fieldObj = $this->owner->$field;
+            $fieldObj = $this->owner->dbObject($field);
             if ($fieldObj instanceof DBFile) {
                 return true;
             }

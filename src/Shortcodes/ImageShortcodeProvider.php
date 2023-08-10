@@ -117,7 +117,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return in_array($k, $whitelist) && (strlen(trim($v ?? '')) || $k === 'alt');
         }, ARRAY_FILTER_USE_BOTH);
 
-        $markup = HTML::createTag('img', $attrs);
+        $markup = self::createImageTag($attrs);
 
         // cache it for future reference
         if ($fileFound) {
@@ -129,6 +129,25 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         return $markup;
+    }
+
+    /**
+     * Construct and return HTML image tag.
+     */
+    public static function createImageTag(array $attributes) : string
+    {
+        $preparedAttributes = '';
+        foreach ($attributes as $attributeKey => $attributeValue) {
+            if (strlen($attributeValue ?? '') > 0 || $attributeKey === 'alt') {
+                $preparedAttributes .= sprintf(
+                    ' %s="%s"',
+                    $attributeKey,
+                    htmlspecialchars($attributeValue ?? '', ENT_QUOTES, 'UTF-8', false)
+                );
+            }
+        }
+
+        return "<img{$preparedAttributes} />";
     }
 
     /**

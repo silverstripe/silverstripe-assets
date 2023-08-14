@@ -338,4 +338,40 @@ class ImageShortcodeProviderTest extends SapphireTest
             ))
         );
     }
+
+    public function gettersAndSettersProvider(): array
+    {
+        return [
+                    'image without special characters' => [
+                        '<img src="http://example.com/image.jpg" alt="My alt text" title="My Title" width="300" height="200" class="leftAlone ss-htmleditorfield-file image" />',
+                        [
+                            'src' => 'http://example.com/image.jpg',
+                            'alt' => 'My alt text',
+                            'title' => 'My Title',
+                            'width' => '300',
+                            'height' => '200',
+                            'class' => 'leftAlone ss-htmleditorfield-file image',
+                        ],
+                    ],
+                    'image with special characters' => [
+                        '<img src="http://example.com/image.jpg" alt="My alt text &amp; special character" title="My Title &amp; special character" width="300" height="200" class="leftAlone ss-htmleditorfield-file image" />',
+                        [
+                            'src' => 'http://example.com/image.jpg',
+                            'alt' => 'My alt text &amp; special character',
+                            'title' => 'My Title & special character',
+                            'width' => '300',
+                            'height' => '200',
+                            'class' => 'leftAlone ss-htmleditorfield-file image',
+                        ]
+                    ]
+                ];
+    }
+
+    /**
+     * @dataProvider gettersAndSettersProvider
+     */
+    public function testCreateImageTag(string $expected, array $attributes)
+    {
+        $this->assertEquals($expected, ImageShortcodeProvider::createImageTag($attributes));
+    }
 }

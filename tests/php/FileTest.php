@@ -1227,4 +1227,27 @@ class FileTest extends SapphireTest
         $this->assertTrue($store->exists('file-changed.txt', $secondHash));
         $this->assertSame(AssetStore::VISIBILITY_PROTECTED, $store->getVisibility('file-changed.txt', $secondHash));
     }
+
+    public function testMoveFileRenamesDuplicateFilename()
+    {
+        $folder1 = $this->objFromFixture(Folder::class, 'folder1');
+        $folder2 = $this->objFromFixture(Folder::class, 'folder2');
+        $file1 = $this->objFromFixture(File::class, 'pdf');
+        $file1->ParentID = $folder1->ID;
+        $file1->write();
+        $file2 = File::create([
+            'FileFilename' => $file1->FileFilename,
+            'FileHash' => $file1->FileHash,
+            'Name' => $file1->Name,
+            'ParentID' => $folder2->ID,
+        ]);
+        $file2->write();
+        $this->assertTrue(strpos($file1->getFilename(), 'FileTest.pdf') !== false);
+        $this->assertTrue(strpos($file2->getFilename(), 'FileTest.pdf') !== false);
+        // Move file1 to folder2 and ensure it gets renamed as it would have a duplicate filename
+        $file1->ParentID = $folder2->ID;
+        $file1->write();
+        $this->assertTrue(strpos($file1->getFilename(), 'FileTest-v2.pdf') !== false);
+        $this->assertTrue(strpos($file2->getFilename(), 'FileTest.pdf') !== false);
+    }
 }

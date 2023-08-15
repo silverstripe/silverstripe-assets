@@ -9,10 +9,10 @@ SilverStripe\Assets\Image:
     Parent: =>SilverStripe\Assets\Folder.folder1
     Name: test-image.png
   imageWithoutTitle:
-    FileFilename: folder/test-image.png
+    FileFilename: folder/test-image-without-title.png
     FileHash: 444065542b5dd5187166d8e1cd684e0d724c5a97
     Parent: =>SilverStripe\Assets\Folder.folder1
-    Name: test-image.png
+    Name: test-image-without-title.png
   imageWithoutTitleContainingDots:
     FileFilename: folder/test.image.with.dots.png
     FileHash: 46affab7043cfd9f1ded919dd24affd08e926eca
@@ -20,10 +20,10 @@ SilverStripe\Assets\Image:
     Name: test.image.with.dots.png
   imageWithMetacharacters:
     Title: This is a/an image Title
-    FileFilename: folder/test-image.png
+    FileFilename: folder/test-image-metacharacters.png
     FileHash: 444065542b5dd5187166d8e1cd684e0d724c5a97
     Parent: =>SilverStripe\Assets\Folder.folder1
-    Name: test-image.png
+    Name: test-image-metacharacters.png
   lowQualityJPEG:
     Title: This is a low quality JPEG
     FileFilename: folder/test-image-low-quality.jpg

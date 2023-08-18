@@ -24,8 +24,8 @@ fr:
     PATH: Chemin
     PLURALNAME: Fichiers
     PLURALS:
-      one: '1 fichier'
       many: '{count} fichiers'
+      one: '1 fichier'
       other: '{count} fichiers'
     PdfType: 'Fichier PDF Adobe Acrobat'
     PngType: 'Image PNG - format passe-partout'
@@ -40,14 +40,14 @@ fr:
   SilverStripe\Assets\Folder:
     PLURALNAME: Dossiers
     PLURALS:
-      one: '1 dossier'
       many: '{count} dossiers'
+      one: '1 dossier'
       other: '{count} dossiers'
     SINGULARNAME: Dossier
   SilverStripe\Assets\Image:
     PLURALNAME: Images
     PLURALS:
-      one: '1 image'
       many: '{count} images'
+      one: '1 image'
       other: '{count} images'
     SINGULARNAME: Image

@@ -24,10 +24,10 @@ sl:
     PATH: Pot
     PLURALNAME: Datoteke
     PLURALS:
-      one: Datoteka
-      two: '{count} datoteki'
       few: '{count} datotek'
+      one: Datoteka
       other: '{count} datotek'
+      two: '{count} datoteki'
     PdfType: 'Datoteka PDF'
     PngType: 'Datoteka PNG'
     SINGULARNAME: Datoteka
@@ -41,16 +41,16 @@ sl:
   SilverStripe\Assets\Folder:
     PLURALNAME: Mape
     PLURALS:
-      one: Mapa
-      two: '{count} mapi'
       few: '{count} map'
+      one: Mapa
       other: '{count} map'
+      two: '{count} mapi'
     SINGULARNAME: Mapa
   SilverStripe\Assets\Image:
     PLURALNAME: Slike
     PLURALS:
-      one: Slika
-      two: '{count} sliki'
       few: '{count} slik'
+      one: Slika
       other: '{count} slik'
+      two: '{count} sliki'
     SINGULARNAME: Slika

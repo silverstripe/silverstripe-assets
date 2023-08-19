@@ -692,7 +692,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $currentname = $name = $this->getField('Name');
         $title = $this->getField('Title');
 
-        $changed = $this->isChanged('Name');
+        $changed = $this->isChanged('Name') || $this->isChanged('ParentID');
 
         // Name can't be blank, default to Title or singular name
         if (!$name) {

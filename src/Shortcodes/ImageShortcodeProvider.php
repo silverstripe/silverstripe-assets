@@ -5,8 +5,6 @@ namespace SilverStripe\Assets\Shortcodes;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
-use SilverStripe\Assets\Storage\AssetStore;
-use SilverStripe\Core\Convert;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\View\HTML;
@@ -119,7 +117,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return in_array($k, $whitelist) && (strlen(trim($v ?? '')) || $k === 'alt');
         }, ARRAY_FILTER_USE_BOTH);
 
-        $markup = HTML::createTag('img', $attrs);
+        $markup = self::createImageTag($attrs);
 
         // cache it for future reference
         if ($fileFound) {
@@ -131,6 +129,25 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         return $markup;
+    }
+
+    /**
+     * Construct and return HTML image tag.
+     */
+    public static function createImageTag(array $attributes) : string
+    {
+        $preparedAttributes = '';
+        foreach ($attributes as $attributeKey => $attributeValue) {
+            if (strlen($attributeValue ?? '') > 0 || $attributeKey === 'alt') {
+                $preparedAttributes .= sprintf(
+                    ' %s="%s"',
+                    $attributeKey,
+                    htmlspecialchars($attributeValue ?? '', ENT_QUOTES, 'UTF-8', false)
+                );
+            }
+        }
+
+        return "<img{$preparedAttributes} />";
     }
 
     /**
@@ -156,7 +173,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         // Rebuild shortcode
         $parts = [];
         foreach ($args as $name => $value) {
-            $htmlValue = Convert::raw2att($value);
+            $htmlValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8', false);
             $parts[] = sprintf('%s="%s"', $name, $htmlValue);
         }
         return sprintf("[%s %s]", $shortcode, implode(' ', $parts));

@@ -52,6 +52,10 @@ class AssetControlExtension extends DataExtension
      */
     public function onAfterDelete()
     {
+        if (!$this->hasAssets()) {
+            return;
+        }
+
         // Prepare blank manipulation
         $manipulations = new AssetManipulationList();
 
@@ -71,6 +75,10 @@ class AssetControlExtension extends DataExtension
      */
     public function onBeforeWrite()
     {
+        if (!$this->hasAssets()) {
+            return;
+        }
+
         // Prepare blank manipulation
         $manipulations = new AssetManipulationList();
 
@@ -207,6 +215,18 @@ class AssetControlExtension extends DataExtension
         foreach ($assets as $asset) {
             $manipulation->addAsset($asset, $state);
         }
+    }
+
+    private function hasAssets(): bool
+    {
+        $fields = DataObject::getSchema()->fieldSpecs($this->owner);
+        foreach ($fields as $field => $db) {
+            $fieldObj = $this->owner->dbObject($field);
+            if ($fieldObj instanceof DBFile) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

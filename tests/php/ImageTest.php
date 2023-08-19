@@ -89,7 +89,7 @@ abstract class ImageTest extends SapphireTest
         Config::modify()->set(DBFile::class, 'force_resample', false);
 
         $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
-        $expected = '<img width="300" height="300" alt="test image" src="/assets/ImageTest/folder/test-image.png" loading="lazy" />';
+        $expected = '<img width="300" height="300" alt="test image without title" src="/assets/ImageTest/folder/test-image-without-title.png" loading="lazy" />';
         $actual = trim($image->getTag() ?? '');
 
         $this->assertEquals($expected, $actual);

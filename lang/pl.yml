@@ -24,9 +24,9 @@ pl:
     PATH: Ścieżka
     PLURALNAME: Pliki
     PLURALS:
-      one: Plik
       few: Plików
       many: Plików
+      one: Plik
       other: '{count} pliki'
     PdfType: 'Plik .PDF'
     PngType: 'Obraz PNG - dobry format ogólnego zastosowania'
@@ -41,16 +41,16 @@ pl:
   SilverStripe\Assets\Folder:
     PLURALNAME: Foldery
     PLURALS:
-      one: Folder
       few: Folderów
       many: Folderów
+      one: Folder
       other: '{count} foldery'
     SINGULARNAME: Folder
   SilverStripe\Assets\Image:
     PLURALNAME: Obrazy
     PLURALS:
-      one: Obraz
       few: obrazów
       many: '{count} orazów'
+      one: Obraz
       other: '{count} orazów'
     SINGULARNAME: Obraz

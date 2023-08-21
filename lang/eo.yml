@@ -6,10 +6,13 @@ eo:
     DRAFT: Malneto
     DmgType: 'Ekzakta kopio de Apple-disko'
     DocType: Word-dokumento
+    EDIT_ALL_DESCRIPTION: 'Redakti ajnan dosieron'
+    EDIT_ALL_HELP: 'Redakti ajnan dosieron en la retejo, eĉ se limigite alirebla'
     GifType: 'GIF-bildo - taŭga por skemoj'
     GzType: 'kompaktigita GZIP-dosiero'
     HtmlType: HTML-dosiero
     INVALIDEXTENSION_SHORT: 'Sufikso ne permesita'
+    INVALIDEXTENSION_SHORT_EXT: 'Sufikso ''{extension}'' ne estas permesita'
     IcoType: 'Bildsimbola dosiero'
     JpgType: 'JPEG-bildo - taŭga por fotoj'
     JsType: 'Ĝavoskripta dosiero'
@@ -19,11 +22,13 @@ eo:
     MpgType: MPEG-videodosiero
     NOFILESIZE: 'Malplena dosiero'
     NOVALIDUPLOAD: 'Dosiero ne estas valida alŝutaĵo'
+    PARTIALUPLOAD: 'Dosiero ne tute alŝutiĝis. Bonvolu reprovi.'
     PATH: Vojprefikso
     PLURALNAME: Dosieroj
     PLURALS:
       one: 'Unu dosiero'
       other: '{count} dosieroj'
+    PREVIEW: Antaŭvido
     PdfType: 'PDF-dosiero de Adobe Acrobat'
     PngType: 'PNG-bildo - taŭga formato por ĝeneralaj uzoj'
     SINGULARNAME: Dosiero
@@ -33,12 +38,25 @@ eo:
     WavType: WAV-sondosiero
     XlsType: Excel-kalkultabelo
     ZipType: 'kompaktigita ZIP-dosiero'
-    EDIT_ALL_DESCRIPTION: 'Redakti ajnan dosieron'
-    EDIT_ALL_HELP: 'Redakti ajnan dosieron en la retejo, eĉ se limigite alirebla'
-    INVALIDEXTENSION_SHORT_EXT: 'Sufikso ''{extension}'' ne estas permesita'
-    PARTIALUPLOAD: 'Dosiero ne tute alŝutiĝis. Bonvolu reprovi.'
-    PREVIEW: Antaŭvido
+    belongs_to_SubmittedFileField: 'Kampo por sendita dosiero'
+    db_CanEditType: 'Povas redakti tipon'
+    db_CanViewType: 'Povas vidigi tipon'
     db_File: Dosiero
+    db_FileContentCache: 'Kaŝmemoro por dosier-enhavo'
+    db_Name: Nomo
+    db_ShowInSearch: 'Vidigi en serĉo'
+    db_Title: Titolo
+    db_UserFormUpload: 'Alŝuti uzulan formularon'
+    db_Version: Versio
+    has_many_BackLinks: Retroligiloj
+    has_one_BasicFieldsTestPage: 'Testopaĝoj por bazaj kampoj'
+    has_one_Company: Kompanio
+    has_one_Owner: Posedanto
+    has_one_Parent: Patro
+    has_one_Subsite: Subretejo
+    has_one_TestPage: 'Testa paĝo'
+    many_many_EditorGroups: 'Grupoj de redaktantoj'
+    many_many_ViewerGroups: 'Grupoj de vidigantoj'
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:
@@ -59,5 +77,9 @@ eo:
       one: 'Unu dosiera ligilo'
       other: '{count} dosieraj ligiloj'
     SINGULARNAME: 'Dosiera ligilo'
+    has_one_Linked: Ligitaj
+    has_one_Parent: Patro
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'Spuri dosierojn'
   SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
     IMAGENOTFOUND: 'Bildo ne troviĝis'

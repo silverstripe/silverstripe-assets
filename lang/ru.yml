@@ -22,9 +22,9 @@ ru:
     PATH: Путь
     PLURALNAME: Файлы
     PLURALS:
-      one: Файл
       few: '{count} файла'
       many: '{count} файлов'
+      one: Файл
       other: '{count} файлов'
     PdfType: 'PDF файл'
     PngType: 'Изображение PNG - подходит для всего'
@@ -39,16 +39,16 @@ ru:
   SilverStripe\Assets\Folder:
     PLURALNAME: Папки
     PLURALS:
-      one: Папка
       few: '{count} папки'
       many: '{count} папок'
+      one: Папка
       other: '{count} папок'
     SINGULARNAME: Папка
   SilverStripe\Assets\Image:
     PLURALNAME: Изображения
     PLURALS:
-      one: Изборажение
       few: '{count} изображения'
       many: '{count} изображений'
+      one: Изборажение
       other: '{count} изображений'
     SINGULARNAME: Изображение

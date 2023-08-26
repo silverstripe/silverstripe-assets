@@ -6,6 +6,8 @@ it:
     DRAFT: Bozza
     DmgType: 'Immagine disco Apple'
     DocType: 'Documento Word'
+    EDIT_ALL_DESCRIPTION: 'Modifica ogni file'
+    EDIT_ALL_HELP: 'Modifica ogni file sul sito, anche se protetto'
     GifType: 'Immagine GIF - adatta per diagrammi'
     GzType: 'File compresso GZIP'
     HtmlType: 'File HTML'
@@ -22,9 +24,9 @@ it:
     PATH: Percorso
     PLURALNAME: Files
     PLURALS:
+      many: '{count} File'
       one: 'Un File'
       other: '{count} File'
-      many: '{count} File'
     PdfType: 'File PDF Adobe Acrobat'
     PngType: 'Immagine PNG - adatta per tutti gli usi'
     SINGULARNAME: File
@@ -34,20 +36,18 @@ it:
     WavType: 'File audio WAV'
     XlsType: 'Foglio elettronico Excel'
     ZipType: 'File ZIP compresso'
-    EDIT_ALL_DESCRIPTION: 'Modifica ogni file'
-    EDIT_ALL_HELP: 'Modifica ogni file sul sito, anche se protetto'
     db_File: File
   SilverStripe\Assets\Folder:
     PLURALNAME: Cartelle
     PLURALS:
+      many: '{count} Cartelle'
       one: 'Una Cartella'
       other: '{count} Cartelle'
-      many: '{count} Cartelle'
     SINGULARNAME: Cartella
   SilverStripe\Assets\Image:
     PLURALNAME: Immagini
     PLURALS:
+      many: '{count} Immagini'
       one: 'Una Immagine'
       other: '{count} Immagini'
-      many: '{count} Immagini'
     SINGULARNAME: Immagine

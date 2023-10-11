@@ -29,3 +29,4 @@ SilverStripe\Assets\File:
     html: 'HTML file'
     htm: 'HTML file'
     webp: 'WEBP Image'
+    brf: 'Braille ASCII file'

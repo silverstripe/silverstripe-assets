@@ -27,7 +27,6 @@ use SilverStripe\Security\Security;
  * (see http://doc.silverstripe.org/secure-development#filesystem).
  * {@link File::$allowed_extensions} provides a good start for a list of "safe" extensions.
  *
- * @todo Allow for non-database uploads
  */
 class Upload extends Controller
 {

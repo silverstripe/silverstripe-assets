@@ -104,15 +104,6 @@ class FileTest extends SapphireTest
             $file->getFilename(),
             '"Filename" property remains unchanged'
         );
-
-        // TODO This should be auto-detected, see File->updateFilesystem()
-        // $this->assertInstanceOf('Folder', $file->Parent(), 'Parent folder is created in database');
-        // $this->assertFileExists($file->Parent()->getURL(), 'Parent folder is created on filesystem');
-        // $this->assertEquals('FileTest', $file->Parent()->Name);
-        // $this->assertInstanceOf('Folder', $file->Parent()->Parent(), 'Grandparent folder is created in database');
-        // $this->assertFileExists($file->Parent()->Parent()->getURL(),
-        // 'Grandparent folder is created on filesystem');
-        // $this->assertEquals('assets', $file->Parent()->Parent()->Name);
     }
 
     public function testGetExtension()

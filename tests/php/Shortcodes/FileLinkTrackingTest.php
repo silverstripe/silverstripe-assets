@@ -205,8 +205,6 @@ class FileLinkTrackingTest extends SapphireTest
         $image->Name = 'renamed-test-file.jpg';
         $image->write();
 
-        // TODO Workaround for bug in DataObject->getChangedFields(), which returns stale data,
-        // and influences File->updateFilesystem()
         $image = Image::get()->byID($image->ID);
         $image->Name = 'renamed-test-file-second-time.jpg';
         $image->write();

@@ -105,6 +105,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Permission for edit all files
      */
     const EDIT_ALL = 'FILE_EDIT_ALL';
+    const GRANT_ACCESS = 'FILE_GRANT_ACCESS';
 
     private static $default_sort = "\"Name\"";
 
@@ -1427,6 +1428,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
                 'sort' => -100,
                 'help' => _t(__CLASS__.'.EDIT_ALL_HELP', 'Edit any file on the site, even if restricted')
+            ],
+            self::GRANT_ACCESS => [
+                'name' => _t(__CLASS__.'.GRANT_ACCESS_DESCRIPTION', 'Manage access rights for files'),
+                'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
+                'sort' => -100,
+                'help' => _t(__CLASS__.'.GRANT_ACCESS_HELP', 'Allow setting of file-specific access restrictions in the "Files" section')
             ]
         ];
     }

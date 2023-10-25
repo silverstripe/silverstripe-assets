@@ -113,6 +113,10 @@ SilverStripe\Assets\File:
     FileFilename: FileTest.txt
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: FileTest.txt
+  brf:
+    FileFilename: FileTest.brf
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: FileTest.brf
   pdf:
     FileFilename: FileTest.pdf
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c

@@ -202,7 +202,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Instructions for the change you need to make are included in a comment in the config file.
      */
     private static $allowed_extensions = [
-        '', 'ace', 'arc', 'arj', 'asf', 'au', 'avi', 'bmp', 'bz2', 'cab', 'cda', 'csv', 'dmg', 'doc',
+        '', 'ace', 'arc', 'arj', 'asf', 'au', 'avi', 'bmp', 'brf', 'bz2', 'cab', 'cda', 'csv', 'dmg', 'doc',
         'docx', 'dotx', 'flv', 'gif', 'gz', 'hqx', 'ico', 'jpeg', 'jpg', 'kml',
         'm4a', 'm4v', 'mid', 'midi', 'mkv', 'mov', 'mp3', 'mp4', 'mpa', 'mpeg', 'mpg', 'ogg', 'ogv', 'pages',
         'pcx', 'pdf', 'png', 'pps', 'ppt', 'pptx', 'potx', 'ra', 'ram', 'rm', 'rtf', 'sit', 'sitx',
@@ -224,7 +224,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             'ram', 'rm', 'snd', 'wav', 'wma',
         ],
         'document' => [
-            'css', 'csv', 'doc', 'docx', 'dotm', 'dotx', 'htm', 'html', 'js', 'kml', 'pages', 'pdf',
+            'brf', 'css', 'csv', 'doc', 'docx', 'dotm', 'dotx', 'htm', 'html', 'js', 'kml', 'pages', 'pdf',
             'potm', 'potx', 'pps', 'ppt', 'pptx', 'rtf', 'txt', 'xhtml', 'xls', 'xlsx', 'xltm', 'xltx', 'xml',
         ],
         'image' => [

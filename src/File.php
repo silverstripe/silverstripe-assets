@@ -711,8 +711,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 // This logic is also used in the Folder subclass, but we're querying
                 // for duplicates on the File base class here (including the Folder subclass).
 
-                // TODO Add read lock to avoid other processes creating files with the same name
-                // before this process has a chance to persist in the database.
                 $existingFile = File::get()->filter([
                     'Name' => $newName,
                     'ParentID' => (int) $this->ParentID
@@ -1301,7 +1299,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function BackLinkTracking()
     {
-        // @todo - Implement PolymorphicManyManyList to replace this
         $list = ArrayList::create();
         foreach ($this->BackLinks() as $link) {
             // Ensure parent record exists

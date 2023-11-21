@@ -5,10 +5,12 @@ namespace SilverStripe\Assets\Flysystem;
 use League\Flysystem\Config as FlysystemConfig;
 use League\Flysystem\UnableToWriteFile;
 use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
+use League\MimeTypeDetection\MimeTypeDetector;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
+use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\SSViewer;
@@ -35,6 +37,16 @@ class AssetAdapter extends LocalFilesystemAdapter
      * @var string
      */
     private static $default_server = 'apache';
+
+    /**
+     * Default mime type detector to use. If not defined, the default mime type detector from Flysystem will be used.
+     * If you want to define one, this must be the name of a class that implements the interface
+     * League\MimeTypeDetection\MimeTypeDetector
+     *
+     * @config
+     * @var string
+     */
+    private static $default_mime_type_detector;
 
     /**
      * Config compatible permissions configuration
@@ -68,7 +80,18 @@ class AssetAdapter extends LocalFilesystemAdapter
         $permissions = PortableVisibilityConverter::fromArray(
             $this->normalisePermissions($this->config()->get('file_permissions'))
         );
-        parent::__construct($root, $permissions, $writeFlags, $linkHandling);
+
+        // Get the mimetype detector from config, if defined, and ensure it's valid
+        $mimeTypeDetector = null;
+
+        if ($mimeTypeDetectorClassName = $this->config()->get('default_mime_type_detector')) {
+            $mimeTypeDetector = Injector::inst()->get($mimeTypeDetectorClassName);
+            if (!$mimeTypeDetector instanceof MimeTypeDetector) {
+                $mimeTypeDetector = null;
+            }
+        }
+        
+        parent::__construct($root, $permissions, $writeFlags, $linkHandling, $mimeTypeDetector);
 
         // Configure server
         $this->configureServer();

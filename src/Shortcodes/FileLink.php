@@ -8,8 +8,8 @@ use SilverStripe\ORM\DataObject;
 /**
  * Represents a link between a dataobject parent and a file shortcode in a HTML content area
  *
- * @method DataObject Parent() Parent object
- * @method File Linked() File being linked to
+ * @method File Linked()
+ * @method DataObject Parent()
  */
 class FileLink extends DataObject
 {

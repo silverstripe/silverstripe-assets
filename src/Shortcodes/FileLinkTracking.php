@@ -24,7 +24,7 @@ use SilverStripe\View\Parsers\HTMLValue;
  * only be enabled for the Stage record.
  *
  * @property DataObject|FileLinkTracking $owner
- * @method ManyManyList|File[] FileTracking() List of files linked on this dataobject
+ * @method SilverStripe\ORM\ManyManyThroughList<File> FileTracking()
  */
 class FileLinkTracking extends DataExtension
 {

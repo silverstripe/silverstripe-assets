@@ -88,14 +88,13 @@ use SilverStripe\View\HTML;
  * @property int $ParentID ID of parent File/Folder
  * @property int $OwnerID ID of Member who owns the file
  *
- * @method File Parent() Returns parent File
- * @method Member Owner() Returns Member object of file owner.
- * @method HasManyList|FileLink[] BackLinks() List of SiteTreeLink objects attached to this page
- *
  * @mixin Hierarchy
  * @mixin Versioned
  * @mixin RecursivePublishable
  * @mixin InheritedPermissionsExtension
+ * @method HasManyList<FileLink> BackLinks()
+ * @method Member Owner()
+ * @method File Parent()
  */
 class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
 {

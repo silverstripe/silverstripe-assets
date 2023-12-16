@@ -11,6 +11,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Security;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Manages uploads via HTML forms processed by PHP,
@@ -53,10 +54,8 @@ class Upload extends Controller
     /**
      * Information about the temporary file produced
      * by the PHP-runtime.
-     *
-     * @var array
      */
-    protected $tmpFile;
+    protected UploadedFile $tmpFile;
 
     /**
      * Replace an existing file rather than renaming the new one.
@@ -156,12 +155,9 @@ class Upload extends Controller
 
     /**
      * Save an file passed from a form post into the AssetStore directly
-     *
-     * @param array $tmpFile Indexed array that PHP generated for every file it uploads.
-     * @param string|bool $folderPath Folder path relative to /assets
      * @return array|false Either the tuple array, or false if the file could not be saved
      */
-    public function load($tmpFile, $folderPath = false)
+    public function load(UploadedFile $tmpFile, string|bool $folderPath = false): array|false
     {
         // Validate filename
         $filename = $this->getValidFilename($tmpFile, $folderPath);
@@ -181,14 +177,10 @@ class Upload extends Controller
      * Save an file passed from a form post into this object.
      * File names are filtered through {@link FileNameFilter}, see class documentation
      * on how to influence this behaviour.
-     *
-     * @param array $tmpFile
-     * @param AssetContainer $file
-     * @param string|bool $folderPath
      * @return bool True if the file was successfully saved into this record
      * @throws Exception
      */
-    public function loadIntoFile($tmpFile, $file = null, $folderPath = false)
+    public function loadIntoFile(UploadedFile $tmpFile, AssetContainer $file = null, string|bool$folderPath = false): bool
     {
         $this->file = $file;
 
@@ -213,13 +205,8 @@ class Upload extends Controller
 
     /**
      * Assign this temporary file into the given destination
-     *
-     * @param array $tmpFile
-     * @param string $filename
-     * @param AssetContainer|AssetStore $container
-     * @return array
      */
-    protected function storeTempFile($tmpFile, $filename, $container)
+    protected function storeTempFile(UploadedFile $tmpFile, string $filename, AssetContainer|AssetStore $container): array
     {
         // Save file into backend
         $conflictResolution = $this->replaceFile
@@ -229,25 +216,17 @@ class Upload extends Controller
             'conflict' => $conflictResolution,
             'visibility' => $this->getDefaultVisibility()
         ];
-        return $container->setFromLocalFile($tmpFile['tmp_name'], $filename, null, null, $config);
+        return $container->setFromLocalFile($tmpFile->getPathname(), $filename, null, null, $config);
     }
 
     /**
      * Given a temporary file and upload path, validate the file and determine the
      * value of the 'Filename' tuple that should be used to store this asset.
      *
-     * @param array $tmpFile
-     * @param string $folderPath
      * @return string|false Value of filename tuple, or false if invalid
      */
-    protected function getValidFilename($tmpFile, $folderPath = null)
+    protected function getValidFilename(UploadedFile $tmpFile, ?string $folderPath = null): string|false
     {
-        if (!is_array($tmpFile)) {
-            throw new InvalidArgumentException(
-                "Upload::load() Not passed an array.  Most likely, the form hasn't got the right enctype"
-            );
-        }
-
         // Validate
         $this->clearErrors();
         $valid = $this->validate($tmpFile);
@@ -260,7 +239,7 @@ class Upload extends Controller
             $folderPath = $this->config()->uploads_folder;
         }
         $nameFilter = FileNameFilter::create();
-        $file = $nameFilter->filter($tmpFile['name']);
+        $file = $nameFilter->filter($tmpFile->getClientOriginalName());
         $filename = basename($file ?? '');
         if ($folderPath) {
             $filename = File::join_paths($folderPath, $filename);
@@ -345,11 +324,8 @@ class Upload extends Controller
      * Is NOT connected to the {Validator} classes,
      * please have a look at {FileField->validate()}
      * for an example implementation of external validation.
-     *
-     * @param array $tmpFile
-     * @return boolean
      */
-    public function validate($tmpFile)
+    public function validate(UploadedFile $tmpFile): bool
     {
         $validator = $this->validator;
         $validator->setTmpFile($tmpFile);

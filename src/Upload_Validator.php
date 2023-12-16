@@ -6,6 +6,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Upload_Validator
 {
@@ -35,10 +36,8 @@ class Upload_Validator
     /**
      * Information about the temporary file produced
      * by the PHP-runtime.
-     *
-     * @var array
      */
-    protected $tmpFile;
+    protected UploadedFile $tmpFile;
 
     protected $errors = [];
 
@@ -83,9 +82,8 @@ class Upload_Validator
 
     /**
      * Set information about temporary file produced by PHP.
-     * @param array $tmpFile
      */
-    public function setTmpFile($tmpFile)
+    public function setTmpFile(UploadedFile $tmpFile): void
     {
         $this->tmpFile = $tmpFile;
     }
@@ -221,13 +219,13 @@ class Upload_Validator
     public function isValidSize()
     {
         // If file was blocked via PHP for being excessive size, shortcut here
-        switch ($this->tmpFile['error']) {
+        switch ($this->tmpFile->getError()) {
             case UPLOAD_ERR_INI_SIZE:
             case UPLOAD_ERR_FORM_SIZE:
                 return false;
         }
         $maxSize = $this->getAllowedMaxFileSize($this->getFileExtension());
-        return (!$this->tmpFile['size'] || !$maxSize || (int)$this->tmpFile['size'] < $maxSize);
+        return (!$this->tmpFile->getSize() || !$maxSize || $this->tmpFile->getSize() < $maxSize);
     }
 
     /**
@@ -238,10 +236,10 @@ class Upload_Validator
     public function isFileEmpty()
     {
         // Don't check file size for errors
-        if ($this->tmpFile['error'] !== UPLOAD_ERR_OK) {
+        if ($this->tmpFile->getError() !== UPLOAD_ERR_OK) {
             return false;
         }
-        return empty($this->tmpFile['size']);
+        return empty($this->tmpFile->getSize());
     }
 
     /**
@@ -258,14 +256,12 @@ class Upload_Validator
     /**
      * Return the extension of the uploaded file, in lowercase
      * Returns an empty string for files without an extension
-     *
-     * @return string
      */
-    public function getFileExtension()
+    public function getFileExtension(): string
     {
-        $pathInfo = pathinfo($this->tmpFile['name'] ?? '');
-        if (isset($pathInfo['extension'])) {
-            return strtolower($pathInfo['extension'] ?? '');
+        $extension = $this->tmpFile->getClientOriginalExtension();
+        if ($extension) {
+            return strtolower($extension);
         }
 
         // Special case for files without extensions
@@ -282,7 +278,7 @@ class Upload_Validator
     public function validate()
     {
         // we don't validate for empty upload fields yet
-        if (empty($this->tmpFile['name'])) {
+        if (empty($this->tmpFile->getFilename())) {
             return true;
         }
 
@@ -339,18 +335,18 @@ class Upload_Validator
     public function isValidUpload()
     {
         // Check file upload
-        if (in_array($this->tmpFile['error'], [UPLOAD_ERR_NO_FILE, UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE])) {
+        if (in_array($this->tmpFile->getError(), [UPLOAD_ERR_NO_FILE, UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE])) {
             return false;
         }
 
         // Note that some "max file size" errors leave "tmp_name" empty, so don't fail on this.
-        if (empty($this->tmpFile['tmp_name'])) {
+        if (empty($this->tmpFile->getPathname())) {
             return true;
         }
 
         // Check if file is valid uploaded (with exception for unit testing)
         $useUploadedFile = $this->config()->get('use_is_uploaded_file');
-        if ($useUploadedFile && !is_uploaded_file($this->tmpFile['tmp_name'] ?? '')) {
+        if ($useUploadedFile && !is_uploaded_file($this->tmpFile->getPathname() ?? '')) {
             return false;
         }
 
@@ -364,6 +360,6 @@ class Upload_Validator
      */
     public function isCompleteUpload()
     {
-        return ($this->tmpFile['error'] !== UPLOAD_ERR_PARTIAL);
+        return ($this->tmpFile->getError() !== UPLOAD_ERR_PARTIAL);
     }
 }

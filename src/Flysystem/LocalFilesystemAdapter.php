@@ -19,7 +19,8 @@ class LocalFilesystemAdapter extends LeagueLocalFilesystemAdapter
         MimeTypeDetector $mimeTypeDetector = null
     ) {
         $this->pathPrefixer = new PathPrefixer($location);
-        parent::__construct($location, $visibility, $writeFlags, $linkHandling, $mimeTypeDetector);
+
+        parent::__construct($location, $visibility, $writeFlags, $linkHandling, $mimeTypeDetector, false, true);
     }
 
     public function prefixPath(string $path): string

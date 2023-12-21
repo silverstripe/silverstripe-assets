@@ -75,19 +75,28 @@ class Upload_Validator
 
     /**
      * Clear out all errors
+     *
+     * @return $this
      */
     public function clearErrors()
     {
         $this->errors = [];
+
+        return $this;
     }
 
     /**
      * Set information about temporary file produced by PHP.
+     *
      * @param array $tmpFile
+     *
+     * @return $this
      */
     public function setTmpFile($tmpFile)
     {
         $this->tmpFile = $tmpFile;
+
+        return $this;
     }
 
 
@@ -154,6 +163,8 @@ class Upload_Validator
      * </code>
      *
      * @param array|int|string $rules
+     *
+     * @return $this
      */
     public function setAllowedMaxFileSize($rules)
     {
@@ -178,6 +189,8 @@ class Upload_Validator
         } elseif ((int)$rules > 0) {
             $this->allowedMaxFileSize['*'] = (int)$rules;
         }
+
+        return $this;
     }
 
     /**
@@ -196,6 +209,8 @@ class Upload_Validator
      * See {@link setAllowedMaxFileSize()} to limit file size by extension.
      *
      * @param array $rules List of extensions
+     *
+     * @return $this
      */
     public function setAllowedExtensions($rules)
     {
@@ -209,6 +224,8 @@ class Upload_Validator
         }
 
         $this->allowedExtensions = $rules;
+
+        return $this;
     }
 
     /**

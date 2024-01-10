@@ -56,7 +56,6 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function handle_shortcode($args, $content, $parser, $shortcode, $extra = [])
     {
-        /** @var CacheInterface $cache */
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($args, $content);
         $cachedMarkup = static::getCachedMarkup($cache, $cacheKey, $args);
@@ -199,7 +198,6 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function getCache()
     {
-        /** @var CacheInterface $cache */
         return Injector::inst()->get(CacheInterface::class . '.ImageShortcodeProvider');
     }
 

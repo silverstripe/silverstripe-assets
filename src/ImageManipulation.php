@@ -853,7 +853,6 @@ trait ImageManipulation
         return $this->manipulate(
             $variant,
             function (AssetStore $store, $filename, $hash, $variant) use ($callback) {
-                /** @var Image_Backend $backend */
                 $backend = $this->getImageBackend();
 
                 // If backend isn't available
@@ -884,7 +883,6 @@ trait ImageManipulation
                 // Write from modified backend
                 if ($result instanceof Image_Backend) {
                     try {
-                        /** @var Image_Backend $result */
                         $tuple = $result->writeToStore(
                             $store,
                             $filename,

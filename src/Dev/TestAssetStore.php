@@ -153,7 +153,6 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         /** @var TestAssetStore $assetStore */
         $assetStore = Injector::inst()->get(AssetStore::class);
         $fileID = $assetStore->getFileID($asset->Filename, $asset->Hash, $asset->Variant);
-        /** @var Filesystem $filesystem */
         $filesystem = $assetStore->getProtectedFilesystem();
         if (!$forceProtected && !$filesystem->has($fileID)) {
             $filesystem = $assetStore->getPublicFilesystem();
@@ -165,7 +164,6 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
 
     public function cleanFilename(string $filename)
     {
-        /** @var FileIDHelper $helper */
         $helper = Injector::inst()->get(HashFileIDHelper::class);
         return $helper->cleanFilename($filename);
     }
@@ -177,14 +175,12 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
 
     public function parseFileID(string $fileID)
     {
-        /** @var ParsedFileID $parsedFileID */
         $parsedFileID = $this->getProtectedResolutionStrategy()->parseFileID($fileID);
         return $parsedFileID ? $parsedFileID->getTuple() : null;
     }
 
     public function getOriginalFilename(string $fileID)
     {
-        /** @var ParsedFileID $parsedFileID */
         $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
         return $parsedFiledID ? $parsedFiledID->getFilename() : null;
     }
@@ -201,7 +197,6 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
 
     public function removeVariant(string $fileID)
     {
-        /** @var ParsedFileID $parsedFileID */
         $parsedFiledID = $this->getPublicResolutionStrategy()->parseFileID($fileID);
         if ($parsedFiledID) {
             return $this->getPublicResolutionStrategy()->buildFileID($parsedFiledID->setVariant(''));

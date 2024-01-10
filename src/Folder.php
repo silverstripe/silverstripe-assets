@@ -161,7 +161,7 @@ class Folder extends File
     /**
      * Returns all children of this folder
      *
-     * @return DataList
+     * @return DataList<File>
      */
     public function myChildren()
     {
@@ -191,7 +191,7 @@ class Folder extends File
     /**
      * Get the children of this folder that are also folders.
      *
-     * @return DataList
+     * @return DataList<Folder>
      */
     public function ChildFolders()
     {

@@ -42,3 +42,11 @@ SilverStripe\Assets\Image:
     FileHash: 1b22f41d0d27755f06b77eaa27e074eff84d3019
     Parent: =>SilverStripe\Assets\Folder.folder1
     Name: landscape-to-portrait.jpg
+
+SilverStripe\Assets\File:
+  notImage:
+    Title: This is not an image
+    FileFilename: folder/not-image.txt
+    FileHash: 6ab0df7d967f44e98d4bfa403020c6921a2b46e7
+    Parent: =>SilverStripe\Assets\Folder.folder1
+    Name: not-image.txt

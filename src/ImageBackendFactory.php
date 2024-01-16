@@ -37,9 +37,15 @@ class ImageBackendFactory implements Factory
      */
     public function create($service, array $params = [])
     {
-        /** @var AssetContainer $assetContainer */
+        /** @var AssetContainer|null $assetContainer */
         $assetContainer = reset($params);
-        if (!$assetContainer instanceof AssetContainer) {
+
+        // If no asset container was passed in, create a new uncached image backend
+        if (!$assetContainer) {
+            return $this->creator->create($service, $params);
+        }
+
+        if (!($assetContainer instanceof AssetContainer)) {
             throw new BadMethodCallException("Can only create Image_Backend for " . AssetContainer::class);
         }
 

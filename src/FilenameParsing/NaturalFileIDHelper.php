@@ -2,8 +2,6 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
-use SilverStripe\Core\Injector\Injectable;
-
 /**
  * Parsed Natural path URLs. Natural path is the same hashless path that appears in the CMS.
  *
@@ -23,10 +21,16 @@ class NaturalFileIDHelper extends AbstractFileIDHelper
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = $matches['variant'] ?: '';
+
+        if ($variant) {
+            $filename = $this->swapExtension($filename, $variant, self::EXTENSION_ORIGINAL);
+        }
+
         return new ParsedFileID(
             $filename,
             '',
-            isset($matches['variant']) ? $matches['variant'] : '',
+            $variant,
             $fileID
         );
     }

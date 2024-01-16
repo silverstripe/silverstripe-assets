@@ -5,8 +5,10 @@ namespace SilverStripe\Assets\Tests;
 use Prophecy\Prophecy\ObjectProphecy;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\FilenameParsing\AbstractFileIDHelper;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
+use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
@@ -469,5 +471,89 @@ class ImageManipulationTest extends SapphireTest
             $assetStore->isGranted($fileUrl),
             'Current user should not automatically be granted access to view thumbnail'
         );
+    }
+
+    public function testManipulateExtension()
+    {
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $manipulated = $image->manipulateExtension(
+            'webp',
+            function (AssetStore $store, string $filename, string $hash, string $variant) use ($image) {
+                $backend = $image->getImageBackend();
+                $tuple = $backend->writeToStore(
+                    $store,
+                    $filename,
+                    $hash,
+                    $variant,
+                    ['conflict' => AssetStore::CONFLICT_USE_EXISTING]
+                );
+                return [$tuple, $backend];
+            }
+        );
+
+        $store = Injector::inst()->get(AssetStore::class);
+
+        // Having a valid image backend means all the image manipulation methods can be chained on top
+        $this->assertInstanceOf(Image_Backend::class, $manipulated->getImageBackend());
+        // Double check the variant was created and stored correctly
+        $this->assertSame([AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, 'png', 'webp'], $manipulated->variantParts($manipulated->getVariant()));
+        $this->assertTrue($store->exists($manipulated->getFilename(), $manipulated->getHash(), $manipulated->getVariant()));
+    }
+
+    public function testManipulateExtensionNonImageToImage()
+    {
+        $original = $this->objFromFixture(File::class, 'notImage');
+        $manipulated = $original->manipulateExtension(
+            'png',
+            function (AssetStore $store, string $filename, string $hash, string $variant) {
+                $backend = Injector::inst()->create(Image_Backend::class);
+                // In lieu of actually generating a screenshot of the txt file and making an image from it,
+                // we'll just load an image from the filesystem.
+                $backend->loadFrom(__DIR__ . '/ImageTest/test-image.png');
+                $tuple = $backend->writeToStore(
+                    $store,
+                    $filename,
+                    $hash,
+                    $variant,
+                    ['conflict' => AssetStore::CONFLICT_USE_EXISTING]
+                );
+                return [$tuple, $backend];
+            }
+        );
+
+        $store = Injector::inst()->get(AssetStore::class);
+
+        // Having a valid image backend means all the image manipulation methods can be chained on top
+        $this->assertInstanceOf(Image_Backend::class, $manipulated->getImageBackend());
+        // Double check the variant was created and stored correctly
+        $this->assertSame([AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, 'txt', 'png'], $manipulated->variantParts($manipulated->getVariant()));
+        $this->assertTrue($store->exists($manipulated->getFilename(), $manipulated->getHash(), $manipulated->getVariant()));
+    }
+
+    public function testManipulateExtensionNonImageToNonImage()
+    {
+        $original = $this->objFromFixture(File::class, 'notImage');
+        $manipulated = $original->manipulateExtension(
+            'csv',
+            function (AssetStore $store, string $filename, string $hash, string $variant) {
+                $tuple = $store->setFromString(
+                    'Any content will do - csv is just a text file afterall',
+                    $filename,
+                    $hash,
+                    $variant,
+                    ['conflict' => AssetStore::CONFLICT_USE_EXISTING]
+                );
+                return [$tuple, null];
+            }
+        );
+
+        $store = Injector::inst()->get(AssetStore::class);
+
+        // Backend should be null since the resulting variant isn't an image
+        $this->assertNull($manipulated->getImageBackend());
+        // Double check the variant was created and stored correctly
+        $this->assertSame([AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, 'txt', 'csv'], $manipulated->variantParts($manipulated->getVariant()));
+        $this->assertTrue($store->exists($manipulated->getFilename(), $manipulated->getHash(), $manipulated->getVariant()));
+        $this->assertSame('Any content will do - csv is just a text file afterall', $manipulated->getString());
     }
 }

@@ -4,6 +4,7 @@ namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
 use LogicException;
+use SilverStripe\Assets\FilenameParsing\AbstractFileIDHelper;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
@@ -841,12 +842,24 @@ trait ImageManipulation
     }
 
     /**
+     * Wrapper for manipulate() that creates a variant file with a different extension than the original file.
+     *
+     * @return DBFile|null The manipulated file
+     */
+    public function manipulateExtension(string $newExtension, callable $callback)
+    {
+        $pathParts = pathinfo($this->getFilename());
+        $variant = $this->variantName(AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, $pathParts['extension'], $newExtension);
+        return $this->manipulate($variant, $callback);
+    }
+
+    /**
      * Wrapper for manipulate that passes in and stores Image_Backend objects instead of tuples
      *
      * @param string $variant
      * @param callable $callback Callback which takes an Image_Backend object, and returns an Image_Backend result.
      * If this callback returns `true` then the current image will be duplicated without modification.
-     * @return DBFile The manipulated file
+     * @return DBFile|null The manipulated file
      */
     public function manipulateImage($variant, $callback)
     {
@@ -914,7 +927,7 @@ trait ImageManipulation
      * This callback will be passed the backend, filename, hash, and variant
      * This will not be called if the file does not
      * need to be created.
-     * @return DBFile The manipulated file
+     * @return DBFile|null The manipulated file
      */
     public function manipulate($variant, $callback)
     {
@@ -999,6 +1012,7 @@ trait ImageManipulation
      * For legacy reasons, there's no delimiter between this part, and the encoded arguments.
      * This means we have to use a whitelist of "known formats", based on methods
      * available on the {@link Image} class as the "main" user of this trait.
+     * The one exception to this is the variant for swapping file extensions, which is explicitly allowed.
      * This class is commonly decorated with additional manipulation methods through {@link DataExtension}.
      *
      * @param $variantName
@@ -1007,10 +1021,11 @@ trait ImageManipulation
      */
     public function variantParts($variantName)
     {
-        $methods = array_map('preg_quote', singleton(Image::class)->allMethodNames() ?? []);
+        $allowedVariantTypes = array_map('preg_quote', singleton(Image::class)->allMethodNames() ?? []);
+        $allowedVariantTypes[] = preg_quote(AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT);
 
         // Regex needs to be case insensitive since allMethodNames() is all lowercased
-        $regex = '#^(?<format>(' . implode('|', $methods) . '))(?<encodedargs>(.*))#i';
+        $regex = '#^(?<format>(' . implode('|', $allowedVariantTypes) . '))(?<encodedargs>(.*))#i';
         preg_match($regex ?? '', $variantName ?? '', $matches);
 
         if (!$matches) {

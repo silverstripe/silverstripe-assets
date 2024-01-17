@@ -74,7 +74,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      */
     public static function handle_shortcode($arguments, $content, $parser, $shortcode, $extra = [])
     {
-        /** @var CacheInterface $cache */
         $cache = static::getCache();
         $cacheKey = static::getCacheKey($arguments, $content);
         $cachedMarkup = static::getCachedMarkup($cache, $cacheKey, $arguments);
@@ -87,7 +86,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         $record = static::find_shortcode_record($arguments, $errorCode);
         if ($errorCode) {
             $fileFound = false;
-            /** @var ErrorPage $record */
             $record = static::find_error_record($errorCode);
         }
         if (!$record) {
@@ -179,7 +177,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         // Check if the file is found
-        /** @var File $file */
         $file = DataObject::get_by_id(File::class, $args['id']);
         if (!$file) {
             $errorCode = 404;
@@ -240,7 +237,6 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      */
     public static function getCache()
     {
-        /** @var CacheInterface $cache */
         return Injector::inst()->get(CacheInterface::class . '.FileShortcodeProvider');
     }
 

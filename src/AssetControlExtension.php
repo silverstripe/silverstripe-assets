@@ -24,11 +24,10 @@ use SilverStripe\Security\Member;
  * Assets which are no longer referenced will be flushed via explicit delete calls
  * to the underlying filesystem.
  *
- * @property DataObject|Versioned $owner A {@see DataObject}, potentially decorated with {@see Versioned} extension.
+ * @extends DataExtension<DataObject&Versioned>
  */
 class AssetControlExtension extends DataExtension
 {
-
     /**
      * When archiving versioned dataobjects, should assets be archived with them?
      * If false, assets will be deleted when the dataobject is archived.
@@ -266,7 +265,6 @@ class AssetControlExtension extends DataExtension
      */
     protected function isVersioned()
     {
-        /** @var Versioned|DataObject $owner */
         $owner = $this->owner;
         return class_exists(Versioned::class)
             && $owner->hasExtension(Versioned::class)

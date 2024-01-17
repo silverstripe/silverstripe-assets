@@ -23,8 +23,8 @@ use SilverStripe\View\Parsers\HTMLValue;
  * Note that since both SiteTree and File are versioned, LinkTracking and FileTracking will
  * only be enabled for the Stage record.
  *
- * @property DataObject|FileLinkTracking $owner
  * @method SilverStripe\ORM\ManyManyThroughList<File> FileTracking()
+ * @extends DataExtension<DataObject&static>
  */
 class FileLinkTracking extends DataExtension
 {

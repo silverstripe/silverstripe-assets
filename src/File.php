@@ -114,7 +114,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     private static $singular_name = "File";
 
     private static $plural_name = "Files";
-    
+
     /**
      * Control whether images in the admin will be resampled
      *
@@ -315,7 +315,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Split to folders and the actual filename, and traverse the structure.
         $parts = array_filter(preg_split("#[/\\\\]+#", $filename ?? '') ?? []);
         $parentID = 0;
-        /** @var File $item */
         $item = null;
         foreach ($parts as $part) {
             $item = File::get()->filter([
@@ -754,7 +753,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function onAfterRevertToLive()
     {
         // Force query of draft object and update (as source record is bound to live stage)
-        /** @var File $draftRecord */
         if (class_exists(Versioned::class) &&
             $draftRecord = Versioned::get_by_stage(self::class, Versioned::DRAFT)->byID($this->ID)
         ) {
@@ -847,7 +845,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         if ($children = $this->Children()) {
             foreach ($children as $item) {
-                /** @var File $item */
                 if (!$condition || eval("return $condition;")) {
                     $collator[] = $item;
                 }
@@ -895,7 +892,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         if (!$grant && $this->canView()) {
             $grant = true;
         }
-        
+
         if ($this->File->exists()) {
             return $this->File->getURL($grant);
         }
@@ -1151,9 +1148,9 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      * Caution: Changes to mapping doesn't apply to existing file records in the database.
      * Also doesn't hook into {@link Object::getCustomClass()}.
      *
-     * @param String File extension, without dot prefix. Use an asterisk ('*')
+     * @param string File extension, without dot prefix. Use an asterisk ('*')
      * to specify a generic fallback if no mapping is found for an extension.
-     * @return String Classname for a subclass of {@link File}
+     * @return string Classname for a subclass of {@link File}
      */
     public static function get_class_for_file_extension($ext)
     {
@@ -1294,7 +1291,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * Get the back-link tracking objects that link to this file via HTML fields
      *
-     * @retun ArrayList|DataObject[]
+     * @return ArrayList<DataObject>
      */
     public function BackLinkTracking()
     {

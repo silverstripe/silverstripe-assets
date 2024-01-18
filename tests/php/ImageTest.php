@@ -419,7 +419,7 @@ abstract class ImageTest extends SapphireTest
         $image = singleton(Image::class);
         $format = 'Pad';
         $args = [331, 313, '222222', 0];
-        $name = $image->variantName($format, $args);
+        $name = $image->variantName($format, ...$args);
         $this->assertEquals(
             array_merge([$format], $args),
             $image->variantParts($name)
@@ -432,7 +432,7 @@ abstract class ImageTest extends SapphireTest
         /** @var Image $image */
         $image = singleton(Image::class);
         $args = ['foo'];
-        $name = $image->variantName('Invalid', $args);
+        $name = $image->variantName('Invalid', ...$args);
         $image->variantParts($name);
     }
 

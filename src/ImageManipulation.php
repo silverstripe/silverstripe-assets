@@ -1037,7 +1037,7 @@ trait ImageManipulation
             throw new InvalidArgumentException('Invalid variant name arguments: ' . $variantName);
         }
 
-        return array_merge([$matches['format']], $args[0]);
+        return array_merge([$matches['format']], $args);
     }
 
     /**

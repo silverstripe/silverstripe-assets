@@ -3,7 +3,6 @@
 namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
-use SilverStripe\Core\Injector\Injectable;
 
 /**
  * Parsed Hash path URLs. Hash paths group a file and its variant under a directory based on a hash generated from the
@@ -14,69 +13,12 @@ use SilverStripe\Core\Injector\Injectable;
  *
  * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class HashFileIDHelper implements FileIDHelper
+class HashFileIDHelper extends AbstractFileIDHelper
 {
-    use Injectable;
-
     /**
      * Default length at which hashes are truncated.
      */
     const HASH_TRUNCATE_LENGTH = 10;
-
-    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
-    {
-        if ($filename instanceof ParsedFileID) {
-            $hash =  $filename->getHash();
-            $variant =  $filename->getVariant();
-            $filename =  $filename->getFilename();
-        }
-
-        if (empty($hash)) {
-            throw new InvalidArgumentException('HashFileIDHelper::buildFileID requires an $hash value.');
-        }
-
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        if ($cleanfilename) {
-            $filename = $this->cleanFilename($filename);
-        }
-        $name = basename($filename ?? '');
-
-        // Split extension
-        $extension = null;
-        if (($pos = strpos($name ?? '', '.')) !== false) {
-            $extension = substr($name ?? '', $pos ?? 0);
-            $name = substr($name ?? '', 0, $pos);
-        }
-
-        $fileID = $this->truncate($hash) . '/' . $name;
-
-        // Add directory
-        $dirname = ltrim(dirname($filename ?? ''), '.');
-        if ($dirname) {
-            $fileID = $dirname . '/' . $fileID;
-        }
-
-        // Add variant
-        if ($variant) {
-            $fileID .= '__' . $variant;
-        }
-
-        // Add extension
-        if ($extension) {
-            $fileID .= $extension;
-        }
-
-        return $fileID;
-    }
-
-    public function cleanFilename($filename)
-    {
-        // Swap backslash for forward slash
-        $filename = str_replace('\\', '/', $filename ?? '');
-
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        return preg_replace('/_{2,}/', '_', $filename ?? '');
-    }
 
     public function parseFileID($fileID)
     {
@@ -115,6 +57,18 @@ class HashFileIDHelper implements FileIDHelper
         return  $folder . $this->truncate($parsedFileID->getHash());
     }
 
+    protected function validateFileParts($filename, $hash, $variant): void
+    {
+        if (empty($hash)) {
+            throw new InvalidArgumentException('HashFileIDHelper::buildFileID requires an $hash value.');
+        }
+    }
+
+    protected function getFileIDBase($shortFilename, $fullFilename, $hash, $variant): string
+    {
+        return $this->truncate($hash) . '/' . $shortFilename;
+    }
+
     /**
      * Truncate a hash to a predefined length
      * @param $hash
@@ -123,10 +77,5 @@ class HashFileIDHelper implements FileIDHelper
     private function truncate($hash)
     {
         return substr($hash ?? '', 0, self::HASH_TRUNCATE_LENGTH);
-    }
-
-    public function lookForVariantRecursive(): bool
-    {
-        return false;
     }
 }

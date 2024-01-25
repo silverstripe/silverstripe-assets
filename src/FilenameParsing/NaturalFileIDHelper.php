@@ -11,62 +11,8 @@ use SilverStripe\Core\Injector\Injectable;
  *
  * e.g.: `Uploads/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class NaturalFileIDHelper implements FileIDHelper
+class NaturalFileIDHelper extends AbstractFileIDHelper
 {
-    use Injectable;
-
-    public function buildFileID($filename, $hash = null, $variant = null, $cleanfilename = true)
-    {
-        if ($filename instanceof ParsedFileID) {
-            $hash =  $filename->getHash();
-            $variant =  $filename->getVariant();
-            $filename =  $filename->getFilename();
-        }
-
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        if ($cleanfilename) {
-            $filename = $this->cleanFilename($filename);
-        }
-        $name = basename($filename ?? '');
-
-        // Split extension
-        $extension = null;
-        if (($pos = strpos($name ?? '', '.')) !== false) {
-            $extension = substr($name ?? '', $pos ?? 0);
-            $name = substr($name ?? '', 0, $pos);
-        }
-
-        $fileID = $name;
-
-        // Add directory
-        $dirname = ltrim(dirname($filename ?? ''), '.');
-        if ($dirname) {
-            $fileID = $dirname . '/' . $fileID;
-        }
-
-        // Add variant
-        if ($variant) {
-            $fileID .= '__' . $variant;
-        }
-
-        // Add extension
-        if ($extension) {
-            $fileID .= $extension;
-        }
-
-        return $fileID;
-    }
-
-
-    public function cleanFilename($filename)
-    {
-        // Swap backslash for forward slash
-        $filename = str_replace('\\', '/', $filename ?? '');
-
-        // Since we use double underscore to delimit variants, eradicate them from filename
-        return preg_replace('/_{2,}/', '_', $filename ?? '');
-    }
-
     public function parseFileID($fileID)
     {
         $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
@@ -97,8 +43,13 @@ class NaturalFileIDHelper implements FileIDHelper
         return $folder == '.' ? '' : $folder;
     }
 
-    public function lookForVariantRecursive(): bool
+    protected function getFileIDBase($shortFilename, $fullFilename, $hash, $variant): string
     {
-        return false;
+        return $shortFilename;
+    }
+
+    protected function validateFileParts($filename, $hash, $variant): void
+    {
+        // no-op
     }
 }

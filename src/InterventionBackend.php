@@ -366,8 +366,10 @@ class InterventionBackend implements Image_Backend, Flushable
                 throw new BadMethodCallException("Cannot write corrupt file to store");
             }
 
+            // Make sure we're using the extension of the variant file, which can differ from the original file
+            $url = $assetStore->getAsURL($filename, $hash, $variant, false);
+            $extension = pathinfo($url, PATHINFO_EXTENSION);
             // Save file
-            $extension = pathinfo($filename ?? '', PATHINFO_EXTENSION);
             $result = $assetStore->setFromString(
                 $resource->encode($extension, $this->getQuality())->getEncoded(),
                 $filename,

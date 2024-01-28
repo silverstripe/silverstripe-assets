@@ -7,7 +7,6 @@ namespace SilverStripe\Assets\FilenameParsing;
  */
 interface FileIDHelper
 {
-
     /**
      * Map file tuple (hash, name, variant) to a filename to be used by flysystem
      *

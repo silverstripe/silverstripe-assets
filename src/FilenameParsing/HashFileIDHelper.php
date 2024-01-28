@@ -30,10 +30,16 @@ class HashFileIDHelper extends AbstractFileIDHelper
         }
 
         $filename = $matches['folder'] . $matches['basename'] . $matches['extension'];
+        $variant = $matches['variant'] ?: '';
+
+        if ($variant) {
+            $filename = $this->swapExtension($filename, $variant, self::EXTENSION_ORIGINAL);
+        }
+
         return new ParsedFileID(
             $filename,
             $matches['hash'],
-            isset($matches['variant']) ? $matches['variant'] : '',
+            $variant,
             $fileID
         );
     }

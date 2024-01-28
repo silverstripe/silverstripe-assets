@@ -2,8 +2,11 @@
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
 use InvalidArgumentException;
+use ReflectionClassConstant;
+use ReflectionMethod;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
+use SilverStripe\Core\Convert;
 
 class HashFileIDHelperTest extends FileIDHelperTester
 {
@@ -172,5 +175,49 @@ class HashFileIDHelperTest extends FileIDHelperTester
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->getHelper()->buildFileID('Filename.txt', '');
+    }
+
+    public function provideRewriteExtension()
+    {
+        $jpgToPng = 'ExtRewrite' . Convert::base64url_encode(['jpg', 'png']);
+
+        return [
+            'no variant' => ['', 'hel_lo.txt', 'hel_lo.txt'],
+            'invalid extension' => ['xyz', 'h_ello.abc+', 'h_ello.abc+'],
+            'no extension' => ['', 'hell_o.', 'hell_o.'],
+            'no filename' => ['', '.hta_ccess', '.hta_ccess'],
+            'no rewrite' => ['xyz', 'hell_o.jpg', 'hell_o.jpg'],
+            'no rewrite multi variant' => ['xyz_abc', 'he_llo.jpg', 'he_llo.jpg'],
+            'rewitten extension' => [$jpgToPng, 'hel_lo.jpg', 'hel_lo.png'],
+            'rewitten extension with other variants' => ["{$jpgToPng}_xyz", 'hel_lo.jpg', 'hel_lo.png'],
+        ];
+    }
+
+    /**
+     * @dataProvider provideRewriteExtension
+     */
+    public function testRewriteVariantExtension($variant, $inFilename, $outFilename)
+    {
+        $helper = new HashFileIDHelper();
+        $reflectionMethod = new ReflectionMethod($helper, 'swapExtension');
+        $reflectionMethod->setAccessible(true);
+        $reflectionConst = new ReflectionClassConstant($helper, 'EXTENSION_VARIANT');
+        $actualFilename = $reflectionMethod->invoke($helper, $inFilename, $variant, $reflectionConst->getValue());
+
+        $this->assertEquals($outFilename, $actualFilename);
+    }
+
+    /**
+     * @dataProvider provideRewriteExtension
+     */
+    public function testRestoreOriginalExtension($variant, $outFilename, $inFilename)
+    {
+        $helper = new HashFileIDHelper();
+        $reflectionMethod = new ReflectionMethod($helper, 'swapExtension');
+        $reflectionMethod->setAccessible(true);
+        $reflectionConst = new ReflectionClassConstant($helper, 'EXTENSION_ORIGINAL');
+        $actualFilename = $reflectionMethod->invoke($helper, $inFilename, $variant, $reflectionConst->getValue());
+
+        $this->assertEquals($outFilename, $actualFilename);
     }
 }

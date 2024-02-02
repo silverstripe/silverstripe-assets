@@ -9,7 +9,7 @@ use SilverStripe\Forms\FormScaffolder;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\ManyManyList;
+use SilverStripe\ORM\ManyManyThroughList;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\HTMLValue;
 
@@ -23,7 +23,7 @@ use SilverStripe\View\Parsers\HTMLValue;
  * Note that since both SiteTree and File are versioned, LinkTracking and FileTracking will
  * only be enabled for the Stage record.
  *
- * @method SilverStripe\ORM\ManyManyThroughList<File> FileTracking()
+ * @method ManyManyThroughList<File> FileTracking()
  * @extends DataExtension<DataObject&static>
  */
 class FileLinkTracking extends DataExtension

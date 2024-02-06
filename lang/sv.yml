@@ -7,10 +7,12 @@ sv:
     DmgType: 'Apple skivavbild'
     DocType: Word-dokument
     EDIT_ALL_DESCRIPTION: 'Ändra alla filer'
+    EDIT_ALL_HELP: 'Redigera vilken fil som helst på webbplatsen, även om den är begränsad'
     GifType: 'GIF-bild - bra för diagram'
     GzType: 'GZIP-komprimerad fil'
     HtmlType: HTML-fil
     INVALIDEXTENSION_SHORT: 'Filändelse ej tillåten'
+    INVALIDEXTENSION_SHORT_EXT: 'Tillägget ''{extension}'' är inte tillåtet'
     IcoType: Ikon-bild
     JpgType: 'JPEG-bild - bra för fotografier'
     JsType: Javascript-fil
@@ -20,11 +22,13 @@ sv:
     MpgType: 'MPEG video-fil'
     NOFILESIZE: 'Filstorleken är 0 bytes'
     NOVALIDUPLOAD: 'Filen är inte en giltig uppladdning'
+    PARTIALUPLOAD: 'Filen kunde inte laddas upp, försök igen'
     PATH: Sökväg
     PLURALNAME: Filer
     PLURALS:
       one: 'En fil'
       other: '{count} filer'
+    PREVIEW: Förhandsgranska
     PdfType: 'Adobe Acrobat PDF-fil'
     PngType: 'PNG-bild - bra generellt format'
     SINGULARNAME: Fil
@@ -34,7 +38,16 @@ sv:
     WavType: 'WAV ljud-fil'
     XlsType: Excel-fil
     ZipType: 'ZIP komprimerad-fil'
+    belongs_to_SubmittedFileField: 'Inskickat filfält'
+    db_CanEditType: 'Kan redigera typ'
+    db_CanViewType: 'Kan se typ'
     db_File: Fil
+    db_FileContentCache: Filinnehållscache
+    db_Name: Namn
+    db_ShowInSearch: 'Visa i sök'
+    db_Title: Titel
+    db_Version: Version
+    has_one_Company: Företag
   SilverStripe\Assets\Folder:
     PLURALNAME: Mappar
     PLURALS:
@@ -47,3 +60,7 @@ sv:
       one: 'En bild'
       other: '{count} bilder'
     SINGULARNAME: Bild
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bilden hittades inte'
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bilden hittades inte'

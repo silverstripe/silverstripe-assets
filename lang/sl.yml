@@ -12,6 +12,7 @@ sl:
     GzType: 'Datoteka GZIP'
     HtmlType: 'Datoteka HTML'
     INVALIDEXTENSION_SHORT: 'Nedovoljena pripona'
+    INVALIDEXTENSION_SHORT_EXT: 'Razširitev ''{extension}'' ni dovoljena'
     IcoType: 'Datoteka ICO'
     JpgType: 'Datoteka JPEG'
     JsType: 'Datoteka JavaScript'
@@ -21,6 +22,7 @@ sl:
     MpgType: 'Datoteka MPEG'
     NOFILESIZE: 'Velikost datoteke je nič.'
     NOVALIDUPLOAD: 'Neveljaven tip datoteke'
+    PARTIALUPLOAD: 'Prenos datoteke se ni zaključil. Poskusite znova.'
     PATH: Pot
     PLURALNAME: Datoteke
     PLURALS:
@@ -28,6 +30,7 @@ sl:
       one: Datoteka
       other: '{count} datotek'
       two: '{count} datoteki'
+    PREVIEW: Predogled
     PdfType: 'Datoteka PDF'
     PngType: 'Datoteka PNG'
     SINGULARNAME: Datoteka
@@ -37,7 +40,27 @@ sl:
     WavType: 'Datoteka WAV'
     XlsType: 'Datoteka XLS'
     ZipType: 'Datoteka ZIP'
+    belongs_to_SubmittedFileField: 'Predložena datoteka'
+    db_CanEditType: 'Dovoljeno urejanje'
+    db_CanViewType: 'Dovoljen ogled'
     db_File: Datoteka
+    db_FileContentCache: 'Predpomnenje vsebine datoteke'
+    db_Name: 'Ime datoteke'
+    db_ShowInSearch: 'Izpiši med rezultati iskanja'
+    db_Title: Naslov
+    db_UserFormUpload: 'Nalaganje obrazca'
+    db_Version: Različica
+    has_many_BackLinks: 'Povratne povezave'
+    has_one_BasicFieldsTestPage: 'Stran za preizkus osnovnih polj'
+    has_one_Company: Podjetje
+    has_one_Owner: Lastnik
+    has_one_Parent: Nadrejena
+    has_one_Subsite: Podspletišče
+    has_one_TestPage: 'Preizkusna stran'
+    many_many_EditorGroups: 'Skupine urednikov'
+    many_many_EditorMembers: Uredniki
+    many_many_ViewerGroups: 'Skupine ogledovalcev'
+    many_many_ViewerMembers: Ogledovalci
   SilverStripe\Assets\Folder:
     PLURALNAME: Mape
     PLURALS:
@@ -54,3 +77,19 @@ sl:
       other: '{count} slik'
       two: '{count} sliki'
     SINGULARNAME: Slika
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Slika ne obstaja'
+  SilverStripe\Assets\Shortcodes\FileLink:
+    PLURALNAME: 'Datotečne povezave'
+    PLURALS:
+      few: '{count} datotečnih povezav'
+      one: 'Datotečna povezava'
+      other: '{count} datotečnih povezav'
+      two: '{count} datotečni povezavi'
+    SINGULARNAME: 'Datotečna povezava'
+    has_one_Linked: Povezana
+    has_one_Parent: Nadrejena
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'Spremljanje datotek'
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Datoteka ne obstaja'

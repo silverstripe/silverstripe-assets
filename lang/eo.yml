@@ -56,7 +56,9 @@ eo:
     has_one_Subsite: Subretejo
     has_one_TestPage: 'Testa paĝo'
     many_many_EditorGroups: 'Grupoj de redaktantoj'
+    many_many_EditorMembers: 'Redaktantaj membroj'
     many_many_ViewerGroups: 'Grupoj de vidigantoj'
+    many_many_ViewerMembers: 'Vidantaj membroj'
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:

@@ -34,7 +34,6 @@ sv:
     SINGULARNAME: Fil
     TOOLARGE: 'Filen är för stor.  Tillåten maxstorlek är {size}'
     TiffType: 'Taggat bild-format'
-    URL: URL
     WavType: 'WAV ljud-fil'
     XlsType: Excel-fil
     ZipType: 'ZIP komprimerad-fil'
@@ -46,7 +45,6 @@ sv:
     db_Name: Namn
     db_ShowInSearch: 'Visa i sök'
     db_Title: Titel
-    db_Version: Version
     has_one_Company: Företag
   SilverStripe\Assets\Folder:
     PLURALNAME: Mappar

@@ -36,7 +36,6 @@ sk:
     SINGULARNAME: Súbor
     TOOLARGE: 'Veľkosť súboru je príliš veľká, maximálna povolená veľkosť je {size}'
     TiffType: 'Formát označeného obrázka'
-    URL: URL
     WavType: 'Zvukový súbor WAV'
     XlsType: 'Excelová tabuľka'
     ZipType: 'Komprimovaný súbor ZIP'

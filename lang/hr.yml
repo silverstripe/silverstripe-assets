@@ -27,7 +27,6 @@ hr:
     PngType: 'PNG slika - dobar sveopći format'
     SINGULARNAME: oteka
     TOOLARGE: 'Veličina datoteke je prevelika, maksimalno {size} dozvoljeno'
-    URL: URL
     WavType: 'WAV audio datoteka'
     XlsType: 'Excell tablica'
     ZipType: 'ZIP komprimirana datoteka'

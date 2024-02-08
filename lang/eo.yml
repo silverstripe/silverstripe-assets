@@ -34,7 +34,6 @@ eo:
     SINGULARNAME: Dosiero
     TOOLARGE: 'Dosiero estas tro granda, maksimumo estas {size}'
     TiffType: 'Markita bilda formato'
-    URL: URL
     WavType: WAV-sondosiero
     XlsType: Excel-kalkultabelo
     ZipType: 'kompaktigita ZIP-dosiero'

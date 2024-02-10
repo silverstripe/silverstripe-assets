@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Storage;
 
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\ImageManipulation;
+use SilverStripe\Assets\Services\ReadOnlyCacheService;
 use SilverStripe\Assets\Thumbnail;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
@@ -373,12 +374,22 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
 
     public function exists()
     {
+        $cacheService = ReadOnlyCacheService::singleton();
+        $cacheNameComponents = [__CLASS__, __FUNCTION__];
+        $dbFileComponents = [$this->Filename, $this->Hash, $this->Variant];
+        if ($cacheService->getEnabled() && $cacheService->hasValue($cacheNameComponents, $dbFileComponents)) {
+            return $cacheService->getValue($cacheNameComponents, $dbFileComponents);
+        }
         if (empty($this->Filename)) {
             return false;
         }
-        return $this
+        $exists = $this
             ->getStore()
             ->exists($this->Filename, $this->Hash, $this->Variant);
+        if ($cacheService->getEnabled()) {
+            $cacheService->setValue($cacheNameComponents, $dbFileComponents, $exists);
+        }
+        return $exists;
     }
 
     public function getFilename()

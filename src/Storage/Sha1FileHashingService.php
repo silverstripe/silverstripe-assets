@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Storage;
 use InvalidArgumentException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Util;
+use League\Flysystem\FileNotFoundException;
 use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
@@ -191,10 +192,20 @@ class Sha1FileHashingService implements FileHashingService, Flushable
      */
     private function getTimestamp($fileID, $fs)
     {
+        $timestamp = '';
         $filesystem = $this->getFilesystem($fs);
-        return $filesystem->has($fileID) ?
-            $filesystem->getTimestamp($fileID) :
-            DBDatetime::now()->getTimestamp();
+        // Using a try/catch block instead of Filesystem::has() because that's already
+        // called in Filesystem::assertPresent()
+        try {
+            // Filesystem::getTimestamp($path) will get a timestamp of the physical file
+            // if it fails for whatever reason, then it will either
+            // a) return false, or
+            // b) throw a FileNotFoundException from Filesystem::assertPresent()
+            $timestamp = $filesystem->getTimestamp($fileID);
+        } catch (FileNotFoundException $exception) {
+            // do nothing
+        }
+        return $timestamp ?: DBDatetime::now()->getTimestamp();
     }
 
     public function invalidate($fileID, $fs)

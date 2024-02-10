@@ -32,7 +32,6 @@ fr:
     SINGULARNAME: Fichier
     TOOLARGE: 'Fichier trop volumineux, {size} maximum autorisés'
     TiffType: 'Image TIFF'
-    URL: URL
     WavType: 'Fichier audio WAV'
     XlsType: 'Tableur Excel'
     ZipType: 'Fichier compressé ZIP'
@@ -45,9 +44,7 @@ fr:
       other: '{count} dossiers'
     SINGULARNAME: Dossier
   SilverStripe\Assets\Image:
-    PLURALNAME: Images
     PLURALS:
       many: '{count} images'
       one: '1 image'
       other: '{count} images'
-    SINGULARNAME: Image

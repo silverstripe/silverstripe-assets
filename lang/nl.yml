@@ -4,8 +4,6 @@ nl:
     CREATED: 'Eerste upload'
     CssType: 'CSS bestand'
     DRAFT: Concept
-    DmgType: 'Apple disk image'
-    DocType: 'Word document'
     EDIT_ALL_DESCRIPTION: 'Elk bestand bewerken'
     EDIT_ALL_HELP: 'Elk bestand bewerken, inclusief vertrouwelijke bestanden'
     GifType: 'GIF afbeelding - geschikt voor diagrammen'
@@ -31,9 +29,7 @@ nl:
     SINGULARNAME: Bestand
     TOOLARGE: 'Bestand is te groot, maximaal {size} is toegestaan'
     TiffType: 'TIFF - Tagged image format'
-    URL: URL
     WavType: 'WAV audio bestand'
-    XlsType: 'Excel spreadsheet'
     ZipType: 'ZIP gecomprimeerd bestand'
     db_File: Bestand
   SilverStripe\Assets\Folder:

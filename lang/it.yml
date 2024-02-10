@@ -22,21 +22,17 @@ it:
     NOFILESIZE: 'La dimensione del file è zero byte.'
     NOVALIDUPLOAD: 'Il file non è un upload valido'
     PATH: Percorso
-    PLURALNAME: Files
     PLURALS:
       many: '{count} File'
       one: 'Un File'
       other: '{count} File'
     PdfType: 'File PDF Adobe Acrobat'
     PngType: 'Immagine PNG - adatta per tutti gli usi'
-    SINGULARNAME: File
     TOOLARGE: 'Dimensione file troppo grande, consentiti {size} massimo'
     TiffType: TIFF
-    URL: URL
     WavType: 'File audio WAV'
     XlsType: 'Foglio elettronico Excel'
     ZipType: 'File ZIP compresso'
-    db_File: File
   SilverStripe\Assets\Folder:
     PLURALNAME: Cartelle
     PLURALS:

@@ -1,0 +1,94 @@
+sk:
+  SilverStripe\Assets\File:
+    AviType: 'Video súbor AVI'
+    CREATED: 'Prvýkrát nahrané'
+    CssType: 'CSS súbor'
+    DRAFT: Koncept
+    DmgType: 'Obraz disku Apple'
+    DocType: 'Dokument programu Word'
+    EDIT_ALL_DESCRIPTION: 'Upravte ľubovoľný súbor'
+    EDIT_ALL_HELP: 'Upravte akýkoľvek súbor na stránke, aj keď je s obmedzeným prístupom'
+    GifType: 'Obrázok GIF - vhodný pre diagramy'
+    GzType: 'Komprimovaný súbor GZIP'
+    HtmlType: 'HTML súbor'
+    INVALIDEXTENSION_SHORT: 'Prípona nie je povolená'
+    INVALIDEXTENSION_SHORT_EXT: 'Prípona ''{extension}'' nie je povolená'
+    IcoType: 'Obrázok ikony'
+    JpgType: 'Obrázok JPEG – vhodný pre fotografie'
+    JsType: 'Javascript súbor'
+    LASTEDIT: 'Naposledy zmenené'
+    MODIFIED: Upravené
+    Mp3Type: 'MP3 audio súbor'
+    MpgType: 'Video súbor MPEG'
+    NOFILESIZE: 'Veľkosť súboru je nula bajtov.'
+    NOVALIDUPLOAD: 'Súbor nie je platne nahraný'
+    PARTIALUPLOAD: 'Nahrávanie súboru sa nedokončilo, skúste to prosím znovu'
+    PATH: Cesta
+    PLURALNAME: Súbory
+    PLURALS:
+      few: '{count} súbory'
+      many: '{count} súborov'
+      one: Súbor
+      other: '{count} súborov'
+    PREVIEW: Náhľad
+    PdfType: 'PDF súbor Adobe Acrobat'
+    PngType: 'Obrázok PNG - dobrý formát na všeobecné použitie'
+    SINGULARNAME: Súbor
+    TOOLARGE: 'Veľkosť súboru je príliš veľká, maximálna povolená veľkosť je {size}'
+    TiffType: 'Formát označeného obrázka'
+    WavType: 'Zvukový súbor WAV'
+    XlsType: 'Excelová tabuľka'
+    ZipType: 'Komprimovaný súbor ZIP'
+    belongs_to_SubmittedFileField: 'Pole odoslaného súboru'
+    db_CanEditType: 'Možno upraviť typ'
+    db_CanViewType: 'Možno zobraziť typ'
+    db_File: Súbor
+    db_FileContentCache: 'Vyrovnávacia pamäť obsahu súboru'
+    db_Name: Názov
+    db_ShowInSearch: 'Zobraziť vo vyhľadávaní'
+    db_Title: Titulok
+    db_UserFormUpload: 'Nahranie používateľského formulára'
+    db_Version: Verzia
+    has_many_BackLinks: 'Spätné odkazy'
+    has_one_BasicFieldsTestPage: 'Testovacia stránka základných polí'
+    has_one_Company: Spoločnosť
+    has_one_Owner: Vlastník
+    has_one_Parent: Rodič
+    has_one_Subsite: Podstránka
+    has_one_TestPage: 'Testovacia stránka'
+    many_many_EditorGroups: 'Skupiny upravovateľov'
+    many_many_EditorMembers: 'Členovia upravovateľov'
+    many_many_ViewerGroups: 'Skupiny prezeračov'
+    many_many_ViewerMembers: 'Členovia prezeračov'
+  SilverStripe\Assets\Folder:
+    PLURALNAME: Priečinky
+    PLURALS:
+      few: '{count} priečinky'
+      many: '{count} priečinkov'
+      one: Priečinok
+      other: '{count} priečinkov'
+    SINGULARNAME: Priečinok
+  SilverStripe\Assets\Image:
+    PLURALNAME: Obrázky
+    PLURALS:
+      few: '{count} obrázky'
+      many: '{count} obrázkov'
+      one: Obrázok
+      other: '{count} obrázkov'
+    SINGULARNAME: Obrázok
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Obrázok sa nenašiel'
+  SilverStripe\Assets\Shortcodes\FileLink:
+    PLURALNAME: 'Odkazy na súbory'
+    PLURALS:
+      few: '{count} odkazy na súbory'
+      many: '{count} odkazov na súbory'
+      one: 'Odkaz na súbor'
+      other: '{count} odkazov na súbory'
+    SINGULARNAME: 'Odkaz na súbor'
+    has_one_Linked: Prepojený
+    has_one_Parent: Rodič
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'Sledovanie súborov'
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Obrázok sa nenašiel'

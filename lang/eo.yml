@@ -34,7 +34,6 @@ eo:
     SINGULARNAME: Dosiero
     TOOLARGE: 'Dosiero estas tro granda, maksimumo estas {size}'
     TiffType: 'Markita bilda formato'
-    URL: URL
     WavType: WAV-sondosiero
     XlsType: Excel-kalkultabelo
     ZipType: 'kompaktigita ZIP-dosiero'
@@ -56,7 +55,9 @@ eo:
     has_one_Subsite: Subretejo
     has_one_TestPage: 'Testa paĝo'
     many_many_EditorGroups: 'Grupoj de redaktantoj'
+    many_many_EditorMembers: 'Redaktantaj membroj'
     many_many_ViewerGroups: 'Grupoj de vidigantoj'
+    many_many_ViewerMembers: 'Vidantaj membroj'
   SilverStripe\Assets\Folder:
     PLURALNAME: Dosierujoj
     PLURALS:

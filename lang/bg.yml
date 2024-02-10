@@ -28,7 +28,6 @@ bg:
     SINGULARNAME: Файл
     TOOLARGE: 'Големината на файла е над позволената от {size}'
     TiffType: 'TIF файл'
-    URL: URL
     WavType: 'WAV аудио'
     XlsType: 'Excel таблица'
     ZipType: 'Компресиран файл ZIP'

@@ -4,6 +4,9 @@ namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
 use LogicException;
+use Psr\Log\LoggerInterface;
+use SilverStripe\Assets\Conversion\FileConverterException;
+use SilverStripe\Assets\Conversion\FileConverterManager;
 use SilverStripe\Assets\FilenameParsing\AbstractFileIDHelper;
 use SilverStripe\Assets\Storage\AssetContainer;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -707,6 +710,30 @@ trait ImageManipulation
             return $thumbnail->getURL(false);
         }
         return $this->getIcon();
+    }
+
+    /**
+     * Convert the file to another format if there's a registered converter that can handle it.
+     *
+     * @param string $toExtension The file extension you want to convert to - e.g. "webp".
+     * @throws FileConverterException If the conversion fails and $returnNullOnFailure is false.
+     */
+    public function Convert(string $toExtension): ?AssetContainer
+    {
+        $converter = Injector::inst()->get(FileConverterManager::class);
+        if ($this instanceof File) {
+            $from = $this->File;
+        } elseif ($this instanceof DBFile) {
+            $from = $this;
+        }
+        try {
+            return $converter->convert($from, $toExtension);
+        } catch (FileConverterException $e) {
+            /** @var LoggerInterface $logger */
+            $logger = Injector::inst()->get(LoggerInterface::class . '.errorhandler');
+            $logger->error($e->getMessage());
+            return null;
+        }
     }
 
     /**

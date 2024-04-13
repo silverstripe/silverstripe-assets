@@ -1,0 +1,24 @@
+SilverStripe\Assets\Folder:
+  folder1:
+    Name: folder
+
+SilverStripe\Assets\Image:
+  jpg-image:
+    Title: This is a low quality JPEG
+    FileFilename: folder/test-image.jpg
+    FileHash: 33be1b95cba0358fe54e8b13532162d52f97421c
+    Parent: =>SilverStripe\Assets\Folder.folder1
+    Name: test-image.jpg
+  missing-image:
+    Title: This is a missing image
+    FileFilename: folder/test-missing-image.jpg
+    Parent: =>SilverStripe\Assets\Folder.folder1
+    Name: test-missing-image.jpg
+
+SilverStripe\Assets\File:
+  not-image:
+    Title: This is not an image
+    FileFilename: folder/not-image.txt
+    FileHash: 6ab0df7d967f44e98d4bfa403020c6921a2b46e7
+    Parent: =>SilverStripe\Assets\Folder.folder1
+    Name: not-image.txt

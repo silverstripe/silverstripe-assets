@@ -2,7 +2,11 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Monolog\Logger;
 use Prophecy\Prophecy\ObjectProphecy;
+use Psr\Log\LoggerInterface;
+use SilverStripe\Assets\Conversion\FileConverterException;
+use SilverStripe\Assets\Conversion\FileConverterManager;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\AbstractFileIDHelper;
@@ -12,6 +16,7 @@ use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Assets\Tests\Conversion\FileConverterManagerTest\TestTxtToImageConverter;
 use SilverStripe\Assets\Tests\ImageManipulationTest\LazyLoadAccessorExtension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
@@ -555,5 +560,48 @@ class ImageManipulationTest extends SapphireTest
         $this->assertSame([AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, 'txt', 'csv'], $manipulated->variantParts($manipulated->getVariant()));
         $this->assertTrue($store->exists($manipulated->getFilename(), $manipulated->getHash(), $manipulated->getVariant()));
         $this->assertSame('Any content will do - csv is just a text file afterall', $manipulated->getString());
+    }
+
+    public function provideConvert(): array
+    {
+        return [
+            'supported conversion' => [
+                'originalFileFixtureClass' => File::class,
+                'originalFileFixture' => 'notImage',
+                'toFormat' => 'jpg',
+                'success' => true,
+            ],
+            'unsupported conversion' => [
+                'originalFileFixtureClass' => File::class,
+                'originalFileFixture' => 'notImage',
+                'toFormat' => 'pdf',
+                'success' => false,
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider provideConvert
+     */
+    public function testConvert(string $originalFileFixtureClass, string $originalFileFixture, string $toExtension, bool $success): void
+    {
+        // Make sure we have a known set of converters for testing
+        FileConverterManager::config()->set('converters', [TestTxtToImageConverter::class]);
+        /** @var File $file */
+        $file = $this->objFromFixture($originalFileFixtureClass, $originalFileFixture);
+
+        // Set up mock logger so we can check the exception gets logged
+        $mockLogger = $this->getMockBuilder(Logger::class)->setConstructorArgs(['testLogger'])->getMock();
+        $mockLogger->expects($success ? $this->never() : $this->once())
+            ->method('error');
+        Injector::inst()->registerService($mockLogger, LoggerInterface::class . '.errorhandler');
+
+        $result = $file->Convert($toExtension);
+
+        if ($success) {
+            $this->assertSame('converted.' . $toExtension, $result->Filename);
+        } else {
+            $this->assertNull($result);
+        }
     }
 }

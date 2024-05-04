@@ -136,17 +136,32 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
      */
     protected static function getCachedMarkup($cache, $cacheKey, $arguments): string
     {
+        // Retrieve the cache markup
         $item = $cache->get($cacheKey);
-        $assetStore = Injector::inst()->get(AssetStore::class);
-        if ($item && $item['markup'] && !empty($item['filename'])) {
-            // Initiate a protected asset grant if necessary
-            $allowSessionGrant = static::getGrant(null, $arguments);
-            if ($allowSessionGrant && $assetStore->exists($item['filename'], $item['hash'])) {
-                $assetStore->grant($item['filename'], $item['hash']);
-                return $item['markup'];
-            }
+        if (empty($item)) {
+            // This is a cache miss
+            return '';
         }
-        return '';
+
+        // Destructure our cache entry
+        $markup = $item['markup'] ?? '';
+        $filename = $item['filename'] ?? '';
+        $hash = $item['hash'] ?? '';
+        $assetStore = Injector::inst()->get(AssetStore::class);
+
+        // Validate the cache entry
+        if (empty($markup) || empty($filename) || empty($hash) || !$assetStore->exists($filename, $hash)) {
+            // Cache entry is wrong, delete it
+            $cache->delete($cacheKey);
+            return '';
+        }
+
+        // Shortcode can be configured to allow session grant to files even if the file is protected
+        if (static::getGrant(null, $arguments)) {
+            $assetStore->grant($filename, $hash);
+        }
+
+        return $markup;
     }
 
     /**

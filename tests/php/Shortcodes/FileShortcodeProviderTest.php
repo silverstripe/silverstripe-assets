@@ -44,6 +44,8 @@ class FileShortcodeProviderTest extends SapphireTest
             Config::inst()->set(SiteTree::class, 'create_default_pages', true);
             ErrorPage::singleton()->requireDefaultRecords();
         }
+
+        FileShortcodeProvider::getCache()->clear();
     }
 
     protected function tearDown(): void
@@ -177,6 +179,32 @@ class FileShortcodeProviderTest extends SapphireTest
             '',
             $parser->parse(sprintf('[file_link,id=%d]', $testFileID)),
             'Test that shortcode with invalid file ID is not parsed.'
+        );
+    }
+
+    public function testCacheHit()
+    {
+        $testFile = $this->objFromFixture(File::class, 'asdf');
+        $testFileID = $testFile->ID;
+        $tuple = $testFile->File->getValue();
+
+        // Prewarm cache with nonsense value
+        $markup = '<img src="cacheHit">';
+        $key = FileShortcodeProvider::getCacheKey(['id' => (string)$testFileID], '');
+        FileShortcodeProvider::getCache()->set($key, [
+            'markup' => $markup,
+            'filename' => $tuple['Filename'],
+            'hash' => $tuple['Hash']
+        ]);
+
+        // Try to retrieve short code ... which should hit the cache
+        $parser = new ShortcodeParser();
+        $parser->register('file_link', [FileShortcodeProvider::class, 'handle_shortcode']);
+        $fileShortcode = sprintf('[file_link,id=%d]', $testFileID);
+        $this->assertEquals(
+            $markup,
+            $parser->parse(sprintf('[file_link,id=%d]', $testFileID)),
+            'Value Stored in the FileShortcodeProvider cache is returned by the shortcode.'
         );
     }
 }

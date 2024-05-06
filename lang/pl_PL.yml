@@ -33,6 +33,7 @@ pl_PL:
     SINGULARNAME: Plik
     TOOLARGE: 'Wielkość pliku jest zbyt duża, {size} to maksymalna dozwolona wielkość'
     TiffType: 'Plik .tiff'
+    URL: URL
     WavType: 'Plik audio .WAV'
     XlsType: 'Excel arkusz kalkulacyjny'
     ZipType: 'Skompresowany plik .ZIP'
@@ -44,6 +45,7 @@ pl_PL:
       many: 'Folderów {count}'
       one: Folder
       other: 'Foldery {count}'
+    SINGULARNAME: Folder
   SilverStripe\Assets\Image:
     PLURALNAME: Obrazki
     PLURALS:

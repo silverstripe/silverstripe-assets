@@ -12,7 +12,7 @@ eo:
     GzType: 'kompaktigita GZIP-dosiero'
     HtmlType: HTML-dosiero
     INVALIDEXTENSION_SHORT: 'Sufikso ne permesita'
-    INVALIDEXTENSION_SHORT_EXT: 'Sufikso ''{extension}'' ne estas permesita'
+    INVALIDEXTENSION_SHORT_EXT: "Sufikso '{extension}' ne estas permesita"
     IcoType: 'Bildsimbola dosiero'
     JpgType: 'JPEG-bildo - taŭga por fotoj'
     JsType: 'Ĝavoskripta dosiero'
@@ -34,6 +34,7 @@ eo:
     SINGULARNAME: Dosiero
     TOOLARGE: 'Dosiero estas tro granda, maksimumo estas {size}'
     TiffType: 'Markita bilda formato'
+    URL: URL
     WavType: WAV-sondosiero
     XlsType: Excel-kalkultabelo
     ZipType: 'kompaktigita ZIP-dosiero'

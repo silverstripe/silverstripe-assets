@@ -4,6 +4,7 @@ da:
     CREATED: 'Først uploadet'
     CssType: 'CSS fil'
     DRAFT: Kladde
+    DmgType: 'Apple disk image'
     DocType: 'Word dokument'
     EDIT_ALL_DESCRIPTION: 'Rediger enhver fil'
     EDIT_ALL_HELP: 'Rediger enhver fil på sitet, også beskyttede'
@@ -30,6 +31,7 @@ da:
     SINGULARNAME: Fil
     TOOLARGE: 'Filen er for stor, maksimalt tilladt {size}'
     TiffType: 'Tagged billede format'
+    URL: URL
     WavType: 'WAV lyd fil'
     XlsType: 'Excel regneark'
     ZipType: 'ZIP komprimeret fil'

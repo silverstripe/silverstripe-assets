@@ -24,6 +24,7 @@ id_ID:
     PdfType: 'Berkas Adobe Acrobat PDF'
     SINGULARNAME: Berkas
     TOOLARGE: 'Ukuran berkas terlalu besar, maksimum {size} yang diizinkan'
+    URL: URL
     WavType: 'Berkas suara WAV'
     ZipType: 'Berkas ZIP Terkompresi'
     db_File: Berkas

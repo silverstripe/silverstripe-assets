@@ -11,7 +11,7 @@ nl:
     HtmlType: 'HTML bestand'
     INVALIDEXTENSION_SHORT: 'Extensie niet toegestaan'
     IcoType: 'Icon afbeelding'
-    JpgType: 'JPEG afbeelding - geschikt voor foto''s'
+    JpgType: "JPEG afbeelding - geschikt voor foto's"
     JsType: 'Javascript bestand'
     LASTEDIT: 'Laatst gewijzigd'
     MODIFIED: Gewijzigd

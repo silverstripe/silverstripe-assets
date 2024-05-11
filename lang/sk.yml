@@ -12,7 +12,7 @@ sk:
     GzType: 'Komprimovaný súbor GZIP'
     HtmlType: 'HTML súbor'
     INVALIDEXTENSION_SHORT: 'Prípona nie je povolená'
-    INVALIDEXTENSION_SHORT_EXT: 'Prípona ''{extension}'' nie je povolená'
+    INVALIDEXTENSION_SHORT_EXT: "Prípona '{extension}' nie je povolená"
     IcoType: 'Obrázok ikony'
     JpgType: 'Obrázok JPEG – vhodný pre fotografie'
     JsType: 'Javascript súbor'

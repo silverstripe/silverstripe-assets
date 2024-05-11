@@ -12,7 +12,7 @@ sv:
     GzType: 'GZIP-komprimerad fil'
     HtmlType: HTML-fil
     INVALIDEXTENSION_SHORT: 'Filändelse ej tillåten'
-    INVALIDEXTENSION_SHORT_EXT: 'Tillägget ''{extension}'' är inte tillåtet'
+    INVALIDEXTENSION_SHORT_EXT: "Tillägget '{extension}' är inte tillåtet"
     IcoType: Ikon-bild
     JpgType: 'JPEG-bild - bra för fotografier'
     JsType: Javascript-fil

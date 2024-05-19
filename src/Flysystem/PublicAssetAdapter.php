@@ -53,6 +53,7 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
      */
     public function getPublicUrl($path)
     {
+        $path = Convert::slashes($path, '/');
         return Controller::join_links(Director::baseURL(), $this->parentUrlPrefix, $path);
     }
 

@@ -28,4 +28,32 @@ class PublicAssetAdapterTest extends SapphireTest
             $adapter->getPublicUrl('dir/file.jpg')
         );
     }
+
+    public function provideGetPublicUrl(): array
+    {
+        return [
+            'filename' => [
+                'path' => 'lorem.jpg',
+                'expected' => '/baseurl/assets/lorem.jpg',
+            ],
+            'unixPath' => [
+                'path' => 'path/to/lorem.jpg',
+                'expected' => '/baseurl/assets/path/to/lorem.jpg',
+            ],
+            'windowsPath' => [
+                'path' => 'path\\to\\lorem.jpg',
+                'expected' => '/baseurl/assets/path/to/lorem.jpg',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider provideGetPublicUrl
+     */
+    public function testGetPublicUrl(string $path, string $expected)
+    {
+        $adapter = new PublicAssetAdapter('assets');
+        $actual = $adapter->getPublicUrl($path);
+        $this->assertSame($expected, $actual);
+    }
 }

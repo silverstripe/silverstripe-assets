@@ -84,7 +84,7 @@ class FileLinkTracking extends DataExtension
         return $this;
     }
 
-    public function onBeforeWrite()
+    protected function onBeforeWrite()
     {
         // Trigger link tracking
         // Note: SiteTreeLinkTracking::onBeforeWrite() has a check to
@@ -106,7 +106,7 @@ class FileLinkTracking extends DataExtension
     /**
      * Find HTMLText fields on {@link owner} to scrape for links that need tracking
      */
-    public function augmentSyncLinkTracking()
+    protected function augmentSyncLinkTracking()
     {
         // If owner is versioned, skip tracking on live
         if (class_exists(Versioned::class) &&
@@ -145,7 +145,7 @@ class FileLinkTracking extends DataExtension
         $this->owner->FileTracking()->setByIDList($linkedPages);
     }
 
-    public function onAfterDelete()
+    protected function onAfterDelete()
     {
         // If owner is versioned, skip tracking on live
         if (class_exists(Versioned::class) &&
@@ -223,7 +223,7 @@ class FileLinkTracking extends DataExtension
         }
     }
 
-    public function updateCMSFields(FieldList $fields)
+    protected function updateCMSFields(FieldList $fields)
     {
         if (!$this->owner->config()->get('show_file_link_tracking')) {
             $fields->removeByName('FileTracking');

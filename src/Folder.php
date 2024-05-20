@@ -94,7 +94,7 @@ class Folder extends File
         return $item;
     }
 
-    public function onBeforeDelete()
+    protected function onBeforeDelete()
     {
         foreach ($this->AllChildren() as $child) {
             $child->delete();
@@ -103,7 +103,7 @@ class Folder extends File
         parent::onBeforeDelete();
     }
 
-    public function onBeforeWrite()
+    protected function onBeforeWrite()
     {
         parent::onBeforeWrite();
 
@@ -245,7 +245,7 @@ class Folder extends File
         return null;
     }
 
-    public function onAfterWrite()
+    protected function onAfterWrite()
     {
         parent::onAfterWrite();
 
@@ -258,7 +258,7 @@ class Folder extends File
         $this->updateChildFilesystem();
     }
 
-    public function onAfterDelete()
+    protected function onAfterDelete()
     {
         parent::onAfterDelete();
 
@@ -276,7 +276,7 @@ class Folder extends File
     /**
      * If a write is skipped due to no changes, ensure that nested records still get asked to update
      */
-    public function onAfterSkippedWrite()
+    protected function onAfterSkippedWrite()
     {
         $this->updateChildFilesystem();
     }

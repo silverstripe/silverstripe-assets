@@ -672,7 +672,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     /**
      * Should be called after the file was uploaded
      */
-    public function onAfterUpload()
+    protected function onAfterUpload()
     {
         $this->extend('onAfterUpload');
     }
@@ -750,7 +750,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $this->updateDependantObjects();
     }
 
-    public function onAfterRevertToLive()
+    protected function onAfterRevertToLive()
     {
         // Force query of draft object and update (as source record is bound to live stage)
         if (class_exists(Versioned::class) &&

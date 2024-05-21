@@ -15,7 +15,7 @@ class FlysystemAssetStoreExtension extends Extension
      * @param string $asset
      * @param array $context
      */
-    public function updateResponse($response, $asset, $context)
+    protected function updateResponse($response, $asset, $context)
     {
         self::$lastHookCall = [$response, $asset, $context];
         self::$callCount++;

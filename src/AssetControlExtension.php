@@ -49,7 +49,7 @@ class AssetControlExtension extends DataExtension
      * Ensure that deletes records remove their underlying file assets, without affecting
      * other staged records.
      */
-    public function onAfterDelete()
+    protected function onAfterDelete()
     {
         if (!$this->hasAssets()) {
             return;
@@ -72,7 +72,7 @@ class AssetControlExtension extends DataExtension
      * Ensure that changes to records flush overwritten files, and update the visibility
      * of other assets.
      */
-    public function onBeforeWrite()
+    protected function onBeforeWrite()
     {
         if (!$this->hasAssets()) {
             return;

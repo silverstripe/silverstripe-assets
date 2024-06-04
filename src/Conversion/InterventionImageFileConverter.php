@@ -8,6 +8,7 @@ use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Assets\Storage\DBFile;
+use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Injector\Injector;
 
 /**
@@ -16,6 +17,8 @@ use SilverStripe\Core\Injector\Injector;
  */
 class InterventionImageFileConverter implements FileConverter
 {
+    use Extensible;
+
     public function supportsConversion(string $fromExtension, string $toExtension, array $options = []): bool
     {
         $unsupportedOptions = $this->validateOptions($options);
@@ -90,21 +93,26 @@ class InterventionImageFileConverter implements FileConverter
     private function supportedByIntervention(string $format, InterventionBackend $backend): bool
     {
         $driver = $backend->getImageManager()->config['driver'] ?? null;
-        // If the driver is somehow not GD or Imagick, we have no way to know what it might support
-        if ($driver !== 'gd' && $driver !== 'imagick') {
-            return false;
-        }
 
         // Return early for empty values - we obviously can't support that
         if ($format === '') {
             return false;
         }
 
+        $format = strtolower($format);
+
+        // If the driver is somehow not GD or Imagick, we have no way to know what it might support
+        if ($driver !== 'gd' && $driver !== 'imagick') {
+            $supported = false;
+            $this->extend('updateSupportedByIntervention', $supported, $format, $driver);
+            return $supported;
+        }
+
         // GD and Imagick support different things.
         // This follows the logic in intervention's AbstractEncoder::process() method
         // and the various methods in the Encoder classes for GD and Imagick,
         // excluding checking for strings that were obviously mimetypes
-        switch (strtolower($format)) {
+        switch ($format) {
             case 'gif':
                 // always supported
                 return true;

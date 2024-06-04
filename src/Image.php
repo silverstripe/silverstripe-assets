@@ -2,6 +2,10 @@
 
 namespace SilverStripe\Assets;
 
+use SilverStripe\Forms\FileHandleField;
+use SilverStripe\Forms\FormField;
+use SilverStripe\ORM\DataObject;
+
 /**
  * Represents an Image
  */
@@ -38,6 +42,17 @@ class Image extends File
     {
         parent::__construct($record, $isSingleton, $queryParams);
         $this->File->setAllowedCategories('image/supported');
+    }
+
+    public function scaffoldFormFieldForHasOne(
+        string $fieldName,
+        ?string $fieldTitle,
+        string $relationName,
+        DataObject $ownerRecord
+    ): FormField&FileHandleField {
+        $field = parent::scaffoldFormFieldForHasOne($fieldName, $fieldTitle, $relationName, $ownerRecord);
+        $field->setAllowedFileCategories('image/supported');
+        return $field;
     }
 
     public function getIsImage()

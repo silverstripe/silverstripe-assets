@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Conversion;
 
 use Imagick;
 use Intervention\Image\Exception\ImageException;
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -30,7 +31,7 @@ class InterventionImageFileConverter implements FileConverter
         return $this->supportedByIntervention($fromExtension, $backend) && $this->supportedByIntervention($toExtension, $backend);
     }
 
-    public function convert(DBFile $from, string $toExtension, array $options = []): DBFile
+    public function convert(DBFile|File $from, string $toExtension, array $options = []): DBFile
     {
         // Do some basic validation up front for things we know aren't supported
         $problems = $this->validateOptions($options);

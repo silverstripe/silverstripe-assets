@@ -7,6 +7,7 @@ use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Log\LoggerInterface;
 use SilverStripe\Assets\Conversion\FileConverterException;
 use SilverStripe\Assets\Conversion\FileConverterManager;
+use SilverStripe\Assets\Conversion\InterventionImageFileConverter;
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\FilenameParsing\AbstractFileIDHelper;
@@ -603,5 +604,28 @@ class ImageManipulationTest extends SapphireTest
         } else {
             $this->assertNull($result);
         }
+    }
+
+    public function provideConvertChainWithLazyLoad(): array
+    {
+        return [
+            [true],
+            [false],
+        ];
+    }
+
+    /**
+     * @dataProvider provideConvertChainWithLazyLoad
+     */
+    public function testConvertChainWithLazyLoad(bool $lazyLoad): void
+    {
+        // Make sure we have a known set of converters for testing
+        FileConverterManager::config()->set('converters', [InterventionImageFileConverter::class]);
+        $file = $this->objFromFixture(Image::class, 'imageWithTitle');
+        /** @var DBFile */
+        $result = $file->LazyLoad($lazyLoad)->Convert('webp');
+        $this->assertSame($lazyLoad, $result->IsLazyLoaded());
+        $result = $file->Convert('webp')->LazyLoad($lazyLoad);
+        $this->assertSame($lazyLoad, $result->IsLazyLoaded());
     }
 }

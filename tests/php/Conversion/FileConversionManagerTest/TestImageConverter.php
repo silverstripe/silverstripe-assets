@@ -15,9 +15,9 @@ class TestImageConverter implements FileConverter, TestOnly
         return in_array($fromExtension, $formats) && in_array($toExtension, $formats);
     }
 
-    public function convert(DBFile $from, string $toExtension, array $options = []): DBFile
+    public function convert(DBFile|File $from, string $toExtension, array $options = []): DBFile
     {
-        $result = clone $from;
+        $result = ($from instanceof File) ? clone $from->File : clone $from;
         $result->Filename = 'converted.' . $toExtension;
         return $result;
     }

@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Conversion;
 
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injector;
@@ -27,7 +28,7 @@ class FileConverterManager
      * Note that if a converter supports the conversion generally but doesn't support these options, that converter will not be used.
      * @throws FileConverterException if the conversion failed or there were no converters available.
      */
-    public function convert(DBFile $from, string $toExtension, array $options = []): DBFile
+    public function convert(DBFile|File $from, string $toExtension, array $options = []): DBFile
     {
         $fromExtension = $from->getExtension();
         foreach (static::config()->get('converters') as $converterClass) {

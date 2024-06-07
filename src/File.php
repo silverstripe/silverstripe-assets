@@ -16,6 +16,8 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleLoader;
 use SilverStripe\Core\Resettable;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FileHandleField;
+use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\HTMLReadonlyField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\ArrayList;
@@ -585,6 +587,19 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         );
         $this->extend('updateCMSFields', $fields);
         return $fields;
+    }
+
+    public function scaffoldFormFieldForHasOne(
+        string $fieldName,
+        ?string $fieldTitle,
+        string $relationName,
+        DataObject $ownerRecord
+    ): FormField&FileHandleField {
+        $field = Injector::inst()->create(FileHandleField::class, $relationName, $fieldTitle);
+        if ($field->hasMethod('setAllowedMaxFileNumber')) {
+            $field->setAllowedMaxFileNumber(1);
+        }
+        return $field;
     }
 
     /**

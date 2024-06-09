@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Conversion;
 
+use SilverStripe\Assets\File;
 use SilverStripe\Assets\Storage\DBFile;
 
 /**
@@ -27,5 +28,5 @@ interface FileConverter
      * @param array $options Any options defined for this converter which should apply to the conversion.
      * @throws FileConverterException if invalid options are passed, or the conversion is not supported or fails.
      */
-    public function convert(DBFile $from, string $toExtension, array $options = []): DBFile;
+    public function convert(DBFile|File $from, string $toExtension, array $options = []): DBFile;
 }

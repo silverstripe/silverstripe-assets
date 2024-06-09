@@ -721,13 +721,8 @@ trait ImageManipulation
     public function Convert(string $toExtension): ?AssetContainer
     {
         $converter = Injector::inst()->get(FileConverterManager::class);
-        if ($this instanceof File) {
-            $from = $this->File;
-        } elseif ($this instanceof DBFile) {
-            $from = $this;
-        }
         try {
-            return $converter->convert($from, $toExtension);
+            return $converter->convert($this, $toExtension);
         } catch (FileConverterException $e) {
             /** @var LoggerInterface $logger */
             $logger = Injector::inst()->get(LoggerInterface::class . '.errorhandler');

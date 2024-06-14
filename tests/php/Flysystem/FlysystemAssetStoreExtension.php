@@ -17,9 +17,9 @@ class FlysystemAssetStoreExtension extends Extension
      */
     public function updateResponse($response, $asset, $context)
     {
-        self::$lastHookCall = [$response, $asset, $context];
-        self::$callCount++;
+        FlysystemAssetStoreExtension::$lastHookCall = [$response, $asset, $context];
+        FlysystemAssetStoreExtension::$callCount++;
 
-        $response->addHeader('FlysystemAssetStoreExtensionCallCount', self::$callCount);
+        $response->addHeader('FlysystemAssetStoreExtensionCallCount', FlysystemAssetStoreExtension::$callCount);
     }
 }

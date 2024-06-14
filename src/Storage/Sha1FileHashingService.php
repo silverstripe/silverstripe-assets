@@ -136,7 +136,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
     public function isCached()
     {
         if ($this->cachable === null) {
-            $this->cachable = self::config()->get('default_cachable');
+            $this->cachable = static::config()->get('default_cachable');
         }
 
         return $this->cachable;
@@ -205,7 +205,7 @@ class Sha1FileHashingService implements FileHashingService, Flushable
 
     public static function flush()
     {
-        /** @var self $self */
+        /** @var Sha1FileHashingService $self */
         $self = Injector::inst()->get(FileHashingService::class);
         $self->getCache()->clear();
     }

@@ -86,37 +86,37 @@ class ParsedFileID
 
     /**
      * @param string $fileID
-     * @return self
+     * @return ParsedFileID
      */
     public function setFileID($fileID)
     {
-        return new self($this->filename, $this->hash, $this->variant, $fileID);
+        return new ParsedFileID($this->filename, $this->hash, $this->variant, $fileID);
     }
 
     /**
      * @param string $filename
-     * @return self
+     * @return ParsedFileID
      */
     public function setFilename($filename)
     {
-        return new self($filename, $this->hash, $this->variant, $this->fileID);
+        return new ParsedFileID($filename, $this->hash, $this->variant, $this->fileID);
     }
 
     /**
      * @param string $variant
-     * @return self
+     * @return ParsedFileID
      */
     public function setVariant($variant)
     {
-        return new self($this->filename, $this->hash, $variant, $this->fileID);
+        return new ParsedFileID($this->filename, $this->hash, $variant, $this->fileID);
     }
 
     /**
      * @param string $hash
-     * @return self
+     * @return ParsedFileID
      */
     public function setHash($hash)
     {
-        return new self($this->filename, $hash, $this->variant, $this->fileID);
+        return new ParsedFileID($this->filename, $hash, $this->variant, $this->fileID);
     }
 }

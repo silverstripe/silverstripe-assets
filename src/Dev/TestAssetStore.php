@@ -97,11 +97,11 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
         Director::config()->set('alternate_base_url', '/');
         DBFile::config()->set('force_resample', false);
         File::config()->set('force_resample', false);
-        self::reset();
-        self::$basedir = $basedir;
+        TestAssetStore::reset();
+        TestAssetStore::$basedir = $basedir;
 
         // Ensure basedir exists
-        SSFilesystem::makeFolder(self::base_path());
+        SSFilesystem::makeFolder(TestAssetStore::base_path());
     }
 
     /**
@@ -111,10 +111,10 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
      */
     public static function base_path()
     {
-        if (!self::$basedir) {
+        if (!TestAssetStore::$basedir) {
             return null;
         }
-        return ASSETS_PATH . '/' . self::$basedir;
+        return ASSETS_PATH . '/' . TestAssetStore::$basedir;
     }
 
     /**
@@ -123,14 +123,14 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     public static function reset()
     {
         // Remove all files in this store
-        if (self::$basedir) {
-            $path = self::base_path();
+        if (TestAssetStore::$basedir) {
+            $path = TestAssetStore::base_path();
             if (file_exists($path ?? '')) {
                 SSFilesystem::removeFolder($path);
             }
         }
-        self::$seekable_override = null;
-        self::$basedir = null;
+        TestAssetStore::$seekable_override = null;
+        TestAssetStore::$basedir = null;
     }
 
     /**
@@ -144,7 +144,7 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
     public static function getLocalPath(AssetContainer $asset, $forceProtected = false, $relative = false)
     {
         if ($asset instanceof Folder) {
-            return self::base_path() . '/' . $asset->getFilename();
+            return TestAssetStore::base_path() . '/' . $asset->getFilename();
         }
         if ($asset instanceof File) {
             $asset = $asset->File;
@@ -223,10 +223,10 @@ class TestAssetStore extends FlysystemAssetStore implements TestOnly
 
     protected function isSeekableStream($stream)
     {
-        if (isset(self::$seekable_override)) {
+        if (isset(TestAssetStore::$seekable_override)) {
             // Unset the override so we don't get stuck in an infinite loop
-            self::$seekable_override = null;
-            return self::$seekable_override;
+            TestAssetStore::$seekable_override = null;
+            return TestAssetStore::$seekable_override;
         }
         return parent::isSeekableStream($stream);
     }

@@ -41,7 +41,7 @@ abstract class AbstractFileIDHelper implements FileIDHelper
         }
 
         if ($variant) {
-            $filename = $this->swapExtension($filename, $variant, self::EXTENSION_VARIANT);
+            $filename = $this->swapExtension($filename, $variant, AbstractFileIDHelper::EXTENSION_VARIANT);
         }
 
         $name = basename($filename ?? '');
@@ -79,7 +79,7 @@ abstract class AbstractFileIDHelper implements FileIDHelper
      * or the variant extension.
      *
      * @param string $filename Original filename without variant
-     * @param int $extIndex One of self::EXTENSION_ORIGINAL or self::EXTENSION_VARIANT
+     * @param int $extIndex One of AbstractFileIDHelper::EXTENSION_ORIGINAL or AbstractFileIDHelper::EXTENSION_VARIANT
      */
     protected function swapExtension(string $filename, string $variant, int $extIndex): string
     {
@@ -102,7 +102,7 @@ abstract class AbstractFileIDHelper implements FileIDHelper
 
         // Loop our variant list until we find our special file extension swap variant
         // Reverse the list first so the variant extension we find is the last extension rewrite variant in a chain
-        $extSwapVariant = preg_quote(self::EXTENSION_REWRITE_VARIANT, '/');
+        $extSwapVariant = preg_quote(AbstractFileIDHelper::EXTENSION_REWRITE_VARIANT, '/');
         foreach (array_reverse($subVariants) as $subVariant) {
             if (preg_match("/^$extSwapVariant(?<base64>.+)$/", $subVariant, $matches)) {
                 // This array always contain 2 values: The original extension at index 0 and the variant extension at index 1

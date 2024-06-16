@@ -541,7 +541,7 @@ trait ImageManipulation
      * then scale down the image to those dimensions if it exceeds them.
      * Similar to Fill but without up-sampling. Use in templates with $FillMax.
      *
-     * @uses ImageManipulation::Fill()
+     * @uses self::Fill()
      * @param int $width The relative (used to determine aspect ratio) and maximum width of the output image
      * @param int $height The relative (used to determine aspect ratio) and maximum height of the output image
      * @return AssetContainer

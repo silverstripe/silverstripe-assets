@@ -57,7 +57,7 @@ class AssetAdapter extends LocalFilesystemAdapter
         ]
     ];
 
-    public function __construct($root = null, $writeFlags = LOCK_EX, $linkHandling = self::DISALLOW_LINKS)
+    public function __construct($root = null, $writeFlags = LOCK_EX, $linkHandling = AssetAdapter::DISALLOW_LINKS)
     {
         // Get root path, and ensure that this exists and is safe
         $root = $this->findRoot($root);

@@ -33,7 +33,7 @@ class HashFileIDHelper extends AbstractFileIDHelper
         $variant = $matches['variant'] ?: '';
 
         if ($variant) {
-            $filename = $this->swapExtension($filename, $variant, self::EXTENSION_ORIGINAL);
+            $filename = $this->swapExtension($filename, $variant, HashFileIDHelper::EXTENSION_ORIGINAL);
         }
 
         return new ParsedFileID(
@@ -82,6 +82,6 @@ class HashFileIDHelper extends AbstractFileIDHelper
      */
     private function truncate($hash)
     {
-        return substr($hash ?? '', 0, self::HASH_TRUNCATE_LENGTH);
+        return substr($hash ?? '', 0, HashFileIDHelper::HASH_TRUNCATE_LENGTH);
     }
 }

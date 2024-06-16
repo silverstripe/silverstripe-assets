@@ -66,11 +66,11 @@ class AssetManipulationList
     public function addAsset($asset, $state)
     {
         switch ($state) {
-            case self::STATE_PUBLIC:
+            case AssetManipulationList::STATE_PUBLIC:
                 return $this->addPublicAsset($asset);
-            case self::STATE_PROTECTED:
+            case AssetManipulationList::STATE_PROTECTED:
                 return $this->addProtectedAsset($asset);
-            case self::STATE_DELETED:
+            case AssetManipulationList::STATE_DELETED:
                 return $this->addDeletedAsset($asset);
             default:
                 throw new \InvalidArgumentException("Invalid state {$state}");

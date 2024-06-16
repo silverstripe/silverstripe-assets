@@ -22,10 +22,10 @@ class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
 
     private static $server_configuration = [
         'apache' => [
-            '.htaccess' => self::class . '_HTAccess'
+            '.htaccess' => ProtectedAssetAdapter::class . '_HTAccess'
         ],
         'microsoft-iis' => [
-            'web.config' => self::class . '_WebConfig'
+            'web.config' => ProtectedAssetAdapter::class . '_WebConfig'
         ]
     ];
 

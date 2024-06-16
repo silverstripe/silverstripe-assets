@@ -208,7 +208,7 @@ class FileFinder
             }
         }
 
-        if ($this->getOption('ignore_vcs') && in_array($basename, self::$vcs_dirs)) {
+        if ($this->getOption('ignore_vcs') && in_array($basename, FileFinder::$vcs_dirs)) {
             return false;
         }
 

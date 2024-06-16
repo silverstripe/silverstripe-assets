@@ -104,7 +104,7 @@ class Upload extends Controller
     {
         parent::__construct();
         $this->validator = Upload_Validator::create();
-        $this->replaceFile = self::config()->replaceFile;
+        $this->replaceFile = static::config()->replaceFile;
     }
 
     public function index()

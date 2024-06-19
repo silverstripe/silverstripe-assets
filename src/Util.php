@@ -6,7 +6,7 @@ class Util
 {
     public static function rewindStream($resource): void
     {
-        self::checkIsResource($resource);
+        Util::checkIsResource($resource);
         if (ftell($resource) !== 0 && static::isSeekableStream($resource)) {
             rewind($resource);
         }
@@ -14,7 +14,7 @@ class Util
 
     public static function isSeekableStream($resource): bool
     {
-        self::checkIsResource($resource);
+        Util::checkIsResource($resource);
 
         return stream_get_meta_data($resource)['seekable'];
     }

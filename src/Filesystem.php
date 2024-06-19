@@ -42,7 +42,7 @@ class Filesystem
     public static function makeFolder($folder)
     {
         if (!file_exists($base = dirname($folder ?? ''))) {
-            self::makeFolder($base);
+            Filesystem::makeFolder($base);
         }
         if (!file_exists($folder ?? '')) {
             mkdir($folder ?? '', static::config()->folder_create_mask ?? 0);
@@ -93,7 +93,7 @@ class Filesystem
         while (false !== ($entry = readdir($handle))) {
             if ($entry != "." && $entry != "..") {
                 // if an empty folder is detected, remove that one first and move on
-                if ($recursive && is_dir($entry ?? '') && self::remove_folder_if_empty($entry)) {
+                if ($recursive && is_dir($entry ?? '') && Filesystem::remove_folder_if_empty($entry)) {
                     continue;
                 }
                 // if a file was encountered, or a subdirectory was not empty, return false.
@@ -124,7 +124,7 @@ class Filesystem
             if ($item[0] != '.') {
                 // Recurse into folders
                 if (is_dir("$folder/$item")) {
-                    $modTime = max($modTime, self::folderModTime("$folder/$item", $extensionList));
+                    $modTime = max($modTime, Filesystem::folderModTime("$folder/$item", $extensionList));
 
                 // Check files
                 } else {
@@ -139,7 +139,7 @@ class Filesystem
             }
         }
 
-        //if(!$recursiveCall) self::$cache_folderModTime[$cacheID] = $modTime;
+        //if(!$recursiveCall) Filesystem::$cache_folderModTime[$cacheID] = $modTime;
         return $modTime;
     }
 

@@ -426,7 +426,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return $result;
         }
 
-        if (Permission::checkMember($member, self::EDIT_ALL)) {
+        if (Permission::checkMember($member, File::EDIT_ALL)) {
             return true;
         }
 
@@ -457,7 +457,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
             return $result;
         }
 
-        if (Permission::checkMember($member, self::EDIT_ALL)) {
+        if (Permission::checkMember($member, File::EDIT_ALL)) {
             return true;
         }
 
@@ -493,7 +493,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }
 
         // Default permission check
-        if (Permission::checkMember($member, self::EDIT_ALL)) {
+        if (Permission::checkMember($member, File::EDIT_ALL)) {
             return true;
         }
 
@@ -531,21 +531,21 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 InheritedPermissions::ONLY_THESE_USERS,
                 InheritedPermissions::ONLY_THESE_MEMBERS,
             ])) {
-            self::$has_restricted_permissions_cache[$id] = true;
+            File::$has_restricted_permissions_cache[$id] = true;
             return true;
         }
         if ($canViewType == InheritedPermissions::INHERIT && $parentID != 0) {
-            if (isset(self::$has_restricted_permissions_cache[$parentID])) {
-                return self::$has_restricted_permissions_cache[$parentID];
+            if (isset(File::$has_restricted_permissions_cache[$parentID])) {
+                return File::$has_restricted_permissions_cache[$parentID];
             }
             $parent = $file->Parent();
             if ($parent->exists()) {
                 $value = $this->hasRestrictedPermissions($parent);
-                self::$has_restricted_permissions_cache[$parentID] = $value;
+                File::$has_restricted_permissions_cache[$parentID] = $value;
                 return $value;
             }
         }
-        self::$has_restricted_permissions_cache[$id] = false;
+        File::$has_restricted_permissions_cache[$id] = false;
         return false;
     }
 
@@ -681,7 +681,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function appCategory()
     {
-        return self::get_app_category($this->getExtension());
+        return File::get_app_category($this->getExtension());
     }
 
     /**
@@ -769,7 +769,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         // Force query of draft object and update (as source record is bound to live stage)
         if (class_exists(Versioned::class) &&
-            $draftRecord = Versioned::get_by_stage(self::class, Versioned::DRAFT)->byID($this->ID)
+            $draftRecord = Versioned::get_by_stage(File::class, Versioned::DRAFT)->byID($this->ID)
         ) {
             $draftRecord->updateDependantObjects();
         }
@@ -1013,7 +1013,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function getExtension()
     {
-        return self::get_file_extension($this->Name);
+        return File::get_file_extension($this->Name);
     }
 
     /**
@@ -1068,7 +1068,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public function getFileType()
     {
-        return self::get_file_type($this->getFilename());
+        return File::get_file_type($this->getFilename());
     }
 
     /**
@@ -1079,10 +1079,10 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_file_type($filename)
     {
-        $file_types = self::config()->get('file_types');
+        $file_types = static::config()->get('file_types');
 
         // Get extension
-        $extension = strtolower(self::get_file_extension($filename) ?? '');
+        $extension = strtolower(File::get_file_extension($filename) ?? '');
 
         if (isset($file_types[$extension])) {
             return _t(
@@ -1169,7 +1169,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      */
     public static function get_class_for_file_extension($ext)
     {
-        $map = array_change_key_case(self::config()->get('class_for_file_extension') ?? [], CASE_LOWER);
+        $map = array_change_key_case(static::config()->get('class_for_file_extension') ?? [], CASE_LOWER);
         return (array_key_exists(strtolower($ext ?? ''), $map ?? [])) ? $map[strtolower($ext)] : $map['*'];
     }
 
@@ -1190,7 +1190,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                     sprintf('Class "%s" (for extension "%s") is not a valid subclass of File', $class, $ext)
                 );
             }
-            self::config()->merge('class_for_file_extension', [$ext => $class]);
+            static::config()->merge('class_for_file_extension', [$ext => $class]);
         }
     }
 
@@ -1430,7 +1430,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function providePermissions()
     {
         return [
-            self::EDIT_ALL => [
+            File::EDIT_ALL => [
                 'name' => _t(__CLASS__.'.EDIT_ALL_DESCRIPTION', 'Edit any file'),
                 'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
                 'sort' => -100,

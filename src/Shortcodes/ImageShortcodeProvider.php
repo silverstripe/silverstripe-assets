@@ -92,7 +92,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // Determine whether loading="lazy" is set
-        $args = self::updateLoadingValue($args, $width, $height);
+        $args = ImageShortcodeProvider::updateLoadingValue($args, $width, $height);
 
         // Build the HTML tag
         $attrs = array_merge(
@@ -115,7 +115,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return in_array($k, $whitelist) && (strlen(trim($v ?? '')) || $k === 'alt');
         }, ARRAY_FILTER_USE_BOTH);
 
-        $markup = self::createImageTag($attrs);
+        $markup = ImageShortcodeProvider::createImageTag($attrs);
 
         // cache it for future reference
         if ($fileFound) {

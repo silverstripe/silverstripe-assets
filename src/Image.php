@@ -90,6 +90,6 @@ class Image extends File
      */
     public static function getLazyLoadingEnabled(): bool
     {
-        return self::config()->get('lazy_loading_enabled');
+        return static::config()->get('lazy_loading_enabled');
     }
 }

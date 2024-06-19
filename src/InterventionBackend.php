@@ -52,9 +52,9 @@ class InterventionBackend implements Image_Backend, Flushable
      * or list of integers (increasing scale)
      */
     private static $error_cache_ttl = [
-        self::FAILED_INVALID => 0, // Invalid file type should probably never be retried
-        self::FAILED_MISSING => '5,10,20,40,80', // Missing files may be eventually available
-        self::FAILED_UNKNOWN => 300, // Unknown (edge case). Maybe system error? Needs a flush?
+        InterventionBackend::FAILED_INVALID => 0, // Invalid file type should probably never be retried
+        InterventionBackend::FAILED_MISSING => '5,10,20,40,80', // Missing files may be eventually available
+        InterventionBackend::FAILED_UNKNOWN => 300, // Unknown (edge case). Maybe system error? Needs a flush?
     ];
 
     /**
@@ -238,7 +238,7 @@ class InterventionBackend implements Image_Backend, Flushable
 
         // Validate stream is readable
         // Note: Mark failed regardless of whether a failed stream is exceptional or not
-        $error = self::FAILED_MISSING;
+        $error = InterventionBackend::FAILED_MISSING;
         try {
             $stream = $assetContainer->getStream();
             if ($this->isStreamReadable($stream)) {
@@ -253,7 +253,7 @@ class InterventionBackend implements Image_Backend, Flushable
         }
 
         // Handle resource
-        $error = self::FAILED_UNKNOWN;
+        $error = InterventionBackend::FAILED_UNKNOWN;
         try {
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
@@ -288,7 +288,7 @@ class InterventionBackend implements Image_Backend, Flushable
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
-            $error = self::FAILED_INVALID;
+            $error = InterventionBackend::FAILED_INVALID;
         } finally {
             if ($error) {
                 $this->markFailed($hash, $variant, $error);
@@ -312,7 +312,7 @@ class InterventionBackend implements Image_Backend, Flushable
         }
 
         // Handle resource
-        $error = self::FAILED_UNKNOWN;
+        $error = InterventionBackend::FAILED_UNKNOWN;
         try {
             $this->setImageResource($this->getImageManager()->make($path));
             $this->markSuccess($hash, null);
@@ -320,7 +320,7 @@ class InterventionBackend implements Image_Backend, Flushable
         } catch (NotReadableException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
-            $error = self::FAILED_INVALID;
+            $error = InterventionBackend::FAILED_INVALID;
         } finally {
             if ($error) {
                 $this->markFailed($hash, null, $error);
@@ -488,7 +488,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     protected function getErrorCacheKey($hash, $variant = null)
     {
-        return self::CACHE_MARK . sha1($hash . '-' . $variant);
+        return InterventionBackend::CACHE_MARK . sha1($hash . '-' . $variant);
     }
 
     /**
@@ -500,7 +500,7 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     protected function getDimensionCacheKey($hash, $variant = null)
     {
-        return self::CACHE_DIMENSIONS . sha1($hash . '-' . $variant);
+        return InterventionBackend::CACHE_DIMENSIONS . sha1($hash . '-' . $variant);
     }
 
     /**
@@ -763,13 +763,13 @@ class InterventionBackend implements Image_Backend, Flushable
      * @param string|null $variant Variant being loaded
      * @param string $reason Reason this file is failed
      */
-    protected function markFailed($hash, $variant = null, $reason = self::FAILED_UNKNOWN)
+    protected function markFailed($hash, $variant = null, $reason = InterventionBackend::FAILED_UNKNOWN)
     {
         $key = $this->getErrorCacheKey($hash, $variant);
 
         // Get TTL for error
         $errorTTLs = $this->config()->get('error_cache_ttl');
-        $ttl = isset($errorTTLs[$reason]) ? $errorTTLs[$reason] : $errorTTLs[self::FAILED_UNKNOWN];
+        $ttl = isset($errorTTLs[$reason]) ? $errorTTLs[$reason] : $errorTTLs[InterventionBackend::FAILED_UNKNOWN];
 
         // Detect increasing waits
         if (is_string($ttl) && strstr($ttl ?? '', ',')) {

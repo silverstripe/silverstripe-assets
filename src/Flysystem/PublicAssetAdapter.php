@@ -24,10 +24,10 @@ class PublicAssetAdapter extends AssetAdapter implements PublicAdapter
      */
     private static $server_configuration = [
         'apache' => [
-            '.htaccess' => self::class . '_HTAccess'
+            '.htaccess' => PublicAssetAdapter::class . '_HTAccess'
         ],
         'microsoft-iis' => [
-            'web.config' => self::class . '_WebConfig'
+            'web.config' => PublicAssetAdapter::class . '_WebConfig'
         ]
     ];
 

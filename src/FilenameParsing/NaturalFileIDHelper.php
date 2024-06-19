@@ -24,7 +24,7 @@ class NaturalFileIDHelper extends AbstractFileIDHelper
         $variant = $matches['variant'] ?: '';
 
         if ($variant) {
-            $filename = $this->swapExtension($filename, $variant, self::EXTENSION_ORIGINAL);
+            $filename = $this->swapExtension($filename, $variant, NaturalFileIDHelper::EXTENSION_ORIGINAL);
         }
 
         return new ParsedFileID(

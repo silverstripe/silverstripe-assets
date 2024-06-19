@@ -252,13 +252,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $publicSet = [
             $this->getPublicFilesystem(),
             $this->getPublicResolutionStrategy(),
-            self::VISIBILITY_PUBLIC
+            FlysystemAssetStore::VISIBILITY_PUBLIC
         ];
 
         $protectedSet = [
             $this->getProtectedFilesystem(),
             $this->getProtectedResolutionStrategy(),
-            self::VISIBILITY_PROTECTED
+            FlysystemAssetStore::VISIBILITY_PROTECTED
         ];
 
         $hasher = Injector::inst()->get(FileHashingService::class);
@@ -335,13 +335,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $publicSet = [
             $this->getPublicFilesystem(),
             $this->getPublicResolutionStrategy(),
-            self::VISIBILITY_PUBLIC
+            FlysystemAssetStore::VISIBILITY_PUBLIC
         ];
 
         $protectedSet = [
             $this->getProtectedFilesystem(),
             $this->getProtectedResolutionStrategy(),
-            self::VISIBILITY_PROTECTED
+            FlysystemAssetStore::VISIBILITY_PROTECTED
         ];
 
         /** @var Filesystem $fs */
@@ -389,14 +389,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     {
         return [
             'visibility' => [
-                self::VISIBILITY_PUBLIC,
-                self::VISIBILITY_PROTECTED
+                FlysystemAssetStore::VISIBILITY_PUBLIC,
+                FlysystemAssetStore::VISIBILITY_PROTECTED
             ],
             'conflict' => [
-                self::CONFLICT_EXCEPTION,
-                self::CONFLICT_OVERWRITE,
-                self::CONFLICT_RENAME,
-                self::CONFLICT_USE_EXISTING
+                FlysystemAssetStore::CONFLICT_EXCEPTION,
+                FlysystemAssetStore::CONFLICT_OVERWRITE,
+                FlysystemAssetStore::CONFLICT_RENAME,
+                FlysystemAssetStore::CONFLICT_USE_EXISTING
             ]
         ];
     }
@@ -853,9 +853,9 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $fileID = $this->getFileID($filename, $hash);
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: [];
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
         $granted[$fileID] = true;
-        $session->set(self::GRANTS_SESSION, $granted);
+        $session->set(FlysystemAssetStore::GRANTS_SESSION, $granted);
     }
 
     public function revoke($filename, $hash)
@@ -866,12 +866,12 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         $session = Controller::curr()->getRequest()->getSession();
-        $granted = $session->get(self::GRANTS_SESSION) ?: [];
+        $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
         unset($granted[$fileID]);
         if ($granted) {
-            $session->set(self::GRANTS_SESSION, $granted);
+            $session->set(FlysystemAssetStore::GRANTS_SESSION, $granted);
         } else {
-            $session->clear(self::GRANTS_SESSION);
+            $session->clear(FlysystemAssetStore::GRANTS_SESSION);
         }
     }
 
@@ -905,7 +905,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         // Make sure our File ID got understood
         if ($parsedFileID && $originalID = $parsedFileID->getFileID()) {
             $session = Controller::curr()->getRequest()->getSession();
-            $granted = $session->get(self::GRANTS_SESSION) ?: [];
+            $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
             if (!empty($granted[$originalID])) {
                 return true;
             }
@@ -1024,14 +1024,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             list($parsedFileID, $fs, $strategy, $visibility) = $fsObjs;
             $targetFileID = $parsedFileID->getFileID();
         } else {
-            if (isset($config['visibility']) && $config['visibility'] === self::VISIBILITY_PUBLIC) {
+            if (isset($config['visibility']) && $config['visibility'] === FlysystemAssetStore::VISIBILITY_PUBLIC) {
                 $fs = $this->getPublicFilesystem();
                 $strategy = $this->getPublicResolutionStrategy();
-                $visibility = self::VISIBILITY_PUBLIC;
+                $visibility = FlysystemAssetStore::VISIBILITY_PUBLIC;
             } else {
                 $fs = $this->getProtectedFilesystem();
                 $strategy = $this->getProtectedResolutionStrategy();
-                $visibility = self::VISIBILITY_PROTECTED;
+                $visibility = FlysystemAssetStore::VISIBILITY_PROTECTED;
             }
             $targetFileID = $strategy->buildFileID($parsedFileID);
         }
@@ -1280,7 +1280,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($public->has($asset)) {
             return [
                 $this->createResponseFor($public, $asset),
-                ['visibility' => self::VISIBILITY_PUBLIC]
+                ['visibility' => FlysystemAssetStore::VISIBILITY_PUBLIC]
             ];
         }
 
@@ -1290,7 +1290,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             if ($this->canView($parsedFileID->getFilename(), $parsedFileID->getHash())) {
                 return [
                     $this->createResponseFor($protected, $asset),
-                    ['visibility' => self::VISIBILITY_PROTECTED, 'parsedFileID' => $parsedFileID]
+                    ['visibility' => FlysystemAssetStore::VISIBILITY_PROTECTED, 'parsedFileID' => $parsedFileID]
                 ];
             }
             // Let's not deny if the file is in the protected store, but is not granted.
@@ -1308,7 +1308,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
             return [
                 $this->createRedirectResponse($redirectFileID, $code),
-                ['visibility' => self::VISIBILITY_PUBLIC, 'parsedFileID' => $parsedFileID]
+                ['visibility' => FlysystemAssetStore::VISIBILITY_PUBLIC, 'parsedFileID' => $parsedFileID]
             ];
         }
 
@@ -1316,7 +1316,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($protected->has($asset)) {
             return [
                 $this->createDeniedResponse(),
-                ['visibility' => self::VISIBILITY_PROTECTED]
+                ['visibility' => FlysystemAssetStore::VISIBILITY_PROTECTED]
             ];
         }
 

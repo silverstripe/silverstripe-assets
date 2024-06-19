@@ -15,7 +15,7 @@ class LocalFilesystemAdapter extends LeagueLocalFilesystemAdapter
         string $location,
         VisibilityConverter $visibility = null,
         int $writeFlags = LOCK_EX,
-        int $linkHandling = self::DISALLOW_LINKS,
+        int $linkHandling = LocalFilesystemAdapter::DISALLOW_LINKS,
         MimeTypeDetector $mimeTypeDetector = null
     ) {
         $this->pathPrefixer = new PathPrefixer($location);

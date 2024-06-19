@@ -5,7 +5,11 @@ namespace SilverStripe\Assets;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Manifest\ModuleResourceLoader;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\TreeDropdownField;
+use SilverStripe\Forms\TreeMultiselectField;
 use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Versioned\Versioned;
 
@@ -92,6 +96,35 @@ class Folder extends File
         }
 
         return $item;
+    }
+
+    public function scaffoldFormFieldForHasOne(
+        string $fieldName,
+        ?string $fieldTitle,
+        string $relationName,
+        DataObject $ownerRecord
+    ): FormField {
+        return TreeDropdownField::create($fieldName, $fieldTitle, static::class);
+    }
+
+    public function scaffoldFormFieldForHasMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $includeInOwnTab = false;
+        return TreeMultiselectField::create($relationName, $fieldTitle, static::class);
+    }
+
+    public function scaffoldFormFieldForManyMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $includeInOwnTab = false;
+        return TreeMultiselectField::create($relationName, $fieldTitle, static::class);
     }
 
     protected function onBeforeDelete()

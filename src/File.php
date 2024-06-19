@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets;
 
 use InvalidArgumentException;
+use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Shortcodes\FileLink;
 use SilverStripe\Assets\Shortcodes\FileLinkTracking;
 use SilverStripe\Assets\Shortcodes\FileShortcodeProvider;
@@ -594,12 +595,42 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         ?string $fieldTitle,
         string $relationName,
         DataObject $ownerRecord
-    ): FormField&FileHandleField {
+    ): FormField {
         $field = Injector::inst()->create(FileHandleField::class, $relationName, $fieldTitle);
         if ($field->hasMethod('setAllowedMaxFileNumber')) {
             $field->setAllowedMaxFileNumber(1);
         }
         return $field;
+    }
+
+    public function scaffoldFormFieldForHasMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $field = Injector::inst()->create(FileHandleField::class, $relationName, $fieldTitle);
+        if ($field instanceof UploadField) {
+            $includeInOwnTab = false;
+            $field->setIsMultiUpload(true);
+            return $field;
+        }
+        return parent::scaffoldFormFieldForHasMany($relationName, $fieldTitle, $ownerRecord, $includeInOwnTab);
+    }
+
+    public function scaffoldFormFieldForManyMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $field = Injector::inst()->create(FileHandleField::class, $relationName, $fieldTitle);
+        if ($field instanceof UploadField) {
+            $includeInOwnTab = false;
+            $field->setIsMultiUpload(true);
+            return $field;
+        }
+        return parent::scaffoldFormFieldForManyMany($relationName, $fieldTitle, $ownerRecord, $includeInOwnTab);
     }
 
     /**

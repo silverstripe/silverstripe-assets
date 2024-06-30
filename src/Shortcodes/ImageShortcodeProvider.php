@@ -7,6 +7,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
@@ -73,26 +74,43 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             return null; // There were no suitable matches at all.
         }
 
+        // Grant access to file if necessary
+        if (static::getGrant($record)) {
+            $record->grantFile();
+        }
+
         // Check if a resize is required
+        $manipulatedRecord = $record;
         $width = null;
         $height = null;
-        $grant = static::getGrant($record);
-        $src = $record->getURL($grant);
         if ($record instanceof Image) {
             $width = isset($args['width']) ? (int) $args['width'] : null;
             $height = isset($args['height']) ? (int) $args['height'] : null;
+
+            // Resize the image if custom dimensions are provided
             $hasCustomDimensions = ($width && $height);
             if ($hasCustomDimensions && (($width != $record->getWidth()) || ($height != $record->getHeight()))) {
-                $resized = $record->ResizedImage($width, $height);
+                $resized = $manipulatedRecord->ResizedImage($width, $height);
                 // Make sure that the resized image actually returns an image
                 if ($resized) {
-                    $src = $resized->getURL($grant);
+                    $manipulatedRecord = $resized;
                 }
+            }
+
+            // If only one of width or height is provided, explicitly unset the other
+            if ($width && !$height) {
+                $args['height'] = false;
+            } elseif (!$width && $height) {
+                $args['width'] = false;
             }
         }
 
-        // Determine whether loading="lazy" is set
-        $args = ImageShortcodeProvider::updateLoadingValue($args, $width, $height);
+        // Set lazy loading attribute
+        if (!empty($args['loading'])) {
+            $loading = strtolower($args['loading']);
+            unset($args['loading']);
+            $manipulatedRecord = $manipulatedRecord->LazyLoad($loading !== 'eager');
+        }
 
         // Build the HTML tag
         $attrs = array_merge(
@@ -101,7 +119,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
             // Use all other shortcode arguments
             $args,
             // But enforce some values
-            ['id' => '', 'src' => $src]
+            ['id' => '', 'src' => '']
         );
 
         // If file was not found then use the Title value from static::find_error_record() for the alt attr
@@ -111,11 +129,14 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
         // Clean out any empty attributes (aside from alt) and anything not whitelisted
         $whitelist = static::config()->get('attribute_whitelist');
-        $attrs = array_filter($attrs ?? [], function ($v, $k) use ($whitelist) {
-            return in_array($k, $whitelist) && (strlen(trim($v ?? '')) || $k === 'alt');
-        }, ARRAY_FILTER_USE_BOTH);
+        foreach ($attrs as $key => $value) {
+            if (in_array($key, $whitelist) && (strlen(trim($value ?? '')) || in_array($key, ['alt', 'width', 'height']))) {
+                $manipulatedRecord = $manipulatedRecord->setAttribute($key, html_entity_decode($value));
+            }
+        }
 
-        $markup = ImageShortcodeProvider::createImageTag($attrs);
+        // We're calling renderWith() with an explicit template in case someone wants to use a custom template
+        $markup = $manipulatedRecord->renderWith(self::class . '_Image');
 
         // cache it for future reference
         if ($fileFound) {
@@ -131,9 +152,12 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
 
     /**
      * Construct and return HTML image tag.
+     *
+     * @deprecated 2.3.0
      */
     public static function createImageTag(array $attributes) : string
     {
+        Deprecation::notice('2.3.0', 'Will be removed without equivalent functionality to replace it.');
         $preparedAttributes = '';
         foreach ($attributes as $attributeKey => $attributeValue) {
             if (strlen($attributeValue ?? '') > 0 || $attributeKey === 'alt') {
@@ -208,30 +232,5 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         return Image::create([
             'Title' => _t(__CLASS__ . '.IMAGENOTFOUND', 'Image not found'),
         ]);
-    }
-
-    /**
-     * Updated the loading attribute which is used to either lazy-load or eager-load images
-     * Eager-load is the default browser behaviour so when eager loading is specified, the
-     * loading attribute is omitted
-     *
-     * @param array $args
-     * @param int|null $width
-     * @param int|null $height
-     * @return array
-     */
-    private static function updateLoadingValue(array $args, ?int $width, ?int $height): array
-    {
-        if (!Image::getLazyLoadingEnabled()) {
-            return $args;
-        }
-        if (isset($args['loading']) && $args['loading'] == 'eager') {
-            // per image override - unset the loading attribute unset to eager load (default browser behaviour)
-            unset($args['loading']);
-        } elseif ($width && $height) {
-            // width and height must be present to prevent content shifting
-            $args['loading'] = 'lazy';
-        }
-        return $args;
     }
 }

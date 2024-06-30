@@ -1145,8 +1145,8 @@ trait ImageManipulation
         $attributes = [];
         if ($this->getIsImage()) {
             $attributes = [
-                'width' => $this->getWidth(),
-                'height' => $this->getHeight(),
+                'width' => $this->getWidth() ?: null,
+                'height' => $this->getHeight() ?: null,
                 'alt' => $this->getTitle(),
                 'src' => $this->getURL(false)
             ];
@@ -1171,11 +1171,19 @@ trait ImageManipulation
 
         $attributes = array_merge($defaultAttributes, $this->attributes);
 
-        // We need to suppress the `loading="eager"` attribute after we merge the default attributes
-        if (isset($attributes['loading']) && $attributes['loading'] === 'eager') {
-            unset($attributes['loading']);
-        }
+        if (isset($attributes['loading'])) {
+            // Check if the dimensions for the image have been set
+            $dimensionsUnset = (
+                empty($attributes['width']) ||
+                empty($attributes['height'])
+            );
 
+            // We need to suppress the `loading="eager"` attribute after we merge the default attributes
+            // or if dimensions are not set
+            if ($attributes['loading'] === 'eager' || $dimensionsUnset) {
+                unset($attributes['loading']);
+            }
+        }
         $this->extend('updateAttributes', $attributes);
 
         return $attributes;

@@ -55,6 +55,32 @@ class Image extends File
         return $field;
     }
 
+    public function scaffoldFormFieldForHasMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $field = parent::scaffoldFormFieldForHasMany($relationName, $fieldTitle, $ownerRecord, $includeInOwnTab);
+        if ($field instanceof FileHandleField) {
+            $field->setAllowedFileCategories('image/supported');
+        }
+        return $field;
+    }
+
+    public function scaffoldFormFieldForManyMany(
+        string $relationName,
+        ?string $fieldTitle,
+        DataObject $ownerRecord,
+        bool &$includeInOwnTab
+    ): FormField {
+        $field = parent::scaffoldFormFieldForManyMany($relationName, $fieldTitle, $ownerRecord, $includeInOwnTab);
+        if ($field instanceof FileHandleField) {
+            $field->setAllowedFileCategories('image/supported');
+        }
+        return $field;
+    }
+
     public function getIsImage()
     {
         return true;

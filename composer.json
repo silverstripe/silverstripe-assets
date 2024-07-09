@@ -23,7 +23,7 @@
         "silverstripe/framework": "^6",
         "silverstripe/vendor-plugin": "^2",
         "symfony/filesystem": "^6.1",
-        "intervention/image": "^2.7.2",
+        "intervention/image": "^3.7",
         "league/flysystem": "^3.9.0"
     },
     "require-dev": {

@@ -8,3 +8,19 @@ SilverStripe\Core\Injector\Injector:
   SilverStripe\Assets\Image_Backend:
     class: SilverStripe\Assets\InterventionBackend
     factory: '%$SilverStripe\Assets\ImageBackendFactory'
+  InterventionImageDriver:
+    class: 'Intervention\Image\Drivers\Gd\Driver'
+  Intervention\Image\ImageManager:
+    factory: '%$SilverStripe\Assets\InterventionManagerFactory'
+    constructor:
+      autoOrientation: true
+
+---
+Name: assetsimage-imagick
+After: '#assetsimage'
+Only:
+  extensionloaded: imagick
+---
+SilverStripe\Core\Injector\Injector:
+  InterventionImageDriver:
+    class: 'Intervention\Image\Drivers\Imagick\Driver'

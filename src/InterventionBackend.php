@@ -3,13 +3,13 @@
 namespace SilverStripe\Assets;
 
 use BadMethodCallException;
-use Intervention\Image\Constraint;
-use Intervention\Image\Exception\NotReadableException;
-use Intervention\Image\Exception\NotSupportedException;
-use Intervention\Image\Exception\NotWritableException;
-use Intervention\Image\Image as InterventionImage;
+use Intervention\Image\Colors\Rgb\Channels\Alpha;
+use Intervention\Image\Colors\Rgb\Color;
+use Intervention\Image\Drivers\AbstractEncoder;
+use Intervention\Image\Exceptions\DecoderException;
+use Intervention\Image\Exceptions\EncoderException;
+use Intervention\Image\Interfaces\ImageInterface as InterventionImage;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Size;
 use InvalidArgumentException;
 use LogicException;
 use Psr\Http\Message\StreamInterface;
@@ -37,21 +37,17 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Is cache flushing enabled?
-     *
-     * @config
-     * @var boolean
      */
-    private static $flush_enabled = true;
+    private static bool $flush_enabled = true;
 
     /**
      * How long to cache each error type
      *
-     * @config
-     * @var array Map of error type to config.
+     * Map of error type to config.
      * each config could be a single int (fixed cache time)
      * or list of integers (increasing scale)
      */
-    private static $error_cache_ttl = [
+    private static array $error_cache_ttl = [
         InterventionBackend::FAILED_INVALID => 0, // Invalid file type should probably never be retried
         InterventionBackend::FAILED_MISSING => '5,10,20,40,80', // Missing files may be eventually available
         InterventionBackend::FAILED_UNKNOWN => 300, // Unknown (edge case). Maybe system error? Needs a flush?
@@ -76,40 +72,20 @@ class InterventionBackend implements Image_Backend, Flushable
     /**
      * Configure where cached intervention files will be stored
      *
-     * @config
-     * @var string
      */
-    private static $local_temp_path = TEMP_PATH;
+    private static string $local_temp_path = TEMP_PATH;
 
-    /**
-     * @var AssetContainer
-     */
-    private $container;
+    private ?AssetContainer $container = null;
 
-    /**
-     * @var InterventionImage
-     */
-    private $image;
+    private ?InterventionImage $image;
 
-    /**
-     * @var int
-     */
-    private $quality;
+    private int $quality = AbstractEncoder::DEFAULT_QUALITY;
 
-    /**
-     * @var ImageManager
-     */
-    private $manager;
+    private ?ImageManager $manager = null;
 
-    /**
-     * @var CacheInterface
-     */
-    private $cache;
+    private ?CacheInterface $cache = null;
 
-    /**
-     * @var string
-     */
-    private $tempPath;
+    private ?string $tempPath = null;
 
     public function __construct(AssetContainer $assetContainer = null)
     {
@@ -117,28 +93,23 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * @return string The temporary local path for this image
+     * Get the temporary local path for this image
      */
-    public function getTempPath()
+    public function getTempPath(): ?string
     {
         return $this->tempPath;
     }
 
     /**
-     * @param string $path
-     *
-     * @return $this
+     * Set the temporary local path for this image
      */
-    public function setTempPath($path)
+    public function setTempPath(string $path): static
     {
         $this->tempPath = $path;
         return $this;
     }
 
-    /**
-     * @return CacheInterface
-     */
-    public function getCache()
+    public function getCache(): CacheInterface
     {
         if (!$this->cache) {
             $this->setCache(Injector::inst()->get(CacheInterface::class . '.InterventionBackend_Manipulations'));
@@ -146,41 +117,25 @@ class InterventionBackend implements Image_Backend, Flushable
         return $this->cache;
     }
 
-    /**
-     * @param CacheInterface $cache
-     *
-     * @return $this
-     */
-    public function setCache($cache)
+    public function setCache(CacheInterface $cache): static
     {
         $this->cache = $cache;
         return $this;
     }
 
-    /**
-     * @return AssetContainer
-     */
-    public function getAssetContainer()
+    public function getAssetContainer(): ?AssetContainer
     {
         return $this->container;
     }
 
-    /**
-     * @param AssetContainer $assetContainer
-     *
-     * @return $this
-     */
-    public function setAssetContainer($assetContainer)
+    public function setAssetContainer(?AssetContainer $assetContainer): static
     {
         $this->setImageResource(null);
         $this->container = $assetContainer;
         return $this;
     }
 
-    /**
-     * @return ImageManager
-     */
-    public function getImageManager()
+    public function getImageManager(): ImageManager
     {
         if (!$this->manager) {
             $this->setImageManager(Injector::inst()->create(ImageManager::class));
@@ -188,12 +143,7 @@ class InterventionBackend implements Image_Backend, Flushable
         return $this->manager;
     }
 
-    /**
-     * @param ImageManager $manager
-     *
-     * @return $this
-     */
-    public function setImageManager($manager)
+    public function setImageManager(ImageManager $manager): static
     {
         $this->manager = $manager;
         return $this;
@@ -203,9 +153,8 @@ class InterventionBackend implements Image_Backend, Flushable
      * Populate the backend with a given object
      *
      * @param AssetContainer $assetContainer Object to load from
-     * @return $this
      */
-    public function loadFromContainer(AssetContainer $assetContainer)
+    public function loadFromContainer(AssetContainer $assetContainer): static
     {
         return $this->setAssetContainer($assetContainer);
     }
@@ -213,10 +162,8 @@ class InterventionBackend implements Image_Backend, Flushable
     /**
      * Get the currently assigned image resource, or generates one if not yet assigned.
      * Note: This method may return null if error
-     *
-     * @return InterventionImage
      */
-    public function getImageResource()
+    public function getImageResource(): ?InterventionImage
     {
         // Get existing resource
         if ($this->image) {
@@ -267,17 +214,10 @@ class InterventionBackend implements Image_Backend, Flushable
             $bytesWritten = file_put_contents($path ?? '', $stream);
             // if we fail to write, then load from stream
             if ($bytesWritten === false) {
-                $resource = $this->getImageManager()->make($stream);
+                $resource = $this->getImageManager()->read($stream);
             } else {
                 $this->setTempPath($path);
-                $resource = $this->getImageManager()->make($path);
-            }
-
-            // Fix image orientation
-            try {
-                $resource->orientate();
-            } catch (NotSupportedException $e) {
-                // noop - we can't orientate, don't worry about it
+                $resource = $this->getImageManager()->read($path);
             }
 
             $this->setImageResource($resource);
@@ -285,7 +225,7 @@ class InterventionBackend implements Image_Backend, Flushable
             $this->warmCache($hash, $variant);
             $error = null;
             return $resource;
-        } catch (NotReadableException $ex) {
+        } catch (DecoderException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
             $error = InterventionBackend::FAILED_INVALID;
@@ -299,11 +239,8 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Populate the backend from a local path
-     *
-     * @param string $path
-     * @return $this
      */
-    public function loadFrom($path)
+    public function loadFrom(string $path): static
     {
         // Avoid repeat load of broken images
         $hash = sha1($path ?? '');
@@ -314,10 +251,10 @@ class InterventionBackend implements Image_Backend, Flushable
         // Handle resource
         $error = InterventionBackend::FAILED_UNKNOWN;
         try {
-            $this->setImageResource($this->getImageManager()->make($path));
+            $this->setImageResource($this->getImageManager()->read($path));
             $this->markSuccess($hash, null);
             $error = null;
-        } catch (NotReadableException $ex) {
+        } catch (DecoderException $ex) {
             // Handle unsupported image encoding on load (will be marked as failed)
             // Unsupported exceptions are handled without being raised as exceptions
             $error = InterventionBackend::FAILED_INVALID;
@@ -331,11 +268,15 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
+     * @inheritDoc
+     *
      * @param InterventionImage $image
-     * @return $this
      */
-    public function setImageResource($image)
+    public function setImageResource($image): static
     {
+        if ($image && !is_a($image, InterventionImage::class)) {
+            throw new InvalidArgumentException('$image must be an instance of ' . InterventionImage::class);
+        }
         $this->image = $image;
         if ($image === null) {
             // remove our temp file if it exists
@@ -347,18 +288,11 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * Write to the given asset store
+     * @inheritDoc
      *
-     * @param AssetStore $assetStore
-     * @param string $filename Name for the resulting file
-     * @param string $hash Hash of original file, if storing a variant.
-     * @param string $variant Name of variant, if storing a variant.
-     * @param array $config Write options. {@see AssetStore}
-     * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
-     * will be calculated from the given data.
      * @throws BadMethodCallException If image isn't valid
      */
-    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = [])
+    public function writeToStore(AssetStore $assetStore, string $filename, ?string $hash = null, ?string $variant = null, array $config = []): array
     {
         try {
             $resource = $this->getImageResource();
@@ -371,7 +305,7 @@ class InterventionBackend implements Image_Backend, Flushable
             $extension = pathinfo($url, PATHINFO_EXTENSION);
             // Save file
             $result = $assetStore->setFromString(
-                $resource->encode($extension, $this->getQuality())->getEncoded(),
+                $resource->encodeByExtension($extension, quality: $this->getQuality())->toString(),
                 $filename,
                 $hash,
                 $variant,
@@ -384,19 +318,17 @@ class InterventionBackend implements Image_Backend, Flushable
             }
 
             return $result;
-        } catch (NotSupportedException $e) {
+        } catch (EncoderException $e) {
             return null;
         }
     }
 
     /**
-     * Write the backend to a local path
+     * @inheritDoc
      *
-     * @param string $path
-     * @return bool If the writing was successful
      * @throws BadMethodCallException If image isn't valid
      */
-    public function writeTo($path)
+    public function writeTo(string $path): bool
     {
         try {
             $resource = $this->getImageResource();
@@ -404,16 +336,16 @@ class InterventionBackend implements Image_Backend, Flushable
                 throw new BadMethodCallException("Cannot write corrupt file to store");
             }
             $resource->save($path, $this->getQuality());
-        } catch (NotWritableException $e) {
+        } catch (EncoderException $e) {
             return false;
         }
         return true;
     }
 
     /**
-     * @return int
+     * @inheritDoc
      */
-    public function getQuality()
+    public function getQuality(): int
     {
         return $this->quality;
     }
@@ -421,9 +353,9 @@ class InterventionBackend implements Image_Backend, Flushable
     /**
      * Return dimensions as array with cache enabled
      *
-     * @return array Two-length array with width and height
+     * Returns a two-length array with width and height
      */
-    protected function getDimensions()
+    protected function getDimensions(): array
     {
         // Default result
         $result = [0, 0];
@@ -465,51 +397,35 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Get dimensions from the given resource
-     *
-     * @param InterventionImage $resource
-     * @return array
      */
-    protected function getResourceDimensions(InterventionImage $resource)
+    protected function getResourceDimensions(InterventionImage $resource): array
     {
-        /** @var Size $size */
-        $size = $resource->getSize();
         return [
-            $size->getWidth(),
-            $size->getHeight()
+            $resource->width(),
+            $resource->height(),
         ];
     }
 
     /**
      * Cache key for recording errors
-     *
-     * @param string $hash
-     * @param string|null $variant
-     * @return string
      */
-    protected function getErrorCacheKey($hash, $variant = null)
+    protected function getErrorCacheKey(string $hash, ?string $variant = null): string
     {
         return InterventionBackend::CACHE_MARK . sha1($hash . '-' . $variant);
     }
 
     /**
      * Cache key for dimensions for given container
-     *
-     * @param string $hash
-     * @param string|null $variant
-     * @return string
      */
-    protected function getDimensionCacheKey($hash, $variant = null)
+    protected function getDimensionCacheKey(string $hash, ?string $variant = null): string
     {
         return InterventionBackend::CACHE_DIMENSIONS . sha1($hash . '-' . $variant);
     }
 
     /**
      * Warm dimension cache for the given asset
-     *
-     * @param string $hash
-     * @param string|null $variant
      */
-    protected function warmCache($hash, $variant = null)
+    protected function warmCache(string $hash, ?string $variant = null): void
     {
         // Warm dimension cache
         $key = $this->getDimensionCacheKey($hash, $variant);
@@ -521,43 +437,36 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * @return int The width of the image
+     * @inheritDoc
      */
-    public function getWidth()
+    public function getWidth(): int
     {
         list($width) = $this->getDimensions();
         return (int)$width;
     }
 
     /**
-     * @return int The height of the image
+     * @inheritDoc
      */
-    public function getHeight()
+    public function getHeight(): int
     {
         list(, $height) = $this->getDimensions();
         return (int)$height;
     }
 
     /**
-     * Set the quality to a value between 0 and 100
-     *
-     * @param int $quality
-     * @return $this
+     * @inheritDoc
      */
-    public function setQuality($quality)
+    public function setQuality(int $quality): static
     {
         $this->quality = $quality;
         return $this;
     }
 
     /**
-     * Resize an image, skewing it as necessary.
-     *
-     * @param int $width
-     * @param int $height
-     * @return static
+     * @inheritDoc
      */
-    public function resize($width, $height)
+    public function resize(int $width, int $height): ?static
     {
         return $this->createCloneWithResource(
             function (InterventionImage $resource) use ($width, $height) {
@@ -567,135 +476,138 @@ class InterventionBackend implements Image_Backend, Flushable
     }
 
     /**
-     * Resize the image by preserving aspect ratio. By default, it will keep the image inside the maxWidth
-     * and maxHeight. Passing useAsMinimum will make the smaller dimension equal to the maximum corresponding dimension
-     *
-     * @param int $width
-     * @param int $height
-     * @param bool $useAsMinimum If true, image will be sized outside of these dimensions.
-     * If false (default) image will be sized inside these dimensions.
-     * @return static
+     * @inheritDoc
      */
-    public function resizeRatio($width, $height, $useAsMinimum = false)
+    public function resizeRatio(int $width, int $height, bool $useAsMinimum = false): ?static
     {
         return $this->createCloneWithResource(
             function (InterventionImage $resource) use ($width, $height, $useAsMinimum) {
-                return $resource->resize(
-                    $width,
-                    $height,
-                    function (Constraint $constraint) use ($useAsMinimum) {
-                        $constraint->aspectRatio();
-                        if (!$useAsMinimum) {
-                            $constraint->upsize();
-                        }
-                    }
-                );
+                if ($useAsMinimum) {
+                    return $resource->scale($width, $height);
+                }
+                return $resource->scaleDown($width, $height);
             }
         );
     }
 
     /**
-     * Resize an image by width. Preserves aspect ratio.
-     *
-     * @param int $width
-     * @return static
+     * @inheritDoc
      */
-    public function resizeByWidth($width)
+    public function resizeByWidth(int $width): ?static
     {
         return $this->createCloneWithResource(
             function (InterventionImage $resource) use ($width) {
-                return $resource->widen($width);
+                return $resource->scale($width);
             }
         );
     }
 
     /**
-     * Resize an image by height. Preserves aspect ratio.
-     *
-     * @param int $height
-     * @return static
+     * @inheritDoc
      */
-    public function resizeByHeight($height)
+    public function resizeByHeight(int $height): ?static
     {
         return $this->createCloneWithResource(
             function (InterventionImage $resource) use ($height) {
-                return $resource->heighten($height);
+                return $resource->scale(height: $height);
             }
         );
     }
 
     /**
-     * Return a clone of this image resized, with space filled in with the given colour
-     *
-     * @param int $width
-     * @param int $height
-     * @param string $backgroundColor
-     * @param int $transparencyPercent
-     * @return static
+     * @inheritDoc
      */
-    public function paddedResize($width, $height, $backgroundColor = "FFFFFF", $transparencyPercent = 0)
+    public function paddedResize(string $width, string $height, string $backgroundColour = 'FFFFFF', int $transparencyPercent = 0): ?static
     {
         $resource = $this->getImageResource();
         if (!$resource) {
             return null;
         }
 
-        // caclulate the background colour
-        $background = $resource->getDriver()->parseColor($backgroundColor)->format('array');
-        // convert transparancy % to alpha
-        $background[3] = 1 - round(min(100, max(0, $transparencyPercent)) / 100, 2);
+        if ($transparencyPercent < 0 || $transparencyPercent > 100) {
+            throw new InvalidArgumentException('$transparencyPercent must be between 0 and 100. Got ' . $transparencyPercent);
+        }
 
-        // resize the image maintaining the aspect ratio and then pad out the canvas
+        $bgColour = Color::create($backgroundColour);
+        // The Color class is immutable, so we have to instantiate a new one to set the alpha channel.
+        // No need to do that if both the $backgroundColor and $transparencyPercent are 0.
+        if ($bgColour->channel(Alpha::class)->value() !== 0 && $transparencyPercent !== 0) {
+            $channels = $bgColour->channels();
+            $alpha = (int) round(255 * (1 - ($transparencyPercent * 0.01)));
+            $bgColour = new Color($channels[0]->value(), $channels[1]->value(), $channels[2]->value(), $alpha);
+        }
+
+        // resize the image maintaining the aspect ratio and pad out the canvas
         return $this->createCloneWithResource(
-            function (InterventionImage $resource) use ($width, $height, $background) {
-                return $resource
-                    ->resize(
-                        $width,
-                        $height,
-                        function (Constraint $constraint) {
-                            $constraint->aspectRatio();
-                        }
-                    )
-                    ->resizeCanvas(
-                        $width,
-                        $height,
-                        'center',
-                        false,
-                        $background
-                    );
+            function (InterventionImage $resource) use ($width, $height, $bgColour) {
+                return $resource->contain($width, $height, $bgColour, 'center');
             }
         );
     }
 
     /**
-     * Resize an image to cover the given width/height completely, and crop off any overhanging edges.
-     *
-     * @param int $width
-     * @param int $height
-     * @return static
+     * @inheritDoc
      */
-    public function croppedResize($width, $height)
+    public function croppedResize(int $width, int $height, string $position = 'center'): ?static
     {
         return $this->createCloneWithResource(
-            function (InterventionImage $resource) use ($width, $height) {
-                return $resource->fit($width, $height);
+            function (InterventionImage $resource) use ($width, $height, $position) {
+                return $resource->cover($width, $height, $position);
             }
         );
     }
 
     /**
-     * Crop's part of image.
-     * @param int $top y position of left upper corner of crop rectangle
-     * @param int $left x position of left upper corner of crop rectangle
-     * @param int $width rectangle width
-     * @param int $height rectangle height
-     * @return Image_Backend
+     * @inheritDoc
      */
-    public function crop($top, $left, $width, $height)
+    public function crop(int $top, int $left, int $width, int $height, string $position = 'top-left', string $backgroundColour = 'FFFFFF'): ?static
     {
         return $this->createCloneWithResource(
-            function (InterventionImage $resource) use ($top, $left, $height, $width) {
-                return $resource->crop($width, $height, $left, $top);
+            function (InterventionImage $resource) use ($top, $left, $height, $width, $position, $backgroundColour) {
+                return $resource->crop($width, $height, $left, $top, $backgroundColour, $position);
+            }
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setAllowsAnimationInManipulations(bool $allow): static
+    {
+        $this->getImageManager()->driver()->config()->decodeAnimation = $allow;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAllowsAnimationInManipulations(): bool
+    {
+        return $this->getImageManager()->driver()->config()->decodeAnimation;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getIsAnimated(): bool
+    {
+        if (!$this->getAllowsAnimationInManipulations()) {
+            return false;
+        }
+        return $this->getImageResource()?->isAnimated() ?? false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function removeAnimation(int|string $position): ?static
+    {
+        if (!$this->getAllowsAnimationInManipulations()) {
+            return $this;
+        }
+        return $this->createCloneWithResource(
+            function (InterventionImage $resource) use ($position) {
+                return $resource->removeAnimation($position);
             }
         );
     }
@@ -705,9 +617,8 @@ class InterventionBackend implements Image_Backend, Flushable
      *
      * @param InterventionImage|callable $resourceOrTransformation Either the resource to assign to the clone,
      * or a function which takes the current resource as a parameter
-     * @return static
      */
-    protected function createCloneWithResource($resourceOrTransformation)
+    protected function createCloneWithResource($resourceOrTransformation): ?static
     {
         // No clone with no argument
         if (!$resourceOrTransformation) {
@@ -743,11 +654,8 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Clear any cached errors / metadata for this image
-     *
-     * @param string $hash
-     * @param string|null $variant
      */
-    protected function markSuccess($hash, $variant = null)
+    protected function markSuccess(string $hash, ?string $variant = null): void
     {
         $key = $this->getErrorCacheKey($hash, $variant);
         $this->getCache()->deleteMultiple([
@@ -763,7 +671,7 @@ class InterventionBackend implements Image_Backend, Flushable
      * @param string|null $variant Variant being loaded
      * @param string $reason Reason this file is failed
      */
-    protected function markFailed($hash, $variant = null, $reason = InterventionBackend::FAILED_UNKNOWN)
+    protected function markFailed(string $hash, ?string $variant = null, string $reason = InterventionBackend::FAILED_UNKNOWN): void
     {
         $key = $this->getErrorCacheKey($hash, $variant);
 
@@ -796,10 +704,8 @@ class InterventionBackend implements Image_Backend, Flushable
      * Will return one of the FAILED_* constant values, or null if not failed
      *
      * @param string $hash Hash of the original file being manipulated
-     * @param string|null $variant
-     * @return string|null
      */
-    protected function hasFailed($hash, $variant = null)
+    protected function hasFailed(string $hash, ?string $variant = null): ?string
     {
         $key = $this->getErrorCacheKey($hash, $variant);
         return $this->getCache()->get($key.'_reason', null);
@@ -810,10 +716,6 @@ class InterventionBackend implements Image_Backend, Flushable
      */
     public function __destruct()
     {
-        //skip the `getImageResource` method because we don't want to load the resource just to destroy it
-        if ($this->image) {
-            $this->image->destroy();
-        }
         // remove our temp file if it exists
         if (file_exists($this->getTempPath() ?? '')) {
             unlink($this->getTempPath() ?? '');
@@ -827,7 +729,7 @@ class InterventionBackend implements Image_Backend, Flushable
      *
      * @see FlushRequestFilter
      */
-    public static function flush()
+    public static function flush(): void
     {
         if (Config::inst()->get(static::class, 'flush_enabled')) {
             /** @var CacheInterface $cache */
@@ -838,11 +740,8 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Validate the stream resource is readable
-     *
-     * @param mixed $stream
-     * @return bool
      */
-    protected function isStreamReadable($stream)
+    protected function isStreamReadable(mixed $stream): bool
     {
         if (empty($stream)) {
             return false;

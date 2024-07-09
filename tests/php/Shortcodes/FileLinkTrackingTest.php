@@ -33,8 +33,8 @@ class FileLinkTrackingTest extends SapphireTest
         $files = File::get()->exclude('ClassName', Folder::class);
         foreach ($files as $file) {
             // Mock content for files
-            $content = $file->Filename . ' ' . str_repeat('x', 1000000);
-            $file->setFromString($content, $file->Filename);
+            $sourcePath = __DIR__ . '/FileLinkTrackingTest/' . $file->Name;
+            $file->setFromLocalFile($sourcePath, $file->Filename);
             $file->write();
             $file->publishRecursive();
         }
@@ -78,7 +78,7 @@ class FileLinkTrackingTest extends SapphireTest
 
         // Live and stage pages both have link to public file
         $this->assertStringContainsString(
-            '<img alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
+            '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         $this->assertStringContainsString(
@@ -91,7 +91,7 @@ class FileLinkTrackingTest extends SapphireTest
             /** @var EditableObject $pageLive */
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
             $this->assertStringContainsString(
@@ -120,14 +120,14 @@ class FileLinkTrackingTest extends SapphireTest
         // the mocked test location disappears for secure files.
         $page = EditableObject::get()->byID($page->ID);
         $this->assertStringContainsString(
-            '<img alt="" src="/assets/5a5ee24e44/renamed-test-file.jpg"',
+            '<img width="300" height="300" alt="" src="/assets/33be1b95cb/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
         });
@@ -137,14 +137,14 @@ class FileLinkTrackingTest extends SapphireTest
         $image1->publishRecursive();
         $page = EditableObject::get()->byID($page->ID);
         $this->assertStringContainsString(
-            '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
+            '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
         });
@@ -153,14 +153,14 @@ class FileLinkTrackingTest extends SapphireTest
         $page->publishRecursive();
         $page = EditableObject::get()->byID($page->ID);
         $this->assertStringContainsString(
-            '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
+            '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
         Versioned::withVersionedMode(function () use ($page) {
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
         });
@@ -194,7 +194,7 @@ class FileLinkTrackingTest extends SapphireTest
             Versioned::set_stage(Versioned::LIVE);
             $livePage = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/testscript-test-file.jpg"',
                 $livePage->dbObject('Content')->forTemplate()
             );
         });
@@ -213,7 +213,7 @@ class FileLinkTrackingTest extends SapphireTest
         // Confirm that the correct image is shown in both the draft and live site
         $page = EditableObject::get()->byID($page->ID);
         $this->assertStringContainsString(
-            '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
+            '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
             $page->dbObject('Content')->forTemplate()
         );
 
@@ -223,7 +223,7 @@ class FileLinkTrackingTest extends SapphireTest
             Versioned::set_stage(Versioned::LIVE);
             $pageLive = EditableObject::get()->byID($page->ID);
             $this->assertStringContainsString(
-                '<img alt="" src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
+                '<img width="300" height="300" alt="" src="/assets/FileLinkTrackingTest/renamed-test-file-second-time.jpg"',
                 $pageLive->dbObject('Content')->forTemplate()
             );
         });

@@ -42,6 +42,11 @@ SilverStripe\Assets\Image:
     FileHash: 1b22f41d0d27755f06b77eaa27e074eff84d3019
     Parent: =>SilverStripe\Assets\Folder.folder1
     Name: landscape-to-portrait.jpg
+  animated:
+    Title: This is an animated GIF
+    FileFilename: folder/animated.gif
+    Parent: =>SilverStripe\Assets\Folder.folder1
+    Name: animated.gif
 
 SilverStripe\Assets\File:
   notImage:

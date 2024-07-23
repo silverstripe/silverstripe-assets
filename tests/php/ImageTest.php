@@ -34,7 +34,6 @@ abstract class ImageTest extends SapphireTest
         TestAssetStore::activate('ImageTest');
 
         // Copy test images for each of the fixture references
-        /** @var File $image */
         $files = File::get()->exclude('ClassName', Folder::class);
         foreach ($files as $image) {
             $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
@@ -147,6 +146,7 @@ abstract class ImageTest extends SapphireTest
         // Same test, but with manipulations in a different order
         $highQuality = $image->Quality(100)->ScaleWidth(200);
         $lowQuality = $image->Quality(1)->ScaleWidth(200);
+
         $this->assertLessThan(
             $highQuality->getAbsoluteSize(),
             $lowQuality->getAbsoluteSize(),
@@ -575,5 +575,28 @@ abstract class ImageTest extends SapphireTest
             Config::modify()->set(Image::class, 'lazy_loading_enabled', false);
             $this->assertFalse(Image::getLazyLoadingEnabled());
         });
+    }
+
+    public function testAnimatedVariants(): void
+    {
+        $image = $this->objFromFixture(Image::class, 'animated');
+        $this->assertTrue($image->getIsAnimated());
+
+        $animatedVariant = $image->Fit(200, 200);
+        $this->assertTrue($animatedVariant->getIsAnimated());
+
+        $stillVariant = $image->RemoveAnimation();
+        $this->assertFalse($stillVariant->getIsAnimated());
+
+        $smallStillVariant = $stillVariant->Fit(300, 200);
+        $this->assertFalse($smallStillVariant->getIsAnimated());
+
+        $image->getImageBackend()->setAllowsAnimationInManipulations(false);
+        $stillVariant2 = $image->Fit(400, 200);
+        $this->assertFalse($stillVariant2->getIsAnimated());
+
+        $image->getImageBackend()->setAllowsAnimationInManipulations(true);
+        $animatedVariant2 = $image->Fit(500, 200);
+        $this->assertTrue($animatedVariant2->getIsAnimated());
     }
 }

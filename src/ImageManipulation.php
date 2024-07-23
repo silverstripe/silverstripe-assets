@@ -603,6 +603,29 @@ trait ImageManipulation
     }
 
     /**
+     * Check if the image is animated (e.g. an animated GIF).
+     */
+    public function getIsAnimated(): bool
+    {
+        $backend = $this->getImageBackend();
+        if (!$backend) {
+            return false;
+        }
+        return $backend->getIsAnimated();
+    }
+
+    public function RemoveAnimation(int|string $position = 0): ?AssetContainer
+    {
+        if (!$this->getIsAnimated()) {
+            return $this;
+        }
+        $variant = $this->variantName(__FUNCTION__, $position);
+        return $this->manipulateImage($variant, function (Image_Backend $backend) use ($position) {
+            return $backend->removeAnimation($position);
+        });
+    }
+
+    /**
      * Set the quality of the resampled image
      *
      * @param int $quality Quality level from 0 - 100

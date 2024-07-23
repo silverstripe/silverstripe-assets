@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Intervention\Image\Drivers\Gd\Driver as GDDriver;
 use Intervention\Image\ImageManager;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\InterventionBackend;
@@ -24,7 +25,7 @@ class GDImageTest extends ImageTest
         Injector::inst()->setConfigLocator(new SilverStripeServiceConfigurationLocator());
         Config::modify()->set(Injector::class, ImageManager::class, [
             'constructor' => [
-                [ 'driver' => 'gd' ],
+                '%$' . GDDriver::class,
             ],
         ]);
     }
@@ -35,7 +36,7 @@ class GDImageTest extends ImageTest
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         /** @var InterventionBackend $backend */
         $backend = $image->getImageBackend();
-        $this->assertEquals('gd', $backend->getImageManager()->config['driver']);
+        $this->assertInstanceOf(GDDriver::class, $backend->getImageManager()->driver());
     }
 
     public function testGetTagWithTitle()

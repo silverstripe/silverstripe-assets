@@ -107,6 +107,11 @@ interface AssetContainer
     public function getIsImage();
 
     /**
+     * Check if the asset is an animated image
+     */
+    public function getIsAnimated(): bool;
+
+    /**
      * Determine visibility of the given file
      *
      * @return string one of values defined by the constants VISIBILITY_PROTECTED or VISIBILITY_PUBLIC, or

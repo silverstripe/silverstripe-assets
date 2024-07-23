@@ -36,42 +36,36 @@ interface Image_Backend
     public function __construct(AssetContainer $assetContainer = null);
 
     /**
-     * @return int The width of the image
+     * Get the width of the image
      */
-    public function getWidth();
+    public function getWidth(): int;
 
     /**
-     * @return int The height of the image
+     * Get the height of the image
      */
-    public function getHeight();
+    public function getHeight(): int;
 
     /**
      * Populate the backend with a given object
      *
      * @param AssetContainer $assetContainer Object to load from
      */
-    public function loadFromContainer(AssetContainer $assetContainer);
+    public function loadFromContainer(AssetContainer $assetContainer): static;
 
     /**
      * Populate the backend from a local path
-     *
-     * @param string $path
      */
-    public function loadFrom($path);
+    public function loadFrom(string $path): static;
 
     /**
      * Get the currently assigned image resource
-     *
-     * @return mixed
      */
-    public function getImageResource();
+    public function getImageResource(): mixed;
 
     /**
      * Set the currently assigned image resource
-     *
-     * @param mixed $resource
      */
-    public function setImageResource($resource);
+    public function setImageResource($resource): static;
 
     /**
      * Write to the given asset store
@@ -84,7 +78,7 @@ interface Image_Backend
      * @return array Tuple associative array (Filename, Hash, Variant) Unless storing a variant, the hash
      * will be calculated from the given data.
      */
-    public function writeToStore(AssetStore $assetStore, $filename, $hash = null, $variant = null, $config = []);
+    public function writeToStore(AssetStore $assetStore, string $filename, ?string $hash = null, ?string $variant = null, array $config = []): array;
 
     /**
      * Write the backend to a local path
@@ -92,79 +86,84 @@ interface Image_Backend
      * @param string $path
      * @return bool if the write was successful
      */
-    public function writeTo($path);
+    public function writeTo(string $path): bool;
 
     /**
      * Set the quality to a value between 0 and 100
-     *
-     * @param int $quality
      */
-    public function setQuality($quality);
+    public function setQuality(int $quality): static;
+
+    /**
+     * Get the current quality (between 0 and 100).
+     */
+    public function getQuality(): int;
 
     /**
      * Resize an image, skewing it as necessary.
-     *
-     * @param int $width
-     * @param int $height
-     * @return static
      */
-    public function resize($width, $height);
+    public function resize(int $width, int $height): ?static;
 
     /**
-     * Resize the image by preserving aspect ratio. By default, it will keep the image inside the maxWidth
-     * and maxHeight. Passing useAsMinimum will make the smaller dimension equal to the maximum corresponding dimension
-     *
-     * @param int $width
-     * @param int $height
-     * @param bool $useAsMinimum If true, image will be sized outside of these dimensions.
-     * If false (default) image will be sized inside these dimensions.
-     * @return static
+     * Resize the image by preserving aspect ratio. By default, the image cannot be resized to be larger
+     * than its current size.
+     * Passing true to useAsMinimum will allow the image to be scaled up.
      */
-    public function resizeRatio($width, $height, $useAsMinimum = false);
+    public function resizeRatio(int $width, int $height, bool $useAsMinimum = false): ?static;
 
     /**
      * Resize an image by width. Preserves aspect ratio.
-     *
-     * @param int $width
-     * @return static
      */
-    public function resizeByWidth($width);
+    public function resizeByWidth(int $width): ?static;
 
     /**
      * Resize an image by height. Preserves aspect ratio.
-     *
-     * @param int $height
-     * @return static
      */
-    public function resizeByHeight($height);
+    public function resizeByHeight(int $height): ?static;
 
     /**
-     * Return a clone of this image resized, with space filled in with the given colour
-     *
-     * @param int $width
-     * @param int $height
-     * @param string $backgroundColor
-     * @param int $transparencyPercent
-     * @return static
+     * Return a clone of this image resized, with space filled in with the given colour.
      */
-    public function paddedResize($width, $height, $backgroundColor = "FFFFFF", $transparencyPercent = 0);
+    public function paddedResize(string $width, string $height, string $backgroundColour = 'FFFFFF', int $transparencyPercent = 0): ?static;
 
     /**
      * Resize an image to cover the given width/height completely, and crop off any overhanging edges.
-     *
-     * @param int $width
-     * @param int $height
-     * @return static
      */
-    public function croppedResize($width, $height);
+    public function croppedResize(int $width, int $height, string $position = 'center'): ?static;
 
     /**
      * Crop's part of image.
-     * @param int $top y position of left upper corner of crop rectangle
-     * @param int $left x position of left upper corner of crop rectangle
+     * @param int $top Amount of pixels the cutout will be moved on the y (vertical) axis
+     * @param int $left Amount of pixels the cutout will be moved on the x (horizontal) axis
      * @param int $width rectangle width
      * @param int $height rectangle height
-     * @return Image_Backend
+     * @param string $position Postion at which the cutout will be aligned
+     * @param string $backgroundColour Colour to fill any newly created areas
      */
-    public function crop($top, $left, $width, $height);
+    public function crop(int $top, int $left, int $width, int $height, string $position, string $backgroundColour = 'FFFFFF'): ?static;
+
+    /**
+     * Set whether this image backend is allowed to output animated images as a result of manipulations.
+     */
+    public function setAllowsAnimationInManipulations(bool $allow): static;
+
+    /**
+     * Get whether this image backend is allowed to output animated images as a result of manipulations.
+     */
+    public function getAllowsAnimationInManipulations(): bool;
+
+    /**
+     * Check if the image is animated (e.g. an animated GIF).
+     * Will return false if animations are not allowed for manipulations.
+     */
+    public function getIsAnimated(): bool;
+
+    /**
+     * Discards all animation frames of the current image instance except the one at the given position. Turns an animated image into a static one.
+     *
+     * @param integer|string $position Which frame to use as the still image.
+     * If an integer is passed, it represents the exact frame number to use (starting at 0). If that frame doesn't exist, an exception is thrown.
+     * If a string is passed, it must be in the form of a percentage (e.g. '0%' or '50%'). The frame to use is then determined based
+     * on this percentage (e.g. if '50%' is passed, a frame halfway through the animation is used).
+     */
+    public function removeAnimation(int|string $position): ?static;
 }

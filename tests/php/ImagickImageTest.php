@@ -2,6 +2,7 @@
 
 namespace SilverStripe\Assets\Tests;
 
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\ImageManager;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\InterventionBackend;
@@ -24,7 +25,7 @@ class ImagickImageTest extends ImageTest
         Injector::inst()->setConfigLocator(new SilverStripeServiceConfigurationLocator());
         Config::modify()->set(Injector::class, ImageManager::class, [
             'constructor' => [
-                [ 'driver' => 'imagick' ],
+                '%$' . ImagickDriver::class,
             ],
         ]);
     }
@@ -35,6 +36,6 @@ class ImagickImageTest extends ImageTest
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         /** @var InterventionBackend $backend */
         $backend = $image->getImageBackend();
-        $this->assertEquals('imagick', $backend->getImageManager()->config['driver']);
+        $this->assertInstanceOf(ImagickDriver::class, $backend->getImageManager()->driver());
     }
 }

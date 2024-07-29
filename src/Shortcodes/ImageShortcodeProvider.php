@@ -136,7 +136,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         // We're calling renderWith() with an explicit template in case someone wants to use a custom template
-        $markup = $manipulatedRecord->renderWith(self::class . '_Image');
+        $markup = $manipulatedRecord->renderWith(ImageShortcodeProvider::class . '_Image');
 
         // cache it for future reference
         if ($fileFound) {

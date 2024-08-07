@@ -12,6 +12,7 @@ de:
     GzType: 'GZIP-komprimierte Datei'
     HtmlType: HTML-Datei
     INVALIDEXTENSION_SHORT: 'Erweiterung ist nicht erlaubt'
+    INVALIDEXTENSION_SHORT_EXT: "Erweiterung '{extension}' ist nicht erlaubt"
     IcoType: Symbolbild
     JpgType: 'JPEG-Bild - gut für Fotos'
     JsType: Javascript-Datei
@@ -21,11 +22,13 @@ de:
     MpgType: MPEG-Videodatei
     NOFILESIZE: 'Dateigröße ist null Bytes.'
     NOVALIDUPLOAD: 'Die Datei ist kein gültiger Upload'
+    PARTIALUPLOAD: 'Datei konnte nicht vollständig hochgeladen werden, bitte versuchen Sie es erneut'
     PATH: Pfad
     PLURALNAME: Dateien
     PLURALS:
       one: 'Eine Datei'
       other: '{count} Dateien'
+    PREVIEW: Vorschau
     PdfType: 'Adobe Acrobat PDF-Datei'
     PngType: 'PNG-Bild - gutes Allzweckformat'
     SINGULARNAME: Datei
@@ -35,6 +38,11 @@ de:
     XlsType: Excel-Tabelle
     ZipType: 'ZIP-komprimierte Datei'
     db_File: Datei
+    db_ShowInSearch: 'In Suche anzeigen'
+    db_Title: Titel
+    has_one_Company: Unternehmen
+    has_one_Subsite: Subseite
+    has_one_TestPage: Testseite
   SilverStripe\Assets\Folder:
     PLURALNAME: Ordner
     PLURALS:
@@ -47,3 +55,14 @@ de:
       one: 'Ein Bild'
       other: '{count} Bilder'
     SINGULARNAME: Bild
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bild nicht gefunden'
+  SilverStripe\Assets\Shortcodes\FileLink:
+    PLURALNAME: Dateilinks
+    PLURALS:
+      one: 'Ein Dateilink'
+      other: '{count} Dateilinks'
+    SINGULARNAME: Dateilink
+    has_one_Linked: Verlinkt
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Bild nicht gefunden'

@@ -1116,6 +1116,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $extension = strtolower(File::get_file_extension($filename) ?? '');
 
         if (isset($file_types[$extension])) {
+            /** @phpstan-ignore translation.key (we need the key to be dynamic here) */
             return _t(
                 __CLASS__ . '.' . ucfirst($extension ?? '') . 'Type',
                 $file_types[$extension]

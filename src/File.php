@@ -1426,13 +1426,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $this->File->canViewFile();
     }
 
-    public function CMSEditLink()
-    {
-        $link = null;
-        $this->extend('updateCMSEditLink', $link);
-        return $link;
-    }
-
     public function PreviewLink($action = null)
     {
         // Since AbsoluteURL can whitelist protected assets,

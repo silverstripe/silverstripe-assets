@@ -277,8 +277,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
             return null;
         }
         $url = $this->getSourceURL($grant);
-        $this->updateURL($url);
-        $this->extend('updateURL', $url);
+        $this->invokeWithExtensions('updateURL', $url);
         return $url;
     }
 

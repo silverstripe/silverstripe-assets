@@ -339,7 +339,7 @@ class Folder extends File
     public function validate()
     {
         $result = ValidationResult::create();
-        $this->extend('validate', $result);
+        $this->extend('updateValidate', $result);
         return $result;
     }
 

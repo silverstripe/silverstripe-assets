@@ -1058,7 +1058,7 @@ trait ImageManipulation
      * This means we have to use a whitelist of "known formats", based on methods
      * available on the {@link Image} class as the "main" user of this trait.
      * The one exception to this is the variant for swapping file extensions, which is explicitly allowed.
-     * This class is commonly decorated with additional manipulation methods through {@link DataExtension}.
+     * This class is commonly decorated with additional manipulation methods through {@link Extension}.
      *
      * @param $variantName
      * @return array|null An array of arguments passed to {@link variantName}. The first item is the "format".

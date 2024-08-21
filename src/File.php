@@ -727,18 +727,21 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
         // Update title
         if (!$title) {
-            // Generate a readable title, dashes and underscores replaced by whitespace,
-            // and any file extensions removed.
-            $this->setField(
-                'Title',
-                str_replace(['-','_'], ' ', preg_replace('/\.[^.]+$/', '', $name ?? '') ?? '')
-            );
+            $this->setField('Title', File::getNormalisedFileName($name));
         }
 
         // Propagate changes to the AssetStore and update the DBFile field
         $this->updateFilesystem();
 
         parent::onBeforeWrite();
+    }
+
+    /**
+     * Generate a readable title, dashes and underscores replaced by whitespace, and any file extensions removed.
+     */
+    public static function getNormalisedFileName(string $name): string
+    {
+        return trim(str_replace(['-','_'], ' ', (string) preg_replace('/\.[^.]+$/', '', $name)));
     }
 
     /**

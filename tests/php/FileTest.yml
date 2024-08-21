@@ -170,3 +170,7 @@ SilverStripe\Assets\Image:
     FileFilename: FileTest.png
     FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
     Name: FileTest.png
+  setfromname-non-english:
+    FileFilename: FileTest-ملف.png
+    FileHash: 55b443b60176235ef09801153cca4e6da7494a0c
+    Name: FileTest.png

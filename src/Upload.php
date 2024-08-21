@@ -199,6 +199,9 @@ class Upload extends Controller
         }
         $filename = $this->resolveExistingFile($filename);
 
+        // Store teh actual file name before any transformation from getValidFilename
+        $this->file->setField('Title', File::getNormalisedFileName((string) $tmpFile['name']));
+
         // Save changes to underlying record (if it's a DataObject)
         $this->storeTempFile($tmpFile, $filename, $this->file);
         if ($this->file instanceof DataObject) {

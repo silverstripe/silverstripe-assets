@@ -40,7 +40,7 @@ class Folder extends File
 
     private static $table_name = 'Folder';
 
-    public function exists()
+    public function exists(): bool
     {
         return $this->isInDB();
     }

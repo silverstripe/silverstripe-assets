@@ -61,7 +61,7 @@ class UploadTest extends SapphireTest
     public function testUpload()
     {
         // create tmp file
-        $tmpFileName = 'UploadTest-testUpload.txt';
+        $tmpFileName = 'UploadTest-testUploãd.txt';
         $this->tmpFilePath = TEMP_PATH . DIRECTORY_SEPARATOR . $tmpFileName;
         $tmpFileContent = $this->getTemporaryFileContent();
         file_put_contents($this->tmpFilePath ?? '', $tmpFileContent);
@@ -87,6 +87,7 @@ class UploadTest extends SapphireTest
             'Uploads/UploadTest-testUpload.txt',
             $file1->getFilename()
         );
+        $this->assertSame('UploadTest testUploãd', $file1->Title);
         $this->assertEquals(
             ASSETS_PATH . '/UploadTest/.protected/Uploads/315ae4c3d4/UploadTest-testUpload.txt',
             TestAssetStore::getLocalPath($file1)

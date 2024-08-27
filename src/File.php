@@ -1183,7 +1183,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         $result = ValidationResult::create();
         $this->File->validate($result, $this->Name);
-        $this->extend('validate', $result);
+        $this->extend('updateValidate', $result);
         return $result;
     }
 

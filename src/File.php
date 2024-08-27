@@ -299,10 +299,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
      *
      * Use $file->isInDB() to only check for a DB record
      * Use $file->File->exists() to only check if the asset exists
-     *
-     * @return bool
      */
-    public function exists()
+    public function exists(): bool
     {
         return parent::exists() && $this->File->exists();
     }
@@ -1316,10 +1314,8 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
     /**
      * Return a html5 tag of the appropriate for this file (normally img or a)
-     *
-     * @return string
      */
-    public function forTemplate()
+    public function forTemplate(): string
     {
         return $this->getTag() ?: '';
     }

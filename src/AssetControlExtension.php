@@ -8,8 +8,8 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\Security\Member;
+use SilverStripe\Core\Extension;
 
 /**
  * This class provides the necessary business logic to ensure that any assets attached
@@ -24,9 +24,9 @@ use SilverStripe\Security\Member;
  * Assets which are no longer referenced will be flushed via explicit delete calls
  * to the underlying filesystem.
  *
- * @extends DataExtension<DataObject&Versioned>
+ * @extends Extension<DataObject&Versioned>
  */
-class AssetControlExtension extends DataExtension
+class AssetControlExtension extends Extension
 {
     /**
      * When archiving versioned dataobjects, should assets be archived with them?

@@ -4,27 +4,25 @@ namespace SilverStripe\Assets\Dev\Tasks;
 
 use SilverStripe\Assets\InterventionBackend;
 use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * A task to manually flush InterventionBackend cache
  */
 class InterventionBackendCacheFlushTask extends BuildTask
 {
-    private static $segment = 'InterventionBackendCacheFlushTask';
+    protected static string $commandName = 'InterventionBackendCacheFlushTask';
 
-    protected $title = 'Clear InterventionBackend cache';
+    protected string $title = 'Clear InterventionBackend cache';
 
-    protected $description = "Clears caches for InterventionBackend";
+    protected static string $description = 'Clears caches for InterventionBackend';
 
-    /**
-     * @param \SilverStripe\Control\HTTPRequest $request
-     * @throws \ReflectionException
-     */
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
         $class = new InterventionBackend();
         $class->getCache()->clear();
-
-        echo 'DONE';
+        return Command::SUCCESS;
     }
 }

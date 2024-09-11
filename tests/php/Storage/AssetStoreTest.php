@@ -18,6 +18,7 @@ use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class AssetStoreTest extends SapphireTest
 {
@@ -235,7 +236,7 @@ class AssetStoreTest extends SapphireTest
      *
      * @return array
      */
-    public function dataProviderFileIDs()
+    public static function dataProviderFileIDs()
     {
         return [
             [
@@ -300,7 +301,7 @@ class AssetStoreTest extends SapphireTest
     /**
      * Data providers for files which need cleaning up (only when generating fileID)
      */
-    public function dataProviderDirtyFileIDs()
+    public static function dataProviderDirtyFileIDs()
     {
         return [
             [
@@ -317,11 +318,11 @@ class AssetStoreTest extends SapphireTest
     /**
      * Test internal file Id generation
      *
-     * @dataProvider dataProviderFileIDs
-     * @dataProvider dataProviderDirtyFileIDs
      * @param string $fileID Expected file ID
      * @param array $tuple Tuple that generates this file ID
      */
+    #[DataProvider('dataProviderFileIDs')]
+    #[DataProvider('dataProviderDirtyFileIDs')]
     public function testGetFileID($fileID, $tuple)
     {
         /** @var TestAssetStore $store */
@@ -579,7 +580,7 @@ class AssetStoreTest extends SapphireTest
         $this->assertFileExists(ASSETS_PATH . '/AssetStoreTest/explicitelyPublicStore__variant.txt');
     }
 
-    public function listOfVariantsToWrite()
+    public static function listOfVariantsToWrite()
     {
         $content = "The quick brown fox jumps over the lazy dog.";
         $hash = sha1($content ?? '');
@@ -605,8 +606,8 @@ class AssetStoreTest extends SapphireTest
 
     /**
      * Make sure that variants are written next to their parent file
-     * @dataProvider listOfVariantsToWrite
      */
+    #[DataProvider('listOfVariantsToWrite')]
     public function testVariantWriteNextToFile(
         $fsName,
         $mainFilePath,
@@ -629,7 +630,7 @@ class AssetStoreTest extends SapphireTest
         $this->assertTrue($fs->fileExists($expectedVariantPath));
     }
 
-    public function listOfFilesToNormalise()
+    public static function listOfFilesToNormalise()
     {
         $public = AssetStore::VISIBILITY_PUBLIC;
         $protected = AssetStore::VISIBILITY_PROTECTED;
@@ -692,7 +693,6 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * @dataProvider listOfFilesToNormalise
      * @param string $fsName
      * @param array $contents
      * @param string $filename
@@ -700,6 +700,7 @@ class AssetStoreTest extends SapphireTest
      * @param array $expected
      * @param array $notExpected
      */
+    #[DataProvider('listOfFilesToNormalise')]
     public function testNormalise($fsName, array $contents, $filename, $hash, array $expected, array $notExpected = [])
     {
         /** @var FileIDHelperResolutionStrategy $protectedStrat */
@@ -728,7 +729,7 @@ class AssetStoreTest extends SapphireTest
         $protectedStrat->setResolutionFileIDHelpers($originalHelpers);
     }
 
-    public function listOfFileIDsToNormalise()
+    public static function listOfFileIDsToNormalise()
     {
         $public = AssetStore::VISIBILITY_PUBLIC;
         $protected = AssetStore::VISIBILITY_PROTECTED;
@@ -821,13 +822,13 @@ class AssetStoreTest extends SapphireTest
     }
 
     /**
-     * @dataProvider listOfFileIDsToNormalise
      * @param string $fsName
      * @param array $contents
      * @param string $fileID
      * @param array $expected
      * @param array $notExpected
      */
+    #[DataProvider('listOfFileIDsToNormalise')]
     public function testNormalisePath(
         $fsName,
         array $contents,

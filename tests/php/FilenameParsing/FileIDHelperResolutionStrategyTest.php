@@ -18,6 +18,7 @@ use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Versioned\Versioned;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class FileIDHelperResolutionStrategyTest extends SapphireTest
 {
@@ -65,7 +66,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         parent::tearDown();
     }
 
-    public function fileList()
+    public static function fileList()
     {
         return [
             ['root-file'],
@@ -76,9 +77,9 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         ];
     }
 
-    public function fileHelperList()
+    public static function fileHelperList()
     {
-        $files = $this->fileList();
+        $files = static::fileList();
         $list = [];
         // We're not testing the FileIDHelper implementation here. But there's a bit of split logic based on whatever
         // the FileIDHelper uses the hash or not.
@@ -91,8 +92,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that FileID resolve when access directly.
-     * @dataProvider fileHelperList
      */
+    #[DataProvider('fileHelperList')]
     public function testDirectResolveFileID($fixtureID, FileIDHelper $helper)
     {
         /** @var File $fileDO */
@@ -117,8 +118,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that FileID resolve when their file ID Scheme is a secondary resolution mechanism.
-     * @dataProvider fileHelperList
      */
+    #[DataProvider('fileHelperList')]
     public function testSecondaryResolveFileID($fixtureID, FileIDHelper $helper)
     {
         /** @var File $fileDO */
@@ -142,8 +143,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that resolve fails when there's an hash mismatch
-     * @dataProvider fileHelperList
      */
+    #[DataProvider('fileHelperList')]
     public function testBadHashResolveFileID($fixtureID, FileIDHelper $helper)
     {
         /** @var File $fileDO */
@@ -168,8 +169,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that FileID resolve when access directly.
-     * @dataProvider fileHelperList
      */
+    #[DataProvider('fileHelperList')]
     public function testDirectSoftResolveFileID($fixtureID, FileIDHelper $helper)
     {
         /** @var File $fileDO */
@@ -207,8 +208,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     /**
      * This method check that older url get redirect to the later ones. This is only relevant for File Scheme with
      * explicit hash. Natural path URL don't change even when the hash of the file does.
-     * @dataProvider fileList
      */
+    #[DataProvider('fileList')]
     public function testSoftResolveOlderFileID($fixtureID)
     {
         /** @var File $fileDO */
@@ -243,8 +244,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that FileID resolve when their file ID Scheme is a secondary resolution mechanism.
-     * @dataProvider fileHelperList
      */
+    #[DataProvider('fileHelperList')]
     public function testSecondarySoftResolveFileID($fixtureID, FileIDHelper $helper)
     {
         /** @var File $fileDO */
@@ -276,8 +277,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * When a file id can be parsed, but that no file can be found, null should be return.
-     * @dataProvider fileList
      */
+    #[DataProvider('fileList')]
     public function testResolveMissingFileID($fixtureID)
     {
         /** @var File $fileDO */
@@ -301,7 +302,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertNull($redirect, 'Theres no file on our adapter for resolveFileID to find');
     }
 
-    public function searchTupleStrategyVariation()
+    public static function searchTupleStrategyVariation()
     {
         $expected = 'expected/abcdef7890/file.txt';
 
@@ -348,8 +349,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
 
     /**
      * This method checks that FileID resolve when access directly.
-     * @dataProvider searchTupleStrategyVariation
      */
+    #[DataProvider('searchTupleStrategyVariation')]
     public function testSearchForTuple(FileIDHelperResolutionStrategy $strategy, $tuple, $expected)
     {
         /** @var FileHashingService $hasher */
@@ -466,7 +467,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertEquals($hash, $respPfID->getHash(), 'hash should have been read from main file');
     }
 
-    public function findVariantsStrategyVariation()
+    public static function findVariantsStrategyVariation()
     {
         $brokenHelper = new BrokenFileIDHelper('nonsense.txt', 'nonsense', '', 'nonsense.txt', false, '');
         $mockHelper = new MockFileIDHelper(
@@ -512,8 +513,8 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
     /**
      * This method checks that FileID resolve when access directly.
      * @param FileIDHelperResolutionStrategy $strategy
-     * @dataProvider findVariantsStrategyVariation
      */
+    #[DataProvider('findVariantsStrategyVariation')]
     public function testFindVariant($strategy, $tuple)
     {
         $this->fs->write('Folder/FolderFile.pdf', 'version 1');
@@ -599,7 +600,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         $this->assertEmpty($parsedFileID);
     }
 
-    public function listVariantwihtoutFileID()
+    public static function listVariantwihtoutFileID()
     {
         $content = "The quick brown fox jumps over the lazy dog.";
         $hash = sha1($content ?? '');
@@ -623,9 +624,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider listVariantwihtoutFileID
-     */
+    #[DataProvider('listVariantwihtoutFileID')]
     public function testGenerateVariantFileID($mainFilePath, $content, ParsedFileID $variantPfid, $expectedFileID)
     {
         /** @var FileResolutionStrategy $strategy */
@@ -640,7 +639,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         }
     }
 
-    public function listVariantParsedFiledID()
+    public static function listVariantParsedFiledID()
     {
         $pfid = new ParsedFileID('folder/file.txt', 'abcdef7890');
         $ambigious = new ParsedFileID('decade1980/file.txt', 'abcdef7890');
@@ -678,9 +677,7 @@ class FileIDHelperResolutionStrategyTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider listVariantParsedFiledID
-     */
+    #[DataProvider('listVariantParsedFiledID')]
     public function testStripVariant(ParsedFileID $expected, $input)
     {
         /** @var FileResolutionStrategy $strategy */

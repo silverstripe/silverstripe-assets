@@ -11,6 +11,7 @@ use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
 use SilverStripe\Assets\Tests\FilenameParsing\FileIDHelperResolutionStrategyTest;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class FlysystemAssetStoreTest extends SapphireTest
 {
@@ -45,29 +46,29 @@ class FlysystemAssetStoreTest extends SapphireTest
         parent::setUp();
 
         $this->publicAdapter = $this->getMockBuilder(PublicAssetAdapter::class)
-            ->setMethods(['getPublicUrl'])
+            ->onlyMethods(['getPublicUrl'])
             ->getMock();
 
         $this->publicFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
+            ->onlyMethods(['has', 'read', 'readStream', 'lastModified'])
             ->setConstructorArgs([$this->publicAdapter])
             ->getMock();
 
         $this->protectedAdapter = $this->getMockBuilder(ProtectedAssetAdapter::class)
-            ->setMethods(['getProtectedUrl'])
+            ->onlyMethods(['getProtectedUrl'])
             ->getMock();
 
         $this->protectedFilesystem = $this->getMockBuilder(Filesystem::class)
-            ->setMethods(['has', 'read', 'readStream', 'lastModified'])
+            ->onlyMethods(['has', 'read', 'readStream', 'lastModified'])
             ->setConstructorArgs([$this->protectedAdapter])
             ->getMock();
 
         $this->publicStrategy = $this->getMockBuilder(FileIDHelperResolutionStrategy::class)
-            ->setMethods(['searchForTuple'])
+            ->onlyMethods(['searchForTuple'])
             ->getMock();
 
         $this->protectedStrategy = $this->getMockBuilder(FileIDHelperResolutionStrategy::class)
-            ->setMethods(['searchForTuple'])
+            ->onlyMethods(['searchForTuple'])
             ->getMock();
     }
 
@@ -94,8 +95,8 @@ class FlysystemAssetStoreTest extends SapphireTest
 
     /**
      * @param boolean $grant
-     * @dataProvider protectedUrlGrantProvider
      */
+    #[DataProvider('protectedUrlGrantProvider')]
     public function testGetAsUrlWithGrant($grant)
     {
         $this->publicFilesystem->expects($this->atLeastOnce())->method('has')->willReturn(false);
@@ -120,7 +121,7 @@ class FlysystemAssetStoreTest extends SapphireTest
     /**
      * @return array[]
      */
-    public function protectedUrlGrantProvider()
+    public static function protectedUrlGrantProvider()
     {
         return [
             [true],

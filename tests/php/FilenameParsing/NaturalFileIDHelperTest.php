@@ -7,12 +7,12 @@ use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 class NaturalFileIDHelperTest extends FileIDHelperTester
 {
 
-    protected function getHelper()
+    protected static function getHelper()
     {
         return new NaturalFileIDHelper();
     }
 
-    public function fileIDComponents()
+    public static function fileIDComponents()
     {
         return [
             // Common use case
@@ -43,7 +43,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function dirtyFileIDComponents()
+    public static function dirtyFileIDComponents()
     {
         return [
             ['sam.jpg', [
@@ -73,7 +73,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function dirtyFileIDFromDirtyTuple()
+    public static function dirtyFileIDFromDirtyTuple()
     {
         return [
             ['sam__double-under-score.jpg', [
@@ -97,7 +97,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    function dirtyFilenames()
+    public static function dirtyFilenames()
     {
         return [
             ['sam.jpg', 'sam.jpg'],
@@ -110,7 +110,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function brokenFileID()
+    public static function brokenFileID()
     {
         return [
             ['/sam.jpg'],
@@ -119,7 +119,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function variantOf()
+    public static function variantOf()
     {
         return [
             [
@@ -170,7 +170,7 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function variantIn()
+    public static function variantIn()
     {
         return [
             [new ParsedFileID('sam.jpg'), ''],

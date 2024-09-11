@@ -10,7 +10,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
-class GDImageTest extends ImageTest
+class GDImageTest extends ImageTestBase
 {
     protected function setUp(): void
     {

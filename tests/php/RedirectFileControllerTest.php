@@ -15,6 +15,7 @@ use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Versioned\Versioned;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class RedirectFileControllerTest extends FunctionalTest
 {
@@ -60,7 +61,7 @@ class RedirectFileControllerTest extends FunctionalTest
         parent::tearDown();
     }
 
-    public function fileList()
+    public static function fileList()
     {
         return [
             'root file' => ['asdf'],
@@ -70,9 +71,7 @@ class RedirectFileControllerTest extends FunctionalTest
         ];
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testPermanentFilenameRedirect($fixtureID)
     {
         /** @var File $file */
@@ -113,8 +112,8 @@ class RedirectFileControllerTest extends FunctionalTest
 
     /**
      * This test a file publish under the hash path, will redirect natural path
-     * @dataProvider fileList
      */
+    #[DataProvider('fileList')]
     public function testTemporaryFilenameRedirect($fixtureID)
     {
         /** @var File $file */
@@ -160,9 +159,7 @@ class RedirectFileControllerTest extends FunctionalTest
     }
 
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testRedirectWithDraftFile($fixtureID)
     {
         $hashHelper = new HashFileIDHelper();
@@ -207,9 +204,7 @@ class RedirectFileControllerTest extends FunctionalTest
         );
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testRedirectAfterPublishSecondVersion($fixtureID)
     {
         $hashHelper = new HashFileIDHelper();
@@ -255,9 +250,7 @@ class RedirectFileControllerTest extends FunctionalTest
         );
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testRedirectAfterUnpublish($fixtureID)
     {
         /** @var File $file */
@@ -303,9 +296,7 @@ class RedirectFileControllerTest extends FunctionalTest
         );
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testRedirectAfterDeleting($fixtureID)
     {
         /** @var File $file */
@@ -349,7 +340,7 @@ class RedirectFileControllerTest extends FunctionalTest
         );
     }
 
-    public function imageList()
+    public static function imageList()
     {
         return [
             ['', 'test', 'jpg'],
@@ -359,9 +350,7 @@ class RedirectFileControllerTest extends FunctionalTest
         ];
     }
 
-    /**
-     * @dataProvider imageList
-     */
+    #[DataProvider('imageList')]
     public function testVariantRedirect($folderFixture, $filename, $ext)
     {
         /** @var Image $file */
@@ -418,9 +407,7 @@ class RedirectFileControllerTest extends FunctionalTest
         );
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testDraftOnlyArchivedVersion($fixtureID)
     {
         $file = $this->objFromFixture(File::class, $fixtureID);

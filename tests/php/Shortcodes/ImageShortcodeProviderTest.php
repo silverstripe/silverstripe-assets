@@ -16,11 +16,12 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
 use DOMDocument;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ImageShortcodeProviderTest extends SapphireTest
 {
 
-    protected static $fixture_file = '../ImageTest.yml';
+    protected static $fixture_file = '../ImageTestBase.yml';
 
     protected function setUp(): void
     {
@@ -471,7 +472,7 @@ class ImageShortcodeProviderTest extends SapphireTest
         );
     }
 
-    public function gettersAndSettersProvider(): array
+    public static function gettersAndSettersProvider(): array
     {
         return [
                     'image without special characters' => [
@@ -499,9 +500,7 @@ class ImageShortcodeProviderTest extends SapphireTest
                 ];
     }
 
-    /**
-     * @dataProvider gettersAndSettersProvider
-     */
+    #[DataProvider('gettersAndSettersProvider')]
     public function testCreateImageTag(string $expected, array $attributes)
     {
         $this->assertEquals($expected, ImageShortcodeProvider::createImageTag($attributes));

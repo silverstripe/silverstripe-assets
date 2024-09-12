@@ -9,10 +9,10 @@ use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\FormField;
 use SilverStripe\ORM\FieldType\DBComposite;
-use SilverStripe\ORM\ValidationException;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Permission;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\ModelData;
 
 /**
  * Represents a file reference stored in a database
@@ -385,7 +385,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      */
     public function setOriginal(AssetContainer $original): static
     {
-        if ($original instanceof ViewableData) {
+        if ($original instanceof ModelData) {
             $this->setFailover($original);
         }
         return $this;

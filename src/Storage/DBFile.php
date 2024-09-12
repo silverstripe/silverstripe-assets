@@ -145,7 +145,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         // Check that path is available
         $url = $this->getURL();
         if (empty($url)) {
-            return null;
+            return '';
         }
 
         // Image template for supported images

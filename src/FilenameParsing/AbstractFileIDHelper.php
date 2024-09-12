@@ -4,7 +4,7 @@ namespace SilverStripe\Assets\FilenameParsing;
 
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injectable;
-use SilverStripe\Core\Path;
+use Symfony\Component\Filesystem\Path;
 
 abstract class AbstractFileIDHelper implements FileIDHelper
 {

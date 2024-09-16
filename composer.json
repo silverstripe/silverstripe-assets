@@ -24,7 +24,8 @@
         "silverstripe/vendor-plugin": "^2",
         "symfony/filesystem": "^7.0",
         "intervention/image": "^3.7",
-        "league/flysystem": "^3.15.0"
+        "league/flysystem": "^3.22",
+        "league/flysystem-local": "^3.22"
     },
     "require-dev": {
         "silverstripe/recipe-testing": "^4",

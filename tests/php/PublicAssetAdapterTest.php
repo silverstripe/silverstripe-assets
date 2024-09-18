@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class PublicAssetAdapterTest extends SapphireTest
 {
@@ -29,7 +30,7 @@ class PublicAssetAdapterTest extends SapphireTest
         );
     }
 
-    public function provideGetPublicUrl(): array
+    public static function provideGetPublicUrl(): array
     {
         return [
             'filename' => [
@@ -47,9 +48,7 @@ class PublicAssetAdapterTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider provideGetPublicUrl
-     */
+    #[DataProvider('provideGetPublicUrl')]
     public function testGetPublicUrl(string $path, string $expected)
     {
         $adapter = new PublicAssetAdapter('assets');

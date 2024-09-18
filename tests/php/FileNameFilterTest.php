@@ -5,6 +5,7 @@ namespace SilverStripe\Assets\Tests;
 use SilverStripe\Assets\FileNameFilter;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\Parsers\Transliterator;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class FileNameFilterTest extends SapphireTest
 {
@@ -59,9 +60,7 @@ class FileNameFilterTest extends SapphireTest
         );
     }
 
-    /**
-     * @dataProvider providerFilterWithEmptyString
-     */
+    #[DataProvider('providerFilterWithEmptyString')]
     public function testFilterWithEmptyString($name)
     {
         $filter = new FileNameFilter();
@@ -80,7 +79,7 @@ class FileNameFilterTest extends SapphireTest
         );
     }
 
-    public function providerFilterWithEmptyString()
+    public static function providerFilterWithEmptyString()
     {
         return [['ö ö ö.jpg'], ['新しいファイル.jpg']];
     }

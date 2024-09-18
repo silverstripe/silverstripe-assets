@@ -18,13 +18,14 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
  */
-abstract class ImageTest extends SapphireTest
+abstract class ImageTestBase extends SapphireTest
 {
-    protected static $fixture_file = 'ImageTest.yml';
+    protected static $fixture_file = 'ImageTestBase.yml';
 
     protected function setUp(): void
     {
@@ -332,11 +333,11 @@ abstract class ImageTest extends SapphireTest
     }
 
     /**
-     * @dataProvider providerTestImageResizeInvalid
      * @param $width
      * @param $height
      * @param $error
      */
+    #[DataProvider('providerTestImageResizeInvalid')]
     public function testImageResizeInvalid($width, $height, $error)
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -346,7 +347,7 @@ abstract class ImageTest extends SapphireTest
         $image->Pad($width, $height);
     }
 
-    public function providerTestImageResizeInvalid()
+    public static function providerTestImageResizeInvalid()
     {
         return [
             ['-1', 100, 'Width must be positive'],
@@ -460,7 +461,7 @@ abstract class ImageTest extends SapphireTest
         $container = $this->getMockAssetBackend($filename, $hash);
         $container
             ->expects($this->any())->method('getStream')
-            ->will($this->returnValue(null)); // Should safely trigger error in InterventionBackend::getImageResource()
+            ->willReturn(null); // Should safely trigger error in InterventionBackend::getImageResource()
 
         // Test backend
         /** @var InterventionBackend $backend */
@@ -510,7 +511,7 @@ abstract class ImageTest extends SapphireTest
         $stream = fopen(__DIR__.'/ImageTest/not-image.txt', 'r');
         $container
             ->expects($this->any())->method('getStream')
-            ->will($this->returnValue($stream));
+            ->willReturn($stream);
 
         // Test backend
         /** @var InterventionBackend $backend */
@@ -545,9 +546,15 @@ abstract class ImageTest extends SapphireTest
     {
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
         $this->assertInstanceOf(Image_Backend::class, $image->getImageBackend());
-
-        $mockBackend = $this->getMockBuilder(InterventionBackend::class)->getMock();
-        $mockBackend->expects($this->any())->method('getWidth')->will($this->returnValue(99999));
+        // Using anonymous class rather than PHPUnit getMockBuilder() to prevent error
+        // Error: Typed property MockObject_InterventionBackend_1695e44d::$__phpunit_state
+        // must not be accessed before initialization
+        $mockBackend = new class extends InterventionBackend {
+            public function getWidth(): int
+            {
+                return 99999;
+            }
+        };
         $image->setImageBackend($mockBackend);
         $this->assertEquals(99999, $image->getWidth());
     }
@@ -560,11 +567,11 @@ abstract class ImageTest extends SapphireTest
     protected function getMockAssetBackend($filename, $hash)
     {
         $builder = $this->getMockBuilder(AssetContainer::class)->getMock();
-        $builder->expects($this->any())->method('exists')->will($this->returnValue(true));
-        $builder->expects($this->any())->method('getFilename')->will($this->returnValue($filename));
-        $builder->expects($this->any())->method('getHash')->will($this->returnValue($hash));
-        $builder->expects($this->any())->method('getVariant')->will($this->returnValue(null));
-        $builder->expects($this->any())->method('getIsImage')->will($this->returnValue(true));
+        $builder->expects($this->any())->method('exists')->willReturn(true);
+        $builder->expects($this->any())->method('getFilename')->willReturn($filename);
+        $builder->expects($this->any())->method('getHash')->willReturn($hash);
+        $builder->expects($this->any())->method('getVariant')->willReturn(null);
+        $builder->expects($this->any())->method('getIsImage')->willReturn(true);
         return $builder;
     }
 

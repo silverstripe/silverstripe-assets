@@ -14,10 +14,10 @@ class FileFinderTest extends SapphireTest
 
     protected $base;
 
-    public function __construct()
+    public function __construct(string $name)
     {
         $this->base = __DIR__ . '/FileFinderTest';
-        parent::__construct();
+        parent::__construct($name);
     }
 
     public function testBasicOperation()

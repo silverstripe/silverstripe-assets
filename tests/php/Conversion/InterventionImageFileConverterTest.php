@@ -9,6 +9,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class InterventionImageFileConverterTest extends SapphireTest
 {
@@ -34,7 +35,7 @@ class InterventionImageFileConverterTest extends SapphireTest
         }
     }
 
-    public function provideSupportsConversion(): array
+    public static function provideSupportsConversion(): array
     {
         // We don't need to check every possible file type here.
         // We're just validating that the logic overall holds true.
@@ -90,16 +91,14 @@ class InterventionImageFileConverterTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider provideSupportsConversion
-     */
+    #[DataProvider('provideSupportsConversion')]
     public function testSupportsConversion(string $from, string $to, array $options, bool $expected): void
     {
         $converter = new InterventionImageFileConverter();
         $this->assertSame($expected, $converter->supportsConversion($from, $to, $options));
     }
 
-    public function provideConvert(): array
+    public static function provideConvert(): array
     {
         return [
             'no options' => [
@@ -111,9 +110,7 @@ class InterventionImageFileConverterTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider provideConvert
-     */
+    #[DataProvider('provideConvert')]
     public function testConvert(array $options): void
     {
         $origFile = $this->objFromFixture(Image::class, 'jpg-image');
@@ -133,7 +130,7 @@ class InterventionImageFileConverterTest extends SapphireTest
         }
     }
 
-    public function provideConvertUnsupported(): array
+    public static function provideConvertUnsupported(): array
     {
         return [
             'nothing to convert from' => [
@@ -181,9 +178,7 @@ class InterventionImageFileConverterTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider provideConvertUnsupported
-     */
+    #[DataProvider('provideConvertUnsupported')]
     public function testConvertUnsupported(string $fixtureClass, string $fromFixture, string $to, array $options, string $exceptionMessage): void
     {
         $file = $this->objFromFixture($fixtureClass, $fromFixture);

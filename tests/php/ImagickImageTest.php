@@ -10,7 +10,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Injector\SilverStripeServiceConfigurationLocator;
 
-class ImagickImageTest extends ImageTest
+class ImagickImageTest extends ImageTestBase
 {
     protected function setUp(): void
     {

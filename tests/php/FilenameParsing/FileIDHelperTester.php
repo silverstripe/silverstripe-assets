@@ -1,6 +1,7 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Dev\SapphireTest;
@@ -15,55 +16,53 @@ abstract class FileIDHelperTester extends SapphireTest
     /**
      * @return FileIDHelper
      */
-    abstract protected function getHelper();
+    abstract protected static function getHelper();
 
     /**
      * List of valid file IDs and their matching component. The first parameter can be use the deduc the second, and
      * the second can be used to build the first.
      * @return array
      */
-    abstract public function fileIDComponents();
+    abstract public static function fileIDComponents();
 
     /**
      * List of unclean buildFileID inputs and their expected output. Second parameter can build the first, but not the
      * other way around.
      * @return array
      */
-    abstract public function dirtyFileIDComponents();
+    abstract public static function dirtyFileIDComponents();
 
     /**
      * Similar to `dirtyFileIDComponents` only the expected output is dirty has well.
      * @return array
      */
-    abstract public function dirtyFileIDFromDirtyTuple();
+    abstract public static function dirtyFileIDFromDirtyTuple();
 
     /**
      * List of potentially dirty filename and their clean equivalent
      * @return array
      */
-    abstract public function dirtyFilenames();
+    abstract public static function dirtyFilenames();
 
     /**
      * List of broken file ID that will break the hash parser regex.
      */
-    abstract public function brokenFileID();
+    abstract public static function brokenFileID();
 
     /**
      * List of `fileID` and `original` parsedFileID and whatever the `fileID` is a variant of `original`
      * @return array[]
      */
-    abstract public function variantOf();
+    abstract public static function variantOf();
 
     /**
      * List of parsedFieldID and a matching expected path where its variants should be search for.
      * @return array[]
      */
-    abstract public function variantIn();
+    abstract public static function variantIn();
 
-    /**
-     * @dataProvider fileIDComponents
-     * @dataProvider dirtyFileIDComponents
-     */
+    #[DataProvider('fileIDComponents')]
+    #[DataProvider('dirtyFileIDComponents')]
     public function testBuildFileID($expected, $input)
     {
         $help = $this->getHelper();
@@ -73,28 +72,23 @@ abstract class FileIDHelperTester extends SapphireTest
 
     /**
      * `buildFileID` accepts an optional `cleanFilename` argument that disables cleaning of filename.
-     * @dataProvider dirtyFileIDFromDirtyTuple
-     * @dataProvider fileIDComponents
      */
+    #[DataProvider('dirtyFileIDFromDirtyTuple')]
+    #[DataProvider('fileIDComponents')]
     public function testDirtyBuildFildID($expected, $input)
     {
         $help = $this->getHelper();
         $this->assertEquals($expected, $help->buildFileID(new ParsedFileID(...$input), null, null, false));
     }
 
-
-    /**
-     * @dataProvider dirtyFilenames
-     */
+    #[DataProvider('dirtyFilenames')]
     public function testCleanFilename($expected, $input)
     {
         $help = $this->getHelper();
         $this->assertEquals($expected, $help->cleanFilename($input));
     }
 
-    /**
-     * @dataProvider fileIDComponents
-     */
+    #[DataProvider('fileIDComponents')]
     public function testParseFileID($input, $expected)
     {
         $help = $this->getHelper();
@@ -110,10 +104,7 @@ abstract class FileIDHelperTester extends SapphireTest
         $this->assertEquals($expectedVariant, $parsedFiledID->getVariant());
     }
 
-
-    /**
-     * @dataProvider brokenFileID
-     */
+    #[DataProvider('brokenFileID')]
     public function testParseBrokenFileID($input)
     {
         $help = $this->getHelper();
@@ -121,10 +112,7 @@ abstract class FileIDHelperTester extends SapphireTest
         $this->assertNull($parsedFiledID);
     }
 
-
-    /**
-     * @dataProvider variantOf
-     */
+    #[DataProvider('variantOf')]
     public function testVariantOf($variantFileID, ParsedFileID $original, $expected)
     {
         $help = $this->getHelper();
@@ -132,9 +120,7 @@ abstract class FileIDHelperTester extends SapphireTest
         $this->assertEquals($expected, $isVariantOf);
     }
 
-    /**
-     * @dataProvider variantIn
-     */
+    #[DataProvider('variantIn')]
     public function testLookForVariantIn(ParsedFileID $original, $expected)
     {
         $help = $this->getHelper();

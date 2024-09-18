@@ -24,6 +24,7 @@ use SilverStripe\ORM\ValidationException;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Versioned\Versioned;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests for the File class
@@ -185,7 +186,7 @@ class FileTest extends SapphireTest
         $this->assertNull($broken->Pad(100, 100));
     }
 
-    public function appCategoryDataProvider()
+    public static function appCategoryDataProvider()
     {
         return [
             ['image', 'jpg'],
@@ -200,9 +201,7 @@ class FileTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider appCategoryDataProvider
-     */
+    #[DataProvider('appCategoryDataProvider')]
     public function testAppCategory($category, $extension)
     {
         // Test various categories
@@ -833,10 +832,10 @@ class FileTest extends SapphireTest
     }
 
     /**
-     * @dataProvider allowedExtensionsProvider
      * @param array $allowedExtensions
      * @param array $expected
      */
+    #[DataProvider('allowedExtensionsProvider')]
     public function testGetAllowedExtensions($allowedExtensions, $expected)
     {
         Config::modify()->set(File::class, 'allowed_extensions', $allowedExtensions);
@@ -846,7 +845,7 @@ class FileTest extends SapphireTest
     /**
      * @return array[]
      */
-    public function allowedExtensionsProvider()
+    public static function allowedExtensionsProvider()
     {
         return [
             'unkeyed array' => [
@@ -875,7 +874,7 @@ class FileTest extends SapphireTest
     public function testCanViewReturnsExtendedResult()
     {
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(true);
         $this->assertTrue($file->canView());
     }
@@ -885,7 +884,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         /** @var PermissionChecker&MockObject $permissionChecker */
@@ -938,7 +937,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         $file->CanViewType = 'LoggedInUsers';
@@ -950,7 +949,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         $file->CanViewType = 'OnlyTheseUsers';
@@ -960,7 +959,7 @@ class FileTest extends SapphireTest
     public function testCanViewReturnsTrueForUserInGroupWithCanViewTypeOnlyTheseUsers()
     {
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         /** @var Member&MockObject $member */
@@ -976,7 +975,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         /** @var PermissionChecker&MockObject $permissionChecker */
@@ -992,7 +991,7 @@ class FileTest extends SapphireTest
     public function testCanEditReturnsExtendedResult()
     {
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(true);
         $this->assertTrue($file->canEdit());
     }
@@ -1002,7 +1001,7 @@ class FileTest extends SapphireTest
         $this->logInWithPermission();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
         $this->assertTrue($file->canEdit());
     }
@@ -1012,7 +1011,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         /** @var PermissionChecker&MockObject $permissionChecker */
@@ -1030,7 +1029,7 @@ class FileTest extends SapphireTest
         $this->logOut();
 
         /** @var File&MockObject $file */
-        $file = $this->getMockBuilder(File::class)->setMethods(['extendedCan'])->getMock();
+        $file = $this->getMockBuilder(File::class)->onlyMethods(['extendedCan'])->getMock();
         $file->expects($this->once())->method('extendedCan')->willReturn(null);
 
         /** @var PermissionChecker&MockObject $permissionChecker */
@@ -1047,7 +1046,7 @@ class FileTest extends SapphireTest
      * @return Generator
      * @see testHasRestrictedAccess
      */
-    public function restrictedAccessDataProvider()
+    public static function restrictedAccessDataProvider()
     {
         yield ['restricted-test-r', false];
         yield ['restricted-test-r1', false];
@@ -1063,11 +1062,11 @@ class FileTest extends SapphireTest
     }
 
     /**
-     * @dataProvider restrictedAccessDataProvider
      *
      * @param string $fixtureName
      * @param bool $expected
      */
+    #[DataProvider('restrictedAccessDataProvider')]
     public function testHasRestrictedAccess(string $fixtureName, bool $expected)
     {
         /** @var Folder $folder */

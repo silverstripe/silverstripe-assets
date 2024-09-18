@@ -7,16 +7,17 @@ use ReflectionMethod;
 use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Core\Convert;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class HashFileIDHelperTest extends FileIDHelperTester
 {
 
-    protected function getHelper()
+    protected static function getHelper()
     {
         return new HashFileIDHelper();
     }
 
-    public function fileIDComponents()
+    public static function fileIDComponents()
     {
         return [
             // Common use case
@@ -45,7 +46,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function dirtyFileIDComponents()
+    public static function dirtyFileIDComponents()
     {
         return [
             // Cases that need clean up
@@ -61,7 +62,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function dirtyFileIDFromDirtyTuple()
+    public static function dirtyFileIDFromDirtyTuple()
     {
         return [
             // Cases that need clean up
@@ -77,7 +78,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    function dirtyFilenames()
+    public static function dirtyFilenames()
     {
         return [
             ['sam.jpg', 'sam.jpg'],
@@ -90,7 +91,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function brokenFileID()
+    public static function brokenFileID()
     {
         return [
             ['sam.jpg'],
@@ -103,7 +104,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function variantOf()
+    public static function variantOf()
     {
         return [
             [
@@ -159,7 +160,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    public function variantIn()
+    public static function variantIn()
     {
         return [
             [new ParsedFileID('sam.jpg', 'abcdef7890'), 'abcdef7890'],
@@ -177,7 +178,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         $this->getHelper()->buildFileID('Filename.txt', '');
     }
 
-    public function provideRewriteExtension()
+    public static function provideRewriteExtension()
     {
         $jpgToPng = 'ExtRewrite' . Convert::base64url_encode(['jpg', 'png']);
 
@@ -193,9 +194,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         ];
     }
 
-    /**
-     * @dataProvider provideRewriteExtension
-     */
+    #[DataProvider('provideRewriteExtension')]
     public function testRewriteVariantExtension($variant, $inFilename, $outFilename)
     {
         $helper = new HashFileIDHelper();
@@ -207,9 +206,7 @@ class HashFileIDHelperTest extends FileIDHelperTester
         $this->assertEquals($outFilename, $actualFilename);
     }
 
-    /**
-     * @dataProvider provideRewriteExtension
-     */
+    #[DataProvider('provideRewriteExtension')]
     public function testRestoreOriginalExtension($variant, $outFilename, $inFilename)
     {
         $helper = new HashFileIDHelper();

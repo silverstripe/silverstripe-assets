@@ -12,6 +12,7 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Versioned\Versioned;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ProtectedFileControllerTest extends FunctionalTest
 {
@@ -50,9 +51,7 @@ class ProtectedFileControllerTest extends FunctionalTest
         parent::tearDown();
     }
 
-    /**
-     * @dataProvider getFilenames
-     */
+    #[DataProvider('getFilenames')]
     public function testIsValidFilename($name, $isValid)
     {
         $controller = new ProtectedFileController();
@@ -63,7 +62,7 @@ class ProtectedFileControllerTest extends FunctionalTest
         );
     }
 
-    public function getFilenames()
+    public static function getFilenames()
     {
         return [
             // Valid names

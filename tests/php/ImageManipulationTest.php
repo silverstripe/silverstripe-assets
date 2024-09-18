@@ -23,13 +23,14 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\SSViewer;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
  */
 class ImageManipulationTest extends SapphireTest
 {
-    protected static $fixture_file = 'ImageTest.yml';
+    protected static $fixture_file = 'ImageTestBase.yml';
 
     protected function setUp(): void
     {
@@ -285,7 +286,7 @@ class ImageManipulationTest extends SapphireTest
         );
     }
 
-    public function lazyLoadProvider()
+    public static function lazyLoadProvider()
     {
         return [
             'false (bool)' => [false, false],
@@ -305,8 +306,8 @@ class ImageManipulationTest extends SapphireTest
     /**
      * @param $val
      * @param $expected
-     * @dataProvider lazyLoadProvider
      */
+    #[DataProvider('lazyLoadProvider')]
     public function testLazyLoad($val, bool $expected)
     {
         /** @var Image $origin */
@@ -324,7 +325,7 @@ class ImageManipulationTest extends SapphireTest
         );
     }
 
-    public function lazyLoadBadProvider()
+    public static function lazyLoadBadProvider()
     {
         return [
             'null' => [null],
@@ -339,8 +340,8 @@ class ImageManipulationTest extends SapphireTest
 
     /**
      * @param $val
-     * @dataProvider lazyLoadBadProvider
      */
+    #[DataProvider('lazyLoadBadProvider')]
     public function testBadLazyLoad($val)
     {
         /** @var Image $origin */
@@ -390,7 +391,7 @@ class ImageManipulationTest extends SapphireTest
         Image::remove_extension(LazyLoadAccessorExtension::class);
     }
 
-    public function renderProvider()
+    public static function renderProvider()
     {
         $alt = 'This is a image Title';
         $src = '/assets/ImageTest/folder/test-image.png';
@@ -441,9 +442,7 @@ class ImageManipulationTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider renderProvider
-     */
+    #[DataProvider('renderProvider')]
     public function testRender(string $template, string $expected)
     {
         /** @var Image $origin */
@@ -563,27 +562,25 @@ class ImageManipulationTest extends SapphireTest
         $this->assertSame('Any content will do - csv is just a text file afterall', $manipulated->getString());
     }
 
-    public function provideConvert(): array
+    public static function provideConvert(): array
     {
         return [
             'supported conversion' => [
                 'originalFileFixtureClass' => File::class,
                 'originalFileFixture' => 'notImage',
-                'toFormat' => 'jpg',
+                'toExtension' => 'jpg',
                 'success' => true,
             ],
             'unsupported conversion' => [
                 'originalFileFixtureClass' => File::class,
                 'originalFileFixture' => 'notImage',
-                'toFormat' => 'pdf',
+                'toExtension' => 'pdf',
                 'success' => false,
             ],
         ];
     }
 
-    /**
-     * @dataProvider provideConvert
-     */
+    #[DataProvider('provideConvert')]
     public function testConvert(string $originalFileFixtureClass, string $originalFileFixture, string $toExtension, bool $success): void
     {
         // Make sure we have a known set of converters for testing
@@ -606,7 +603,7 @@ class ImageManipulationTest extends SapphireTest
         }
     }
 
-    public function provideConvertChainWithLazyLoad(): array
+    public static function provideConvertChainWithLazyLoad(): array
     {
         return [
             [true],
@@ -614,9 +611,7 @@ class ImageManipulationTest extends SapphireTest
         ];
     }
 
-    /**
-     * @dataProvider provideConvertChainWithLazyLoad
-     */
+    #[DataProvider('provideConvertChainWithLazyLoad')]
     public function testConvertChainWithLazyLoad(bool $lazyLoad): void
     {
         // Make sure we have a known set of converters for testing

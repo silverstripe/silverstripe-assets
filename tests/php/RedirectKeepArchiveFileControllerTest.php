@@ -11,6 +11,7 @@ use SilverStripe\Assets\File;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * We rerun all the same test in `RedirectFileControllerTest` but with keep_archived_assets on
@@ -24,9 +25,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         parent::setUp();
     }
 
-    /**
-     * @dataProvider fileList
-     */
+    #[DataProvider('fileList')]
     public function testRedirectAfterUnpublish($fixtureID)
     {
         /** @var File $file */
@@ -95,9 +94,8 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
     /**
      * When keeping archives. The old files should still be there. So the protected adapter should deny you access to
      * them.
-     *
-     * @dataProvider fileList
      */
+    #[DataProvider('fileList')]
     public function testRedirectAfterDeleting($fixtureID)
     {
         /** @var File $file */
@@ -153,9 +151,8 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
     /**
      * When keeping archives. The old files should still be there. So the protected adapter should deny you access to
      * them.
-     *
-     * @dataProvider fileList
      */
+    #[DataProvider('fileList')]
     public function testResolvedArchivedFile($fixtureID)
     {
         /** @var File $file */
@@ -208,9 +205,7 @@ class RedirectKeepArchiveFileControllerTest extends RedirectFileControllerTest
         );
     }
 
-    /**
-     * @dataProvider imageList
-     */
+    #[DataProvider('imageList')]
     public function testVariantRedirect($folderFixture, $filename, $ext)
     {
         parent::testVariantRedirect($folderFixture, $filename, $ext);

@@ -10,6 +10,7 @@ use SilverStripe\Assets\Tests\Conversion\FileConverterManagerTest\TestImageConve
 use SilverStripe\Assets\Tests\Conversion\FileConverterManagerTest\TestTxtToImageConverter;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class FileConverterManagerTest extends SapphireTest
 {
@@ -41,35 +42,33 @@ class FileConverterManagerTest extends SapphireTest
         }
     }
 
-    public function provideConvert(): array
+    public static function provideConvert(): array
     {
         return [
             'supported by image converter' => [
-                'fromFormat' => 'jpg',
-                'toFormat' => 'png',
+                'fromExtension' => 'jpg',
+                'toExtension' => 'png',
                 'expectSuccess' => true,
             ],
             'supported by txt converter' => [
-                'fromFormat' => 'txt',
-                'toFormat' => 'png',
+                'fromExtension' => 'txt',
+                'toExtension' => 'png',
                 'expectSuccess' => true,
             ],
             'unsupported 1' => [
-                'fromFormat' => 'jpg',
-                'toFormat' => 'txt',
+                'fromExtension' => 'jpg',
+                'toExtension' => 'txt',
                 'expectSuccess' => false,
             ],
             'unsupported 2' => [
-                'fromFormat' => 'txt',
-                'toFormat' => 'doc',
+                'fromExtension' => 'txt',
+                'toExtension' => 'doc',
                 'expectSuccess' => false,
             ],
         ];
     }
 
-    /**
-     * @dataProvider provideConvert
-     */
+    #[DataProvider('provideConvert')]
     public function testConvert(string $fromExtension, string $toExtension, bool $expectSuccess): void
     {
         $manager = new FileConverterManager();

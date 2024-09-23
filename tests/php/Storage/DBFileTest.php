@@ -6,7 +6,7 @@ use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\ValidationException;
+use SilverStripe\Core\Validation\ValidationException;
 
 class DBFileTest extends SapphireTest
 {

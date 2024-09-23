@@ -14,7 +14,7 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;

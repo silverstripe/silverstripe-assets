@@ -1322,16 +1322,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
 
     /**
      * Return a html5 tag of the appropriate for this file (normally img or a)
-     *
-     * @return string
      */
-    public function getTag()
+    public function getTag(): string
     {
         $template = $this->File->getFrontendTemplate();
         if (empty($template)) {
             return '';
         }
-        return (string)$this->renderWith($template);
+        return $this->renderWith($template);
     }
 
     /**

@@ -12,6 +12,7 @@ use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\View\ArrayData;
@@ -238,7 +239,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
     public static function getCacheKey($params, $content = null)
     {
         $key = SSViewer::config()->get('global_key');
-        $viewer = new SSViewer_FromString($key);
+        $viewer = Deprecation::withSuppressedNotice(fn() => new SSViewer_FromString($key));
         $globalKey = md5($viewer->process(ArrayData::create([])) ?? '');
         $argsKey = md5(serialize($params)) . '#' . md5(serialize($content));
 

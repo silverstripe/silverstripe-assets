@@ -21,6 +21,7 @@ use SilverStripe\Assets\Tests\Conversion\FileConverterManagerTest\TestTxtToImage
 use SilverStripe\Assets\Tests\ImageManipulationTest\LazyLoadAccessorExtension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\View\SSViewer;
 
@@ -449,9 +450,10 @@ class ImageManipulationTest extends SapphireTest
         /** @var Image $origin */
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
 
+        $fromString = Deprecation::withSuppressedNotice(fn() => SSViewer::fromString($template));
         $this->assertEquals(
             $expected,
-            trim($image->renderWith(SSViewer::fromString($template)) ?? '')
+            trim($image->renderWith($fromString) ?? '')
         );
     }
 

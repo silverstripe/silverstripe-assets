@@ -8,6 +8,7 @@ use SilverStripe\Assets\Thumbnail;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\FormField;
+use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\FieldType\DBComposite;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Core\Validation\ValidationResult;
@@ -460,13 +461,12 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         }
     }
 
-
     /**
      * Hook to validate this record against a validation result
      *
-     * @param null|string $filename Optional filename to validate. If omitted, the current value is validated.
+     * @param string $filename Optional filename to validate. If omitted, the current value is validated.
      */
-    public function validate(ValidationResult $result, ?string $filename = null): bool
+    public function validateFilename(ValidationResult $result, $filename = null): bool
     {
         if (empty($filename)) {
             $filename = $this->getFilename();

@@ -455,7 +455,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     protected function assertFilenameValid(string $filename): void
     {
         $result = new ValidationResult();
-        $this->validate($result, $filename);
+        $this->validateFilename($result, $filename);
         if (!$result->isValid()) {
             throw new ValidationException($result);
         }

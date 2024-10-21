@@ -22,8 +22,9 @@ use SilverStripe\Assets\Tests\ImageManipulationTest\LazyLoadAccessorExtension;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\View\SSViewer;
 use PHPUnit\Framework\Attributes\DataProvider;
+use SilverStripe\View\SSTemplateEngine;
+use SilverStripe\View\ViewLayerData;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
@@ -447,10 +448,10 @@ class ImageManipulationTest extends SapphireTest
     {
         /** @var Image $origin */
         $image = $this->objFromFixture(Image::class, 'imageWithTitle');
-
+        $engine = new SSTemplateEngine();
         $this->assertEquals(
             $expected,
-            trim($image->renderWith(SSViewer::fromString($template)) ?? '')
+            trim($engine->renderString($template, ViewLayerData::create($image)))
         );
     }
 

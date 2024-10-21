@@ -247,7 +247,7 @@ class AssetControlExtension extends Extension
             }
 
             // Omit variant and merge with set
-            $next = $record->dbObject($field)->getValue();
+            $next = $record->dbObject($field)?->getValue();
             unset($next['Variant']);
             if ($next) {
                 $files[] = $next;

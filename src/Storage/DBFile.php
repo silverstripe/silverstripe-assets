@@ -464,9 +464,9 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
     /**
      * Hook to validate this record against a validation result
      *
-     * @param string $filename Optional filename to validate. If omitted, the current value is validated.
+     * @param null|string $filename Optional filename to validate. If omitted, the current value is validated.
      */
-    public function validateFilename(ValidationResult $result, $filename = null): bool
+    public function validateFilename(ValidationResult $result, ?string $filename = null): bool
     {
         if (empty($filename)) {
             $filename = $this->getFilename();
@@ -493,7 +493,6 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
 
         return parent::setField($fieldName, $value, $markChanged);
     }
-
 
     /**
      * Returns the size of the file type in an appropriate format.

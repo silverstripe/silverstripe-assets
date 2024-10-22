@@ -31,6 +31,7 @@ use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\InheritedPermissionsExtension;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
+use SilverStripe\Security\PermissionCheckable;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
@@ -99,7 +100,7 @@ use SilverStripe\View\HTML;
  * @method Member Owner()
  * @method File Parent()
  */
-class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable
+class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewable, PermissionProvider, Resettable, PermissionCheckable
 {
     use ImageManipulation;
 
@@ -349,14 +350,6 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public function AbsoluteLink()
     {
         return $this->getAbsoluteURL();
-    }
-
-    /**
-     * @return string
-     */
-    public function getTreeTitle()
-    {
-        return Convert::raw2xml($this->Title);
     }
 
     /**
@@ -1435,10 +1428,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $link;
     }
 
-    /**
-     * @return PermissionChecker
-     */
-    public function getPermissionChecker()
+    public function getPermissionChecker(): PermissionChecker
     {
         return Injector::inst()->get(PermissionChecker::class.'.file');
     }
@@ -1518,13 +1508,12 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }, $parts ?? []));
     }
 
-    public function flushCache($persistent = true): static
+    public function flushCache(bool $persistent = true): static
     {
-        parent::flushCache($persistent);
         static::reset();
         ImageShortcodeProvider::flush();
         FileShortcodeProvider::flush();
-        return $this;
+        return parent::flushCache($persistent);
     }
 
     public static function reset()

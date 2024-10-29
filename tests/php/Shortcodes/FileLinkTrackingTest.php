@@ -9,7 +9,7 @@ use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest\EditableObject;
 use SilverStripe\Core\Convert;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 class FileLinkTrackingTest extends SapphireTest
 {

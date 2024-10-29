@@ -5,8 +5,8 @@ namespace SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest;
 use SilverStripe\Assets\Shortcodes\FileLinkTracking;
 use SilverStripe\Dev\TestOnly;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Versioned\RecursivePublishable;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Staged\RecursivePublishable;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * @mixin RecursivePublishable

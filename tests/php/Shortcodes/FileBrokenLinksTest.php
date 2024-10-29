@@ -6,7 +6,7 @@ use SilverStripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Tests\Shortcodes\FileBrokenLinksTest\EditableObject;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * Tests broken links in html areas

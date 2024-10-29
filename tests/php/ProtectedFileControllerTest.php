@@ -11,7 +11,7 @@ use SilverStripe\Assets\Storage\ProtectedFileController;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ProtectedFileControllerTest extends FunctionalTest

@@ -13,7 +13,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ErrorPage\ErrorPage;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
 class FileShortcodeProviderTest extends SapphireTest

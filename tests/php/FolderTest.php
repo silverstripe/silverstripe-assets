@@ -13,7 +13,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * @author Ingo Schommer (ingo at silverstripe dot com)

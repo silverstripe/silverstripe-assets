@@ -11,7 +11,7 @@ use SilverStripe\Forms\TreeMultiselectField;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Core\Validation\ValidationResult;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * Represents a logical folder, which may be used to organise assets
@@ -76,7 +76,7 @@ class Folder extends File
             // When in archived mode, find or make should not find folders that don't exist
             // We check explicitly for Versioned and if it exists then we'll confirm the reading mode isn't archived
             if (class_exists(Versioned::class)) {
-                $versioned = Injector::inst()->get('SilverStripe\Versioned\Versioned');
+                $versioned = Injector::inst()->get('SilverStripe\Versioned\Mode\Versioned');
                 if ($versioned
                     && strpos($versioned::get_reading_mode() ?? '', 'Archive.') !== false) {
                     // We return the searched for folder, it will either be null if it doesn't exist

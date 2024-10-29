@@ -11,7 +11,7 @@ use SilverStripe\Assets\Tests\AssetControlExtensionTest\TestObject;
 use SilverStripe\Assets\Tests\AssetControlExtensionTest\VersionedObject;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * Tests {@see AssetControlExtension}

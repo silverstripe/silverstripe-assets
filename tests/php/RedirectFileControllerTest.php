@@ -14,7 +14,7 @@ use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Assets\Dev\TestAssetStore;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class RedirectFileControllerTest extends FunctionalTest

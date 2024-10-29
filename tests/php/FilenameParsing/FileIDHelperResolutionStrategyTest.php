@@ -17,7 +17,7 @@ use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Assets\Storage\Sha1FileHashingService;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class FileIDHelperResolutionStrategyTest extends SapphireTest

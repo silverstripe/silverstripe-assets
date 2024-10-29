@@ -9,7 +9,7 @@ use SilverStripe\Assets\Storage\FileHashingService;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use SilverStripe\Assets\File;
 use SilverStripe\ORM\DB;
 

@@ -25,7 +25,7 @@ use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Security\Security;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 
 /**
  * Asset store based on flysystem Filesystem as a backend

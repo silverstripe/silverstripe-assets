@@ -34,8 +34,8 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionChecker;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
-use SilverStripe\Versioned\RecursivePublishable;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Staged\RecursivePublishable;
+use SilverStripe\Versioned\Mode\Versioned;
 use SilverStripe\View\HTML;
 
 /**

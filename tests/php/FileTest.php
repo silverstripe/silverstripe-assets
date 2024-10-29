@@ -23,7 +23,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\PermissionChecker;
-use SilverStripe\Versioned\Versioned;
+use SilverStripe\Versioned\Mode\Versioned;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**

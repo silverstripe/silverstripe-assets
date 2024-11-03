@@ -23,7 +23,7 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use PHPUnit\Framework\Attributes\DataProvider;
-use SilverStripe\View\SSTemplateEngine;
+use SilverStripe\TemplateEngine\SSTemplateEngine;
 use SilverStripe\View\ViewLayerData;
 
 /**

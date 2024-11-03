@@ -18,7 +18,7 @@ use SilverStripe\Model\ArrayData;
 use SilverStripe\View\HTML;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
-use SilverStripe\View\SSTemplateEngine;
+use SilverStripe\TemplateEngine\SSTemplateEngine;
 use SilverStripe\View\SSViewer;
 use SilverStripe\View\ViewLayerData;
 

@@ -1518,12 +1518,13 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         }, $parts ?? []));
     }
 
-    public function flushCache($persistent = true)
+    public function flushCache($persistent = true): static
     {
         parent::flushCache($persistent);
         static::reset();
         ImageShortcodeProvider::flush();
         FileShortcodeProvider::flush();
+        return $this;
     }
 
     public static function reset()

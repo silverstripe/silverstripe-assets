@@ -33,7 +33,7 @@ interface Image_Backend
      *
      * @param AssetContainer $assetContainer Object to load from
      */
-    public function __construct(AssetContainer $assetContainer = null);
+    public function __construct(?AssetContainer $assetContainer = null);
 
     /**
      * Get the width of the image

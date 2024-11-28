@@ -78,7 +78,7 @@ class FileLinkTracking extends Extension
      * @param FileLinkTrackingParser $parser
      * @return $this
      */
-    public function setFileParser(FileLinkTrackingParser $parser = null)
+    public function setFileParser(?FileLinkTrackingParser $parser = null)
     {
         $this->fileParser = $parser;
         return $this;

@@ -87,7 +87,7 @@ class InterventionBackend implements Image_Backend, Flushable
 
     private ?string $tempPath = null;
 
-    public function __construct(AssetContainer $assetContainer = null)
+    public function __construct(?AssetContainer $assetContainer = null)
     {
         $this->setAssetContainer($assetContainer);
     }

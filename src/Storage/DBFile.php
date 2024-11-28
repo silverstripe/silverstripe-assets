@@ -89,7 +89,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      *
      * @param array|string $allowed List of allowed file categories (not extensions), as per File::$app_categories
      */
-    public function __construct(string $name = null, array|string $allowed = [])
+    public function __construct(?string $name = null, array|string $allowed = [])
     {
         parent::__construct($name);
         $this->setAllowedCategories($allowed);

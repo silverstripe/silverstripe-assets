@@ -1167,10 +1167,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         return $this->File->getAbsoluteSize();
     }
 
-    /**
-     * @return ValidationResult
-     */
-    public function validate()
+    public function validate(): ValidationResult
     {
         $result = ValidationResult::create();
         $this->File->validateFilename($result, $this->Name);

@@ -336,7 +336,7 @@ class Folder extends File
         return null;
     }
 
-    public function validate()
+    public function validate(): ValidationResult
     {
         $result = ValidationResult::create();
         $this->extend('updateValidate', $result);

@@ -725,7 +725,7 @@ trait ImageManipulation
             return $converter->convert($this, $toExtension);
         } catch (FileConverterException $e) {
             /** @var LoggerInterface $logger */
-            $logger = Injector::inst()->get(LoggerInterface::class . '.errorhandler');
+            $logger = Injector::inst()->get(LoggerInterface::class);
             $logger->error($e->getMessage());
             return null;
         }

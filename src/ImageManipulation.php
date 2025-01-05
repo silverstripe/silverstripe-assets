@@ -720,6 +720,10 @@ trait ImageManipulation
      */
     public function Convert(string $toExtension): ?AssetContainer
     {
+        // Verify this manipulation is applicable to this instance
+        if (!$this->exists()) {
+            return null;
+        }
         $converter = Injector::inst()->get(FileConverterManager::class);
         try {
             return $converter->convert($this, $toExtension);

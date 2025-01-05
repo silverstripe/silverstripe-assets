@@ -606,6 +606,12 @@ class ImageManipulationTest extends SapphireTest
         }
     }
 
+    public function testConvertEmpty(): void
+    {
+        $file = new Image();
+        $this->assertNull($file->Convert('webp'));
+    }
+
     public function provideConvertChainWithLazyLoad(): array
     {
         return [

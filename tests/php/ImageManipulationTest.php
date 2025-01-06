@@ -595,7 +595,7 @@ class ImageManipulationTest extends SapphireTest
         $mockLogger = $this->getMockBuilder(Logger::class)->setConstructorArgs(['testLogger'])->getMock();
         $mockLogger->expects($success ? $this->never() : $this->once())
             ->method('error');
-        Injector::inst()->registerService($mockLogger, LoggerInterface::class . '.errorhandler');
+        Injector::inst()->registerService($mockLogger, LoggerInterface::class);
 
         $result = $file->Convert($toExtension);
 

@@ -8,7 +8,6 @@ use SilverStripe\Assets\Thumbnail;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\ORM\FieldType\DBComposite;
 use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Core\Validation\ValidationResult;

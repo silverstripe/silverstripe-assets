@@ -7,7 +7,6 @@ use SilverStripe\Assets\File;
 use SilverStripe\Assets\Image;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\Dev\Deprecation;
 use SilverStripe\View\Parsers\ShortcodeHandler;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
@@ -148,28 +147,6 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
         }
 
         return $markup;
-    }
-
-    /**
-     * Construct and return HTML image tag.
-     *
-     * @deprecated 2.3.0
-     */
-    public static function createImageTag(array $attributes) : string
-    {
-        Deprecation::notice('2.3.0', 'Will be removed without equivalent functionality to replace it.');
-        $preparedAttributes = '';
-        foreach ($attributes as $attributeKey => $attributeValue) {
-            if (strlen($attributeValue ?? '') > 0 || $attributeKey === 'alt') {
-                $preparedAttributes .= sprintf(
-                    ' %s="%s"',
-                    $attributeKey,
-                    htmlspecialchars($attributeValue ?? '', ENT_QUOTES, 'UTF-8', false)
-                );
-            }
-        }
-
-        return "<img{$preparedAttributes} />";
     }
 
     /**

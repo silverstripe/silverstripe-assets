@@ -593,7 +593,7 @@ class ImageManipulationTest extends SapphireTest
         $mockLogger = $this->getMockBuilder(Logger::class)->setConstructorArgs(['testLogger'])->getMock();
         $mockLogger->expects($success ? $this->never() : $this->once())
             ->method('error');
-        Injector::inst()->registerService($mockLogger, LoggerInterface::class . '.errorhandler');
+        Injector::inst()->registerService($mockLogger, LoggerInterface::class);
 
         $result = $file->Convert($toExtension);
 
@@ -602,6 +602,12 @@ class ImageManipulationTest extends SapphireTest
         } else {
             $this->assertNull($result);
         }
+    }
+
+    public function testConvertEmpty(): void
+    {
+        $file = new Image();
+        $this->assertNull($file->Convert('webp'));
     }
 
     public static function provideConvertChainWithLazyLoad(): array

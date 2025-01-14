@@ -743,12 +743,16 @@ trait ImageManipulation
      */
     public function Convert(string $toExtension): ?AssetContainer
     {
+        // Verify this manipulation is applicable to this instance
+        if (!$this->exists()) {
+            return null;
+        }
         $converter = Injector::inst()->get(FileConverterManager::class);
         try {
             return $converter->convert($this, $toExtension);
         } catch (FileConverterException $e) {
             /** @var LoggerInterface $logger */
-            $logger = Injector::inst()->get(LoggerInterface::class . '.errorhandler');
+            $logger = Injector::inst()->get(LoggerInterface::class);
             $logger->error($e->getMessage());
             return null;
         }

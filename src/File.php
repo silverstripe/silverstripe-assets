@@ -1484,6 +1484,11 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
                 continue;
             }
 
+            // don't add the same extension multiple times
+            if (in_array($key, $allowedExtensions)) {
+                continue;
+            }
+
             $allowedExtensions[] = $key;
         }
         return $allowedExtensions;

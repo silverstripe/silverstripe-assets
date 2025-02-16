@@ -12,6 +12,7 @@ it:
     GzType: 'File compresso GZIP'
     HtmlType: 'File HTML'
     INVALIDEXTENSION_SHORT: 'Estensione non permessa'
+    INVALIDEXTENSION_SHORT_EXT: "Estensione '{extension}' non consentita"
     IcoType: 'Immagine icona'
     JpgType: 'Immagine JPEG - adatta per foto'
     JsType: 'File Javascript'
@@ -21,11 +22,13 @@ it:
     MpgType: 'File video MPEG'
     NOFILESIZE: 'La dimensione del file è zero byte.'
     NOVALIDUPLOAD: 'Il file non è un upload valido'
+    PARTIALUPLOAD: 'Il file non è stato caricato completamente, si prega di riprovare'
     PATH: Percorso
     PLURALS:
       many: '{count} File'
       one: 'Un File'
       other: '{count} File'
+    PREVIEW: Anteprima
     PdfType: 'File PDF Adobe Acrobat'
     PngType: 'Immagine PNG - adatta per tutti gli usi'
     TOOLARGE: 'Dimensione file troppo grande, consentiti {size} massimo'
@@ -33,6 +36,26 @@ it:
     WavType: 'File audio WAV'
     XlsType: 'Foglio elettronico Excel'
     ZipType: 'File ZIP compresso'
+    belongs_to_SubmittedFileField: 'Campo invio file'
+    db_CanEditType: 'Tipo '
+    db_CanViewType: 'Tipo può visualizzare'
+    db_FileContentCache: 'Cache contenuto del file'
+    db_Name: Nome
+    db_ShowInSearch: 'Mostrare nella ricerca'
+    db_Title: Titolo
+    db_UserFormUpload: 'Caricamento form utente'
+    db_Version: Versione
+    has_many_BackLinks: 'Link di ritorno'
+    has_one_BasicFieldsTestPage: 'Pagina di prova campi base'
+    has_one_Company: Società
+    has_one_Owner: Proprietario
+    has_one_Parent: Genitore
+    has_one_Subsite: Sottosito
+    has_one_TestPage: 'Pagina di prova'
+    many_many_EditorGroups: 'Gruppi di editori'
+    many_many_EditorMembers: 'Membri editori'
+    many_many_ViewerGroups: 'Gruppo di visualizzatori'
+    many_many_ViewerMembers: 'Membri visualizzatori'
   SilverStripe\Assets\Folder:
     PLURALNAME: Cartelle
     PLURALS:
@@ -47,3 +70,18 @@ it:
       one: 'Una Immagine'
       other: '{count} Immagini'
     SINGULARNAME: Immagine
+  SilverStripe\Assets\ShortCodesImageShortcodeProvider:
+    IMAGENOTFOUND: 'Immagine non trovata'
+  SilverStripe\Assets\Shortcodes\FileLink:
+    PLURALNAME: 'Link al file'
+    PLURALS:
+      many: '{count} Link al File'
+      one: 'Un Link al File'
+      other: '{count} Link al File'
+    SINGULARNAME: 'Link al File'
+    has_one_Linked: Collegato
+    has_one_Parent: Genitore
+  SilverStripe\Assets\Shortcodes\FileLinkTracking:
+    many_many_FileTracking: 'Tracciamento file'
+  SilverStripe\Assets\Shortcodes\ImageShortcodeProvider:
+    IMAGENOTFOUND: 'Immagine non trovata'

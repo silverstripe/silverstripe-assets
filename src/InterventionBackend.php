@@ -263,7 +263,7 @@ class InterventionBackend implements Image_Backend, Flushable
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
             $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
-            $path = tempnam($tempPath ?? '', TEMP_FILE_PREFIX);
+            $path = tempnam($tempPath ?? '', InterventionBackend::TEMP_FILE_PREFIX);
             if ($extension = pathinfo($assetContainer->getFilename() ?? '', PATHINFO_EXTENSION)) {
                 //tmpnam creates a file, we should clean it up if we are changing the path name
                 unlink($path ?? '');

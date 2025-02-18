@@ -36,6 +36,11 @@ class InterventionBackend implements Image_Backend, Flushable
     const CACHE_DIMENSIONS = 'DIMENSIONS_';
 
     /**
+     * Prefix for temp file names
+     */
+    private const TEMP_FILE_PREFIX = 'interventionimage_';
+
+    /**
      * Is cache flushing enabled?
      *
      * @config
@@ -258,7 +263,7 @@ class InterventionBackend implements Image_Backend, Flushable
             // write the file to a local path so we can extract exif data if it exists.
             // Currently exif data can only be read from file paths and not streams
             $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
-            $path = tempnam($tempPath ?? '', 'interventionimage_');
+            $path = tempnam($tempPath ?? '', TEMP_FILE_PREFIX);
             if ($extension = pathinfo($assetContainer->getFilename() ?? '', PATHINFO_EXTENSION)) {
                 //tmpnam creates a file, we should clean it up if we are changing the path name
                 unlink($path ?? '');
@@ -815,7 +820,7 @@ class InterventionBackend implements Image_Backend, Flushable
             $this->image->destroy();
         }
         // remove our temp file if it exists
-        if (str_starts_with(basename($this->getTempPath()), 'interventionimage_') && file_exists($this->getTempPath() ?? '')) {
+        if (str_starts_with(basename($this->getTempPath()), TEMP_FILE_PREFIX) && file_exists($this->getTempPath() ?? '')) {
             unlink($this->getTempPath() ?? '');
         }
     }

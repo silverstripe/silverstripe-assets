@@ -157,7 +157,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
      */
     public static function createImageTag(array $attributes) : string
     {
-        Deprecation::notice('2.3.0', 'Will be removed without equivalent functionality to replace it.');
+        Deprecation::notice('2.3.0', 'Will be removed without equivalent functionality to replace it in a future major release.');
         $preparedAttributes = '';
         foreach ($attributes as $attributeKey => $attributeValue) {
             if (strlen($attributeValue ?? '') > 0 || $attributeKey === 'alt') {

@@ -315,7 +315,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     public static function find($filename)
     {
         // Split to folders and the actual filename, and traverse the structure.
-        $parts = array_filter(preg_split("#[/\\\\]+#", $filename ?? '') ?? []);
+        $parts = static::getFilePathParts($filename ?? '');
         $parentID = 0;
         $item = null;
         foreach ($parts as $part) {
@@ -1504,7 +1504,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     {
         // Fix illegal characters
         $filter = $this->getFilter();
-        $parts = array_filter(preg_split("#[/\\\\]+#", $name ?? '') ?? []);
+        $parts = static::getFilePathParts($name ?? '');
         return implode('/', array_map(function ($part) use ($filter) {
             return $filter->filter($part);
         }, $parts ?? []));
@@ -1535,5 +1535,15 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     protected function getFilter()
     {
         return FileNameFilter::create();
+    }
+
+    /**
+     * Get an array with each segment (directory name and file name) in a file path as a value.
+     */
+    protected static function getFilePathParts(string $filePath): array
+    {
+        // Explicitly allow zero as a segment in the path (e.g. /some/path/0/file.txt)
+        $notEmpty = fn(mixed $part) => ($part === 0 || $part === '0' || (bool) $part);
+        return array_filter(preg_split("#[/\\\\]+#", $filePath), $notEmpty);
     }
 }

@@ -54,7 +54,7 @@ class Folder extends File
     public static function find_or_make($folderPath)
     {
         // Safely split all parts
-        $parts = array_filter(preg_split("#[/\\\\]+#", $folderPath ?? '') ?? []);
+        $parts = static::getFilePathParts($folderPath ?? '');
 
         $parentID = 0;
         $item = null;

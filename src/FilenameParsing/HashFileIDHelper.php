@@ -3,6 +3,7 @@
 namespace SilverStripe\Assets\FilenameParsing;
 
 use InvalidArgumentException;
+use SilverStripe\Assets\File;
 
 /**
  * Parsed Hash path URLs. Hash paths group a file and its variant under a directory based on a hash generated from the
@@ -13,7 +14,7 @@ use InvalidArgumentException;
  *
  * e.g.: `Uploads/a1312bc34d/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class HashFileIDHelper extends AbstractFileIDHelper
+class HashFileIDHelper extends AbstractFileIDHelper implements GlobbableFileIDHelper
 {
     /**
      * Default length at which hashes are truncated.
@@ -63,6 +64,17 @@ class HashFileIDHelper extends AbstractFileIDHelper
             $folder .= '/';
         }
         return  $folder . $this->truncate($parsedFileID->getHash());
+    }
+
+    public function getVariantGlob(string $folder, ParsedFileID $parsedFileID): string
+    {
+        $truncatedHash = $this->truncate($parsedFileID->getHash());
+        $folderWithoutHash = str_replace('/' . $truncatedHash, '', $folder);
+        $folderRegex = '#^' . preg_quote($folderWithoutHash, '#') . '/#';
+        $globFilePath = preg_replace($folderRegex, '', $parsedFileID->getFilename());
+        $extRegex = '#\.' . preg_quote(File::get_file_extension($globFilePath), '#') . '$#';
+        $globFilePathWithoutExtension = preg_replace($extRegex, '', $globFilePath);
+        return $globFilePathWithoutExtension . FileIDHelper::VARIANT_SEPARATOR . '*';
     }
 
     protected function validateFileParts($filename, $hash, $variant): void

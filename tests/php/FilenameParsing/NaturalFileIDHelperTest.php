@@ -1,6 +1,7 @@
 <?php
 namespace SilverStripe\Assets\Tests\FilenameParsing;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use SilverStripe\Assets\FilenameParsing\NaturalFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 
@@ -180,5 +181,39 @@ class NaturalFileIDHelperTest extends FileIDHelperTester
             [new ParsedFileID('folder/sam.jpg', 'abcdef7890'), 'folder'],
             [new ParsedFileID('folder/sam.jpg', 'abcdef7890', 'ResizeXXX'), 'folder'],
         ];
+    }
+
+    public static function provideGetVariantGlob(): array
+    {
+        return [
+            'folder is excluded' => [
+                'folder' => 'my-folder',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-file__*',
+            ],
+            'hash is not accounted for' => [
+                'folder' => 'my-folder/123456789',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-folder/my-file__*',
+            ],
+            'full folder path is excluded' => [
+                'folder' => 'my-folder/sub-folder',
+                'parsedFileID' => new ParsedFileID('my-folder/sub-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-file__*',
+            ],
+            'different folder gets ignored' => [
+                'folder' => 'different-folder/123456789',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-folder/my-file__*',
+            ],
+        ];
+    }
+
+    #[DataProvider('provideGetVariantGlob')]
+    public function testGetVariantGlob(string $folder, ParsedFileID $parsedFileID, string $expected): void
+    {
+        $helper = new NaturalFileIDHelper();
+        $glob = $helper->getVariantGlob($folder, $parsedFileID);
+        $this->assertSame($expected, $glob);
     }
 }

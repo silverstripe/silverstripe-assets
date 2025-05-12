@@ -13,7 +13,9 @@ class NaturalFileIDHelper extends AbstractFileIDHelper
 {
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        $pattern = '#^(?<folder>([^/]+/)*)(?<basename>((?<!'
+            . FileIDHelper::VARIANT_SEPARATOR . ')[^/.])+)('
+            . FileIDHelper::VARIANT_SEPARATOR . '(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern ?? '', $fileID ?? '', $matches) || strpos($matches['folder'] ?? '', '_resampled') !== false) {

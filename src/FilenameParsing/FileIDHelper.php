@@ -8,6 +8,12 @@ namespace SilverStripe\Assets\FilenameParsing;
 interface FileIDHelper
 {
     /**
+     * The string that separates the base file name from the variant name.
+     * This string must not be present in the name of files which are not variants.
+     */
+    public const VARIANT_SEPARATOR = '__';
+
+    /**
      * Map file tuple (hash, name, variant) to a filename to be used by flysystem
      *
      * @param string|ParsedFileID $filename Name of file or ParsedFileID object

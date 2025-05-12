@@ -22,7 +22,9 @@ class HashFileIDHelper extends AbstractFileIDHelper
 
     public function parseFileID($fileID)
     {
-        $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-f0-9]{10})/(?<basename>((?<!__)[^/.])+)(__(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
+        $pattern = '#^(?<folder>([^/]+/)*)(?<hash>[a-f0-9]{10})/(?<basename>((?<!'
+            . FileIDHelper::VARIANT_SEPARATOR . ')[^/.])+)('
+            . FileIDHelper::VARIANT_SEPARATOR . '(?<variant>[^.]+))?(?<extension>(\..+)*)$#';
 
         // not a valid file (or not a part of the filesystem)
         if (!preg_match($pattern ?? '', $fileID ?? '', $matches)) {

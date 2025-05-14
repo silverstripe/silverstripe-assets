@@ -579,6 +579,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 $destParsedFileID = $parsedFileID->setFilename($newName);
 
                 // Move all variants around
+                $dirsToTruncate = [];
                 foreach ($strategy->findVariants($parsedFileID, $fs) as $originParsedFileID) {
                     $origin = $originParsedFileID->getFileID();
                     $destination = $strategy->buildFileID(
@@ -597,8 +598,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                             // Move cached hash value to new location
                             $hasher->move($origin, $fs, $destination);
                         }
-                        $this->truncateDirectory(dirname($origin ?? ''), $fs);
+                        $dirsToTruncate[] = dirname($origin);
                     }
+                }
+
+                // Truncate any directories that held removed files.
+                // We do this all in one go like this to reduce duplicate calls which can reduce performance.
+                foreach (array_unique($dirsToTruncate) as $dir) {
+                    $this->truncateDirectory($dir, $fs);
                 }
 
                 // Build and parsed non-variant file ID so we can figure out what the new name file name is
@@ -734,10 +741,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $toStrategy = $this->getPublicResolutionStrategy();
         // Contain a list of temporary file that needs to be move to the $from store once we are done.
 
-
         // Look for files that might be overriden by publishing to destination store, those need to be stashed away
         $swapFileIDStr = $toStrategy->buildFileID($parsedFileID);
         $swapFiles = [];
+        $dirsToTruncate = [];
         if ($to->has($swapFileIDStr)) {
             $swapParsedFileID = $toStrategy->resolveFileID($swapFileIDStr, $to);
             foreach ($toStrategy->findVariants($swapParsedFileID, $to) as $variantParsedFileID) {
@@ -755,12 +762,18 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 // Blast existing variants from the destination
                 $to->delete($toFileID);
                 $hasher->move($toFileID, $to, '.swap/' . $fromFileID, $from);
-                $this->truncateDirectory(dirname($toFileID ?? ''), $to);
+                $dirsToTruncate[] = dirname($toFileID);
             }
         }
 
+        // Truncate any directories that held removed files for the "to" filesystem
+        // We do this all in one go like this to reduce duplicate calls which can reduce performance.
+        foreach (array_unique($dirsToTruncate) as $dir) {
+            $this->truncateDirectory($dir, $to);
+        }
 
         // Let's find all the variants on the origin store ... those need to be moved to the destination
+        $dirsToTruncate = [];
         foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
             // Copy via stream
             $fromFileID = $variantParsedFileID->getFileID();
@@ -775,7 +788,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             // Remove the origin file and keep the file ID
             $from->delete($fromFileID);
             $hasher->move($fromFileID, $from, $toFileID, $to);
-            $this->truncateDirectory(dirname($fromFileID ?? ''), $from);
+            $dirsToTruncate[] = dirname($fromFileID);
+        }
+
+        // Truncate any directories that held removed files for the "from" filesystem
+        // We do this all in one go like this to reduce duplicate calls which can reduce performance.
+        foreach (array_unique($dirsToTruncate) as $dir) {
+            $this->truncateDirectory($dir, $from);
         }
 
         foreach ($swapFiles as $variantParsedFileID) {
@@ -827,6 +846,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         $hasher = Injector::inst()->get(FileHashingService::class);
 
         // Let's find all the variants on the origin store ... those need to be moved to the destination
+        $dirsToTruncate = [];
         foreach ($fromStrategy->findVariants($parsedFileID, $from) as $variantParsedFileID) {
             // Copy via stream
             $fromFileID = $variantParsedFileID->getFileID();
@@ -843,7 +863,13 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $from->delete($fromFileID);
 
             $hasher->move($fromFileID, $from, $toFileID, $to);
-            $this->truncateDirectory(dirname($fromFileID ?? ''), $from);
+            $dirsToTruncate[] = dirname($fromFileID);
+        }
+
+        // Truncate any directories that held removed files
+        // We do this all in one go like this to reduce duplicate calls which can reduce performance.
+        foreach (array_unique($dirsToTruncate) as $dir) {
+            $this->truncateDirectory($dir, $from);
         }
     }
 
@@ -1324,7 +1350,6 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         return [$this->createMissingResponse(), []];
     }
 
-
     /**
      * Generate an {@see HTTPResponse} for the given file from the source filesystem
      * @param Filesystem $flysystem
@@ -1462,6 +1487,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         }
 
         // Let's move all the variants
+        $dirsToTruncate = [];
         foreach ($strategy->findVariants($pfid, $fs) as $variantPfid) {
             $origin = $variantPfid->getFileID();
             $targetVariantFileID = $strategy->buildFileID($variantPfid->setFilename($cleanFilename));
@@ -1474,8 +1500,14 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                     $hasher->move($origin, $fs, $targetVariantFileID);
                     $ops[$origin] = $targetVariantFileID;
                 }
-                $this->truncateDirectory(dirname($origin ?? ''), $fs);
+                $dirsToTruncate[] = dirname($origin);
             }
+        }
+
+        // Truncate any directories that held removed files
+        // We do this all in one go like this to reduce duplicate calls which can reduce performance.
+        foreach (array_unique($dirsToTruncate) as $dir) {
+            $this->truncateDirectory($dir, $fs);
         }
 
         // Our strategy will have cleaned up the name

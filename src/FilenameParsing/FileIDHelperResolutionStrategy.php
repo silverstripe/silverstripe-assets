@@ -435,27 +435,30 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
 
             // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
-            $possibleVariants = $filesystem->listContents($folder, $helper->lookForVariantRecursive())->toArray();
+            $possibleVariantsGenerator = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
 
-            // Flysystem returns array of meta data abouch each file, we remove directories and map it down to the path
-            $possibleVariants = array_filter($possibleVariants ?? [], function ($possibleVariant) {
-                return $possibleVariant['type'] !== 'dir';
-            });
-            $possibleVariants = array_map(function ($possibleVariant) {
-                return $possibleVariant['path'];
-            }, $possibleVariants ?? []);
+            // Flysystem returns generator of meta data abouch each file, we remove directories and map it down to the path
+            $possibleVariantPaths = $possibleVariantsGenerator
+                ->filter(fn($item) => !$item->isDir())
+                ->map(fn($item) => $item->path());
 
-            // Let's explicitely add the main variant to the list if need be
+            // Find out what the main variant is in case we need to add it
             $mainVariant = $this->stripVariantFromParsedFileID($parsedFileID, $helper)->getFileID();
-            if (!in_array($mainVariant, $possibleVariants ?? []) && $filesystem->has($mainVariant)) {
-                $possibleVariants[] = $mainVariant;
-            }
+            $mainVariantProcessed = false;
 
             // Loop through the possible variants and yield the ones that are actual variant.
-            foreach ($possibleVariants as $possibleVariant) {
+            foreach ($possibleVariantPaths as $possibleVariant) {
+                if ($possibleVariant === $mainVariant) {
+                    $mainVariantProcessed = true;
+                }
                 if ($helper->isVariantOf($possibleVariant, $parsedFileID)) {
                     yield $helper->parseFileID($possibleVariant)->setHash($hash);
                 }
+            }
+
+            // Yield the main variant if it wasn't already included.
+            if (!$mainVariantProcessed && $filesystem->has($mainVariant) && $helper->isVariantOf($mainVariant, $parsedFileID)) {
+                yield $helper->parseFileID($mainVariant)->setHash($hash);
             }
         }
     }

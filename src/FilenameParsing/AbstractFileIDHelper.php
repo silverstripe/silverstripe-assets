@@ -63,7 +63,7 @@ abstract class AbstractFileIDHelper implements FileIDHelper
 
         // Add variant
         if ($variant) {
-            $fileID .= '__' . $variant;
+            $fileID .= FileIDHelper::VARIANT_SEPARATOR . $variant;
         }
 
         // Add extension

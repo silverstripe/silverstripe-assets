@@ -49,7 +49,7 @@ class FileNameFilter
     private static $default_replacements = [
         '/\s/' => '-', // remove whitespace
         '/[^-_A-Za-z0-9+.]+/' => '', // remove non-ASCII chars, only allow alphanumeric plus dash, dot, and underscore
-        '/_{2,}/' => '_', // remove duplicate underscores (since `__` is variant separator)
+        '/_{2,}/' => '_', // remove duplicate underscores (since `__` is variant separator - see FileIDHelper::VARIANT_SEPARATOR)
         '/-{2,}/' => '-', // remove duplicate dashes
         '/^[-_\.]+/' => '', // Remove all leading dots, dashes or underscores
     ];

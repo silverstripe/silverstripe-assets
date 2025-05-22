@@ -217,4 +217,38 @@ class HashFileIDHelperTest extends FileIDHelperTester
 
         $this->assertEquals($outFilename, $actualFilename);
     }
+
+    public static function provideGetVariantGlob(): array
+    {
+        return [
+            'folder is excluded' => [
+                'folder' => 'my-folder',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-file__*',
+            ],
+            'hash and folder are excluded' => [
+                'folder' => 'my-folder/123456789',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-file__*',
+            ],
+            'full folder path is excluded' => [
+                'folder' => 'my-folder/sub-folder/123456789',
+                'parsedFileID' => new ParsedFileID('my-folder/sub-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-file__*',
+            ],
+            'different folder gets ignored' => [
+                'folder' => 'different-folder/123456789',
+                'parsedFileID' => new ParsedFileID('my-folder/my-file.jpg', '123456789'),
+                'expected' => 'my-folder/my-file__*',
+            ],
+        ];
+    }
+
+    #[DataProvider('provideGetVariantGlob')]
+    public function testGetVariantGlob(string $folder, ParsedFileID $parsedFileID, string $expected): void
+    {
+        $helper = new HashFileIDHelper();
+        $glob = $helper->getVariantGlob($folder, $parsedFileID);
+        $this->assertSame($expected, $glob);
+    }
 }

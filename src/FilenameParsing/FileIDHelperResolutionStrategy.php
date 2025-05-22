@@ -11,6 +11,8 @@ use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Assets\File;
+use SilverStripe\Assets\Flysystem\GlobContentLister;
+use SilverStripe\Core\Path;
 use SilverStripe\ORM\DB;
 
 /**
@@ -432,10 +434,24 @@ class FileIDHelperResolutionStrategy implements FileResolutionStrategy
             // Make sure our yield file has an hash
             $hash = $parsedFileID->getHash() ?: $this->findHashOf($helper, $parsedFileID, $filesystem);
 
-
             // Find the correct folder to search for possible variants in
             $folder = $helper->lookForVariantIn($parsedFileID);
-            $possibleVariantsGenerator = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
+
+            if (!$filesystem->directoryExists($folder)) {
+                continue;
+            }
+
+            // Use a glob if possible, as that will be more performant if the adapter supports it.
+            if (($helper instanceof GlobbableFileIDHelper) && ($filesystem instanceof GlobContentLister)) {
+                $glob = $helper->getVariantGlob($folder, $parsedFileID);
+                $possibleVariantsGenerator = $filesystem->listContentsByGlob(
+                    $folder,
+                    $glob,
+                    $helper->lookForVariantRecursive()
+                );
+            } else {
+                $possibleVariantsGenerator = $filesystem->listContents($folder, $helper->lookForVariantRecursive());
+            }
 
             // Flysystem returns generator of meta data abouch each file, we remove directories and map it down to the path
             $possibleVariantPaths = $possibleVariantsGenerator

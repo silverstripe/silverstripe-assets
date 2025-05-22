@@ -2,6 +2,8 @@
 
 namespace SilverStripe\Assets\FilenameParsing;
 
+use SilverStripe\Assets\File;
+
 /**
  * Parsed Natural path URLs. Natural path is the same hashless path that appears in the CMS.
  *
@@ -9,7 +11,7 @@ namespace SilverStripe\Assets\FilenameParsing;
  *
  * e.g.: `Uploads/sam__ResizedImageWzYwLDgwXQ.jpg`
  */
-class NaturalFileIDHelper extends AbstractFileIDHelper
+class NaturalFileIDHelper extends AbstractFileIDHelper implements GlobbableFileIDHelper
 {
     public function parseFileID($fileID)
     {
@@ -47,6 +49,15 @@ class NaturalFileIDHelper extends AbstractFileIDHelper
     {
         $folder = dirname($parsedFileID->getFilename() ?? '');
         return $folder == '.' ? '' : $folder;
+    }
+
+    public function getVariantGlob(string $folder, ParsedFileID $parsedFileID): string
+    {
+        $folderRegex = '#^' . preg_quote($folder, '#') . '/#';
+        $globFilePath = preg_replace($folderRegex, '', $parsedFileID->getFilename());
+        $extRegex = '#\.' . preg_quote(File::get_file_extension($globFilePath), '#') . '$#';
+        $globFilePathWithoutExtension = preg_replace($extRegex, '', $globFilePath);
+        return $globFilePathWithoutExtension . FileIDHelper::VARIANT_SEPARATOR . '*';
     }
 
     protected function getFileIDBase($shortFilename, $fullFilename, $hash, $variant): string

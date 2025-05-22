@@ -23,6 +23,7 @@
         "silverstripe/framework": "^6",
         "silverstripe/template-engine": "^1",
         "symfony/filesystem": "^7.0",
+        "symfony/finder": "^7.0",
         "intervention/image": "^3.9",
         "league/flysystem": "^3.29",
         "league/flysystem-local": "^3.29"

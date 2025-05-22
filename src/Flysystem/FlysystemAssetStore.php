@@ -692,7 +692,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         if ($dirname
             && ltrim($dirname ?? '', '.')
             && !$this->config()->get('keep_empty_dirs')
-            && !$filesystem->listContents($dirname)->toArray()
+            && $filesystem->isEmpty($dirname)
         ) {
             $filesystem->deleteDirectory($dirname);
             $this->truncateDirectory(dirname($dirname ?? ''), $filesystem);

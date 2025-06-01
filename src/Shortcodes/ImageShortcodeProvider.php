@@ -153,7 +153,7 @@ class ImageShortcodeProvider extends FileShortcodeProvider implements ShortcodeH
     /**
      * Construct and return HTML image tag.
      *
-     * @deprecated 2.3.0
+     * @deprecated 2.3.0 Will be removed without equivalent functionality to replace it in a future major release.
      */
     public static function createImageTag(array $attributes) : string
     {

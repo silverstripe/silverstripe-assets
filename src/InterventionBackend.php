@@ -319,7 +319,7 @@ class InterventionBackend implements Image_Backend, Flushable
 
             return $result;
         } catch (EncoderException $e) {
-            return null;
+            return [];
         }
     }
 

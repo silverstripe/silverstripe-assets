@@ -193,7 +193,7 @@ class FileShortcodeProvider implements ShortcodeHandler, Flushable
         }
 
         // Check if the file is found
-        $file = DataObject::get_by_id(File::class, $args['id']);
+        $file = DataObject::get(File::class)->setUseCache(true)->byID($args['id']);
         if (!$file) {
             $errorCode = 404;
             return null;

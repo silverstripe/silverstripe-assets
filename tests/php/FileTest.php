@@ -54,7 +54,7 @@ class FileTest extends SapphireTest
         );
         foreach ($fileIDs as $fileID) {
             /** @var File $file */
-            $file = DataObject::get_by_id(File::class, $fileID);
+            $file = DataObject::get(File::class)->setUseCache(true)->byID($fileID);
             $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
         }
 
@@ -538,13 +538,13 @@ class FileTest extends SapphireTest
         //rename a folder's title
         $folderID = $this->objFromFixture(Folder::class, "folder2")->ID;
         /** @var Folder $folder */
-        $folder = DataObject::get_by_id(Folder::class, $folderID);
+        $folder = Folder::get()->byID($folderID);
         $folder->Title = $newTitle;
         $folder->write();
 
         //get folder again and see if the filename has changed
         /** @var Folder $folder */
-        $folder = DataObject::get_by_id(Folder::class, $folderID);
+        $folder = Folder::get()->byID($folderID);
         $this->assertEquals(
             $newTitle . '/',
             $folder->getFilename(),
@@ -558,7 +558,7 @@ class FileTest extends SapphireTest
 
         //get folder again and see if the Title has changed
         /** @var Folder $folder */
-        $folder = DataObject::get_by_id(Folder::class, $folderID);
+        $folder = Folder::get()->byID($folderID);
         $this->assertEquals(
             $folder->Title,
             $newTitle2,
@@ -572,7 +572,7 @@ class FileTest extends SapphireTest
         $folder->write();
 
         //get folder again and see if the Title has changed
-        $folder = DataObject::get_by_id(Folder::class, $folderID);
+        $folder = Folder::get()->byID($folderID);
         $this->assertEquals(
             $folder->Title,
             $newTitle3,

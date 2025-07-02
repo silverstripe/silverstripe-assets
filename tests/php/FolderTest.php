@@ -9,7 +9,6 @@ use SilverStripe\Assets\FolderNameFilter;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\Member;
@@ -135,12 +134,7 @@ class FolderTest extends SapphireTest
             'Empty folder does not have a filesystem record automatically'
         );
 
-        $parentFolder = DataObject::get_one(
-            Folder::class,
-            [
-            '"File"."Name"' => 'parent'
-            ]
-        );
+        $parentFolder = Folder::get()->find('Name', 'parent');
         $this->assertNotNull($parentFolder);
         $this->assertEquals($parentFolder->ID, $folder->ParentID);
 
@@ -172,7 +166,7 @@ class FolderTest extends SapphireTest
 
         // Publish file1
         /** @var File $file1 */
-        $file1 = DataObject::get_by_id(File::class, $this->idFromFixture(File::class, 'file1-folder1'), false);
+        $file1 = File::get()->byID($this->idFromFixture(File::class, 'file1-folder1'));
         $file1->publishRecursive();
 
         // set ParentID. This should cause updateFilesystem to be called on all children
@@ -232,20 +226,14 @@ class FolderTest extends SapphireTest
      */
     public function testRenameFolderAndCheckTheFile()
     {
-        // ID is prefixed in case Folder is subclassed by project/other module.
-        $folder1 = DataObject::get_one(
-            Folder::class,
-            [
-            '"File"."ID"' => $this->idFromFixture(Folder::class, 'folder1')
-            ]
-        );
+        $folder1 = Folder::get()->byID($this->idFromFixture(Folder::class, 'folder1'));
 
         $folder1->Name = 'FileTest-folder1-changed';
         $folder1->write();
 
         // Check if the file in the folder moved along
         /** @var File $file1 */
-        $file1 = DataObject::get_by_id(File::class, $this->idFromFixture(File::class, 'file1-folder1'), false);
+        $file1 = File::get()->byID($this->idFromFixture(File::class, 'file1-folder1'));
         $this->assertFileExists(
             TestAssetStore::getLocalPath($file1)
         );
@@ -315,13 +303,13 @@ class FolderTest extends SapphireTest
         $writeFolder = new Folder();
         $writeFolder->Name = 'TestNameWrittenToTitle';
         $writeFolder->write();
-        $newFolderWritten = Folder::get_one(Folder::class, "\"Title\" = 'TestNameWrittenToTitle'");
+        $newFolderWritten = Folder::get()->find('Title', 'TestNameWrittenToTitle');
         $this->assertNotNull($newFolderWritten);
 
         // Title should be populated from name on subsequent writes
         $writeFolder->Name = 'TestNameWrittenToTitleOnUpdate';
         $writeFolder->write();
-        $newFolderWritten = Folder::get_one(Folder::class, "\"Title\" = 'TestNameWrittenToTitleOnUpdate'");
+        $newFolderWritten = Folder::get()->find('Title', 'TestNameWrittenToTitleOnUpdate');
         $this->assertNotNull($newFolderWritten);
     }
 

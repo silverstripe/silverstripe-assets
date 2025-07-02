@@ -12,7 +12,6 @@ use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ErrorPage\ErrorPage;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
@@ -35,7 +34,7 @@ class FileShortcodeProviderTest extends SapphireTest
         );
         foreach ($fileIDs as $fileID) {
             /** @var File $file */
-            $file = DataObject::get_by_id(File::class, $fileID);
+            $file = File::get()->byID($fileID);
             $file->setFromString(str_repeat('x', 1000000), $file->getFilename());
         }
 

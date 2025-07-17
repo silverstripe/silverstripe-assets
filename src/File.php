@@ -144,6 +144,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         "File" => "DBFile",
         // Only applies to files, doesn't inherit for folder
         'ShowInSearch' => 'Boolean(1)',
+        // FQCN needs 4 backslashes so the raw SQL ends up with a single escaped backslash in the string literal.
+        'IsFolder' => <<<'SPEC'
+            Generated(
+                "Boolean",
+                "CASE WHEN \"ClassName\"='SilverStripe\\\\Assets\\\\Folder' THEN 1 ELSE 0 END",
+                "STORED"
+            )
+            SPEC,
     ];
 
     private static $has_one = [
@@ -160,7 +168,24 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     ];
 
     private static $indexes = [
-        'FileHash' => true
+        'FileHash' => true,
+        // Used when viewing files in AssetAdmin ordered by Title ASC
+        // Not used for other sort (e.g. Title DESC or Created) so if the default
+        // sort in AssetAdmin changes, we should update this index.
+        'default_asset_sort' => [
+            'type' => 'index',
+            'columns' => [
+                'ParentID',
+                'IsFolder DESC',
+                'Title',
+            ],
+        ]
+    ];
+
+    private static bool|array $skip_fetch_generated_columns_after_write = [
+        // Updating the ClassName which this is based on is very unlikely,
+        // so we can skip the extra SELECT query after write.
+        'IsFolder',
     ];
 
     private static $defaults = [

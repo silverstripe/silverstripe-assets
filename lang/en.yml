@@ -43,6 +43,7 @@ en:
     db_CanViewType: 'Can view type'
     db_File: File
     db_FileContentCache: 'File content cache'
+    db_IsFolder: 'Is folder'
     db_Name: Name
     db_ShowInSearch: 'Show in search'
     db_Title: Title

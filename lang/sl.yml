@@ -45,6 +45,7 @@ sl:
     db_CanViewType: 'Dovoljen ogled'
     db_File: Datoteka
     db_FileContentCache: 'Predpomnenje vsebine datoteke'
+    db_IsFolder: Mapa
     db_Name: 'Ime datoteke'
     db_ShowInSearch: 'Izpiši med rezultati iskanja'
     db_Title: Naslov

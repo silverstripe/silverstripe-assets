@@ -188,7 +188,6 @@ class UploadTest extends SapphireTest
     {
         $v = new Upload_Validator();
         $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
-        $reflectionMethod->setAccessible(true);
         $maxUploadSize = $reflectionMethod->invoke($v);
 
         // Bump up the size by about 2MB.
@@ -209,7 +208,6 @@ class UploadTest extends SapphireTest
     {
         $v = new Upload_Validator();
         $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
-        $reflectionMethod->setAccessible(true);
         $maxUploadSize = $reflectionMethod->invoke($v);
 
         $v->setAllowedMaxFileSize([]);
@@ -223,7 +221,6 @@ class UploadTest extends SapphireTest
     {
         $v = new Upload_Validator();
         $reflectionMethod = new ReflectionMethod($v, 'maxUploadSizeFromPHPIni');
-        $reflectionMethod->setAccessible(true);
         $maxUploadSize = $reflectionMethod->invoke($v);
 
         /*

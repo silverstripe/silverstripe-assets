@@ -199,7 +199,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
     {
         $helper = new HashFileIDHelper();
         $reflectionMethod = new ReflectionMethod($helper, 'swapExtension');
-        $reflectionMethod->setAccessible(true);
         $reflectionConst = new ReflectionClassConstant($helper, 'EXTENSION_VARIANT');
         $actualFilename = $reflectionMethod->invoke($helper, $inFilename, $variant, $reflectionConst->getValue());
 
@@ -211,7 +210,6 @@ class HashFileIDHelperTest extends FileIDHelperTester
     {
         $helper = new HashFileIDHelper();
         $reflectionMethod = new ReflectionMethod($helper, 'swapExtension');
-        $reflectionMethod->setAccessible(true);
         $reflectionConst = new ReflectionClassConstant($helper, 'EXTENSION_ORIGINAL');
         $actualFilename = $reflectionMethod->invoke($helper, $inFilename, $variant, $reflectionConst->getValue());
 

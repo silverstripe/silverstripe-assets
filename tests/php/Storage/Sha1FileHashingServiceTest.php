@@ -248,7 +248,6 @@ class Sha1FileHashingServiceTest extends SapphireTest
             Sha1FileHashingService::class,
             'buildCacheKey'
         );
-        $reflectedMethod->setAccessible(true);
         // We're using this filename here as it was caught in issue #426
         $cacheKey = $reflectedMethod->invokeArgs(
             $service,

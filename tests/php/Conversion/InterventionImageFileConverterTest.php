@@ -138,7 +138,7 @@ class InterventionImageFileConverterTest extends SapphireTest
                 'fromFixture' => 'missing-image',
                 'to' => 'png',
                 'options' => [],
-                'exceptionMessage' => 'ImageBackend must be an instance of InterventionBackend. Got null',
+                'exceptionMessage' => 'Source file does not exist',
             ],
             'nothing to convert to' => [
                 'fixtureClass' => Image::class,

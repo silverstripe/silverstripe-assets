@@ -3,14 +3,12 @@
 namespace SilverStripe\Assets\Flysystem;
 
 use Exception;
-use Generator;
 use InvalidArgumentException;
 use LogicException;
+use Psr\SimpleCache\CacheInterface;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Util;
-use SilverStripe\Assets\FilenameParsing\FileIDHelper;
 use SilverStripe\Assets\FilenameParsing\FileResolutionStrategy;
-use SilverStripe\Assets\FilenameParsing\HashFileIDHelper;
 use SilverStripe\Assets\FilenameParsing\ParsedFileID;
 use SilverStripe\Assets\Storage\AssetNameGenerator;
 use SilverStripe\Assets\Storage\AssetStore;
@@ -63,6 +61,8 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @var FileResolutionStrategy
      */
     private $protectedResolutionStrategy = null;
+
+    private ?CacheInterface $cache = null;
 
     /**
      * Flag if empty folders are allowed.
@@ -1124,13 +1124,23 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
     public function getMimeType($filename, $hash, $variant = null)
     {
+        // Flysystem calculates the mime type from the file contents, which is memory intensive, so we cache the result
+        $cache = $this->getCache();
+        $key = md5($filename . $hash . $variant);
+        if ($cache->has($key)) {
+            return $cache->get($key);
+        }
+
         // If `applyToFileOnFilesystem` calls our closure we'll know for sure that a file exists
-        return $this->applyToFileOnFilesystem(
+        $mimeType = $this->applyToFileOnFilesystem(
             function (ParsedFileID $parsedFileID, Filesystem $fs) {
                 return $fs->mimetype($parsedFileID->getFileID());
             },
             new ParsedFileID($filename, $hash, $variant)
         );
+
+        $cache->set($key, $mimeType);
+        return $mimeType;
     }
 
     public function exists($filename, $hash, $variant = null)
@@ -1276,6 +1286,24 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
                 }
             }
         }
+
+        /** @var CacheInterface $cache */
+        $cache = Injector::inst()->get(CacheInterface::class . '.FlysystemAssetStore');
+        $cache->clear();
+    }
+
+    public function getCache(): CacheInterface
+    {
+        if (!$this->cache) {
+            $this->setCache(Injector::inst()->get(CacheInterface::class . '.FlysystemAssetStore'));
+        }
+        return $this->cache;
+    }
+
+    public function setCache(CacheInterface $cache): static
+    {
+        $this->cache = $cache;
+        return $this;
     }
 
     public function getResponseFor($asset)

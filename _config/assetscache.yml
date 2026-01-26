@@ -2,6 +2,10 @@
 Name: assetscache
 ---
 SilverStripe\Core\Injector\Injector:
+  Psr\SimpleCache\CacheInterface.FlysystemAssetStore:
+    factory: SilverStripe\Core\Cache\CacheFactory
+    constructor:
+      namespace: "FlysystemAssetStore"
   Psr\SimpleCache\CacheInterface.InterventionBackend_Manipulations:
     factory: SilverStripe\Core\Cache\CacheFactory
     constructor:

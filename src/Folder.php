@@ -230,7 +230,7 @@ class Folder extends File
      * @param bool $grant
      * @return null|string
      */
-    public function getURL($grant = true)
+    public function getURL($grant = false)
     {
         return null;
     }

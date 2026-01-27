@@ -71,7 +71,7 @@ interface AssetContainer
      * This will not grant access to users other than the owner of the current session.
      * @return string public url to the asset in this container
      */
-    public function getURL($grant = true);
+    public function getURL($grant = false);
 
     /**
      * @return string The absolute URL to the asset in this container

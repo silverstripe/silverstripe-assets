@@ -145,14 +145,14 @@ class InterventionImageFileConverterTest extends SapphireTest
                 'fromFixture' => 'jpg-image',
                 'to' => '',
                 'options' => [],
-                'exceptionMessage' => 'Convertion to format \'\' is not suported.',
+                'exceptionMessage' => 'Conversion to format \'\' is not supported.',
             ],
             'jpg to txt' => [
                 'fixtureClass' => Image::class,
                 'fromFixture' => 'jpg-image',
                 'to' => 'txt',
                 'options' => [],
-                'exceptionMessage' => 'Convertion to format \'txt\' is not suported.',
+                'exceptionMessage' => 'Conversion to format \'txt\' is not supported.',
             ],
             'txt to jpg' => [
                 'fixtureClass' => File::class,

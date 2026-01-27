@@ -60,7 +60,7 @@ class InterventionImageFileConverter implements FileConverter
                     /** @var InterventionBackend $originalBackend */
                     $driver = $originalBackend->getImageManager()->driver();
                     if (!$driver->supports($toExtension)) {
-                        throw new FileConverterException("Convertion to format '$toExtension' is not suported.");
+                        throw new FileConverterException("Conversion to format '$toExtension' is not supported.");
                     }
 
                     $quality = $options['quality'] ?? null;

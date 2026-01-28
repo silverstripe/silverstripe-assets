@@ -42,25 +42,31 @@ class InterventionImageFileConverter implements FileConverter
         if (!empty($problems)) {
             throw new FileConverterException('Invalid options provided: ' . implode(', ', $problems));
         }
-        $originalBackend = $from->getImageBackend();
-        if (!is_a($originalBackend, InterventionBackend::class)) {
-            $actualClass = $originalBackend ? get_class($originalBackend) : 'null';
-            throw new FileConverterException("ImageBackend must be an instance of InterventionBackend. Got $actualClass");
-        }
-        /** @var InterventionBackend $originalBackend */
-        $driver = $originalBackend->getImageManager()->driver();
-        if (!$driver->supports($toExtension)) {
-            throw new FileConverterException("Convertion to format '$toExtension' is not suported.");
+
+        if (!$from->exists()) {
+            throw new FileConverterException('Source file does not exist');
         }
 
-        $quality = $options['quality'] ?? null;
-        // Clone the backend if we're changing quality to avoid affecting other manipulations to that original image
-        $backend = $quality === null ? $originalBackend : clone $originalBackend;
         // Pass through to invervention image to do the conversion for us.
         try {
             $result = $from->manipulateExtension(
                 $toExtension,
-                function (AssetStore $store, string $filename, string $hash, string $variant) use ($backend, $quality) {
+                function (AssetStore $store, string $filename, string $hash, string $variant) use ($from, $toExtension, $options) {
+                    $originalBackend = $from->getImageBackend();
+                    if (!is_a($originalBackend, InterventionBackend::class)) {
+                        $actualClass = $originalBackend ? get_class($originalBackend) : 'null';
+                        throw new FileConverterException("ImageBackend must be an instance of InterventionBackend. Got $actualClass");
+                    }
+                    /** @var InterventionBackend $originalBackend */
+                    $driver = $originalBackend->getImageManager()->driver();
+                    if (!$driver->supports($toExtension)) {
+                        throw new FileConverterException("Conversion to format '$toExtension' is not supported.");
+                    }
+
+                    $quality = $options['quality'] ?? null;
+                    // Clone the backend if we're changing quality to avoid affecting other manipulations to that original image
+                    $backend = $quality === null ? $originalBackend : clone $originalBackend;
+
                     if ($quality !== null) {
                         $backend->setQuality($quality);
                     }

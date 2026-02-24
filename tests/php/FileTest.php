@@ -1273,4 +1273,34 @@ class FileTest extends SapphireTest
         $this->assertTrue(strpos($file1->getFilename(), 'FileTest-v2.pdf') !== false);
         $this->assertTrue(strpos($file2->getFilename(), 'FileTest.pdf') !== false);
     }
+
+    public static function providePreviewLink(): array
+    {
+        return [
+            [true],
+            [false],
+        ];
+    }
+
+    #[DataProvider('providePreviewLink')]
+    public function testPreviewLink(bool $fileExists): void
+    {
+        $image = Image::create([
+            'Name' => 'animated.gif',
+            'FileFilename' => 'animated.gif',
+        ]);
+        $image->write();
+        if ($fileExists) {
+            $sourcePath = __DIR__ . '/ImageTest/' . $image->Name;
+            $image->setFromLocalFile($sourcePath, $image->Filename);
+        }
+        $image->publishSingle();
+
+        $previewLink = $image->PreviewLink();
+        if ($fileExists) {
+            $this->assertStringEndsWith('/assets/FileTest/animated__FitMaxWzkzMCwzMzZd.gif', $previewLink);
+        } else {
+            $this->assertStringContainsString('/_resources/vendor/silverstripe/framework/client/images/app_icons/generic_92.png', $previewLink);
+        }
+    }
 }

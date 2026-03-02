@@ -110,7 +110,7 @@ class Image extends File
 
         // Temporarily disallow animated manipulations if necessary
         $backend = $this->getImageBackend();
-        $origAllowAnimation = $backend->getAllowsAnimationInManipulations();
+        $origAllowAnimation = $backend?->getAllowsAnimationInManipulations();
         if ($origAllowAnimation && !static::config()->get('allow_animated_preview')) {
             $backend->setAllowsAnimationInManipulations(false);
         }

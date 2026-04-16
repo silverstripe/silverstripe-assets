@@ -121,7 +121,7 @@ trait ImageManipulation
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
      * @return string public url to the asset in this container
      */
-    abstract public function getURL($grant = true);
+    abstract public function getURL($grant = false);
 
     /**
      * @return string The absolute URL to the asset in this container

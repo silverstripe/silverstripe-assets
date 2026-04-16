@@ -251,7 +251,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
             ->getAsString($this->Filename, $this->Hash, $this->Variant);
     }
 
-    public function getURL($grant = true): string
+    public function getURL($grant = false): string
     {
         if (!$this->exists()) {
             return '';
@@ -283,7 +283,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
      *
      * @param bool $grant Ensures that the url for any protected assets is granted for the current user.
      */
-    public function getSourceURL(bool $grant = true): string
+    public function getSourceURL(bool $grant = false): string
     {
         return $this
             ->getStore()

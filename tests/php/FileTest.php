@@ -1303,4 +1303,24 @@ class FileTest extends SapphireTest
             $this->assertStringContainsString('/_resources/vendor/silverstripe/framework/client/images/app_icons/generic_92.png', $previewLink);
         }
     }
+
+    public function testCollateDescendantsDoesNotEvaluateCondition()
+    {
+        $folder = $this->objFromFixture(Folder::class, 'subfolder');
+
+        $marker = TEMP_PATH . '/file-collate-descendants-rce.txt';
+        if (file_exists($marker)) {
+            unlink($marker);
+        }
+        // Mirrors an injected template method-call argument: a string that only causes harm if eval()'d as PHP.
+        $condition = "file_put_contents('" . $marker . "', 'pwned') !== false";
+        $collator = [];
+        $folder->collateDescendants($condition, $collator);
+
+        $this->assertFileDoesNotExist($marker);
+        $this->assertNotEmpty($collator);
+        if (file_exists($marker)) {
+            unlink($marker);
+        }
+    }
 }

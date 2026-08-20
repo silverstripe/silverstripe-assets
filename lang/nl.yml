@@ -39,6 +39,7 @@ nl:
     db_CanViewType: 'Bekijken door'
     db_File: Bestand
     db_FileContentCache: 'Bestandsinhoud cache'
+    db_IsFolder: 'Is map'
     db_Name: Naam
     db_ShowInSearch: 'Toon in zoeken'
     db_Title: Titel

@@ -40,6 +40,7 @@ it:
     db_CanEditType: 'Tipo '
     db_CanViewType: 'Tipo può visualizzare'
     db_FileContentCache: 'Cache contenuto del file'
+    db_IsFolder: 'È cartella'
     db_Name: Nome
     db_ShowInSearch: 'Mostrare nella ricerca'
     db_Title: Titolo

@@ -351,6 +351,30 @@ class FileTest extends SapphireTest
         $file->write();
     }
 
+    public function testRenameViaTitleFallbackWithInvalidExtensionDoesntChangeFilesystem()
+    {
+        Config::modify()->set(File::class, 'allowed_extensions', ['txt']);
+        /** @var File $file */
+        $file = $this->objFromFixture(File::class, 'asdf');
+        $hash = $file->File->Hash;
+        // An empty Name makes onBeforeWrite() resolve the name from the Title, smuggling the
+        // disallowed extension past File::validate(), which only sees the empty Name.
+        $file->Name = 0;
+        $file->Title = 'FileTest.php';
+        $thrown = false;
+        try {
+            $file->write();
+        } catch (ValidationException $e) {
+            $thrown = true;
+        }
+        $this->assertTrue($thrown);
+        $this->assertFalse($this->getAssetStore()->exists('FileTest.php', $hash));
+        $this->assertTrue($this->getAssetStore()->exists('FileTest.txt', $hash));
+        $persisted = File::get()->byID($file->ID);
+        $this->assertEquals('FileTest.txt', $persisted->Name);
+        $this->assertEquals('FileTest.txt', $persisted->getFilename());
+    }
+
     public function testGetURL()
     {
         /** @var File $rootfile */

@@ -12,8 +12,9 @@ class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
 
     /**
      * Name of default folder to save secure assets in under ASSETS_PATH.
-     * This can be bypassed by specifying an absolute filesystem path via
-     * the SS_PROTECTED_ASSETS_PATH environment definition.
+     * This can be bypassed by specifying a filesystem path via the
+     * SS_PROTECTED_ASSETS_PATH environment definition. That path may be absolute,
+     * or relative to BASE_PATH when it starts with ./ or ../
      *
      * @config
      * @var string
@@ -38,7 +39,7 @@ class ProtectedAssetAdapter extends AssetAdapter implements ProtectedAdapter
 
         // Use environment defined path or default location is under assets
         if ($path = Environment::getEnv('SS_PROTECTED_ASSETS_PATH')) {
-            return $path;
+            return parent::findRoot($path);
         }
 
         // Default location

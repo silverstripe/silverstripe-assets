@@ -7,8 +7,12 @@ use SilverStripe\Assets\Filesystem;
 use SilverStripe\Assets\Flysystem\AssetAdapter;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
+use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionClass;
+use ReflectionMethod;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Environment;
 use SilverStripe\Dev\SapphireTest;
 
 class AssetAdapterTest extends SapphireTest
@@ -17,6 +21,8 @@ class AssetAdapterTest extends SapphireTest
 
     protected $originalServer = null;
 
+    protected $originalEnv = null;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,6 +30,7 @@ class AssetAdapterTest extends SapphireTest
         Filesystem::makeFolder($this->rootDir);
         Config::modify()->set(Director::class, 'alternate_base_url', '/');
         $this->originalServer = $_SERVER;
+        $this->originalEnv = Environment::getVariables();
     }
 
     protected function tearDown(): void
@@ -35,6 +42,10 @@ class AssetAdapterTest extends SapphireTest
         if ($this->originalServer) {
             $_SERVER = $this->originalServer;
             $this->originalServer = null;
+        }
+        if ($this->originalEnv) {
+            Environment::setVariables($this->originalEnv);
+            $this->originalEnv = null;
         }
         parent::tearDown();
     }
@@ -90,6 +101,33 @@ class AssetAdapterTest extends SapphireTest
 
         // Test url
         $this->assertEquals('/assets/file.jpg', $adapter->getProtectedUrl('file.jpg'));
+    }
+
+    public static function provideProtectedAdapterEnvRoot(): array
+    {
+        return [
+            'relative to base path' => [
+                'envPath' => './restricted_assets',
+                'expected' => BASE_PATH . '/restricted_assets',
+            ],
+            'relative to parent of base path' => [
+                'envPath' => '../restricted_assets',
+                'expected' => dirname(BASE_PATH) . '/restricted_assets',
+            ],
+            'absolute path' => [
+                'envPath' => '/var/restricted_assets',
+                'expected' => '/var/restricted_assets',
+            ],
+        ];
+    }
+
+    #[DataProvider('provideProtectedAdapterEnvRoot')]
+    public function testProtectedAdapterEnvRoot(string $envPath, string $expected)
+    {
+        Environment::setEnv('SS_PROTECTED_ASSETS_PATH', $envPath);
+        $adapter = (new ReflectionClass(ProtectedAssetAdapter::class))->newInstanceWithoutConstructor();
+        $findRoot = new ReflectionMethod($adapter, 'findRoot');
+        $this->assertSame($expected, $findRoot->invoke($adapter, null));
     }
 
     public function testPermissions()

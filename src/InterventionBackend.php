@@ -20,6 +20,7 @@ use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Flushable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Dev\Deprecation;
 
 class InterventionBackend implements Image_Backend, Flushable
 {
@@ -72,6 +73,7 @@ class InterventionBackend implements Image_Backend, Flushable
     /**
      * Configure where cached intervention files will be stored
      *
+     * @deprecated 3.4.0 Will be removed without equivalent functionality to replace it in a future major release.
      */
     private static string $local_temp_path = TEMP_PATH;
 
@@ -94,17 +96,23 @@ class InterventionBackend implements Image_Backend, Flushable
 
     /**
      * Get the temporary local path for this image
+     *
+     * @deprecated 3.4.0 Will be removed without equivalent functionality to replace it in a future major release.
      */
     public function getTempPath(): ?string
     {
+        Deprecation::noticeWithNoReplacment('3.4.0');
         return $this->tempPath;
     }
 
     /**
      * Set the temporary local path for this image
+     *
+     * @deprecated 3.4.0 Will be removed without equivalent functionality to replace it in a future major release.
      */
     public function setTempPath(string $path): static
     {
+        Deprecation::noticeWithNoReplacment('3.4.0');
         $this->tempPath = $path;
         return $this;
     }
@@ -202,23 +210,7 @@ class InterventionBackend implements Image_Backend, Flushable
         // Handle resource
         $error = InterventionBackend::FAILED_UNKNOWN;
         try {
-            // write the file to a local path so we can extract exif data if it exists.
-            // Currently exif data can only be read from file paths and not streams
-            $tempPath = $this->config()->get('local_temp_path') ?? TEMP_PATH;
-            $path = tempnam($tempPath ?? '', 'interventionimage_');
-            if ($extension = pathinfo($assetContainer->getFilename() ?? '', PATHINFO_EXTENSION)) {
-                //tmpnam creates a file, we should clean it up if we are changing the path name
-                unlink($path ?? '');
-                $path .= "." . $extension;
-            }
-            $bytesWritten = file_put_contents($path ?? '', $stream);
-            // if we fail to write, then load from stream
-            if ($bytesWritten === false) {
-                $resource = $this->getImageManager()->read($stream);
-            } else {
-                $this->setTempPath($path);
-                $resource = $this->getImageManager()->read($path);
-            }
+            $resource = $this->getImageManager()->read($stream);
 
             $this->setImageResource($resource);
             $this->markSuccess($hash, $variant);
@@ -278,12 +270,6 @@ class InterventionBackend implements Image_Backend, Flushable
             throw new InvalidArgumentException('$image must be an instance of ' . InterventionImage::class);
         }
         $this->image = $image;
-        if ($image === null) {
-            // remove our temp file if it exists
-            if (file_exists($this->getTempPath() ?? '')) {
-                unlink($this->getTempPath());
-            }
-        }
         return $this;
     }
 
@@ -709,17 +695,6 @@ class InterventionBackend implements Image_Backend, Flushable
     {
         $key = $this->getErrorCacheKey($hash, $variant);
         return $this->getCache()->get($key.'_reason', null);
-    }
-
-    /**
-     * Make sure we clean up the image resource when this object is destroyed
-     */
-    public function __destruct()
-    {
-        // remove our temp file if it exists
-        if (file_exists($this->getTempPath() ?? '')) {
-            unlink($this->getTempPath() ?? '');
-        }
     }
 
     /**

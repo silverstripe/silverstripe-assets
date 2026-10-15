@@ -567,6 +567,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->Filename) {
             return null;
         }
+        $this->assertFilenameValid($newName);
         $newName = $this
             ->getStore()
             ->rename($this->Filename, $this->Hash, $newName);
@@ -581,6 +582,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         if (!$this->Filename) {
             return null;
         }
+        $this->assertFilenameValid($newName);
         return $this
             ->getStore()
             ->copy($this->Filename, $this->Hash, $newName);

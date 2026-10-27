@@ -19,6 +19,7 @@ use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use PHPUnit\Framework\Attributes\DataProvider;
+use ReflectionProperty;
 
 /**
  * ImageTest is abstract and should be overridden with manipulator-specific subtests
@@ -412,6 +413,26 @@ abstract class ImageTestBase extends SapphireTest
         );
         $customKey = $this->getDimensionCacheKey(sha1('anything'), 'custom-variant');
         $this->assertTrue($cache->has($customKey));
+    }
+
+    /**
+     * Reading dimensions on a cold cache must not keep the decoded image in memory
+     */
+    public function testDimensionCacheMissUnloadsResource()
+    {
+        /** @var Image $image */
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        /** @var InterventionBackend $backend */
+        $backend = $image->getImageBackend();
+        $backend->getCache()->clear();
+
+        $this->assertGreaterThan(0, $backend->getWidth());
+        $this->assertGreaterThan(0, $backend->getHeight());
+
+        $property = new ReflectionProperty(InterventionBackend::class, 'image');
+        $this->assertNull($property->getValue($backend));
+        // Dimensions are now cached, and the resource can still be reloaded on demand
+        $this->assertNotNull($backend->getImageResource());
     }
 
     public function testVariantParts()

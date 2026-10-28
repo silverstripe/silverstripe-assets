@@ -115,7 +115,30 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
      * @var array
      */
     private static $file_response_headers = [
-        'Cache-Control' => 'private'
+        'Cache-Control' => 'private',
+        'X-Content-Type-Options' => 'nosniff',
+        'Content-Security-Policy' => "default-src 'none'; sandbox",
+    ];
+
+    /**
+     * MIME types which may be rendered inline in the browser. Anything else is served with a
+     * "Content-Disposition: attachment" header. Entries ending in "/*" match a whole type group.
+     * Compared case-insensitively and ignoring any MIME parameters (e.g. "; charset=utf-8").
+     */
+    private static array $inline_content_types = [
+        'image/*',
+        'audio/*',
+        'video/*',
+        'application/pdf',
+        'text/plain',
+    ];
+
+    /**
+     * MIME types which must never be rendered inline, even when they match an entry in
+     * $inline_content_types - image/svg+xml matches "image/*" but can carry an inline <script>.
+     */
+    private static array $forbidden_inline_content_types = [
+        'image/svg+xml',
     ];
 
     /**
@@ -1375,7 +1398,41 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
         foreach ($headers as $header => $value) {
             $response->addHeader($header, $value);
         }
+
+        // No filename directive: current browsers honour a bare "attachment" for XML types,
+        // but older ones may render them inline unless given a non-XML filename extension.
+        $response->addHeader('Content-Disposition', $this->isInlineMime($mime) ? 'inline' : 'attachment');
+
         return $response;
+    }
+
+    /**
+     * Determine whether a detected MIME type may be rendered inline rather than downloaded.
+     * Unrecognised and empty types fail closed.
+     */
+    private function isInlineMime(string $mime): bool
+    {
+        // Strip any MIME parameters (e.g. "; charset=utf-8") and normalise case
+        $baseMime = strtolower(trim(explode(';', $mime)[0]));
+        if (!$baseMime) {
+            return false;
+        }
+        foreach ($this->config()->get('forbidden_inline_content_types') ?? [] as $forbidden) {
+            if ($baseMime === strtolower($forbidden)) {
+                return false;
+            }
+        }
+        foreach ($this->config()->get('inline_content_types') ?? [] as $allowed) {
+            $allowed = strtolower($allowed);
+            if (str_ends_with($allowed, '/*')) {
+                if (str_starts_with($baseMime, substr($allowed, 0, -1))) {
+                    return true;
+                }
+            } elseif ($baseMime === $allowed) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

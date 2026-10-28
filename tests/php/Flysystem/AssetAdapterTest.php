@@ -78,9 +78,16 @@ class AssetAdapterTest extends SapphireTest
             $this->assertMatchesRegularExpression('/\b'.preg_quote($extension ?? '').'\b/', $content);
         }
 
+        // Executable scripts are denied regardless of how PHP is wired up
+        $this->assertStringContainsString(
+            '<FilesMatch "(?i)\\.(?:php[0-9]*|phar|phtml|pht|inc)$">',
+            $content
+        );
+        $this->assertStringContainsString('Require all denied', $content);
+
         // Rewrite rules
         $this->assertStringContainsString('RewriteRule .* ../index.php [QSA]', $content);
-        $this->assertStringContainsString('RewriteRule error[^\\\\/]*\\.html$ - [L]', $content);
+        $this->assertStringContainsString('RewriteCond %{REQUEST_FILENAME} (?:^|/)error[^/]*\\.html$', $content);
 
         // Test flush restores invalid content
         file_put_contents($this->rootDir . '/.htaccess', '# broken content');
@@ -90,6 +97,61 @@ class AssetAdapterTest extends SapphireTest
 
         // Test URL
         $this->assertEquals('/assets/AssetAdapterTest/file.jpg', $adapter->getPublicUrl('file.jpg'));
+    }
+
+    public static function provideErrorPageAllowance(): array
+    {
+        return [
+            'genuine error page' => [
+                '/assets/error-500.html',
+                'error-500.html',
+                true,
+            ],
+            'plain error.html' => [
+                '/assets/error.html',
+                'error.html',
+                true,
+            ],
+            'nested error page' => [
+                '/assets/nested/error-404.html',
+                'nested/error-404.html',
+                true,
+            ],
+            'php script requested directly' => [
+                '/assets/shell.php',
+                'shell.php',
+                false,
+            ],
+            'path-info bypass' => [
+                '/assets/shell.php/error-404.html',
+                'shell.php',
+                false,
+            ],
+            'php file merely named like an error page' => [
+                '/assets/error-500.php',
+                'error-500.php',
+                false,
+            ],
+        ];
+    }
+
+    #[DataProvider('provideErrorPageAllowance')]
+    public function testErrorPageAllowanceMatchesResolvedFileNotPathInfo(
+        string $requestUri,
+        string $resolvedFile,
+        bool $allowed
+    ): void {
+        $_SERVER['SERVER_SOFTWARE'] = 'Apache/2.4.68 (Ubuntu)';
+        $adapter = new PublicAssetAdapter($this->rootDir);
+        $content = $adapter->read('.htaccess');
+        // Extract the error-page guard (the RewriteCond tested against the resolved file).
+        $this->assertMatchesRegularExpression('/RewriteCond\s+%\{REQUEST_FILENAME\}\s+\S*error[^\s]*html\S*/', $content);
+        preg_match('/RewriteCond\s+%\{REQUEST_FILENAME\}\s+(\S*error[^\s]*html\S*)/', $content, $matches);
+        $guard = '#' . $matches[1] . '#';
+        // Apache tests the guard against the resolved file on disk, so match against that.
+        $resolvedPath = ASSETS_PATH . '/' . $resolvedFile;
+        $matched = preg_match($guard, $resolvedPath) === 1;
+        $this->assertSame($allowed, $matched);
     }
 
     public function testProtectedAdapter()

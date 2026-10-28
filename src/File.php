@@ -25,6 +25,7 @@ use SilverStripe\ORM\CMSPreviewable;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Hierarchy\Hierarchy;
+use SilverStripe\ORM\ValidationException;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\InheritedPermissions;
 use SilverStripe\Security\InheritedPermissionsExtension;
@@ -834,6 +835,14 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         $pathAfter = $this->generateFilename();
         if ($pathAfter === $pathBefore) {
             return false;
+        }
+
+        // File::validate() runs against Name before onBeforeWrite() resolves the final name (Title
+        // fallback), so re-validate the resolved path here to keep a disallowed extension off disk.
+        $result = ValidationResult::create();
+        $this->File->validateFilename($result, $pathAfter);
+        if (!$result->isValid()) {
+            throw new ValidationException($result);
         }
 
         // Copy record to new location and point DB fields to updated Filename,

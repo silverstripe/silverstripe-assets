@@ -907,21 +907,17 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
     }
 
     /**
-     * Collate selected descendants of this page.
-     * $condition will be evaluated on each descendant, and if it is succeeds, that item will be added
-     * to the $collator array.
+     * Collate all descendants of this file into the $collator array.
      *
-     * @param string $condition The PHP condition to be evaluated.  The page will be called $item
-     * @param array $collator An array, passed by reference, to collect all of the matching descendants.
+     * @param string $condition @deprecated - this parameter is unused and will be removed in a future major release
+     * @param array $collator An array, passed by reference, to collect all of the descendants.
      * @return true|null
      */
     public function collateDescendants($condition, &$collator)
     {
         if ($children = $this->Children()) {
             foreach ($children as $item) {
-                if (!$condition || eval("return $condition;")) {
-                    $collator[] = $item;
-                }
+                $collator[] = $item;
                 $item->collateDescendants($condition, $collator);
             }
             return true;

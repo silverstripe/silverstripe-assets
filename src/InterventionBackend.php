@@ -391,6 +391,7 @@ class InterventionBackend implements Image_Backend, Flushable
         if ($resource) {
             $result = $this->getResourceDimensions($resource);
             $cache->set($key, $result);
+            $this->setImageResource(null);
         }
         return $result;
     }

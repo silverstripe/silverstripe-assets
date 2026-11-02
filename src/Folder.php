@@ -294,7 +294,12 @@ class Folder extends File
         $this->flushCache();
         // Writing this record should trigger a write (and potential updateFilesystem) on each child
         foreach ($this->AllChildren() as $child) {
+            $isPublished = $child->IsPublished();
+            $isModifiedOnDraft = $child->IsModifiedOnDraft();
             $child->write();
+            if ($isPublished && !$isModifiedOnDraft) {
+                $child->publishSingle();
+            }
         }
     }
 

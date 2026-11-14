@@ -4,6 +4,7 @@ namespace SilverStripe\Assets\Tests\Storage;
 
 use Silverstripe\Assets\Dev\TestAssetStore;
 use SilverStripe\Assets\Storage\AssetStore;
+use SilverStripe\Assets\Storage\DBFile;
 use SilverStripe\Assets\Tests\Storage\DBFileTest\TestFileWithPermissions;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\SapphireTest;
@@ -57,6 +58,43 @@ class DBFileTest extends SapphireTest
             '<a href="/mysite/assets/subdir/2a17a9cb4b/puppy-document.txt" title="puppy-document.txt" download="puppy-document.txt">',
             trim($obj->MyFile->forTemplate() ?? '')
         );
+    }
+
+    public function testSetFromMethodsResetImageBackend(): void
+    {
+        $fish = realpath(__DIR__ . '/../ImageTest/test-image-high-quality.jpg');
+        $replacement = realpath(__DIR__ . '/../ImageTest/landscape-to-portrait.jpg');
+        $this->assertFileExists($fish);
+        $this->assertFileExists($replacement);
+
+        $methods = [
+            'setFromLocalFile' => fn (DBFile $file) => $file->setFromLocalFile($replacement, 'replaced-local.jpg'),
+            'setFromString' => fn (DBFile $file) => $file->setFromString(
+                file_get_contents($replacement),
+                'replaced-string.jpg'
+            ),
+            'setFromStream' => function (DBFile $file) use ($replacement) {
+                $stream = fopen($replacement, 'rb');
+                try {
+                    $file->setFromStream($stream, 'replaced-stream.jpg');
+                } finally {
+                    fclose($stream);
+                }
+            },
+        ];
+
+        foreach ($methods as $name => $replace) {
+            $obj = new DBFileTest\TestObject();
+            $obj->MyFile->setFromLocalFile($fish, "original-$name.jpg");
+
+            // Load the backend's image resource before replacing
+            $this->assertSame(300, $obj->MyFile->getWidth(), $name);
+            $this->assertNotNull($obj->MyFile->getImageBackend()->getImageResource(), $name);
+
+            $replace($obj->MyFile);
+            $this->assertSame(450, $obj->MyFile->getWidth(), $name);
+            $this->assertSame(600, $obj->MyFile->getHeight(), $name);
+        }
     }
 
     public function testValidation()

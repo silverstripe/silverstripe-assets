@@ -580,6 +580,44 @@ abstract class ImageTestBase extends SapphireTest
         $this->assertEquals(99999, $image->getWidth());
     }
 
+    public function testSetFromMethodsResetImageBackend(): void
+    {
+        $sourcePath = __DIR__ . '/ImageTest/landscape-to-portrait.jpg';
+
+        // Test setFromString() when the backend's image resource is already loaded
+        // (e.g. ImageEditor renders from getImageBackend()->getImageResource() then replaces the file)
+        $image = $this->objFromFixture(Image::class, 'imageWithTitle');
+        $this->assertSame(300, $image->getWidth());
+        $this->assertSame(300, $image->getHeight());
+        $this->assertNotNull($image->getImageBackend()->getImageResource());
+        $image->setFromString(file_get_contents($sourcePath), $image->getFilename());
+        $this->assertSame(450, $image->getWidth());
+        $this->assertSame(600, $image->getHeight());
+
+        // Test setFromLocalFile()
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitle');
+        $this->assertSame(300, $image->getWidth());
+        $this->assertNotNull($image->getImageBackend()->getImageResource());
+        $image->setFromLocalFile($sourcePath, $image->getFilename());
+        $this->assertSame(450, $image->getWidth());
+        $this->assertSame(600, $image->getHeight());
+
+        // Test setFromStream()
+        $image = $this->objFromFixture(Image::class, 'imageWithoutTitleContainingDots');
+        $this->assertSame(300, $image->getWidth());
+        $this->assertNotNull($image->getImageBackend()->getImageResource());
+        $stream = fopen($sourcePath, 'rb');
+        try {
+            $image->setFromStream($stream, $image->getFilename());
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+        $this->assertSame(450, $image->getWidth());
+        $this->assertSame(600, $image->getHeight());
+    }
+
     /**
      * @param $filename
      * @param $hash

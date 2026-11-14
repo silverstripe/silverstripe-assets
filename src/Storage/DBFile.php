@@ -201,6 +201,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         // Update from result
         if ($result) {
             $this->setValue($result);
+            $this->imageBackend = null;
         }
         return $result;
     }
@@ -214,6 +215,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         // Update from result
         if ($result) {
             $this->setValue($result);
+            $this->imageBackend = null;
         }
         return $result;
     }
@@ -227,6 +229,7 @@ class DBFile extends DBComposite implements AssetContainer, Thumbnail
         // Update from result
         if ($result) {
             $this->setValue($result);
+            $this->imageBackend = null;
         }
         return $result;
     }

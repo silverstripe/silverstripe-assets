@@ -20,6 +20,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPStreamResponse;
+use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Configurable;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Flushable;
@@ -901,7 +902,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         $fileID = $this->getFileID($filename, $hash);
 
-        $session = Controller::curr()->getRequest()->getSession();
+        $session = $this->getGrantSession();
+        if (!$session) {
+            return;
+        }
         $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
         $granted[$fileID] = true;
         $session->set(FlysystemAssetStore::GRANTS_SESSION, $granted);
@@ -914,7 +918,10 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
             $fileID = $this->getProtectedResolutionStrategy()->buildFileID(new ParsedFileID($filename, $hash));
         }
 
-        $session = Controller::curr()->getRequest()->getSession();
+        $session = $this->getGrantSession();
+        if (!$session) {
+            return;
+        }
         $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
         unset($granted[$fileID]);
         if ($granted) {
@@ -940,6 +947,19 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
     }
 
     /**
+     * Get the session that holds file grants, or null when there is no current controller
+     * or its request has no session, such as in a command-line process
+     */
+    private function getGrantSession(): ?Session
+    {
+        $request = Controller::curr()?->getRequest();
+        if (!$request || !$request->hasSession()) {
+            return null;
+        }
+        return $request->getSession();
+    }
+
+    /**
      * Determine if a grant exists for the given FileID
      *
      * @param string|ParsedFileID $fileID
@@ -953,8 +973,7 @@ class FlysystemAssetStore implements AssetStore, AssetStoreRouter, Flushable
 
         // Make sure our File ID got understood
         if ($parsedFileID && $originalID = $parsedFileID->getFileID()) {
-            $session = Controller::curr()->getRequest()->getSession();
-            $granted = $session->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
+            $granted = $this->getGrantSession()?->get(FlysystemAssetStore::GRANTS_SESSION) ?: [];
             if (!empty($granted[$originalID])) {
                 return true;
             }

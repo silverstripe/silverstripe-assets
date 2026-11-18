@@ -9,6 +9,7 @@ use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
 use SilverStripe\Assets\Flysystem\PublicAssetAdapter;
 use SilverStripe\Assets\Tests\FilenameParsing\FileIDHelperResolutionStrategyTest;
+use SilverStripe\Control\Controller;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Dev\SapphireTest;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -127,6 +128,79 @@ class FlysystemAssetStoreTest extends SapphireTest
             [true],
             [false],
         ];
+    }
+
+    /**
+     * Check that `getAsURL()` returns the link of a protected file when there is no controller to hold the grant
+     */
+    public function testGetAsUrlWithGrantWithoutController()
+    {
+        $this->publicFilesystem->method('has')->willReturn(false);
+        $this->protectedFilesystem->method('has')->willReturn(true);
+        $this->protectedAdapter->method('getProtectedUrl')->willReturn('protected.jpg');
+        $this->protectedFilesystem
+            ->method('readStream')
+            ->willReturnCallback(fn() => fopen('data://text/plain,some dummy content', 'r'));
+        $assetStore = $this->createAssetStore();
+        $hash = sha1('some dummy content');
+
+        $url = $this->withoutController(fn() => $assetStore->getAsURL('foo', $hash, null, true));
+
+        $this->assertSame('protected.jpg', $url);
+    }
+
+    /**
+     * Check that `revoke()` and `canView()` work on a protected file when there is no controller to hold a grant
+     */
+    public function testRevokeAndCanViewWithoutController()
+    {
+        $this->publicFilesystem->method('has')->willReturn(false);
+        $this->protectedFilesystem->method('has')->willReturn(true);
+        $this->protectedFilesystem
+            ->method('readStream')
+            ->willReturnCallback(fn() => fopen('data://text/plain,some dummy content', 'r'));
+        $assetStore = $this->createAssetStore();
+        $hash = sha1('some dummy content');
+
+        $canView = $this->withoutController(function () use ($assetStore, $hash) {
+            $assetStore->revoke('foo', $hash);
+            return $assetStore->canView('foo', $hash);
+        });
+
+        $this->assertFalse($canView);
+    }
+
+    /**
+     * Create an asset store that uses the mocked filesystems
+     */
+    private function createAssetStore(): FlysystemAssetStore
+    {
+        $injector = Injector::inst();
+        $assetStore = new FlysystemAssetStore();
+        $assetStore->setPublicFilesystem($this->publicFilesystem);
+        $assetStore->setProtectedFilesystem($this->protectedFilesystem);
+        $assetStore->setPublicResolutionStrategy($injector->get(FileResolutionStrategy::class . '.public'));
+        $assetStore->setProtectedResolutionStrategy($injector->get(FileResolutionStrategy::class . '.protected'));
+        return $assetStore;
+    }
+
+    /**
+     * Run a callback with the controller stack emptied, as it is for a command-line process
+     */
+    private function withoutController(callable $callback): mixed
+    {
+        $controllers = [];
+        while ($controller = Controller::curr()) {
+            $controllers[] = $controller;
+            $controller->popCurrent();
+        }
+        try {
+            return $callback();
+        } finally {
+            foreach (array_reverse($controllers) as $controller) {
+                $controller->pushCurrent();
+            }
+        }
     }
 
     public function testPublicFilesystem()

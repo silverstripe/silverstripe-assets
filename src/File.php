@@ -1286,6 +1286,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Update File record to name of the uploaded asset
         if ($result) {
             $this->setFilename($result['Filename']);
+            $this->imageBackend = null;
         }
         return $result;
     }
@@ -1297,6 +1298,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Update File record to name of the uploaded asset
         if ($result) {
             $this->setFilename($result['Filename']);
+            $this->imageBackend = null;
         }
         return $result;
     }
@@ -1308,6 +1310,7 @@ class File extends DataObject implements AssetContainer, Thumbnail, CMSPreviewab
         // Update File record to name of the uploaded asset
         if ($result) {
             $this->setFilename($result['Filename']);
+            $this->imageBackend = null;
         }
         return $result;
     }
